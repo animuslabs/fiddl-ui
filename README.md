@@ -1,7 +1,3 @@
-# Quasar App (fiddl-ui)
-
-fiddl-ui
-
 ## Install the dependencies
 ```bash
 yarn

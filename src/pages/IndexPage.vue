@@ -1,55 +1,68 @@
-<template>
-  <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
-  </q-page>
+<template lang="pug">
+q-page.full-height.full-width
+  .centered.q-mt-md
+    q-img(src="/fiddlLogo.webp" style="width: 400px")
+  .centered.q-mt-md
+    h2 Fiddl.art
+  .centered
+    h5 Create, Vote, Earn with generative artwork.
+  .centered.q-mt-lg
+    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://9sql.mjt.lu/wgt/9sql/xu3g/form?c=472af0c7" style="height: 500px; width:500px;")
+  .centered
+    q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
+    q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
+  //- script(type="text/javascript" src="https://app.mailjet.com/pas-nc-embedded-v1.js")
+  //- .centered.q-mt-md(v-if="!userAuth.loggedIn")
+  //-   h5 Login to see your files and live sessions
+  //- div(v-else)
+  //-   .centered.q-mt-md
+  //-     h5 Hello, {{ userAuth.userData?.email || userAuth.userData?.name || userAuth.userData?.phone || "user" }}
+  //-   .centered.q-mt-md
+  //-     UserRecordings(:recordings="userFiles" @refresh="loadUserFiles")
+
+
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { Todo, Meta } from 'components/models'
-import ExampleComponent from 'components/ExampleComponent.vue'
+import { defineComponent } from "vue"
+import { Todo, Meta } from "components/models"
+import DropBox from "src/components/DropBox.vue"
+import { api } from "lib/api"
+import { passKeyAuth } from "lib/auth"
+import { useUserAuth } from "src/stores/userAuth"
+import { UserFile } from "lib/types"
+import UserRecordings from "components/UserRecordingsList.vue"
+import { loadScript } from "lib/util"
 
 export default defineComponent({
-  name: 'IndexPage',
-
   components: {
-    ExampleComponent
+    DropBox, UserRecordings
   },
-
-  data () {
-    const todos: Todo[] = [
-      {
-        id: 1,
-        content: 'ct1'
-      },
-      {
-        id: 2,
-        content: 'ct2'
-      },
-      {
-        id: 3,
-        content: 'ct3'
-      },
-      {
-        id: 4,
-        content: 'ct4'
-      },
-      {
-        id: 5,
-        content: 'ct5'
-      }
-    ]
-
-    const meta: Meta = {
-      totalCount: 1200
+  data() {
+    return {
+      userAuth: useUserAuth(),
+      api,
+      passKeyAuth,
+      userFiles: [] as UserFile[]
     }
-
-    return { todos, meta }
+  },
+  mounted(){
+    loadScript("https://app.mailjet.com/pas-nc-embedded-v1.js")
+  },
+  methods: {
+    async loadUserFiles() {
+      this.userFiles = await api.files.getUserFiles()
+    }
+  },
+  watch: {
+    "userAuth.loggedIn": {
+      immediate: true,
+      handler() {
+        if (this.userAuth.loggedIn) {
+          void this.loadUserFiles()
+        }
+      }
+    }
   }
 })
 </script>
