@@ -15,7 +15,7 @@
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "@simplewebauthn/browser": "^10.0.0",
-    "axios": "^1.6.8",
+    "axios": "^1.7.4",
     "eventemitter3": "^5.0.1",
     "pinia": "^2.0.11",
     "quasar": "^2.8.0",
