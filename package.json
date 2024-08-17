@@ -1,8 +1,8 @@
 {
-  "name": "fiddl-ui",
+  "name": "fiddl.art",
   "version": "0.0.1",
   "description": "fiddl.art",
-  "productName": "fiddl-ui",
+  "productName": "fiddl.art",
   "author": "john@boid.com",
   "private": true,
   "scripts": {
