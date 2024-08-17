@@ -30,7 +30,7 @@ q-page.full-height.full-width.bgimg
 
   &::before
     content: ""
-    background-image: url('homebg.jpg')
+    background-image: url('/homebg.jpg')
     background-size: cover
     background-position: center
     opacity: 0.4 // Adjust this value for transparency
