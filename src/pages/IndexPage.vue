@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogo.webp" style="width: 400px; opacity: 0.9")
+    q-img(src="/fiddlLogo2.webp" style="width: 400px; opacity: 0.9")
   .centered.q-mt-md
     h1 Fiddl.art
   .centered
