@@ -6,9 +6,10 @@ const routes:RouteRecordRaw[] = [
     component: () => import("layouts/MainLayout.vue"),
     children: [
       { name: "index", path: "", component: () => import("pages/IndexPage.vue") },
-      { name: "upload", path: "/upload", component: () => import("pages/UploadPage.vue") },
-      { name: "prompt", path: "/promptTranscription/:id?", component: () => import("pages/PromptPage.vue") },
-      { name: "live", path: "/live/:id?", component: () => import("pages/LivePage.vue") }
+      { name: "search", path: "/search", component: () => import("pages/SearchPage.vue") },
+      { name: "create", path: "/create", component: () => import("pages/CreatePage.vue") },
+      { name: "vote", path: "/vote", component: () => import("pages/VotePage.vue") },
+      { name: "mint", path: "/mint", component: () => import("pages/MintPage.vue") },
     ]
   },
 

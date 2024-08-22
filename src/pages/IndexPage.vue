@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogo2.webp" style="width: 400px; opacity: 0.9")
+    q-img(src="/fiddlLogo2.webp" style="width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager" )
   .centered.q-mt-md
     h1 Fiddl.art
   .centered
@@ -12,14 +12,6 @@ q-page.full-height.full-width.bgimg
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
     q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
   .full-width(style="height: 15px")
-  //- script(type="text/javascript" src="https://app.mailjet.com/pas-nc-embedded-v1.js")
-  //- .centered.q-mt-md(v-if="!userAuth.loggedIn")
-  //-   h5 Login to see your files and live sessions
-  //- div(v-else)
-  //-   .centered.q-mt-md
-  //-     h5 Hello, {{ userAuth.userData?.email || userAuth.userData?.name || userAuth.userData?.phone || "user" }}
-  //-   .centered.q-mt-md
-  //-     UserRecordings(:recordings="userFiles" @refresh="loadUserFiles")
 
 
 </template>
@@ -44,18 +36,16 @@ q-page.full-height.full-width.bgimg
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { Todo, Meta } from "components/models"
-import DropBox from "src/components/DropBox.vue"
+
 import { api } from "lib/api"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import { UserFile } from "lib/types"
-import UserRecordings from "components/UserRecordingsList.vue"
 import { loadScript } from "lib/util"
 
 export default defineComponent({
   components: {
-    DropBox, UserRecordings
+
   },
   data() {
     return {
@@ -69,17 +59,13 @@ export default defineComponent({
     loadScript("https://app.mailjet.com/pas-nc-embedded-v1.js")
   },
   methods: {
-    async loadUserFiles() {
-      this.userFiles = await api.files.getUserFiles()
-    }
+
   },
   watch: {
     "userAuth.loggedIn": {
       immediate: true,
       handler() {
-        if (this.userAuth.loggedIn) {
-          void this.loadUserFiles()
-        }
+
       }
     }
   }

@@ -1,6 +1,6 @@
 // app global css in Sass form
 body
-  background-color: darken($dark,4 )
+  background-color: $grey-10
 p
   font-size: 15px
   margin-bottom: 0px
@@ -8,7 +8,7 @@ p
 h1
   font-size: 75px
   margin: 0px
-  font-family: right
+  font-family: gluten
   color: white
 h2
   font-size: 30px
@@ -50,7 +50,29 @@ h6
 .redMsg
   color: $red
 .outlined
-  outline: 1.4px solid rgba(0, 0, 0, 0.12)
+  outline: 1.4px solid rgba(221, 221, 221, 0.61)
+.q-input .q-field__native
+  font-size: 22px
+  padding-left: 10px
+  padding-right: 10px
+.create-btn
+  border-top-left-radius: 0
+  border-bottom-left-radius: 0
+  border-top-right-radius: 16px
+  border-bottom-right-radius: 16px
+  margin-left: -1px
+.create-input
+  border-top-left-radius: 16px
+  border-bottom-left-radius: 16px
+  border-top-right-radius: 0
+  border-bottom-right-radius: 0
+  margin-left: -1px
+textarea
+  white-space: normal
+  overflow-wrap: break-word
+  font-size: 1.5rem
+  width: 100%
+  line-height: 1.5 !important
 .q-card--bordered
   // outline: 2px solid $pink-2
   // outline-style: linear-gradient(to bottom, $pink-2,rgba(0, 0, 0, 0)) 1 100%
@@ -60,10 +82,10 @@ h6
   height: 2px
   background-color: rgba(0, 0, 0, 0.12)
 .q-card
-  border-radius: 26px
-  // box-shadow: 0px 1px 15px $grey-2 !important
+  border-radius: 16px
+  box-shadow: 0px 1px 15px $grey-10 !important
   backdrop-filter: blur(25px)
-  // background-color: rgba(255, 255, 255, 0.25)
+  background-color: $grey-10
 .q-menu
   background-color: rgba(0, 1, 1, .8)
 .q-btn
@@ -116,6 +138,9 @@ body.body--dark
 @font-face
   font-family: right
   src: url(/fonts/right.ttf)
+@font-face
+  font-family: gluten
+  src: url(/fonts/gluten.ttf)
 
 .bridge-box
   background: linear-gradient(90deg, rgba(0,0,0,.3) 0%,rgba(0,0,0,0) 33%,rgba(0,0,0,0) 66%,rgba(0,0,0,.3) 100% )

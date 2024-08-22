@@ -29,7 +29,7 @@ export default boot(({ app }) => {
   // setDefault(QInput, "outlined", true)
   setDefault(QInput, "stackLabel", true)
   setDefault(QInput, "hideBottomSpace", true)
-  setDefault(QInput, "square", true)
+  // setDefault(QInput, "square", true)
 
   // setDefault(QBtn, "flat", true)
   // setDefault(QBtn, "unelevated", true)

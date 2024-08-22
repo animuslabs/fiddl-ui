@@ -4,6 +4,17 @@ import {
   , PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON
 } from "@simplewebauthn/types"
 
+export type OutputFormat = 'jpeg' | 'png' | 'webp';
+export type StabilityAIContentResponse = {
+    filepath: string;
+    filename: string;
+    contentType: 'image' | 'video' | '3d';
+    outputFormat: OutputFormat | 'mp4' | 'glb';
+    contentFiltered: boolean;
+    errored: boolean;
+    seed: number;
+};
+
 export interface EssentialLinkProps {
   title:string;
   caption?:string;
