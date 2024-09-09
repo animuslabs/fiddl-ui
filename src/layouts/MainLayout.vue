@@ -21,7 +21,7 @@ q-layout
       .row.justify-end.full-width(v-else)
         q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
   q-page-container.centered
-    .centered.bg-dark(style="width:1200px; max-width:100%; height:100%" )
+    .centered.bg-dark(style="width:1200px; max-width:100%; height:100%")
       router-view
 </template>
 
@@ -29,23 +29,23 @@ q-layout
 import { Dialog } from "quasar"
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import LoginDialog from "src/components/dialogs/LoginRegister.vue"
+// import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 // import RegisterDialog from "components/dialogs/Register.vue"
 
 export default defineComponent({
 
   data() {
     return {
-      userAuth: useUserAuth()
+      // userAuth: useUserAuth()
     }
   },
 
   methods: {
-    login() {
-      Dialog.create({
-        component: LoginDialog
-      })
-    }
+    // login() {
+    //   Dialog.create({
+    //     component: LoginDialog
+    //   })
+    // }
   }
 })
 </script>

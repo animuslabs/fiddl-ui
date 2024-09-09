@@ -7,7 +7,9 @@ q-page.full-height.full-width.bgimg
   .centered
     h5 Create, Vote, Earn with generative artwork.
   .centered.q-mt-lg
-    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://9sql.mjt.lu/wgt/9sql/xut5/form?c=8268c5ed" style="height: 500px; width:500px;").bg-dark-page
+    h3 Join the list to be the first to know about the platform launch.
+  .centered
+    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 500px; width:500px;").bg-dark-page
   .centered
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
     q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
