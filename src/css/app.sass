@@ -82,10 +82,14 @@ textarea
   height: 2px
   background-color: rgba(0, 0, 0, 0.12)
 .q-card
-  border-radius: 16px
-  box-shadow: 0px 1px 15px $grey-10 !important
-  backdrop-filter: blur(25px)
+  border-radius: 14px
+  // box-shadow: 0px 1px 15px $grey-10 !important
+  // backdrop-filter: blur(25px)
   background-color: $grey-10
+.faded-out
+  opacity: 0.2
+  pointer-events: none
+  transition: opacity 0.3s ease
 .q-menu
   background-color: rgba(0, 1, 1, .8)
 .q-btn
@@ -155,8 +159,8 @@ body.body--dark
   background: linear-gradient(90deg, rgba(0,0,0,.1) 0%,rgba(0,0,0,.1) 50%,rgba(0,0,0,.1) 100% )
 
 .selected-box
-  outline: 4px solid rgba($amber-6,.8)
-  background: transparentize($grey-9,.5 )
+  outline: 4px solid rgba($secondary,1)
+  background: transparentize($secondary,.95 )
 
   .q-field__input
     color: $pink

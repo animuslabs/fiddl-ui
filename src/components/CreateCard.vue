@@ -6,15 +6,16 @@ div
         //- h4 Describe your vision
       q-form(@submit="createImage")
         .centered.q-pa-md
-          q-input(v-model="description" color="primary" filled style="width:600px; max-width:70vw;" type="textarea" placeholder="Describe your vision" )
+          q-input(v-model="description"  @keydown="handleKeydown"  color="primary" filled style="width:600px; max-width:80vw;" type="textarea" placeholder="Describe your vision" )
         .centered
-          q-btn(type="submit" label="Create" color="primary" )
+          q-btn( type="submit" label="Create" color="primary" )
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import {useUserAuth} from 'stores/userAuth'
-import {api} from 'lib/api'
+import { useUserAuth } from 'stores/userAuth'
+import { api } from 'lib/api'
+import { useCreateSession } from 'stores/createSessionStore'
 export default defineComponent({
   components: {
 
@@ -22,28 +23,28 @@ export default defineComponent({
   data() {
     return {
       userAuth: useUserAuth(),
-      description:'' as string
+      description: '' as string,
+      createSession: useCreateSession(),
     }
   },
   emits: ['created'],
-  mounted(){
+  mounted() {
   },
   methods: {
-    async createImage(){
-      console.log('create image')
-      const result = await api.create.image({
-        prompt: this.description
-      })
-      console.log('created', result)
-      this.$emit('created', result)
-    }
-  },
-  watch: {
-    "userAuth.loggedIn": {
-      immediate: true,
-      handler() {
-        // reload any user specific stuff here
+    handleKeydown(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.createImage()
       }
+    },
+    async createImage() {
+      // console.log('create image')
+      // const result = await api.create.image({
+      //   prompt: this.description
+      // })
+      // console.log('created', result)
+      this.createSession.generateImage({ prompt: this.description })
+      // this.$emit('created', result)
     }
   }
 })

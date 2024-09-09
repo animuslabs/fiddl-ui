@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from "vue-router"
 
-const routes:RouteRecordRaw[] = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
@@ -10,6 +10,7 @@ const routes:RouteRecordRaw[] = [
       { name: "create", path: "/create", component: () => import("pages/CreatePage.vue") },
       { name: "vote", path: "/vote", component: () => import("pages/VotePage.vue") },
       { name: "mint", path: "/mint", component: () => import("pages/MintPage.vue") },
+      { name: "addPoints", path: "/addPoints", component: () => import("pages/AddPointsPage.vue") },
     ]
   },
 

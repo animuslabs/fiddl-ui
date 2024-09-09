@@ -73,16 +73,6 @@ export type VerifiedRegistrationResponse = {
 };
 
 
-export interface UserData {
-  id:string
-  webauthnUserID:string | null
-  name:string | null
-  email:string | null
-  phone:string | null
-  currentPassKeyChallenge:string | null
-}
-
-
 export interface FileUpload {
   id:string
   fileName:string

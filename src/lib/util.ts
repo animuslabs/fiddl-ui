@@ -26,6 +26,16 @@ export function loadScript(src:string) {
     document.head.appendChild(script);
   });
 }
+
+export function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export async function downloadFile(data:any, fileName:string) {
   try {
     console.log("download file data")

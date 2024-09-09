@@ -2,7 +2,7 @@ import { reactive } from "vue"
 import { passKeyAuth as pkAuth } from "lib/auth"
 import { createPinia, defineStore } from "pinia"
 import { api } from "lib/api"
-import { UserData } from "lib/types"
+import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 
 
@@ -10,21 +10,23 @@ export const useUserAuth = defineStore("userAuth", {
   state() {
     return {
       loggedIn: false,
-      userId: null as string|null,
-      userData: null as UserData|null
+      userId: null as string | null,
+      userData: null as User | null
 
     }
   },
   actions: {
-    async loadUserData(userId:string) {
-      this.userId = userId
-      const data = await api.user.loadUser(this.userId)
+    async loadUserData(userId?: string) {
+      if (!userId && !this.userId) return
+      if (!userId && this.userId) userId = this.userId
+      if (userId) this.userId = userId
+      const data = await api.user.loadUser(userId!)
       this.userData = data.data
     },
-    setUserId(userId:string) {
+    setUserId(userId: string) {
       this.userId = userId
     },
-    async login(userId:string, method = "passKey") {
+    async login(userId: string, method = "passKey") {
       if (method == "passKey") {
         const userData = await pkAuth.login(userId)
         await this.loadUserData(userData.userId)
@@ -40,15 +42,15 @@ export const useUserAuth = defineStore("userAuth", {
       this.setUserId(savedLogin.userId)
       this.loggedIn = true
     },
-    async emailLogin(email:string) {
+    async emailLogin(email: string) {
       const userId = await api.user.findUserIdByEmail(email)
       await this.login(userId.data)
     },
-    async phoneLogin(phoneNumber:string) {
+    async phoneLogin(phoneNumber: string) {
       const userId = await api.user.findUserIdByPhone(phoneNumber)
       await this.login(userId.data)
     },
-    async registerAndLogin(data:{email?:string, phone?:string,}) {
+    async registerAndLogin(data: { email?: string, phone?: string, }) {
       const result = await pkAuth.register(data)
       await this.login(result.registration.user.name)
       console.log(result.registration)
@@ -64,8 +66,8 @@ export const useUserAuth = defineStore("userAuth", {
 
 export const userAuth = reactive({
   loggedIn: false,
-  userId: null as string|null,
-  setUserId(userId:string) {
+  userId: null as string | null,
+  setUserId(userId: string) {
     this.userId = userId
   },
   async login(method = "passKey") {
