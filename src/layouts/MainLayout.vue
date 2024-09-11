@@ -20,9 +20,9 @@ q-layout
         //- q-btn(flat @click="register()" label="register" size="sm")
       .row.justify-end.full-width(v-else)
         q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
-  q-page-container.centered
-    .centered.bg-dark(style="width:1200px; max-width:100%; height:100%")
-      router-view
+  q-page-container.centered()
+    .centered.bg-dark(style="width:1200px; max-width:100%; height:100%" )
+      router-view()
 </template>
 
 <script lang="ts">
@@ -33,7 +33,6 @@ import { useUserAuth } from "stores/userAuth"
 // import RegisterDialog from "components/dialogs/Register.vue"
 
 export default defineComponent({
-
   data() {
     return {
       // userAuth: useUserAuth()
@@ -46,6 +45,6 @@ export default defineComponent({
     //     component: LoginDialog
     //   })
     // }
-  }
+  },
 })
 </script>
