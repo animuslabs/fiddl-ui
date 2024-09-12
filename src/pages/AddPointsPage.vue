@@ -37,13 +37,14 @@ import { StabilityAIContentResponse } from 'lib/types'
 import { api } from 'lib/api'
 import CreatedImageCard from 'components/CreatedImageCard.vue'
 import { useCreateSession } from 'stores/createSessionStore'
-import { payPal } from "lib/payPal"
+import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js";
 import { throwErr } from "lib/util"
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/pointsPackages"
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string
 }
+
 
 export default defineComponent({
   components: {
@@ -54,8 +55,12 @@ export default defineComponent({
       selectedPkg: null as null | PointsPackageRender,
       ppButton: null as null | PayPalButtonsComponent,
       packages: [] as PointsPackageRender[],
-      selectedPkgIndex: null as null | number
+      selectedPkgIndex: null as null | number,
+      payPal: null as null | PayPalNamespace
     }
+  },
+  async created() {
+    this.payPal = await loadPayPal()
   },
   async mounted() {
     api.points.getPackages().then(res => {
@@ -81,8 +86,8 @@ export default defineComponent({
       }
     },
     initPPButton() {
-      if (!payPal?.Buttons) return
-      this.ppButton = payPal.Buttons({
+      if (!this.payPal?.Buttons) return
+      this.ppButton = this.payPal.Buttons({
         style: {
           label: 'pay'
         },

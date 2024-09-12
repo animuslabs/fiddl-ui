@@ -41,7 +41,6 @@ import { api } from "lib/api"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import { UserFile } from "lib/types"
-import { loadScript } from "lib/util"
 
 export default defineComponent({
   components: {
