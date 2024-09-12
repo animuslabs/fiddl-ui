@@ -5,17 +5,17 @@ q-layout
       .row.q-mr-lg.no-wrap.items-center.q-gutter-md
         q-tabs.gt-xs
           q-route-tab(:to="{ name: 'index' }" no-caps exact)
-            .row.no-wrap.cursor-pointer(@click="$router.push({ name: 'index' })")
+            .row.no-wrap.cursor-pointer(style="padding-top:8px;" @click="$router.push({ name: 'index' })")
               q-icon(name="img:/fiddlLogo.svg" size="2rem").q-mr-sm
-              .text-h5(style="font-family: gluten; font-weight: 200;") Fiddl.art
-          q-route-tab(:to="{ name: 'search' }" exact)
-            | Search
+              .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
+          //- q-route-tab(:to="{ name: 'search' }" exact)
+          //-   | Search
           q-route-tab(:to="{ name: 'create' }")
             | create
-          q-route-tab(:to="{ name: 'vote' }")
-            | vote
-          q-route-tab(:to="{ name: 'mint' }")
-            | mint
+          //- q-route-tab(:to="{ name: 'vote' }")
+          //-   | vote
+          //- q-route-tab(:to="{ name: 'mint' }")
+          //-   | mint
       .row.justify-end.full-width(v-if="!userAuth.loggedIn")
         q-btn(flat @click="login()" label="login / Register"  size="sm")
         //- q-separator(color="white" vertical)

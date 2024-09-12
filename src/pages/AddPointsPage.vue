@@ -60,9 +60,9 @@ export default defineComponent({
     }
   },
   async created() {
-    this.payPal = await loadPayPal()
   },
   async mounted() {
+    this.payPal = await loadPayPal()
     api.points.getPackages().then(res => {
       this.packages = res.map(el => {
         return {

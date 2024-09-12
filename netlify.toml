@@ -7,3 +7,5 @@
   from = "/*"
   to = "/index.html"
   status = 200
+[images]
+  remote_images = ["https://api.fiddl.art/images/.*", "http://locahost:4444/images/.*"]

@@ -23,9 +23,15 @@ export const useCreateSession = defineStore("createSession", {
       sessionItems: [] as CreatedItem[]
     }
   },
+  getters: {
+    reverse(): CreatedItem[] {
+      return this.sessionItems.slice().reverse()
+    }
+  },
   actions: {
     async reset() {
       this.sessionItems = []
+      const rev = this.reverse
     },
     async generateImage(request: CreateImageRequest) {
       const result = await api.create.image(request)
@@ -37,5 +43,5 @@ export const useCreateSession = defineStore("createSession", {
       this.sessionItems.unshift(createdItem)
     }
   },
-  persist: true
+  persist: false
 })

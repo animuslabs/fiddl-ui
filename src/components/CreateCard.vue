@@ -43,7 +43,8 @@ export default defineComponent({
       //   prompt: this.description
       // })
       // console.log('created', result)
-      this.createSession.generateImage({ prompt: this.description })
+      await this.createSession.generateImage({ prompt: this.description, model: "ultra" })
+      await this.userAuth.loadUserData()
       // this.$emit('created', result)
     }
   }
