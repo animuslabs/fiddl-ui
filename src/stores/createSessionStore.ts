@@ -1,9 +1,5 @@
-import { reactive } from "vue"
-import { passKeyAuth as pkAuth } from "lib/auth"
-import { createPinia, defineStore } from "pinia"
+import { defineStore } from "pinia"
 import { api } from "lib/api"
-import { UserData } from "lib/types"
-import { jwt } from "lib/jwt"
 import { CreateImageRequest } from "app/../fiddl-server/src/lib/types/serverTypes"
 
 export interface CreatedItem {
@@ -13,6 +9,14 @@ export interface CreatedItem {
   request: CreateImageRequest
 }
 
+function requestMatches(request: CreateImageRequest, other: CreateImageRequest) {
+  return request.prompt === other.prompt
+    && request.quantity === other.quantity
+    && request.seed === other.seed
+    && request.model === other.model
+    && request.style === other.style
+}
+
 export const useCreateSession = defineStore("createSession", {
   state() {
     return {
@@ -20,12 +24,12 @@ export const useCreateSession = defineStore("createSession", {
     }
   },
   actions: {
-    async reset(){
+    async reset() {
       this.sessionItems = []
     },
-    async generateImage(request:CreateImageRequest) {
+    async generateImage(request: CreateImageRequest) {
       const result = await api.create.image(request)
-      let createdItem:CreatedItem = {
+      let createdItem: CreatedItem = {
         id: result.id,
         points: 0,
         request
@@ -33,5 +37,5 @@ export const useCreateSession = defineStore("createSession", {
       this.sessionItems.unshift(createdItem)
     }
   },
-  persist:true
+  persist: true
 })

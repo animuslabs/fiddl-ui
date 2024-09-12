@@ -8,8 +8,10 @@ q-page.full-height.full-width
     h5 Your Fiddl Points:
     h3 {{ userAuth.userData.availablePoints }}
   .centered
-    h3 Fiddl Points are needed to use Fiddl.art
-  .centered.q-gutter-lg.q-mt-md
+    h5 Fiddl Points are needed to use Fiddl.art
+  .centered.q-mt-md
+    h3 Select Points Package
+  .centered.q-gutter-lg.q-pt-sm
     q-card.q-pa-lg.cursor-pointer( v-for="(pkg, index) in packages" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" :key="pkg.points")
       .centered.q-pb-md
         h4 {{ pkg.points.toLocaleString() }} Points
@@ -18,11 +20,11 @@ q-page.full-height.full-width
         h4(v-else) No Discount
       .centered.q-pt-md
         h4 ${{ pkg.usd }}
-  .centered.q-mt-md(v-if="selectedPkg").q-pt-lg
-    h4 Adding {{ selectedPkg.points.toLocaleString() }} Points with a {{ selectedPkg.discountPct * 100 }}% discount will cost you ${{ selectedPkg?.usd }}
-  div.q-mt-xl(:class="!selectedPkg ? 'faded-out' : ''")
+  .centered.q-ma-md(v-if="selectedPkg").q-pt-lg
+    h4 Adding {{ selectedPkg.points.toLocaleString() }} Points with a {{ selectedPkg.discountPct * 100 }}% discount will cost ${{ selectedPkg?.usd }}
+  div.q-mt-lg(:class="!selectedPkg ? 'faded-out' : ''").q-mb-xl
     .centered
-      div(ref="paypal" style="border-radius: 14px ").bg-grey-2.q-pa-md.rounded-box
+      div(ref="paypal" style="border-radius: 14px; width:400px; max-width:90vw").bg-grey-2.q-pa-md.rounded-box
 
 </template>
 
