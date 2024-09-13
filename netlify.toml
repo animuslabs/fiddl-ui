@@ -8,4 +8,4 @@
   to = "/index.html"
   status = 200
 [images]
-  remote_images = ["https://api.fiddl.art/images/.*", "http://locahost:4444/images/.*"]
+  remote_images = ["https://api.fiddl.art/images/.*", "http://localhost:4444/images/.*"]
