@@ -1,7 +1,7 @@
 import { store } from "quasar/wrappers"
 import { createPinia } from "pinia"
 import { Router } from "vue-router"
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate"
 
 /*
  * When adding new properties to stores, you should also
@@ -10,7 +10,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
  */
 declare module "pinia" {
   export interface PiniaCustomProperties {
-    readonly router:Router;
+    readonly router: Router
   }
 }
 

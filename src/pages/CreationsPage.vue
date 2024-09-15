@@ -1,7 +1,13 @@
 <template lang="pug">
 q-page.full-height.full-width
   .centered.q-mt-md
-    h2 Mint
+    h2 Creations
+  q-scroll-area(style="width:900px; height:400px; max-width:90vw; overflow:auto").q-ma-md
+    .centered
+      pre.q-ma-md {{ userAuth.userData }}
+  //- pre.q-ma-md {{ userAuth.userData }}
+  .row.q-gutter-md.q-pa-md
+    q-btn(label="refresh" @click="userAuth.loadUserData()")
 
 </template>
 
@@ -24,7 +30,10 @@ export default defineComponent({
       },
     },
   },
-  mounted() {},
+
+  mounted() {
+    this.userAuth.loadUserData()
+  },
   methods: {},
 })
 </script>

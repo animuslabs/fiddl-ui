@@ -5,32 +5,26 @@ q-page.full-height.full-width
 
 </template>
 
-
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "src/stores/userAuth"
 
 export default defineComponent({
-  components: {
-
-  },
+  components: {},
   data() {
     return {
-      userAuth: useUserAuth()
+      userAuth: useUserAuth(),
     }
-  },
-  mounted(){
-  },
-  methods: {
-
   },
   watch: {
     "userAuth.loggedIn": {
       immediate: true,
       handler() {
         // reload any user specific stuff here
-      }
-    }
-  }
+      },
+    },
+  },
+  mounted() {},
+  methods: {},
 })
 </script>

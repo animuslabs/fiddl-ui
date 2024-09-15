@@ -43,29 +43,22 @@ import { useUserAuth } from "src/stores/userAuth"
 import { UserFile } from "lib/types"
 
 export default defineComponent({
-  components: {
-
-  },
+  components: {},
   data() {
     return {
       userAuth: useUserAuth(),
       api,
       passKeyAuth,
-      userFiles: [] as UserFile[]
+      userFiles: [] as UserFile[],
     }
-  },
-  mounted() {
-  },
-  methods: {
-
   },
   watch: {
     "userAuth.loggedIn": {
       immediate: true,
-      handler() {
-
-      }
-    }
-  }
+      handler() {},
+    },
+  },
+  mounted() {},
+  methods: {},
 })
 </script>

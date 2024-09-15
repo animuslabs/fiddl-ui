@@ -5,14 +5,12 @@ import { api } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 
-
 export const useUserAuth = defineStore("userAuth", {
   state() {
     return {
       loggedIn: false,
       userId: null as string | null,
-      userData: null as User | null
-
+      userData: null as User | null,
     }
   },
   actions: {
@@ -50,7 +48,7 @@ export const useUserAuth = defineStore("userAuth", {
       const userId = await api.user.findUserIdByPhone(phoneNumber)
       await this.login(userId.data)
     },
-    async registerAndLogin(data: { email?: string, phone?: string, }) {
+    async registerAndLogin(data: { email?: string; phone?: string }) {
       const result = await pkAuth.register(data)
       await this.login(result.registration.user.name)
       console.log(result.registration)
@@ -60,8 +58,8 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = false
       this.userId = null
       this.userData = null
-    }
-  }
+    },
+  },
 })
 
 export const userAuth = reactive({
@@ -75,5 +73,5 @@ export const userAuth = reactive({
       const userData = await pkAuth.login(this.userId!)
       // this.userId = userData.
     }
-  }
+  },
 })

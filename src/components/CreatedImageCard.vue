@@ -21,47 +21,54 @@ div
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import { useUserAuth } from 'stores/userAuth'
-import { api, apiUrl } from 'lib/api'
-import { CreatedItem } from 'stores/createSessionStore'
-import type { ImageSize } from '../../../fiddl-server/src/lib/types/serverTypes'
-
+import { defineComponent, PropType } from "vue"
+import { useUserAuth } from "stores/userAuth"
+import { api, apiUrl } from "lib/api"
+import { CreatedItem } from "stores/createSessionStore"
+import type { ImageSize } from "../../../fiddl-server/src/lib/types/serverTypes"
 
 export default defineComponent({
-  components: {
-
-  },
-  data() {
-    return {
-      imageBlobUrl: '' as string,
-      internalSize: this.size as ImageSize,
-      fullscreen: false as boolean
-    }
-  },
-  emits: [],
+  components: {},
   props: {
     createdImage: {
       type: Object as PropType<CreatedItem>,
-      required: true
+      required: true,
     },
     size: {
       type: String as PropType<ImageSize>,
       required: false,
-      default: "md"
-    }
+      default: "md",
+    },
   },
-  mounted() {
-
+  emits: [],
+  data() {
+    return {
+      imageBlobUrl: "" as string,
+      internalSize: this.size as ImageSize,
+      fullscreen: false as boolean,
+    }
   },
   computed: {
     upColor(): string {
-      return this.createdImage.points === 1 ? 'primary' : 'primary'
+      return this.createdImage.points === 1 ? "primary" : "primary"
     },
     downColor(): string {
-      return this.createdImage.points === -1 ? 'secondary' : 'secondary'
-    }
+      return this.createdImage.points === -1 ? "secondary" : "secondary"
+    },
   },
+  watch: {
+    size(newSize) {
+      this.internalSize = newSize // Watch for changes in the prop and update the internal state
+      this.loadImage()
+    },
+    createdImage: {
+      immediate: true,
+      handler() {
+        this.loadImage()
+      },
+    },
+  },
+  mounted() {},
   methods: {
     toggleFullscreen() {
       this.internalSize = this.fullscreen ? "md" : "lg"
@@ -70,19 +77,7 @@ export default defineComponent({
     async loadImage() {
       // this.imageBlobUrl = await api.image.load(this.createdImage.id, this.internalSize)
       this.imageBlobUrl = `${apiUrl}/images/${this.createdImage.id}-${this.internalSize}.webp`
-    }
-  },
-  watch: {
-    size(newSize) {
-      this.internalSize = newSize;  // Watch for changes in the prop and update the internal state
-      this.loadImage()
     },
-    createdImage: {
-      immediate: true,
-      handler() {
-        this.loadImage()
-      }
-    }
-  }
+  },
 })
 </script>

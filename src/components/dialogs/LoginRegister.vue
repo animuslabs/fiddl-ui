@@ -26,12 +26,14 @@ import { api } from "lib/api"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 
-
 const loginMethods = [
   { label: "email", value: "email" },
-  { label: "phone", value: "phone" }
+  { label: "phone", value: "phone" },
 ]
 export default {
+  props: {},
+
+  emits: ["ok", "hide"],
   data() {
     return {
       userAuth: useUserAuth(),
@@ -41,17 +43,19 @@ export default {
       email: "" as string,
       phone: "" as string,
       loading: false,
-      registerError: false
+      registerError: false,
     }
   },
-  props: {
-
+  watch: {
+    email(val: string) {
+      if (val.length == 0) this.loginError = false
+    },
+    loginMethod() {
+      this.email = ""
+      this.phone = ""
+      this.loginError = false
+    },
   },
-
-  emits: [
-
-    "ok", "hide"
-  ],
 
   methods: {
     async doLogin() {
@@ -72,12 +76,15 @@ export default {
     async doRegister() {
       this.registerError = false
       this.loginError = false
-      await this.userAuth.registerAndLogin({ phone: this.phone, email: this.email })
+      await this.userAuth
+        .registerAndLogin({ phone: this.phone, email: this.email })
         .then(() => {
           Notify.create({ message: "Logged in", color: "positive", icon: "check" })
           this.hide()
         })
-        .catch(el => { this.registerError = true })
+        .catch((el) => {
+          this.registerError = true
+        })
     },
     show() {
       const dialog = this.$refs.dialog as QDialog
@@ -100,17 +107,7 @@ export default {
 
     onCancelClick() {
       this.hide()
-    }
-  },
-  watch: {
-    email(val:string) {
-      if (val.length == 0) this.loginError = false
     },
-    loginMethod() {
-      this.email = ""
-      this.phone = ""
-      this.loginError = false
-    }
-  }
+  },
 }
 </script>

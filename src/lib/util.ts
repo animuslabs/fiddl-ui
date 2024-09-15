@@ -17,22 +17,22 @@ export function normalizePhoneNumber(phoneNumber: string, defaultCountryCode = "
 }
 export function loadScript(src: string) {
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+    const script = document.createElement("script")
+    script.type = "text/javascript"
+    script.src = src
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
 }
 
 export function blobToDataURL(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 export async function downloadFile(data: any, fileName: string) {
@@ -52,26 +52,31 @@ export async function downloadFile(data: any, fileName: string) {
 }
 
 export function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text).then(() => {
-    console.log("Text copied to clipboard")
-  }).catch(err => {
-    console.error("Error copying text: ", err)
-  })
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      console.log("Text copied to clipboard")
+    })
+    .catch((err) => {
+      console.error("Error copying text: ", err)
+    })
 }
 
 export function formatTranscriptForDocs(transcripts: TranscriptLine[], speakerNames?: Record<string, string>): string {
-  return transcripts.map(transcript => {
-    const name = speakerNames ? speakerNames[transcript.speaker] : transcript.speaker
-    if (name) transcript.speaker = name
-    if (transcript.text.length === 0) return ""
-    return `
+  return transcripts
+    .map((transcript) => {
+      const name = speakerNames ? speakerNames[transcript.speaker] : transcript.speaker
+      if (name) transcript.speaker = name
+      if (transcript.text.length === 0) return ""
+      return `
 ${transcript.speaker}
 
 ${transcript.text}
 
 ${transcript.startTime.toFixed(0)}s - ${transcript.endTime.toFixed(0)}s
     `
-  }).join("\n")
+    })
+    .join("\n")
 }
 
 export function getSpeakerName(speaker: string, speakerNames: Record<string, string>, callerName: string): string {
@@ -86,7 +91,7 @@ export function getSpeakerName(speaker: string, speakerNames: Record<string, str
   else return ""
 }
 
-export const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function shuffle<T>(array: T[]) {
   let currentIndex = array.length
@@ -103,7 +108,7 @@ export function shuffle<T>(array: T[]) {
   return array
 }
 export function throwErr(...messages: any[]): never {
-  let strMessages = messages.map(el => (typeof el === "object") ? JSON.stringify(el, null, 2) : el.toString())
+  const strMessages = messages.map((el) => (typeof el === "object" ? JSON.stringify(el, null, 2) : el.toString()))
   const errorMessage = strMessages.join(" ")
   throw new Error(errorMessage)
 }
@@ -139,14 +144,15 @@ export function rand(min: number, max: number) {
 }
 
 export function toObject(data: any) {
-  return JSON.parse(JSON.stringify(data, (key, value) =>
-    typeof value === "bigint"
-      ? value.toString()
-      : value // return everything else unchanged
-  ))
+  return JSON.parse(
+    JSON.stringify(
+      data,
+      (key, value) => (typeof value === "bigint" ? value.toString() : value), // return everything else unchanged
+    ),
+  )
 }
 
-export function toInt(num: BigInt): number {
+export function toInt(num: bigint): number {
   return parseInt(num.toString())
 }
 export function pickRand<T>(arr: T[]): T {
@@ -157,35 +163,3 @@ export function removeDuplicates<T>(arr: T[]): T[] {
   return Array.from(new Set(arr))
 }
 
-export function jsonToMarkdown(json: any[]) {
-  let markdown = ""
-  function formatValue(value: any): any {
-    if (typeof value === "string") {
-      // Trim leading and trailing whitespace and newlines, then replace multiple whitespace with a single space
-      let cleanedString = value
-
-      try {
-        // Attempt to parse and pretty-print if the string is JSON
-        let parsed = JSON.parse(cleanedString)
-        return "```\n" + JSON.stringify(parsed, null, 2) + "\n```"
-      } catch (e) {
-        // If it's not JSON, return the cleaned string
-        return cleanedString
-      }
-    } else if (Array.isArray(value)) {
-      return value.map(item => formatValue(item)).join("\n")
-    } else if (typeof value === "object" && value !== null) {
-      return jsonToMarkdown(value)
-    } else {
-      return value
-    }
-  }
-  let object = Object.assign({}, json)
-  for (let key in object) {
-    if (json.hasOwnProperty(key)) { // eslint-disable-line no-prototype-builtins
-      markdown += `**${key}:**\n${formatValue(json[key as any])}\n\n`
-    }
-  }
-
-  return markdown
-}

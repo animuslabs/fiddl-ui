@@ -8,9 +8,9 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-const { configure } = require("quasar/wrappers");
-const path = require("node:path");
-require("dotenv").config();
+const { configure } = require("quasar/wrappers")
+const path = require("node:path")
+require("dotenv").config()
 
 module.exports = configure(function (/* ctx */) {
   return {
@@ -57,7 +57,7 @@ module.exports = configure(function (/* ctx */) {
         // console.log(viteConf)
         Object.assign(viteConf.resolve.alias, {
           lib: path.join(__dirname, "./src/lib"),
-        });
+        })
       },
       // async extendViteConf(viteConf, { isClient, isServer }) {
       //   // Dynamically import the required plugins
@@ -125,14 +125,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: [
-        "Dialog",
-        "LocalStorage",
-        "SessionStorage",
-        "Loading",
-        "Notify",
-        "LoadingBar",
-      ],
+      plugins: ["Dialog", "LocalStorage", "SessionStorage", "Loading", "Notify", "LoadingBar"],
     },
 
     // animations: 'all', // --- includes all animations
@@ -227,5 +220,5 @@ module.exports = configure(function (/* ctx */) {
     bex: {
       contentScripts: ["my-content-script"],
     },
-  };
-});
+  }
+})

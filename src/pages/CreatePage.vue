@@ -16,35 +16,25 @@ q-page.full-height.full-width
 
 </template>
 
-
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import CreateCard from "components/CreateCard.vue"
-import { StabilityAIContentResponse } from 'lib/types'
-import { api } from 'lib/api'
-import CreatedImageCard from 'components/CreatedImageCard.vue'
-import { useCreateSession } from 'stores/createSessionStore'
+import { StabilityAIContentResponse } from "lib/types"
+import { api } from "lib/api"
+import CreatedImageCard from "components/CreatedImageCard.vue"
+import { useCreateSession } from "stores/createSessionStore"
 export default defineComponent({
   components: {
-    CreateCard, CreatedImageCard
+    CreateCard,
+    CreatedImageCard,
   },
   data() {
     return {
       userAuth: useUserAuth(),
       createSession: useCreateSession(),
       images: [] as string[],
-      api
-    }
-  },
-  mounted() {
-  },
-  methods: {
-    async addImage(data: string) {
-      // this.createSession.generateImage({ prompt: data })
-      // console.log('add image', data)
-      // const blobUrl = await api.image.load(data)
-      // this.images = [blobUrl, ...this.images]
+      api,
     }
   },
   watch: {
@@ -52,8 +42,17 @@ export default defineComponent({
       immediate: true,
       handler() {
         // reload any user specific stuff here
-      }
-    }
-  }
+      },
+    },
+  },
+  mounted() {},
+  methods: {
+    async addImage(data: string) {
+      // this.createSession.generateImage({ prompt: data })
+      // console.log('add image', data)
+      // const blobUrl = await api.image.load(data)
+      // this.images = [blobUrl, ...this.images]
+    },
+  },
 })
 </script>

@@ -17,9 +17,7 @@ import type { CreateImageRequest, CreateImageResponse, ImageSize } from "../../.
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/pointsPackages"
 import type { PayPalOrderCreated } from "../../../fiddl-server/src/lib/payPal"
 
-import {
-  PublicKeyCredentialCreationOptionsJSON
-} from "@simplewebauthn/types"
+import { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/types"
 import { TranscriptionLineEvent, TranscriptLine, UserFile, VerifiedAuthenticationResponse, VerifiedRegistrationResponse } from "lib/types"
 import { jwt } from "lib/jwt"
 import { blobToDataURL, downloadFile, throwErr } from "lib/util"
@@ -27,24 +25,25 @@ import { User } from "lib/prisma"
 // import { LivePrompt, LiveSession, LiveSessionWithRelations } from "lib/prisma"
 import { ref, Ref } from "vue"
 import { CreateOrderData, PayPalButtonCreateOrder } from "@paypal/paypal-js"
-export let authToken: Ref<string | null> = ref(null)
+export const authToken: Ref<string | null> = ref(null)
 const jwtData = jwt.read()
 if (jwtData) authToken.value = jwtData.token
 
-ax.interceptors.request.use((config) => {
-  const jwtData = jwt.read()
-  if (jwtData) {
-    authToken.value = jwtData.token
-    config.headers.Authorization = `Bearer ${jwtData.token}`
-  }
-  return config
-}, (error) => {
-  return Promise.reject(error)
-})
+ax.interceptors.request.use(
+  (config) => {
+    const jwtData = jwt.read()
+    if (jwtData) {
+      authToken.value = jwtData.token
+      config.headers.Authorization = `Bearer ${jwtData.token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  },
+)
 
 type PaymentMethod = "payPal" | "stripe" | "applePay" | "googlePay"
-
-
 
 export const api = {
   points: {
@@ -55,8 +54,9 @@ export const api = {
       return (await ax.post("/points/initBuyPackage", { packageId, method })).data
     },
     async completeBuyPackage(orderId: string, method: PaymentMethod = "payPal"): Promise<any> {
+      console.log("completeBuyPackage", orderId)
       return (await ax.post("/points/completeBuyPackage", { orderId, method })).data
-    }
+    },
   },
   user: {
     loadUser(userId: string) {
@@ -67,10 +67,10 @@ export const api = {
     },
     findUserIdByPhone(phone: string) {
       return ax.get<string>("/user/phone/" + phone)
-    }
+    },
   },
   auth: {
-    async register(method: string, data: { phone?: string, email?: string }) {
+    async register(method: string, data: { phone?: string; email?: string }) {
       if (!data.phone && !data.email) throwErr("Must provide phone or email")
       const result = (await ax.post<PublicKeyCredentialCreationOptionsJSON>("/auth/register/start/" + method, data)).data
       console.log(result)
@@ -85,7 +85,7 @@ export const api = {
       return result
     },
     async finishLogin(method: string, data?: Record<string, any>) {
-      const result = (await ax.post<{ authResult: VerifiedAuthenticationResponse, token: any, userId: string }>("/auth/login/finish/" + method, data)).data
+      const result = (await ax.post<{ authResult: VerifiedAuthenticationResponse; token: any; userId: string }>("/auth/login/finish/" + method, data)).data
       console.log(result)
       if (result.authResult.verified) {
         jwt.save({ userId: result.userId, token: result.token })
@@ -94,19 +94,19 @@ export const api = {
     },
     async logout() {
       return (await ax.post("/auth/logout")).data
-    }
+    },
   },
   create: {
     async image(params: CreateImageRequest): Promise<CreateImageResponse> {
       return (await ax.post("/create/image", params)).data
-    }
+    },
   },
   image: {
     async load(id: string, size: ImageSize): Promise<string> {
       const blob = await ax.get("/images/" + `${id}-${size}.webp`, { responseType: "blob" })
       return await blobToDataURL(blob.data)
-    }
-  }
+    },
+  },
 
   // transcribeSocket: () => new WsManager(wsUrl + "/transcribe"),
   // echoSocket: () => new WsManager(wsUrl + "/echo")

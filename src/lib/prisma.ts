@@ -1,9 +1,7 @@
 import { Prisma } from "../../../fiddl-server/prisma/client"
 
-export type User = Prisma.UserGetPayload<{}>;
-export type ImageRequest = Prisma.ImageRequestGetPayload<{}>;
-
-
+export type User = Prisma.UserGetPayload<object>
+export type ImageRequest = Prisma.ImageRequestGetPayload<object>
 
 // export type FileUpload = Prisma.FileUploadGetPayload<{}>;
 
@@ -20,6 +18,3 @@ export type ImageRequest = Prisma.ImageRequestGetPayload<{}>;
 // export type LivePrompt = Prisma.LivePromptGetPayload<{}>;
 // export type TranscriptLine = Prisma.TranscriptLineGetPayload<{}>;
 // export type PassKey = Prisma.PassKeyGetPayload<{}>;
-
-
-

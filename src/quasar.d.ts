@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 // Forces TS to apply `@quasar/app-vite` augmentations of `quasar` package
 // Removing this would break `quasar/wrappers` imports as those typings are declared
 //  into `@quasar/app-vite`
@@ -7,3 +5,14 @@
 //  this declaration also apply `quasar` own
 //  augmentations (eg. adds `$q` into Vue component context)
 /// <reference types="@quasar/app-vite" />
+
+// Import the necessary types from Vue 3 and Vue Router
+import "vue"
+import { Router } from "vue-router"
+
+// Extend Vue instance properties
+declare module "@vue/runtime-core" {
+  interface ComponentCustomProperties {
+    $router: Router
+  }
+}

@@ -1,7 +1,7 @@
 import { boot } from "quasar/wrappers"
 import { QInput, QBtn, QCard, QRouteTab, QTab } from "quasar"
 
-const setDefault = (component:any, key:string, value:any) => {
+const setDefault = (component: any, key: string, value: any) => {
   const prop = component.props[key]
   switch (typeof prop) {
     case "object":
@@ -10,7 +10,7 @@ const setDefault = (component:any, key:string, value:any) => {
     case "function":
       component.props[key] = {
         type: prop,
-        default: value
+        default: value,
       }
       break
     case "undefined":
@@ -35,7 +35,6 @@ export default boot(({ app }) => {
   // setDefault(QBtn, "unelevated", true)
   // setDefault(QBtn, "stretch", true)
   setDefault(QBtn, "ripple", false)
-
 
   setDefault(QRouteTab, "ripple", false)
 })

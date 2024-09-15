@@ -12,28 +12,25 @@ div
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { useUserAuth } from 'stores/userAuth'
-import { api } from 'lib/api'
-import { useCreateSession } from 'stores/createSessionStore'
+import { defineComponent } from "vue"
+import { useUserAuth } from "stores/userAuth"
+import { api } from "lib/api"
+import { useCreateSession } from "stores/createSessionStore"
 export default defineComponent({
-  components: {
-
-  },
+  components: {},
+  emits: ["created"],
   data() {
     return {
       userAuth: useUserAuth(),
-      description: '' as string,
+      description: "" as string,
       createSession: useCreateSession(),
     }
   },
-  emits: ['created'],
-  mounted() {
-  },
+  mounted() {},
   methods: {
     handleKeydown(e: KeyboardEvent) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
+      if (e.key === "Enter") {
+        e.preventDefault()
         this.createImage()
       }
     },
@@ -46,7 +43,7 @@ export default defineComponent({
       await this.createSession.generateImage({ prompt: this.description, model: "ultra" })
       await this.userAuth.loadUserData()
       // this.$emit('created', result)
-    }
-  }
+    },
+  },
 })
 </script>

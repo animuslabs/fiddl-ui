@@ -15,8 +15,8 @@ export default defineComponent({
       color: "info",
       size: "3px",
       position: "top",
-      reverse: false
+      reverse: false,
     })
-  }
+  },
 })
 </script>

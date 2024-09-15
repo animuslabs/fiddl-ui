@@ -3,7 +3,7 @@ import { api } from "lib/api"
 import { normalizePhoneNumber, throwErr } from "lib/util"
 
 export const passKeyAuth = {
-  async register(data:{phone?:string, email?:string}) {
+  async register(data: { phone?: string; email?: string }) {
     const registration = await api.auth.register("passKey", data)
     console.log("registerResp", registration)
     const attResp = await webAuthN.startRegistration(registration)
@@ -14,11 +14,11 @@ export const passKeyAuth = {
       return {
         registration,
         keyId: attResp.id,
-        verification: verification.registrationInfo
+        verification: verification.registrationInfo,
       }
     } else throwErr("registration verification failed")
   },
-  async login(userId:string, save = true) {
+  async login(userId: string, saveKey: boolean) {
     const resp = await api.auth.startLogin("passKey", { userId })
     console.log(resp)
     const data = await webAuthN.startAuthentication(resp)
@@ -26,11 +26,11 @@ export const passKeyAuth = {
     console.log("verificationJSON", verificationResp)
     return verificationResp
   },
-  async findUserId(data:{email?:string, phone?:string}) {
+  async findUserId(data: { email?: string; phone?: string }) {
     const email = data.email
     const phone = data.phone
     if (email) return (await api.user.findUserIdByEmail(email)).data
     else if (phone) return (await api.user.findUserIdByPhone(normalizePhoneNumber(phone))).data
     else throwErr("Must provide email or phone")
-  }
+  },
 }
