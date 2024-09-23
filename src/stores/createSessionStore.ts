@@ -1,10 +1,12 @@
 import { defineStore } from "pinia"
 import api from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import { toObject } from "lib/util"
 
 export interface CreatedItem {
   request: CreateImageRequest
   imageIds: string[]
+  id: string
 }
 
 export const useCreateSession = defineStore("createSession", {
@@ -27,9 +29,11 @@ export const useCreateSession = defineStore("createSession", {
       const result = await api.create.image.mutate(request)
       const createdItem: CreatedItem = {
         imageIds: result.ids,
-        request,
+        request: toObject(request),
+        id: result.id,
       }
       this.sessionItems.unshift(createdItem)
+      console.log(this.sessionItems)
     },
   },
   persist: false,

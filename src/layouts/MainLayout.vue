@@ -1,5 +1,5 @@
 <template lang="pug">
-q-layout
+q-layout(view="lHh Lpr lFf")
   q-header
     q-toolbar.bg-grey-10
       .row.q-mr-lg.no-wrap.items-center
@@ -53,8 +53,11 @@ q-layout
                 | Logout
 
   q-page-container.centered.bg-grey-10
-    .centered.bg-dark(style="width:1400px; max-width:100%; height:100%" )
+    .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
       router-view
+  q-footer
+    q-toolbar.bg-grey-10
+      //- q-toolbar-title Fiddl.art
 </template>
 
 <script lang="ts">

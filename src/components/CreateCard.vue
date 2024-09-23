@@ -6,14 +6,17 @@ div
         //- h4 Describe your vision
       q-form(@submit="createImage")
         .centered.q-pa-md
-          q-input(v-model="req.prompt" :disable="anyLoading"  @keydown="handleKeydown"  color="primary" filled style="width:600px; max-width:80vw;" type="textarea" placeholder="Enter a description of the image to create" )
-        .centered
-          q-btn(label="randomize" icon="shuffle" flat @click="randomizePrompt()" :loading="loading.randomize" :disable="anyLoading" )
+          q-input(v-model="req.prompt" :disable="anyLoading"  @keydown="handleKeydown"  color="primary" filled type="textarea" placeholder="Enter a description of the image to create" ).full-width
+        .centered.q-ma-md
+          q-btn(label="new idea" icon="lightbulb" flat @click="newPrompt()" :loading="loading.new" :disable="anyLoading" )
             .badge
               p 1
-          q-btn(label="improve" icon="arrow_upward" flat @click="improvePrompt()" :loading="loading.improve" :disable="anyLoading || req.prompt.length < 3" )
+          q-btn(label="randomize" icon="shuffle" flat @click="randomizePrompt()" :loading="loading.randomize" :disable="anyLoading || req.prompt?.length < 10" )
             .badge
               p 1
+          q-btn(label="improve" icon="arrow_upward" flat @click="improvePrompt()" :loading="loading.improve" :disable="anyLoading || req.prompt?.length < 10" )
+            .badge
+              p 2
         q-separator(color="grey-9" spaced="20px" inset)
         .centered
           div.q-ma-md
@@ -53,6 +56,7 @@ import { useUserAuth } from "stores/userAuth"
 import { useCreateSession } from "stores/createSessionStore"
 import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { ImageModelData, imageModelDatas, aspectRatios } from "lib/imageModels"
+import { toObject } from "lib/util"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -71,6 +75,7 @@ export default defineComponent({
       availableAspectRatios,
       privateMode: false,
       loading: {
+        new: false,
         randomize: false,
         improve: false,
         create: false,
@@ -104,6 +109,16 @@ export default defineComponent({
     // this.selectedModel = availableModels[2]!
   },
   methods: {
+    async newPrompt() {
+      this.loading.new = true
+      try {
+        this.req.prompt = await this.$api.create.randomPrompt.mutate()
+      } catch (e) {
+        console.error(e)
+      }
+      this.loading.new = false
+      await this.userAuth.loadUserData()
+    },
     async improvePrompt() {
       this.loading.improve = true
       try {
@@ -116,9 +131,9 @@ export default defineComponent({
     },
     async randomizePrompt() {
       this.loading.randomize = true
-      // const existingPrompt = this.req.prompt.length > 0 ? this.req.prompt : undefined
+      const existingPrompt = this.req.prompt.length > 0 ? this.req.prompt : undefined
       try {
-        this.req.prompt = await this.$api.create.randomPrompt.mutate()
+        this.req.prompt = await this.$api.create.randomPrompt.mutate(existingPrompt)
       } catch (e) {
         console.error(e)
       }
@@ -138,7 +153,7 @@ export default defineComponent({
     async createImage() {
       this.loading.create = true
       try {
-        await this.createSession.generateImage(this.req)
+        await this.createSession.generateImage(toObject(this.req))
       } catch (e) {
         console.error(e)
       }
