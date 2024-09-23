@@ -2,16 +2,15 @@
 q-page.full-height.full-width
   .centered.q-mt-md
     h2 Create
-  .centered.q-ma-md
-    CreatedImageCard(size="lg" v-if="createSession.sessionItems[0]" :createdImage="createSession.sessionItems[0]" style="width:500px; height:auto; ")
   .centered
     CreateCard(@created="addImage")
   .centered
-    .centered.q-gutter-lg(style="max-width: 80vw;").q-ma-lg
-      div(v-for="(image, index) in createSession.sessionItems" style="overflow:scroll" :key="image.id")
-        //- div {{ image }}
-        //- q-img(:src="image" height="200px" width="200px").bg-red
-        CreatedImageCard(:createdImage="image" style="width:300px; height:auto; " v-if="index > 0")
+    .centered.q-gutter-lg(style="max-width: 80vw;").q-ma-lg.full-width
+      div(v-for="(creation, index) in createSession.sessionItems" style="overflow:scroll" :key="index").full-width
+        .row.q-mb-md
+          p.ellipsis {{  creation.request.prompt }}
+        .row.full-width.q-gutter-lg
+          CreatedImageCard(v-for="imageId in creation.imageIds" :imageId="imageId" style="width:300px; height:auto;" :key="imageId")
 
 
 </template>
@@ -20,8 +19,6 @@ q-page.full-height.full-width
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import CreateCard from "components/CreateCard.vue"
-import { StabilityAIContentResponse } from "lib/types"
-import { api } from "lib/api"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useCreateSession } from "stores/createSessionStore"
 export default defineComponent({
@@ -34,7 +31,6 @@ export default defineComponent({
       userAuth: useUserAuth(),
       createSession: useCreateSession(),
       images: [] as string[],
-      api,
     }
   },
   watch: {

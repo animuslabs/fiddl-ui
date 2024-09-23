@@ -6,7 +6,13 @@
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import { Loading, LoadingBar } from "quasar"
-
+if (import.meta.hot) {
+  import.meta.hot.on("vite:beforeUpdate", () => {
+    setTimeout(() => {
+      console.clear()
+    }, 10)
+  })
+}
 export default defineComponent({
   name: "App",
   mounted() {

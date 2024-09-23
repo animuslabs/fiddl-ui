@@ -8,11 +8,13 @@
 
 // Import the necessary types from Vue 3 and Vue Router
 import "vue"
-import { Router } from "vue-router"
-
+import { Router, type RouteLocationAsRelativeGeneric } from "vue-router"
+import { APIType } from "lib/api"
 // Extend Vue instance properties
 declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
     $router: Router
+    $route: RouteLocationAsRelativeGeneric
+    $api: APIType
   }
 }

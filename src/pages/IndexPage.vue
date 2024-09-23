@@ -36,8 +36,6 @@ q-page.full-height.full-width.bgimg
 
 <script lang="ts">
 import { defineComponent } from "vue"
-
-import { api } from "lib/api"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import { UserFile } from "lib/types"
@@ -47,7 +45,6 @@ export default defineComponent({
   data() {
     return {
       userAuth: useUserAuth(),
-      api,
       passKeyAuth,
       userFiles: [] as UserFile[],
     }

@@ -22,7 +22,6 @@ q-dialog(ref="dialog" @hide="onDialogHide")
 
 <script lang="ts">
 import { QDialog, Notify } from "quasar"
-import { api } from "lib/api"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 

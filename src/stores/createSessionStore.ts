@@ -1,16 +1,10 @@
 import { defineStore } from "pinia"
-import { api } from "lib/api"
-import { CreateImageRequest } from "app/../fiddl-server/src/lib/types/serverTypes"
+import api from "lib/api"
+import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 
 export interface CreatedItem {
-  id: string
-  // url: string
-  points: number
   request: CreateImageRequest
-}
-
-function requestMatches(request: CreateImageRequest, other: CreateImageRequest) {
-  return request.prompt === other.prompt && request.quantity === other.quantity && request.seed === other.seed && request.model === other.model && request.style === other.style
+  imageIds: string[]
 }
 
 export const useCreateSession = defineStore("createSession", {
@@ -30,10 +24,9 @@ export const useCreateSession = defineStore("createSession", {
       // const rev = this.reverse
     },
     async generateImage(request: CreateImageRequest) {
-      const result = await api.create.image(request)
+      const result = await api.create.image.mutate(request)
       const createdItem: CreatedItem = {
-        id: result.id,
-        points: 0,
+        imageIds: result.ids,
         request,
       }
       this.sessionItems.unshift(createdItem)

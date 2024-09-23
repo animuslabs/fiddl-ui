@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h1 Test Page
-  p {{ dsfdsf }}
+  //- p {{ dsfdsf }}
 </template>
 
 <script lang="ts">

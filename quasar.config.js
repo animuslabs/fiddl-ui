@@ -55,6 +55,7 @@ module.exports = configure(function (/* ctx */) {
       // ],
       extendViteConf(viteConf, { isServer, isClient }) {
         // console.log(viteConf)
+        viteConf.logLevel = "error"
         Object.assign(viteConf.resolve.alias, {
           lib: path.join(__dirname, "./src/lib"),
         })
@@ -88,7 +89,9 @@ module.exports = configure(function (/* ctx */) {
       // distDir
 
       // extendViteConf (viteConf) {},
-      // viteVuePluginOptions: {},
+      viteVuePluginOptions: {
+        logLevel: "error", // Only display errors in the console
+      },
 
       vitePlugins: [
         // ["vite-plugin-checker", {

@@ -1,7 +1,7 @@
 import { reactive } from "vue"
 import { passKeyAuth as pkAuth } from "lib/auth"
 import { createPinia, defineStore } from "pinia"
-import { api } from "lib/api"
+import api, { type UserData } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 
@@ -10,7 +10,7 @@ export const useUserAuth = defineStore("userAuth", {
     return {
       loggedIn: false,
       userId: null as string | null,
-      userData: null as User | null,
+      userData: null as UserData | null,
     }
   },
   actions: {
@@ -18,8 +18,7 @@ export const useUserAuth = defineStore("userAuth", {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      const data = await api.user.loadUser(userId!)
-      this.userData = data.data
+      this.userData = await api.user.get.query(userId!)
     },
     setUserId(userId: string) {
       this.userId = userId
@@ -29,6 +28,9 @@ export const useUserAuth = defineStore("userAuth", {
         const userData = await pkAuth.login(userId)
         await this.loadUserData(userData.userId)
         this.setUserId(userData.userId)
+        if (userData.authResult.verified) {
+          jwt.save({ userId: userData.userId, token: userData.token })
+        }
         this.loggedIn = true
       }
     },
@@ -41,12 +43,12 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
     },
     async emailLogin(email: string) {
-      const userId = await api.user.findUserIdByEmail(email)
-      await this.login(userId.data)
+      const userId = await api.user.findByEmail.query(email)
+      await this.login(userId)
     },
     async phoneLogin(phoneNumber: string) {
-      const userId = await api.user.findUserIdByPhone(phoneNumber)
-      await this.login(userId.data)
+      const userId = await api.user.findByPhone.query(phoneNumber)
+      await this.login(userId)
     },
     async registerAndLogin(data: { email?: string; phone?: string }) {
       const result = await pkAuth.register(data)
@@ -59,19 +61,5 @@ export const useUserAuth = defineStore("userAuth", {
       this.userId = null
       this.userData = null
     },
-  },
-})
-
-export const userAuth = reactive({
-  loggedIn: false,
-  userId: null as string | null,
-  setUserId(userId: string) {
-    this.userId = userId
-  },
-  async login(method = "passKey") {
-    if (method == "passKey") {
-      const userData = await pkAuth.login(this.userId!)
-      // this.userId = userData.
-    }
   },
 })

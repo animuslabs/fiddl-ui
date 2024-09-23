@@ -164,3 +164,41 @@ body.body--dark
 
   .q-field__input
     color: $pink
+
+input[type="number"]
+  &::-webkit-outer-spin-button
+    -webkit-appearance: none
+    margin: 0
+
+  &::-webkit-inner-spin-button
+    -webkit-appearance: none
+    margin: 0
+
+    -moz-appearance: textfield
+
+.q-menu
+  .q-item__label
+    font-size: 18px
+.badge
+  width: 22px
+  height: 22px
+  background-color: black
+  border-radius: 50%
+  position: absolute
+  top: -8px
+  right: -8px
+  font-size: 12px
+  border: .5px solid transparent
+  background-image: linear-gradient(black, black), linear-gradient(45deg, $secondary, $primary)
+  background-origin: border-box
+  background-clip: padding-box, border-box
+  display: flex
+  justify-content: center
+  align-items: center
+
+  p
+    font-size: 12px
+    line-height: 22px
+    margin: 0
+    padding: 0
+    text-align: center

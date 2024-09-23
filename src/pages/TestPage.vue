@@ -2,7 +2,7 @@
   <div>
     <h1>Test Page</h1>
     <p>{{ hello }}</p>
-    <p>{{ dsfdsf }}</p>
+    <!-- <p>{{ dsfdsf }}</p> -->
   </div>
 </template>
 

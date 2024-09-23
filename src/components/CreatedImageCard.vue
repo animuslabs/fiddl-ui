@@ -4,7 +4,7 @@ div
     div
       .row.no-wrap
         .col
-          q-img.rounded-borders.cursor-pointer(@click="toggleFullscreen" :src="imageBlobUrl" style="border-radius: 14px; width:100%; height:100%;")
+          q-img.rounded-borders.cursor-pointer(@click="toggleFullscreen" :src="imageUrl" style="border-radius: 14px; width:100%; height:100%;")
         //- .col-auto.q-ml-md.q-mr-md.q-mt-md
         //-   .column.items-center.justify-center.q-gutter-md
         //-     q-btn(icon="favorite" color="grey-10")
@@ -22,16 +22,15 @@ div
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
-import { useUserAuth } from "stores/userAuth"
-import { api, apiUrl } from "lib/api"
 import { CreatedItem } from "stores/createSessionStore"
-import type { ImageSize } from "../../../fiddl-server/src/lib/types/serverTypes"
+import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
+import { img } from "lib/netlifyImg"
 
 export default defineComponent({
   components: {},
   props: {
-    createdImage: {
-      type: Object as PropType<CreatedItem>,
+    imageId: {
+      type: String,
       required: true,
     },
     size: {
@@ -43,18 +42,18 @@ export default defineComponent({
   emits: [],
   data() {
     return {
-      imageBlobUrl: "" as string,
+      imageUrl: "" as string,
       internalSize: this.size as ImageSize,
       fullscreen: false as boolean,
     }
   },
   computed: {
-    upColor(): string {
-      return this.createdImage.points === 1 ? "primary" : "primary"
-    },
-    downColor(): string {
-      return this.createdImage.points === -1 ? "secondary" : "secondary"
-    },
+    // upColor(): string {
+    //   return this.createdImage.points === 1 ? "primary" : "primary"
+    // },
+    // downColor(): string {
+    //   return this.createdImage.points === -1 ? "secondary" : "secondary"
+    // },
   },
   watch: {
     size(newSize) {
@@ -76,7 +75,8 @@ export default defineComponent({
     },
     async loadImage() {
       // this.imageBlobUrl = await api.image.load(this.createdImage.id, this.internalSize)
-      this.imageBlobUrl = `${apiUrl}/images/${this.createdImage.id}-${this.internalSize}.webp`
+      // this.imageBlobUrl = `${apiUrl}/images/${this.createdImage.id}-${this.internalSize}.webp`
+      this.imageUrl = img(this.imageId, "lg")
     },
   },
 })
