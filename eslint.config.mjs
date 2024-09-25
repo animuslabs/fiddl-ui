@@ -12,6 +12,8 @@ export default ts.config(
     languageOptions: {
       parserOptions: {
         parser: "@typescript-eslint/parser",
+        project: "./tsconfig.json",
+        extraFileExtensions: [".vue"],
       },
     },
     rules: {
@@ -20,6 +22,15 @@ export default ts.config(
       "@typescript-eslint/no-unused-vars": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-floating-promises": [
+        "error",
+        {
+          ignoreVoid: true, // Ignore expressions with `void`
+          ignoreIIFE: false, // Ignore immediately invoked function expressions
+        },
+      ],
+      "@typescript-eslint/await-thenable": "error",
+      "require-await": "warn",
     },
   },
   eslintConfigPrettier,

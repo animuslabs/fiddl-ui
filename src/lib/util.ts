@@ -1,5 +1,9 @@
 import { TranscriptLine } from "lib/types"
+import { formatDistanceToNow } from "date-fns"
 
+export function timeSince(date: Date): string {
+  return formatDistanceToNow(date, { addSuffix: true })
+}
 export function normalizePhoneNumber(phoneNumber: string, defaultCountryCode = "+1") {
   // Remove all non-digit characters except the plus sign
   const cleaned = phoneNumber.replace(/[^\d+]/g, "")

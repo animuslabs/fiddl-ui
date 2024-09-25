@@ -10,11 +10,13 @@
 import "vue"
 import { Router, type RouteLocationAsRelativeGeneric } from "vue-router"
 import { APIType } from "lib/api"
+import { UserAuthStore } from "src/stores/userAuth"
 // Extend Vue instance properties
 declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
     $router: Router
     $route: RouteLocationAsRelativeGeneric
     $api: APIType
+    $userAuth: UserAuthStore
   }
 }

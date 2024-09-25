@@ -58,12 +58,12 @@ export default defineComponent({
   watch: {
     size(newSize) {
       this.internalSize = newSize // Watch for changes in the prop and update the internal state
-      this.loadImage()
+      void this.loadImage()
     },
     createdImage: {
       immediate: true,
       handler() {
-        this.loadImage()
+        void this.loadImage()
       },
     },
   },

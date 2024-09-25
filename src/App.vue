@@ -15,6 +15,9 @@ if (import.meta.hot) {
 }
 export default defineComponent({
   name: "App",
+  created() {
+    // this.$userAuth = useUserAuth()
+  },
   mounted() {
     void useUserAuth().attemptAutoLogin()
     LoadingBar.setDefaults({

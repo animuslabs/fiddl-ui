@@ -1,25 +1,29 @@
 <template lang="pug">
-q-page.full-height.full-width
-  //- .centered.q-mt-md
-  //-   h2 Create
-  .centered.q-ma-md
-    .col-auto
-      CreateCard(@created="addImage" style="padding-top:18px; min-width:300px; max-width:600px;" ref="createCard")
-    .col-auto(style="height:90vh")
-      q-scroll-area(style="width:1090px; height:100%; max-width:90vw;")
-        .q-ma-md
-          div(style="max-width:100%")
-            q-card(v-for="(creation, index) in createSession.sessionItems" style="overflow:scroll" :key="creation.id").full-width.q-pa-lg.q-mb-md
-              div {{ creation.request }}
-              div {{ creation.imageIds }}
-              .row.q-mb-md.q-gutter-md(style="overflow:scroll; max-width:1000px;")
-                .col-auto
-                  q-btn(size="sm" icon="arrow_back" flat round @click="setReq(creation.request)")
-                .col-10
-                  p.ellipsis {{  creation.request.prompt }}
-              .row.full-width.q-gutter-lg
-                CreatedImageCard(v-for="imageId in creation.imageIds" :imageId="imageId" style="width:300px; height:auto;" :key="imageId")
-
+q-page
+  .gt-md
+    .row.full-height.full-width.no-wrap
+      .gt-md
+        .centered
+          CreateCard.q-mt-md(@created="addImage" style="padding-top:0px; min-width:300px; max-width:600px;" ref="createCard")
+      q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
+        .centered.q-ma-md
+          ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq(creation.request)")
+        .centered.q-ma-md
+          q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
+  .lt-lg
+    .full-width.z-max
+      .centered.q-ma-md
+        q-btn(label="Create" color="primary" @click="createMode = true" :disable="createSession.sessionItems.length < 1" v-if="!createMode")
+      div.q-ma-md(v-if="createMode")
+        .row
+          q-btn(label="Back" color="primary" flat @click="createMode = false")
+        .row
+          CreateCard(@created="addImage" style="padding-top:0px; min-width:200px; max-width:90vw;" ref="createCard")
+    q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
+      ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
+      //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
+      .centered.q-ma-md
+        q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" :disable="createSession.sessionItems.length < 1")
 
 </template>
 
@@ -30,34 +34,72 @@ import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useCreateSession } from "stores/createSessionStore"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { toObject } from "lib/util"
+import ImageRequestCard from "components/ImageRequestCard.vue"
+import { toObject, timeSince } from "lib/util"
 export default defineComponent({
   components: {
     CreateCard,
     CreatedImageCard,
+    ImageRequestCard,
   },
   data() {
     return {
+      timeSince,
       userAuth: useUserAuth(),
       createSession: useCreateSession(),
       images: [] as string[],
+      createMode: false,
     }
   },
   watch: {
-    "userAuth.loggedIn": {
+    "$userAuth.loggedIn": {
       immediate: true,
-      handler() {
-        // reload any user specific stuff here
+      handler(val) {
+        if (val) void this.loadCreations()
+        else this.createSession.reset()
       },
     },
   },
-  mounted() {},
+  mounted() {
+    console.log()
+    if (this.$q.platform.is.mobile) this.createMode = true
+  },
   methods: {
-    setReq(request: CreateImageRequest) {
-      const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
-      createCard.req = toObject(request)
+    async loadCreations() {
+      if (!this.$userAuth.userId) return
+      const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]
+      console.log("lastItem", lastItem)
+      const creations = await this.$api.creations.createRequests.query({
+        userId: this.$userAuth.userId,
+        includeMetadata: true,
+        order: "desc",
+        endDateTime: lastItem?.createdAt || undefined,
+      })
+      console.log("creations", creations)
+      for (const creation of creations) {
+        const request: CreateImageRequest = {
+          prompt: creation.prompt,
+          aspectRatio: creation.aspectRatio as any,
+          model: creation.model as any,
+          public: creation.public,
+          quantity: creation.quantity,
+          negativePrompt: creation.negativePrompt,
+        }
+
+        this.createSession.addItem({ id: creation.id, imageIds: creation.Image.map((el: any) => el.id), request, createdAt: new Date(creation.created) })
+      }
+    },
+    setReq(request: CreateImageRequest, toggleCreateMode = false) {
+      if (toggleCreateMode) this.createMode = true
+      void this.$nextTick(() => {
+        const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
+        // createCard.req = toObject(request)
+        createCard.setReq(request)
+      })
     },
     async addImage(data: string) {
+      console.log("add Image triggered")
+      if (this.createMode) this.createMode = false
       // this.createSession.generateImage({ prompt: data })
       // console.log('add image', data)
       // const blobUrl = await api.image.load(data)

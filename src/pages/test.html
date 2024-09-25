@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Column Layout</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="column left-column">
+            <h2>Left Column</h2>
+            <p>This column is static.</p>
+            <button id="toggleButton" onclick="toggleColumns()">Show Images</button>
+        </div>
+        <div class="column right-column" id="rightColumn">
+            <h2>Images</h2>
+            <div class="image-grid">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
+                <!-- Add more images as needed -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleColumns() {
+            const leftColumn = document.querySelector('.left-column');
+            const rightColumn = document.querySelector('.right-column');
+            if (leftColumn.style.display === 'none') {
+                leftColumn.style.display = 'block';
+                rightColumn.style.display = 'none';
+                document.getElementById('toggleButton').textContent = 'Show Images';
+            } else {
+                leftColumn.style.display = 'none';
+                rightColumn.style.display = 'block';
+                document.getElementById('toggleButton').textContent = 'Show Info';
+            }
+        }
+
+        // Initial state for mobile
+        if (window.innerWidth < 600) {
+            document.querySelector('.right-column').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

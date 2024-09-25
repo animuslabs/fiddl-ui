@@ -3,14 +3,14 @@ q-layout(view="lHh Lpr lFf")
   q-header
     q-toolbar.bg-grey-10
       .row.q-mr-lg.no-wrap.items-center
-        q-tabs.gt-xs
+        q-tabs
           q-route-tab(:to="{ name: 'index' }" no-caps exact)
             .row.no-wrap.cursor-pointer(style="padding-top:5px;" @click="$router.push({ name: 'index' })")
               q-icon(name="img:/fiddlLogo.svg" size="35px").q-mr-sm
               .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)
           //-   | Search
-          q-route-tab(:to="{ name: 'create' }")
+          q-route-tab(:to="{ name: 'create' }").gt-md
             | create
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
@@ -55,9 +55,12 @@ q-layout(view="lHh Lpr lFf")
   q-page-container.centered.bg-grey-10
     .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
       router-view
-  q-footer
+  q-footer.lt-lg
     q-toolbar.bg-grey-10
-      //- q-toolbar-title Fiddl.art
+      .centered.full-width
+        q-tabs
+          q-route-tab(:to="{ name: 'create' }")
+            | create
 </template>
 
 <script lang="ts">

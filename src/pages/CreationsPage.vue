@@ -32,7 +32,7 @@ export default defineComponent({
   },
 
   mounted() {
-    this.userAuth.loadUserData()
+    void this.userAuth.loadUserData()
   },
   methods: {},
 })

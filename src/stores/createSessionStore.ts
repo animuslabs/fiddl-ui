@@ -7,6 +7,7 @@ export interface CreatedItem {
   request: CreateImageRequest
   imageIds: string[]
   id: string
+  createdAt: Date
 }
 
 export const useCreateSession = defineStore("createSession", {
@@ -21,7 +22,12 @@ export const useCreateSession = defineStore("createSession", {
     },
   },
   actions: {
-    async reset() {
+    addItem(item: CreatedItem) {
+      const idExists = this.sessionItems.some((i) => i.id === item.id)
+      if (idExists) return
+      this.sessionItems.push(item)
+    },
+    reset() {
       this.sessionItems = []
       // const rev = this.reverse
     },
@@ -31,6 +37,7 @@ export const useCreateSession = defineStore("createSession", {
         imageIds: result.ids,
         request: toObject(request),
         id: result.id,
+        createdAt: new Date(),
       }
       this.sessionItems.unshift(createdItem)
       console.log(this.sessionItems)

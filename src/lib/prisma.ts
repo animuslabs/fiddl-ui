@@ -1,5 +1,5 @@
 import type { AppRouter } from "fiddl-server/dist/server"
-import { Prisma } from "../../../fiddl-server/prisma/client"
+import { Prisma } from "fiddl-server/node_modules/.prisma/client"
 import { inferProcedureOutput } from "@trpc/server"
 
 export type User = Prisma.UserGetPayload<object>

@@ -64,7 +64,7 @@ export default defineComponent({
       console.log("selected pkg", this.selectedPkg)
       const fundingEligibility = this.payPal?.getFundingSources ? this.payPal?.getFundingSources() : null
       console.log(fundingEligibility)
-      this.ppButton?.updateProps({
+      void this.ppButton?.updateProps({
         message: {
           amount: this.selectedPkg.usd,
           color: "black",
@@ -80,12 +80,12 @@ export default defineComponent({
     },
   },
   async created() {},
-  async mounted() {
-    loadPayPal().then((res) => {
+  mounted() {
+    void loadPayPal().then((res) => {
       this.payPal = res
       this.initPPButton()
     })
-    this.$api.points.packagesAvailble.query().then((res) => {
+    void this.$api.points.packagesAvailble.query().then((res) => {
       this.packages = res.map((el) => {
         return {
           ...el,
@@ -93,7 +93,7 @@ export default defineComponent({
         }
       })
     })
-    if (this.userAuth.loggedIn) this.userAuth.loadUserData()
+    if (this.userAuth.loggedIn) void this.userAuth.loadUserData()
   },
   methods: {
     pkgCardClass(pkg: PointsPackageRender) {
@@ -134,7 +134,7 @@ export default defineComponent({
             })
             throwErr("Failed to capture order: ", errorDetail)
           }
-          this.userAuth.loadUserData()
+          void this.userAuth.loadUserData()
           Dialog.create({
             title: "Success",
             message: "Points added successfully",
@@ -147,7 +147,7 @@ export default defineComponent({
       })
       const payPalDiv = this.$refs.paypal as HTMLDivElement
       if (!payPalDiv) return
-      this.ppButton.render(payPalDiv)
+      void this.ppButton.render(payPalDiv)
     },
     setAddPoints(pkgIndex: number) {
       console.log("set add points", pkgIndex)

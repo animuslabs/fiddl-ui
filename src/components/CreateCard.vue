@@ -55,7 +55,7 @@ import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import { useCreateSession } from "stores/createSessionStore"
 import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { ImageModelData, imageModelDatas, aspectRatios } from "lib/imageModels"
+import { ImageModelData, imageModelDatas, aspectRatios, ImageModel } from "lib/imageModels"
 import { toObject } from "lib/util"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
@@ -69,9 +69,8 @@ export default defineComponent({
       userAuth: useUserAuth(),
       createSession: useCreateSession(),
       req: defaultImageRequest as CreateImageRequest,
-      selectedModel: availableModels[2],
+      selectedModel: availableModels[2] as ImageModel,
       availableModels,
-      selectedAspectRatio: availableAspectRatios[0],
       availableAspectRatios,
       privateMode: false,
       loading: {
@@ -109,6 +108,10 @@ export default defineComponent({
     // this.selectedModel = availableModels[2]!
   },
   methods: {
+    setReq(req: CreateImageRequest) {
+      this.selectedModel = req.model
+      this.req = toObject(req)
+    },
     async newPrompt() {
       this.loading.new = true
       try {
@@ -147,13 +150,14 @@ export default defineComponent({
     handleKeydown(e: KeyboardEvent) {
       if (e.key === "Enter") {
         e.preventDefault()
-        this.createImage()
+        void this.createImage()
       }
     },
     async createImage() {
       this.loading.create = true
       try {
         await this.createSession.generateImage(toObject(this.req))
+        this.$emit("created")
       } catch (e) {
         console.error(e)
       }

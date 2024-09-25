@@ -63,3 +63,4 @@ export const useUserAuth = defineStore("userAuth", {
     },
   },
 })
+export type UserAuthStore = ReturnType<typeof useUserAuth>
