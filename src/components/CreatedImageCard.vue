@@ -73,10 +73,10 @@ export default defineComponent({
       this.internalSize = this.fullscreen ? "md" : "lg"
       this.fullscreen = !this.fullscreen
     },
-    async loadImage() {
+    loadImage() {
       // this.imageBlobUrl = await api.image.load(this.createdImage.id, this.internalSize)
       // this.imageBlobUrl = `${apiUrl}/images/${this.createdImage.id}-${this.internalSize}.webp`
-      this.imageUrl = img(this.imageId, "lg")
+      this.imageUrl = img(this.imageId, "sm")
     },
   },
 })

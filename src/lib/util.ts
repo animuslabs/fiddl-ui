@@ -1,5 +1,36 @@
 import { TranscriptLine } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
+import crypto from "crypto-js"
+
+/**
+ * Extracts the image ID from the URL.
+ * @param url - The URL containing the image ID.
+ * @returns The extracted image ID or null if not found.
+ */
+export function extractImageId(url: string): string | null {
+  const regex = /\/images\/([a-f0-9-]+)-/
+  const match = url.match(regex)
+  return match && match[1] ? match[1] : null
+}
+
+/**
+ * Generates a shortened hash from a given string.
+ * @param input - The input string to hash.
+ * @returns A shortened hash (8 characters).
+ */
+export function generateShortHash(input: string): string {
+  // return crypto.createHash("md5").update(input).digest("base64").slice(0, 8)
+  return crypto.HmacMD5(input, "Key").toString()
+}
+
+// Example usage
+const url = "http://localhost:4444/images/2e63a85c-3d16-4f89-aa6c-5db32b9c1c1b-lg.webp"
+const imageId = extractImageId(url)
+
+if (imageId) {
+  const shortHash = generateShortHash(imageId)
+  console.log(shortHash) // Outputs: shortened hash
+}
 
 export function timeSince(date: Date): string {
   return formatDistanceToNow(date, { addSuffix: true })
@@ -39,7 +70,7 @@ export function blobToDataURL(blob: Blob): Promise<string> {
   })
 }
 
-export async function downloadFile(data: any, fileName: string) {
+export function downloadFile(data: any, fileName: string) {
   try {
     console.log("download file data")
     const url = window.URL.createObjectURL(new Blob([data]))
@@ -54,6 +85,31 @@ export async function downloadFile(data: any, fileName: string) {
     console.error("Error downloading file:", error)
   }
 }
+
+export function downloadImage(imageUrl: string, filename = "downloaded-image") {
+  fetch(imageUrl)
+    .then((response) => response.blob())
+    .then((blob) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    })
+    .catch((error) => console.error("Image download failed:", error))
+}
+
+// export function downloadImage(imageUrl: string, filename = "downloaded-image") {
+//   const link = document.createElement("a")
+//   link.href = imageUrl
+//   link.download = filename
+//   document.body.appendChild(link)
+//   link.click()
+//   document.body.removeChild(link)
+// }
 
 export function copyToClipboard(text: string) {
   navigator.clipboard
@@ -95,7 +151,7 @@ export function getSpeakerName(speaker: string, speakerNames: Record<string, str
   else return ""
 }
 
-export const sleep = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function shuffle<T>(array: T[]) {
   let currentIndex = array.length

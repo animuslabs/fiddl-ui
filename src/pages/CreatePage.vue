@@ -11,7 +11,7 @@ q-page
         .centered.q-ma-md
           q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
   .lt-lg
-    .full-width.z-max
+    .full-width
       .centered.q-ma-md
         q-btn(label="Create" color="primary" @click="createMode = true" :disable="createSession.sessionItems.length < 1" v-if="!createMode")
       div.q-ma-md(v-if="createMode")
@@ -97,7 +97,7 @@ export default defineComponent({
         createCard.setReq(request)
       })
     },
-    async addImage(data: string) {
+    addImage(data: string) {
       console.log("add Image triggered")
       if (this.createMode) this.createMode = false
       // this.createSession.generateImage({ prompt: data })

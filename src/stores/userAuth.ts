@@ -55,7 +55,7 @@ export const useUserAuth = defineStore("userAuth", {
       await this.login(result.registration.user.name)
       console.log(result.registration)
     },
-    async logout() {
+    logout() {
       jwt.remove()
       this.loggedIn = false
       this.userId = null

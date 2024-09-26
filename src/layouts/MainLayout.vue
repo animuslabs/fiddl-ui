@@ -12,6 +12,8 @@ q-layout(view="lHh Lpr lFf")
           //-   | Search
           q-route-tab(:to="{ name: 'create' }").gt-md
             | create
+          q-route-tab(:to="{ name: 'browse' }").gt-md
+            | browse
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
           //- q-route-tab(:to="{ name: 'mint' }")
@@ -61,6 +63,8 @@ q-layout(view="lHh Lpr lFf")
         q-tabs
           q-route-tab(:to="{ name: 'create' }")
             | create
+          q-route-tab(:to="{ name: 'browse' }")
+            | browse
 </template>
 
 <script lang="ts">

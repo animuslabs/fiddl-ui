@@ -1,12 +1,13 @@
-<!-- CreationCard.vue -->
 <template lang="pug">
 q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
-  .row.full-width.q-pt-md.q-pb-md
+  .centered.full-width.q-pt-md.q-pb-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent Error during Image generation
-    .col-auto(v-else v-for="(imageId,index) in creation.imageIds" :key="imageId" style="width:400px;" )
-      CreatedImageCard( :imageId="imageId" @click="showGallery(index)").full-width.q-pa-md
+    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm
+      CreatedImageCard( :imageId="imageId" @click="showGallery(index)" ).q-pa-md
+    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md
+      CreatedImageCard( :imageId="imageId" @click="showGallery(index)" ).q-pa-sm
   q-separator(color="grey-9" spaced="20px")
   .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
     .col-auto
@@ -28,8 +29,6 @@ q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Quantity: #[p {{ creation.request.quantity }}]
         .col-auto
           small Private: #[p {{ !creation.request.public }}]
-  //- ImageGallery(:images="creation.imageIds.map(el => img(el,'lg'))" ref="gallery")
-  //- ImageGallery(:images="images" ref="gallery")
 
 </template>
 
@@ -41,7 +40,6 @@ import { PropType } from "vue"
 import { CreatedItem } from "src/stores/createSessionStore"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
-const images = ["https://cdn.quasar.dev/img/mountains.jpg", "http://localhost:4444/images/82c1f0a4-11f9-4ed9-bd5d-2eeadf72c313-lg.webp"]
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -58,13 +56,18 @@ export default defineComponent({
     return {
       timeSince,
       img,
-      images,
     }
   },
   methods: {
     showGallery(startIndex: number) {
       // const gallery = this.$refs.gallery as InstanceType<typeof ImageGallery>
       // gallery.openDialog(startIndex)
+      const root = this.$root
+      if (!root) return
+      const images = this.creation.imageIds.map((el: any) => img(el, "lg"))
+      //@ts-expect-error root is not null
+      root.openDialog(startIndex, images)
+      // this.$root.openDialog(startIndex)
     },
     setRequest() {
       this.$emit("setRequest", this.creation.request)
