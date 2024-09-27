@@ -57,6 +57,7 @@ import { useCreateSession } from "stores/createSessionStore"
 import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { ImageModelData, imageModelDatas, aspectRatios, ImageModel } from "lib/imageModels"
 import { toObject } from "lib/util"
+import { LocalStorage } from "quasar"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -106,6 +107,9 @@ export default defineComponent({
   },
   mounted() {
     // this.selectedModel = availableModels[2]!
+    this.req = LocalStorage.getItem("req") || defaultImageRequest
+    this.privateMode = !this.req.public
+    this.selectedModel = this.req.model
   },
   methods: {
     setReq(req: CreateImageRequest) {
@@ -155,6 +159,7 @@ export default defineComponent({
     },
     async createImage() {
       this.loading.create = true
+      LocalStorage.set("req", this.req)
       try {
         await this.createSession.generateImage(toObject(this.req))
         this.$emit("created")

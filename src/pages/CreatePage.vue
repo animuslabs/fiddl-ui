@@ -69,12 +69,14 @@ export default defineComponent({
       if (!this.$userAuth.userId) return
       const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]
       console.log("lastItem", lastItem)
-      const creations = await this.$api.creations.createRequests.query({
+      const query = {
         userId: this.$userAuth.userId,
         includeMetadata: true,
-        order: "desc",
+        order: "desc" as any,
         endDateTime: lastItem?.createdAt || undefined,
-      })
+      }
+      console.log("query", query)
+      const creations = await this.$api.creations.createRequests.query(query)
       console.log("creations", creations)
       for (const creation of creations) {
         const request: CreateImageRequest = {
@@ -86,7 +88,7 @@ export default defineComponent({
           negativePrompt: creation.negativePrompt,
         }
 
-        this.createSession.addItem({ id: creation.id, imageIds: creation.Image.map((el: any) => el.id), request, createdAt: new Date(creation.created) })
+        this.createSession.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.created) })
       }
     },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {

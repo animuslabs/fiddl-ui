@@ -8,8 +8,8 @@
   .indicators(v-if="images.length > 1")
     span.indicator(v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
 
-  .overlay(v-if="isFullScreen" tabindex="0" @click.self="closeFullScreen").z-top
-    .overlay-content.position-relative
+  .overlay(v-if="isFullScreen" tabindex="0" @click.self="closeFullScreen" @click="onOverlayClick").z-top.cursor-pointer
+    .overlay-content
       .centered.q-mb-md
         q-btn(icon="share"  flat @click="share()")
         q-btn(icon="download"  flat @click="downloadImage()")
@@ -17,7 +17,8 @@
         //- q-btn(icon="favorite" flat @click="closeFullScreen")
         //- q-btn(icon="add" flat @click="closeFullScreen")
         q-btn(icon="close" flat @click="closeFullScreen")
-      q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image" fit="contain" no-transition @click="onImageClick")
+      //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
+      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage")
       .indicators(v-if="images.length > 1")
         span.indicator( v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
 </template>
@@ -97,13 +98,28 @@ export default defineComponent({
     closeFullScreen() {
       this.isFullScreen = false
     },
+    onOverlayClick(event: MouseEvent) {
+      const imageElement = this.$refs.overlayImage.$el as HTMLElement
+      console.log("imgElement", imageElement)
+      if (imageElement) {
+        const rect = imageElement.getBoundingClientRect()
+        const clickX = event.clientX
+        const clickY = event.clientY
+
+        // Check if the click is outside the image's bounding box
+        if (clickX < rect.left || clickX > rect.right || clickY < rect.top || clickY > rect.bottom) {
+          this.closeFullScreen()
+        }
+      }
+    },
+
     onImageClick(event: MouseEvent) {
       console.log("click")
       const target = event.target as HTMLElement
       const rect = target.getBoundingClientRect()
       const clickX = event.clientX - rect.left
       const width = rect.width
-
+      console.log(event.target)
       if (this.isFullScreen) {
         console.log(clickX)
         if (clickX < width / 2) {
@@ -189,13 +205,11 @@ export default defineComponent({
   position: relative
   user-select: none
 
-.carousel-image, .overlay-image
-  width: 100%
-  // max-width:80vw
+.overlay-image
+  width: auto
+  max-width: 1900px
   display: block
-  cursor: pointer
   max-height: 80vh
-  object-fit: contain
 
 .prev-button, .next-button
   position: absolute
@@ -246,8 +260,10 @@ export default defineComponent({
 
 .overlay-content
   position: relative
-  width: 90%
-  max-width: 800px
+  // width: 95%
+  max-width: 1900px
+  max-height: 95%
+
 
 @media (max-width: 600px)
   .prev-button, .next-button

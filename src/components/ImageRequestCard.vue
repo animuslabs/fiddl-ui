@@ -1,13 +1,13 @@
 <template lang="pug">
 q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
-  .centered.full-width.q-pt-md.q-pb-md
+  .centered.full-width.q-pt-md.q-pb-md.q-gutter-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent Error during Image generation
     .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm
-      CreatedImageCard( :imageId="imageId" @click="showGallery(index)" ).q-pa-md
+      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" ).q-pa-md
     .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md
-      CreatedImageCard( :imageId="imageId" @click="showGallery(index)" ).q-pa-sm
+      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" ).q-pa-sm
   q-separator(color="grey-9" spaced="20px")
   .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
     .col-auto
@@ -29,6 +29,8 @@ q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Quantity: #[p {{ creation.request.quantity }}]
         .col-auto
           small Private: #[p {{ !creation.request.public }}]
+  .row {{ creation.id }}
+  .row {{ creation.createdAt }}
 
 </template>
 
@@ -60,8 +62,6 @@ export default defineComponent({
   },
   methods: {
     showGallery(startIndex: number) {
-      // const gallery = this.$refs.gallery as InstanceType<typeof ImageGallery>
-      // gallery.openDialog(startIndex)
       const root = this.$root
       if (!root) return
       const images = this.creation.imageIds.map((el: any) => img(el, "lg"))

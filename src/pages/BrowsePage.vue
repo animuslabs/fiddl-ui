@@ -2,17 +2,34 @@
 q-page.full-height.full-width
   .centered.q-mt-md
     h2 Browse
+  .q-ma-md
+    ImageMosaic(:items="browserStore.items")
+  q-scroll-observer(@scroll="handleScroll")
 
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { useUserAuth } from "src/stores/userAuth"
+import { useBrowserStore } from "src/stores/browserStore"
+import CreatedImageCard from "src/components/CreatedImageCard.vue"
+import { type CreatedItem } from "src/stores/createSessionStore"
+import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
+import ImageMosaic from "components/ImageMosaic.vue"
+import { debounce, Scroll, throttle } from "quasar"
 
 export default defineComponent({
-  components: {},
+  components: {
+    CreatedImageCard,
+    ImageMosaic,
+  },
   data() {
-    return {}
+    return {
+      browserStore: useBrowserStore(),
+      onScroll: null as any,
+    }
+  },
+  computed: {
+    // images(): string[] {},
   },
   watch: {
     "$userAuth.loggedIn": {
@@ -22,9 +39,40 @@ export default defineComponent({
       },
     },
   },
-  mounted() {
-    // const
+  async mounted() {
+    // Create a throttled scroll handler
+    this.onScroll = throttle(() => {
+      void this.browserStore.loadCreations()
+    }, 1000)
+
+    await this.browserStore.loadCreations()
   },
-  methods: {},
+  unmounted() {
+    window.removeEventListener("scroll", () => {
+      console.log("Removed scroll listener")
+    })
+  },
+  methods: {
+    handleScroll(data: any) {
+      const windowHeight = window.innerHeight
+      const scrollPosition = data.position
+      const pageHeight = document.body.scrollHeight
+      // console.log("scroll")
+      if (scrollPosition.top + windowHeight >= pageHeight / 1.5) {
+        console.log("Scrolled past the bottom!")
+        this.onScroll()
+      }
+    },
+    imgClass(index: number, ratio: AspectRatioGrade) {
+      let classes = []
+      if (index === 0) classes.push("lg")
+      else classes.push("sm")
+      classes.push(ratio)
+      return classes
+    },
+    reqFirstImg(req: CreatedItem) {
+      return req.imageIds[0] || false
+    },
+  },
 })
 </script>

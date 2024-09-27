@@ -1,62 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Column Layout</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Mosaic Layout</title>
+  <style>
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      /* Responsive columns */
+      grid-auto-rows: 100px;
+      /* Base row height */
+      gap: 5px;
+      /* Gap between images */
+      grid-auto-flow: dense;
+      /* Fill gaps efficiently */
+    }
+
+    .container>div {
+      position: relative;
+    }
+
+    .container>div img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* Ensures images cover the grid cell while maintaining aspect ratio */
+    }
+
+    /* Create classes for varying grid item sizes */
+    .small {
+      grid-column: span 1;
+      grid-row: span 1;
+    }
+
+    .medium {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .large {
+      grid-column: span 3;
+      grid-row: span 3;
+    }
+
+    .wide {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    .tall {
+      grid-column: span 1;
+      grid-row: span 2;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="column left-column">
-            <h2>Left Column</h2>
-            <p>This column is static.</p>
-            <button id="toggleButton" onclick="toggleColumns()">Show Images</button>
-        </div>
-        <div class="column right-column" id="rightColumn">
-            <h2>Images</h2>
-            <div class="image-grid">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <img src="http://localhost:4444/images/1173f954-58ca-487c-b4a0-c1fbf058ebb0-lg.webp" alt="Placeholder Image 3">
-                <!-- Add more images as needed -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function toggleColumns() {
-            const leftColumn = document.querySelector('.left-column');
-            const rightColumn = document.querySelector('.right-column');
-            if (leftColumn.style.display === 'none') {
-                leftColumn.style.display = 'block';
-                rightColumn.style.display = 'none';
-                document.getElementById('toggleButton').textContent = 'Show Images';
-            } else {
-                leftColumn.style.display = 'none';
-                rightColumn.style.display = 'block';
-                document.getElementById('toggleButton').textContent = 'Show Info';
-            }
-        }
-
-        // Initial state for mobile
-        if (window.innerWidth < 600) {
-            document.querySelector('.right-column').style.display = 'none';
-        }
-    </script>
+  <div class="container">
+    <div class="small"><img src="https://via.placeholder.com/200" alt="Image 1"></div>
+    <div class="medium"><img src="https://via.placeholder.com/400" alt="Image 2"></div>
+    <div class="tall"><img src="https://via.placeholder.com/200x600" alt="Image 3"></div>
+    <div class="wide"><img src="https://via.placeholder.com/600x200" alt="Image 4"></div>
+    <div class="small"><img src="https://via.placeholder.com/300" alt="Image 5"></div>
+    <div class="large"><img src="https://via.placeholder.com/900" alt="Image 6"></div>
+    <div class="medium"><img src="https://via.placeholder.com/400" alt="Image 7"></div>
+    <div class="small"><img src="https://via.placeholder.com/300" alt="Image 8"></div>
+    <div class="tall"><img src="https://via.placeholder.com/200x600" alt="Image 9"></div>
+    <div class="wide"><img src="https://via.placeholder.com/600x200" alt="Image 10"></div>
+    <div class="large"><img src="https://via.placeholder.com/900" alt="Image 11"></div>
+    <div class="medium"><img src="https://via.placeholder.com/400" alt="Image 12"></div>
+    <div class="small"><img src="https://via.placeholder.com/200" alt="Image 13"></div>
+  </div>
 </body>
+
 </html>
