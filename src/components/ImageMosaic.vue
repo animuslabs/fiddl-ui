@@ -55,17 +55,24 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   grid-auto-rows: 100px;
-  gap: 20px;
+  gap: 16px;
   grid-auto-flow: dense;
+  /* background-color: red; */
+}
+@media (max-width: 600px) {
+  .container {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  }
 }
 
 .container > div {
   position: relative;
   overflow: hidden;
-  /* display: flex; */
   justify-content: center;
   align-items: center;
+  min-width: 50px;
 }
+
 .container >>> div {
   width: 100%;
   height: 100%;

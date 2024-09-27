@@ -99,18 +99,17 @@ export default defineComponent({
       this.isFullScreen = false
     },
     onOverlayClick(event: MouseEvent) {
-      const imageElement = this.$refs.overlayImage.$el as HTMLElement
-      console.log("imgElement", imageElement)
-      if (imageElement) {
-        const rect = imageElement.getBoundingClientRect()
-        const clickX = event.clientX
-        const clickY = event.clientY
-
-        // Check if the click is outside the image's bounding box
-        if (clickX < rect.left || clickX > rect.right || clickY < rect.top || clickY > rect.bottom) {
-          this.closeFullScreen()
-        }
-      }
+      // const imageElement = this.$refs.overlayImage.$el as HTMLElement
+      // console.log("imgElement", imageElement)
+      // if (imageElement) {
+      //   const rect = imageElement.getBoundingClientRect()
+      //   const clickX = event.clientX
+      //   const clickY = event.clientY
+      //   // Check if the click is outside the image's bounding box
+      //   if (clickX < rect.left || clickX > rect.right || clickY < rect.top || clickY > rect.bottom) {
+      //     this.closeFullScreen()
+      //   }
+      // }
     },
 
     onImageClick(event: MouseEvent) {
@@ -206,9 +205,9 @@ export default defineComponent({
   user-select: none
 
 .overlay-image
-  width: auto
-  max-width: 1900px
-  display: block
+  width: 100%
+  height: auto
+  max-width: 90vw
   max-height: 80vh
 
 .prev-button, .next-button

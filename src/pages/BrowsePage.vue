@@ -47,11 +47,6 @@ export default defineComponent({
 
     await this.browserStore.loadCreations()
   },
-  unmounted() {
-    window.removeEventListener("scroll", () => {
-      console.log("Removed scroll listener")
-    })
-  },
   methods: {
     handleScroll(data: any) {
       const windowHeight = window.innerHeight
@@ -59,7 +54,7 @@ export default defineComponent({
       const pageHeight = document.body.scrollHeight
       // console.log("scroll")
       if (scrollPosition.top + windowHeight >= pageHeight / 1.5) {
-        console.log("Scrolled past the bottom!")
+        // console.log("Scrolled past the bottom!")
         this.onScroll()
       }
     },
