@@ -60,7 +60,7 @@ export const useBrowserStore = defineStore("browserStore", {
           ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
           cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
           imageIds: creation.images.map((el: any) => el.id),
-          createdAt: new Date(creation.created),
+          createdAt: new Date(creation.createdAt),
         })
       }
     },

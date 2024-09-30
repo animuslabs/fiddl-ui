@@ -13,7 +13,7 @@ q-page
   .lt-lg
     .full-width
       .centered.q-ma-md
-        q-btn(label="Create" color="primary" @click="createMode = true" :disable="createSession.sessionItems.length < 1" v-if="!createMode")
+        q-btn(label="Create" color="primary" @click="createMode = true" v-if="!createMode")
       div.q-ma-md(v-if="createMode")
         .row
           q-btn(label="Back" color="primary" flat @click="createMode = false")
@@ -23,7 +23,7 @@ q-page
       ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
       //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
       .centered.q-ma-md
-        q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" :disable="createSession.sessionItems.length < 1")
+        q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
 
 </template>
 
@@ -85,10 +85,10 @@ export default defineComponent({
           model: creation.model as any,
           public: creation.public,
           quantity: creation.quantity,
-          negativePrompt: creation.negativePrompt,
+          negativePrompt: creation.negativePrompt || undefined,
         }
 
-        this.createSession.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.created) })
+        this.createSession.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.createdAt) })
       }
     },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {

@@ -1,7 +1,18 @@
 <template lang="pug">
   .container
     div(v-for="item in items" :key="item.id" :class="item.cssClass")
-      CreatedImageCard.cursor-pointer(:imageId="getRandImg(item.imageIds)" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)")
+      CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)")
+      .absolute-bottom
+        .centered
+          div(v-for="img in item.imageIds.length").q-mb-xs
+            div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6
+
+          //- q-btn(flat icon="favorite" color="grey-7")
+          //- h4 {{ item.imageIds.length }}
+      //- .absolute-top
+        //- q-btn(flat icon="favorite" color="grey-7" @click="favorite(item.id)")
+        //- .row
+          //- h4 {{ item.imageIds.length }}
       //- div {{ item.cssClass }}
 </template>
 
@@ -53,7 +64,7 @@ export default {
 <style scoped>
 .container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   grid-auto-rows: 100px;
   gap: 16px;
   grid-auto-flow: dense;
@@ -61,7 +72,7 @@ export default {
 }
 @media (max-width: 600px) {
   .container {
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -73,7 +84,7 @@ export default {
   min-width: 50px;
 }
 
-.container >>> div {
+.container-image {
   width: 100%;
   height: 100%;
   object-fit: cover !important;

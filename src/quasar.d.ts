@@ -20,3 +20,12 @@ declare module "@vue/runtime-core" {
     $userAuth: UserAuthStore
   }
 }
+
+import { Prisma } from "@prisma/client"
+
+declare module "@prisma/client" {
+  namespace Prisma {
+    // Override JsonValue with 'object'
+    type JsonValue = object
+  }
+}

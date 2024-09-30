@@ -57,7 +57,7 @@ import { useCreateSession } from "stores/createSessionStore"
 import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { ImageModelData, imageModelDatas, aspectRatios, ImageModel } from "lib/imageModels"
 import { toObject } from "lib/util"
-import { LocalStorage } from "quasar"
+import { Dialog, LocalStorage } from "quasar"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -120,8 +120,13 @@ export default defineComponent({
       this.loading.new = true
       try {
         this.req.prompt = await this.$api.create.randomPrompt.mutate()
-      } catch (e) {
+      } catch (e: any) {
         console.error(e)
+        Dialog.create({
+          title: "Error",
+          message: e.message,
+          ok: true,
+        })
       }
       this.loading.new = false
       await this.userAuth.loadUserData()

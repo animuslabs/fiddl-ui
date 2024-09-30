@@ -29,8 +29,6 @@ q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Quantity: #[p {{ creation.request.quantity }}]
         .col-auto
           small Private: #[p {{ !creation.request.public }}]
-  .row {{ creation.id }}
-  .row {{ creation.createdAt }}
 
 </template>
 

@@ -191,8 +191,6 @@ export default defineComponent({
   display: flex
   justify-content: center
 
-
-
 .carousel
   position: relative
   width: 100%
@@ -205,10 +203,11 @@ export default defineComponent({
   user-select: none
 
 .overlay-image
-  width: 100%
-  height: auto
+  width: 2000px
+  height:2000px
+  object-fit: contain
   max-width: 90vw
-  max-height: 80vh
+  max-height: calc(75vh - 20px)
 
 .prev-button, .next-button
   position: absolute
