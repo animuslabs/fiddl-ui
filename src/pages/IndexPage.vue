@@ -1,9 +1,9 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogo2.webp" style="width: 400px; opacity: 0.9")
-  .centered.q-mt-md
-    h1 Fiddl.art
+    q-img(src="/fiddlLogoWithText.svg" style="width: 400px; opacity: 0.9")
+  //- .centered.q-mt-md
+  //-   h1 Fiddl.art
   .centered
     h5 Create, Vote, Earn with generative artwork.
   .centered.q-mt-lg
@@ -57,23 +57,24 @@ import { loadScript } from "lib/util"
 
 export default defineComponent({
   components: {
-    DropBox, UserRecordings
+    DropBox,
+    UserRecordings,
   },
   data() {
     return {
       userAuth: useUserAuth(),
       api,
       passKeyAuth,
-      userFiles: [] as UserFile[]
+      userFiles: [] as UserFile[],
     }
   },
-  mounted(){
+  mounted() {
     loadScript("https://app.mailjet.com/pas-nc-embedded-v1.js")
   },
   methods: {
     async loadUserFiles() {
       this.userFiles = await api.files.getUserFiles()
-    }
+    },
   },
   watch: {
     "userAuth.loggedIn": {
@@ -82,8 +83,8 @@ export default defineComponent({
         if (this.userAuth.loggedIn) {
           void this.loadUserFiles()
         }
-      }
-    }
-  }
+      },
+    },
+  },
 })
 </script>

@@ -1,0 +1,20 @@
+{
+	"siteId": "10c5184f-f2cf-4a25-a25f-4379ff0136ca",
+	"geolocation": {
+		"data": {
+			"city": "Barre",
+			"country": {
+				"code": "US",
+				"name": "United States"
+			},
+			"subdivision": {
+				"code": "VT",
+				"name": "Vermont"
+			},
+			"timezone": "America/New_York",
+			"latitude": 44.1968,
+			"longitude": -72.4976
+		},
+		"timestamp": 1726184887882
+	}
+}

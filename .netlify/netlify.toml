@@ -1,0 +1,52 @@
+redirectsOrigin = "config"
+headers = []
+
+[images]
+remote_images = ["https://api.fiddl.art/images/.*"]
+
+[functions]
+
+[functions.emails]
+included_files = ["./emails/**"]
+
+[functions."*"]
+
+[[plugins]]
+origin = "ui"
+package = "@netlify/plugin-emails"
+pinned_version = "1"
+
+[plugins.inputs]
+
+[build]
+publish = "/Users/boidcom/Dev/fiddl/fiddl-ui/dist/spa"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "yarn build"
+base = "/Users/boidcom/Dev/fiddl/fiddl-ui"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
