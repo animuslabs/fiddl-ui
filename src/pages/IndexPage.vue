@@ -1,9 +1,7 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogo2.webp" style="width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager" )
-  .centered.q-mt-md
-    h1 Fiddl.art
+    q-img(src="/fiddlLogoWithText.svg" style="width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager" )
   .centered
     h5 Create, Vote, Earn with generative artwork.
   .centered.q-mt-lg
