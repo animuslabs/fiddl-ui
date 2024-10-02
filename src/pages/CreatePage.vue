@@ -9,7 +9,7 @@ q-page
         q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
           .centered.q-ma-md
             ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq(creation.request)")
-          .centered.q-ma-md
+          .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
             q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
     .lt-lg
       .full-width
