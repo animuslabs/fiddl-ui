@@ -26,6 +26,7 @@ export const useBrowserStore = defineStore("browserStore", {
   state() {
     return {
       items: [] as BrowserItem[],
+      loading: false,
     }
   },
   getters: {
@@ -44,6 +45,7 @@ export const useBrowserStore = defineStore("browserStore", {
       // const rev = this.reverse
     },
     async loadCreations() {
+      this.loading = true
       const lastItem = this.items[this.items.length - 1]
       console.log("lastItem", lastItem?.createdAt)
       let endDateTime
@@ -67,8 +69,10 @@ export const useBrowserStore = defineStore("browserStore", {
           createdAt: new Date(creation.createdAt),
         })
       }
+      this.loading = false
     },
     async loadRecentCreations() {
+      this.loading = true
       const firstItem = this.items[0]
       let startDateTime
       if (firstItem?.createdAt) {
@@ -98,6 +102,7 @@ export const useBrowserStore = defineStore("browserStore", {
           this.items.unshift(newItem)
         }
       }
+      this.loading = false
     },
   },
   persist: false,

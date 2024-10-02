@@ -1,11 +1,14 @@
 <template lang="pug">
 q-page.full-height.full-width
-  .centered.q-mt-md
+  .centered.q-mt-sm
     h2 Browse
+  .centered
+    //- q-spinner(size="10px" :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}")
+    q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
   .q-ma-md
     ImageMosaic(:items="browserStore.items")
   .centered.q-ma-md
-    q-btn(label="Load More" @click="browserStore.loadCreations()" :disable="browserStore.items.length < 1")
+    q-btn(label="Load More" @click="browserStore.loadCreations()" :disable="browserStore.items.length < 1" :loading="browserStore.loading")
   q-scroll-observer(@scroll="handleScroll")
 
 </template>
