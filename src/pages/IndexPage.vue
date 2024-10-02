@@ -7,7 +7,9 @@ q-page.full-height.full-width.bgimg
   .centered
     h5 Create, Vote, Earn with generative artwork.
   .centered.q-mt-lg
-    h3 Join the list to be the first to know about the platform launch.
+    q-btn(size="xl" label="Alpha Is Live" color="secondary" type="a" href="https://alpha.fiddl.art")
+  .centered.q-ma-lg
+    h5 Join the Mailing List to be updated on new features and events.
   .centered
     iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 500px; width:500px;").bg-dark-page
   .centered
