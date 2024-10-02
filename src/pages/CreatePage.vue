@@ -23,7 +23,7 @@ q-page
       q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
         ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
         //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
-        .centered.q-ma-md
+        .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
           q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
   div(v-else)
     .centered.q-mt-xl
