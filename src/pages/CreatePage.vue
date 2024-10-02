@@ -78,7 +78,7 @@ export default defineComponent({
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-        limit: 10,
+        limit: 15,
       })
       console.log("creations", creations)
       for (const creation of creations) {
