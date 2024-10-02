@@ -1,21 +1,26 @@
 <template lang="pug">
 q-page.full-height.full-width
-  .centered.q-mt-md
-    h2 Add Fiddl Points
-  .centered.q-ma-md(v-if="!userAuth.loggedIn")
-    h4 Please login to add Fiddl Points
-  .centered.items-center.q-gutter-md(v-if="userAuth.userData")
-    h5 Your Fiddl Points:
-    h3 {{ userAuth.userData.availablePoints }}
-  .centered
-    h5 Fiddl Points are needed to use Fiddl.art
+  .centered.q-mt-md.q-gutter-md
+    .col-auto
+      .shimmer
+        q-img(src="/fiddlPointsLogo-sm.svg" style="width:200px;")
+    .col-auto
+      .row.q-mt-md
+        h2 Add Fiddl Points
+      .row.q-ma-md(v-if="!userAuth.loggedIn")
+        h4 Please login to add Fiddl Points
+      .row.items-center.q-gutter-md(v-if="userAuth.userData")
+        h5 Your Fiddl Points:
+        h3 {{ userAuth.userData.availablePoints }}
+      .row
+        h6 Fiddl Points are needed to use Fiddl.art
   .centered.q-mt-md(v-if="userAuth.loggedIn")
     h3 Select Points Package
   .centered.q-gutter-lg.q-pt-sm
     q-card.q-pa-lg.cursor-pointer(v-if="packages.length>0" v-for="(pkg, index) in packages" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" :key="pkg.points")
       .centered.q-pb-md.items-center.q-gutter-sm
         h4 +{{ pkg.points.toLocaleString() }}
-        q-img(src="/fiddlPointsLogo.svg" height="50px" width="50px")
+        q-img(src="/fiddlPointsLogo-sm.svg" height="50px" width="50px")
       .centered.q-pa-sm(style="border-radius: 15px;" :class="pkg.bgColor")
         h4(v-if="pkg.discountPct > 0") {{ pkg.discountPct * 100 }}% Discount
         h4(v-else) No Discount
@@ -32,6 +37,7 @@ q-page.full-height.full-width
 
 
 </template>
+<style></style>
 
 <script lang="ts">
 import { defineComponent } from "vue"

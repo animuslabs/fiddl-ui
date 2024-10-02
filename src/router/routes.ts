@@ -1,28 +1,50 @@
 import { RouteRecordRaw } from "vue-router"
+import { defineAsyncComponent } from "vue"
+
+const asyncLazyLoad = (path: string) => defineAsyncComponent(() => import(`../pages/${path}.vue`))
+
+const routeData = [
+  ["index", "/", "IndexPage"],
+  ["search", "/search", "SearchPage"],
+  ["create", "/create", "CreatePage"],
+  ["vote", "/vote", "VotePage"],
+  ["mint", "/mint", "MintPage"],
+  ["browse", "/browse", "BrowsePage"],
+  ["account", "/account", "AccountPage"],
+  ["creations", "/creations/:accountId?", "CreationsPage"],
+  ["addPoints", "/addPoints", "AddPointsPage"],
+  ["login", "/login", "LoginPage"],
+]
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("../layouts/MainLayout.vue"),
-    children: [
-      { name: "index", path: "", component: () => import("pages/IndexPage.vue") },
-      { name: "search", path: "/search", component: () => import("pages/SearchPage.vue") },
-      { name: "create", path: "/create", component: () => import("pages/CreatePage.vue") },
-      { name: "vote", path: "/vote", component: () => import("pages/VotePage.vue") },
-      { name: "mint", path: "/mint", component: () => import("pages/MintPage.vue") },
-      { name: "browse", path: "/browse", component: () => import("pages/BrowsePage.vue") },
-      { name: "account", path: "/account", component: () => import("pages/AccountPage.vue") },
-      { name: "creations", path: "/creations/:accountId?", component: () => import("pages/CreationsPage.vue") },
-      { name: "addPoints", path: "/addPoints", component: () => import("pages/AddPointsPage.vue") },
-    ],
+    children: [],
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
   {
     path: "/:catchAll(.*)*",
-    component: () => import("pages/ErrorNotFound.vue"),
+    component: asyncLazyLoad("ErrorNotFound"),
   },
 ]
+
+routeData.forEach((el) =>
+  routes[0]?.children?.push({
+    name: el[0] as string,
+    path: el[1] as string,
+    component: () => import(`../pages/${el[2] as string}.vue`),
+  }),
+)
+setTimeout(() => {
+  console.log("start routes preload")
+  routes.forEach((route) => {
+    const component = route.component as any
+    if (typeof component === "function") {
+      component().catch((err: any) => {
+        console.warn(`Failed to preload route: ${route.path}`, err)
+      })
+    }
+  })
+}, 1000)
 
 export default routes

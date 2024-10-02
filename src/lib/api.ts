@@ -36,6 +36,9 @@ const api = createTRPCProxyClient<AppRouter>({
   ],
 })
 export type UserData = inferRouterOutputs<AppRouter>["user"]["get"]
+export type UserProfile = inferRouterOutputs<AppRouter>["user"]["profile"]
+export type PointsTransfer = inferRouterOutputs<AppRouter>["user"]["pointsHistory"][number]
+export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImagePurchases"][number]
 
 export default api
 export type APIType = typeof api

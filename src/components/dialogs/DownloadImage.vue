@@ -1,6 +1,6 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide")
-  q-card.q-dialog-plugin
+  q-card.q-dialog-plugin.z-max
     q-form(:submit="doRegister")
       .q-ma-md
         .row.justify-center

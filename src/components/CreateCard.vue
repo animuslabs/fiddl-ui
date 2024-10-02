@@ -47,6 +47,11 @@ div
           q-btn( type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > userAuth.userData.availablePoints || req.prompt.length < 5" )
             .badge
               p {{ totalCost }}
+      div(v-if="userAuth.userData && totalCost > userAuth?.userData?.availablePoints|| 0").q-pt-md
+        .centered
+          p.text-accent.q-pt-md You don't have enough points to create this image
+        .centered.q-ma-sm
+          q-btn(label="Get more points" color="primary" @click="$router.push({name:'addPoints'})" flat )
             //- p.q-ml-sm  ({{ totalCost }})
 </template>
 

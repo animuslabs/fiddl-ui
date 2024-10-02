@@ -3,13 +3,32 @@ q-page.full-height.full-width.bgimg
   .centered.q-mt-md
     q-img(src="/fiddlLogoWithText.svg" style="width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager" )
   .centered
-    h5 Create, Vote, Earn with generative artwork.
-  .centered.q-mt-lg
-    //- iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://9sql.mjt.lu/wgt/9sql/xut5/form?c=8268c5ed" style="height: 500px; width:500px;").bg-dark-page
-  .centered
+    h4 Create and Earn with Generative Art
+  .q-mt-xl
+    .centered
+      .col-auto
+        h2 Welcome to the Alpha Launch of Fiddl.art
+    .centered.q-mt-md
+      ul
+        li
+          h4 Create art on the Create page
+        li
+          h4 Explore other creations on the Browse page
+        li
+          h4 Purchase an image to download a high resolution version
+        li
+          h4 Earn points when someone purchases your images
+    .centered.q-mt-md
+      h2 Have fun exploring the site
+
+
+
+
+  .centered.q-mt-xl
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
     q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
   .full-width(style="height: 15px")
+  //- Landing
 
 
 </template>
@@ -37,9 +56,12 @@ import { defineComponent } from "vue"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import { UserFile } from "lib/types"
+import Landing from "components/Landing.vue"
 
 export default defineComponent({
-  components: {},
+  components: {
+    Landing,
+  },
   data() {
     return {
       userAuth: useUserAuth(),

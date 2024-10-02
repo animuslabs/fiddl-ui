@@ -69,14 +69,13 @@ export default defineComponent({
       if (!this.$userAuth.userId) return
       const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]
       console.log("lastItem", lastItem)
-      const query = {
+      const creations = await this.$api.creations.createRequests.query({
         userId: this.$userAuth.userId,
         includeMetadata: true,
-        order: "desc" as any,
+        order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-      }
-      console.log("query", query)
-      const creations = await this.$api.creations.createRequests.query(query)
+        limit: 10,
+      })
       console.log("creations", creations)
       for (const creation of creations) {
         const request: CreateImageRequest = {

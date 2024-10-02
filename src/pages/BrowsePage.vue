@@ -4,6 +4,8 @@ q-page.full-height.full-width
     h2 Browse
   .q-ma-md
     ImageMosaic(:items="browserStore.items")
+  .centered.q-ma-md
+    q-btn(label="Load More" @click="browserStore.loadCreations()" :disable="browserStore.items.length < 1")
   q-scroll-observer(@scroll="handleScroll")
 
 </template>

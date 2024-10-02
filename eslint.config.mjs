@@ -22,6 +22,7 @@ export default ts.config(
       "@typescript-eslint/no-unused-vars": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "vue/multiword-component-names": "off",
       "@typescript-eslint/no-floating-promises": [
         "error",
         {

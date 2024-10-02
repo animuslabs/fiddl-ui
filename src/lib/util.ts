@@ -1,6 +1,9 @@
 import { TranscriptLine } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
 import crypto from "crypto-js"
+import type { TRPCClientError } from "@trpc/client"
+import type { AppRouter } from "lib/server"
+import { Dialog } from "quasar"
 
 /**
  * Extracts the image ID from the URL.
@@ -26,6 +29,14 @@ export function generateShortHash(input: string): string {
 // Example usage
 const url = "http://localhost:4444/images/2e63a85c-3d16-4f89-aa6c-5db32b9c1c1b-lg.webp"
 const imageId = extractImageId(url)
+export const catchErr = (err: TRPCClientError<AppRouter>) => {
+  console.error(err)
+  Dialog.create({
+    title: "Error",
+    message: err.message,
+    ok: true,
+  })
+}
 
 if (imageId) {
   const shortHash = generateShortHash(imageId)
@@ -70,22 +81,31 @@ export function blobToDataURL(blob: Blob): Promise<string> {
   })
 }
 
-export function downloadFile(data: any, fileName: string) {
+export function downloadFile(dataUrl: any, fileName: string) {
+  // console.log("Downloading file...", dataUrl, fileName)
   try {
-    console.log("download file data")
-    const url = window.URL.createObjectURL(new Blob([data]))
+    const [metadata, base64] = dataUrl.split(",")
+    const mime = metadata.match(/:(.*?);/)[1]
+    const binary = atob(base64)
+    const arrayBuffer = new Uint8Array(binary.length)
+
+    for (let i = 0; i < binary.length; i++) {
+      arrayBuffer[i] = binary.charCodeAt(i)
+    }
+
+    const blob = new Blob([arrayBuffer], { type: mime })
+    const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${fileName}` // Suggested filename
+    a.download = fileName
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    window.URL.revokeObjectURL(url) // Clean up the URL object
+    window.URL.revokeObjectURL(url)
   } catch (error) {
     console.error("Error downloading file:", error)
   }
 }
-
 export function downloadImage(imageUrl: string, filename = "downloaded-image") {
   fetch(imageUrl)
     .then((response) => response.blob())

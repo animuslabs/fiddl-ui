@@ -6,7 +6,7 @@ q-layout(view="lHh Lpr lFf")
         q-tabs
           q-route-tab(:to="{ name: 'index' }" no-caps exact)
             .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;" @click="$router.push({ name: 'index' })")
-              q-icon(name="img:/fiddlLogo.svg" size="35px").q-mr-sm
+              q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)
           //-   | Search
@@ -26,7 +26,7 @@ q-layout(view="lHh Lpr lFf")
         q-btn(rounded padding="0px" :color="pointsColor" v-if="userAuth.userData" @click="$router.push({ name: 'addPoints' })")
           .row.items-center
             div.q-ml-md {{ userAuth?.userData?.availablePoints || 0 }}
-            q-img.q-ml-sm(src="/FiddlPointsLogo.svg" style="width:40px; height:40px;")
+            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;")
           q-tooltip
             p Add Fiddl Points
         //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
@@ -84,14 +84,12 @@ export default defineComponent({
   computed: {
     pointsColor() {
       if (!this.userAuth.userData) return "negative"
-      return this.userAuth.userData?.availablePoints > 10 ? "grey-9" : "negative"
+      return this.userAuth.userData?.availablePoints > 10 ? "grey-9" : "accent"
     },
   },
   methods: {
     login() {
-      Dialog.create({
-        component: LoginDialog,
-      })
+      void this.$router.push({ name: "login" })
     },
   },
 })

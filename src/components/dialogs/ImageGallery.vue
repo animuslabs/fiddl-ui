@@ -8,26 +8,64 @@
   .indicators(v-if="images.length > 1")
     span.indicator(v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
 
-  .overlay(v-if="isFullScreen" tabindex="0" @click.self="closeFullScreen" @click="onOverlayClick").z-top.cursor-pointer
-    .overlay-content
-      .centered.q-mb-md
-        q-btn(icon="share"  flat @click="share()")
-        q-btn(icon="download"  flat @click="downloadImage()")
+  .overlay(v-if="isFullScreen" tabindex="0" @click.self="closeFullScreen").z-top.cursor-pointer
+    .centered.bg-green
+    .overlay-content.relative-position
+      //- q-spinner.absolute-center(size="100px")
+      .centered.q-mb-md.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+        div
+          q-btn(icon="share"  flat @click="share()" round color="grey-5")
+        div
+          q-btn(icon="download"  flat @click="downloadMode = true" round :class="downloadClass")
+            q-tooltip
+              p(v-if="userOwnsImage") You own the 4k download
+              p(v-else) Download Image
         //- q-btn(icon="edit" flat @click="closeFullScreen")
         //- q-btn(icon="favorite" flat @click="closeFullScreen")
         //- q-btn(icon="add" flat @click="closeFullScreen")
-        q-btn(icon="close" flat @click="closeFullScreen")
+        div
+          q-btn(icon="close" flat @click="closeFullScreen" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
-      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage")
-      .indicators(v-if="images.length > 1")
+      q-linear-progress.absolute-bottom( indeterminate v-if="imgLoading || loading" )
+      .absolute.full-width.full-height(style="background-color: rgba(0,0,0,.5);" v-if="imgLoading")
+      .absolute.full-width(style="background-color: rgba(0,0,0,.8); top:55px; height:100vh;" v-if="downloadMode")
+        .centered
+          h4 Download Image
+        .centered(v-if="!userOwnsImage")
+          div.q-ma-md
+            p.q-ma-md You do not own this image. It can be purchased with Fiddl Points.
+            p.q-ma-md When you purchase the image, it will always display in full resolution without a watermark on fiddl.art.
+            p.q-ma-md You will have access to the original full quality image as well as a 4k upscaled version suitable for printing.
+            .centered.q-pt-md
+              q-btn(color="accent" label="Purchase Image" @click="purchaseImage()")
+                .badge
+                  p 10
+        div(v-else style="height:30vh")
+          .centered
+            p.q-ma-md You own this image.
+          .centered
+            div
+              .row
+                p.q-ma-md Downloads
+              .col-auto
+                q-btn(label="original" icon="image" @click="downloadOriginal()")
+              .col-auto
+                q-btn(label="4k Upscale" icon="4k" :loading="upscaling" @click="downloadUpscaled()")
+              small Upscaling can take 30+ seconds the first time
+        .centered.q-mt-md
+          q-btn(label="< back" color="grey" flat @click="downloadMode = false")
+      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage" @load="imgLoaded")
+      .indicators(v-if="images.length > 1 && !downloadMode")
         span.indicator( v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
 </template>
 
 <script lang="ts">
 import { log } from "console"
-import { copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash } from "lib/util"
-import { Dialog } from "quasar"
+import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
+import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash } from "lib/util"
+import { Dialog, Loading } from "quasar"
 import { defineComponent } from "vue"
+import DownloadImage from "./DownloadImage.vue"
 
 export default defineComponent({
   props: {
@@ -42,14 +80,36 @@ export default defineComponent({
   },
   data() {
     return {
+      downloadMode: false,
+      imgLoading: true,
+      userOwnsImage: false,
+      loading: false,
       currentIndex: 0,
       isFullScreen: false,
       touchStartX: 0,
       touchEndX: 0,
+      upscaling: false,
       threshold: 50, // Minimum swipe distance
     }
   },
+  computed: {
+    downloadClass() {
+      return this.userOwnsImage ? "text-positive" : "text-white"
+    },
+    currentImageId() {
+      const currentImage = this.images[this.currentIndex as number]
+      if (!currentImage) return
+      return extractImageId(currentImage)
+    },
+  },
   watch: {
+    currentImageId(val: string) {
+      if (!val) return
+      void this.$nextTick(() => {
+        this.imgLoading = true
+      })
+      void this.loadHdImage(val)
+    },
     isFullScreen(newVal: boolean) {
       if (newVal) {
         window.addEventListener("keydown", this.handleKeyDown)
@@ -62,10 +122,71 @@ export default defineComponent({
     window.removeEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    async downloadOriginal() {
+      if (!this.userOwnsImage) return
+      if (!this.currentImageId) return
+      const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
+      const imageDataUrl = `data:image/png;base64,${imageData}`
+      downloadFile(imageDataUrl, this.currentImageId + ".png")
+    },
+    async downloadUpscaled() {
+      if (!this.userOwnsImage) return
+      if (!this.currentImageId) return
+      this.upscaling = true
+      Loading.show({
+        message: "Upscaling Image",
+      })
+
+      const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
+      if (!imageData) return console.error("No image data")
+      const imageDataUrl = `data:image/png;base64,${imageData}`
+      downloadFile(imageDataUrl, this.currentImageId + ".png")
+      Loading.hide()
+      this.upscaling = false
+    },
+    async loadHdImage(val: string) {
+      this.userOwnsImage = false
+      let imageData = getImageFromCache(val)
+      if (!imageData) {
+        this.loading = true
+        imageData = (await this.$api.creations.hdImage.query(val).catch(() => {})) || undefined
+        this.loading = false
+        if (!imageData) return
+        storeImageInCache(val, imageData)
+      }
+      this.userOwnsImage = true
+      const imageDataUrl = `data:image/webp;base64,${imageData}`
+      void this.$nextTick(() => {
+        const img = this.$refs.overlayImage as HTMLImageElement
+        if (img) img.src = imageDataUrl
+      })
+    },
+    async purchaseImage() {
+      if (!this.currentImageId) return
+      const result = await this.$api.creations.purchaseImage.mutate(this.currentImageId).catch(catchErr)
+      if (!result) return
+      this.userOwnsImage = true
+      void this.loadHdImage(this.currentImageId)
+    },
+    preloadImages() {
+      this.images.forEach((src, index) => {
+        if (index !== this.currentIndex) {
+          const img = new Image()
+          img.src = src
+        }
+      })
+    },
+    imgLoaded(event: Event) {
+      // console.log(event)
+      console.log("imgLoaded")
+      this.preloadImages()
+      this.imgLoading = false
+    },
     downloadImage() {
-      const currentImage = this.images[this.currentIndex as number]
-      if (!currentImage) return
-      downloadImage(currentImage, "fiddl.art-" + extractImageId(currentImage) + ".webp")
+      // const currentImage = this.images[this.currentIndex as number]
+      // if (!currentImage) return
+      // downloadImage(currentImage, "fiddl.art-" + extractImageId(currentImage) + ".webp")
+      // Dialog.create({ component: DownloadImage })
     },
     share() {
       const currentImage = this.images[this.currentIndex as number]
@@ -84,6 +205,7 @@ export default defineComponent({
     },
     next() {
       console.log("next")
+      if (this.loading || this.imgLoading) return
       this.currentIndex = (this.currentIndex + 1) % this.images.length
     },
     prev() {
@@ -97,19 +219,6 @@ export default defineComponent({
     },
     closeFullScreen() {
       this.isFullScreen = false
-    },
-    onOverlayClick(event: MouseEvent) {
-      // const imageElement = this.$refs.overlayImage.$el as HTMLElement
-      // console.log("imgElement", imageElement)
-      // if (imageElement) {
-      //   const rect = imageElement.getBoundingClientRect()
-      //   const clickX = event.clientX
-      //   const clickY = event.clientY
-      //   // Check if the click is outside the image's bounding box
-      //   if (clickX < rect.left || clickX > rect.right || clickY < rect.top || clickY > rect.bottom) {
-      //     this.closeFullScreen()
-      //   }
-      // }
     },
 
     onImageClick(event: MouseEvent) {
@@ -203,11 +312,11 @@ export default defineComponent({
   user-select: none
 
 .overlay-image
-  width: 2000px
-  height:2000px
+  // width: 1000px
+  // height:2000px
   object-fit: contain
   max-width: 90vw
-  max-height: calc(75vh - 20px)
+  max-height: calc(85vh - 50px)
 
 .prev-button, .next-button
   position: absolute

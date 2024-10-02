@@ -3,6 +3,7 @@ import { type Prisma } from "fiddl-server/dist/lib/db"
 import { inferProcedureOutput } from "@trpc/server"
 
 export type User = Prisma.UserGetPayload<object>
+export type Profile = Prisma.UserProfileGetPayload<object>
 export type ImageRequest = Prisma.ImageRequestGetPayload<object>
 export type ImageRequest2 = Prisma.ImageRequestGetPayload<object>
 

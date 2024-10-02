@@ -46,11 +46,15 @@ export const useBrowserStore = defineStore("browserStore", {
     async loadCreations() {
       const lastItem = this.items[this.items.length - 1]
       console.log("lastItem", lastItem?.createdAt)
-
+      let endDateTime
+      if (lastItem?.createdAt) {
+        endDateTime = lastItem.createdAt
+        // endDateTime.setSeconds(endDateTime.getSeconds() + 1)
+      }
       const creations = await api.creations.browseCreateRequests.query({
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-        limit: 35,
+        limit: 150,
       })
       console.log("creations", creations)
       for (const creation of creations) {
