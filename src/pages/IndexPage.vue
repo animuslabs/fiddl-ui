@@ -6,23 +6,22 @@ q-page.full-height.full-width.bgimg
     h4 Create and Earn with Generative Art
   .q-mt-xl
     .centered
-      .col-auto
-        h2 Welcome to the Alpha Launch of Fiddl.art
-    .centered.q-mt-md
-      ul
-        li
-          h4 Create art on the Create page
-        li
-          h4 Explore other creations on the Browse page
-        li
-          h4 Purchase an image to download a high resolution version
-        li
-          h4 Earn points when someone purchases your images
-    .centered.q-mt-md
-      h2 Have fun exploring the site
-
-
-
+      q-card.q-pa-md(style="background-color: rgba(0,0,0,.3); max-width:600px;")
+        .centered
+          .col-auto
+            h3 Welcome to the Alpha Launch of Fiddl.art
+        .centered.q-mt-md
+          ul
+            li
+              h5 Create art on the Create page
+            li
+              h5 Explore other creations on the Browse page
+            li
+              h5 Purchase an image to download a high resolution version
+            li
+              h5 Earn points when someone purchases your images
+        .centered.q-mt-md
+          h3 Have fun exploring the site
 
   .centered.q-mt-xl
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)

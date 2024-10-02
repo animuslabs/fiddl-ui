@@ -1,29 +1,33 @@
 <template lang="pug">
 q-page
-  .gt-md
-    .row.full-height.full-width.no-wrap
-      .gt-md
-        .centered
-          CreateCard.q-mt-md(@created="addImage" style="padding-top:0px; min-width:300px; max-width:600px;" ref="createCard")
-      q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
+  div(v-if="$userAuth.loggedIn")
+    .gt-md
+      .row.full-height.full-width.no-wrap
+        .gt-md
+          .centered
+            CreateCard.q-mt-md(@created="addImage" style="padding-top:0px; min-width:300px; max-width:600px;" ref="createCard")
+        q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
+          .centered.q-ma-md
+            ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq(creation.request)")
+          .centered.q-ma-md
+            q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
+    .lt-lg
+      .full-width
         .centered.q-ma-md
-          ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq(creation.request)")
+          q-btn(label="Create" color="primary" @click="createMode = true" v-if="!createMode")
+        div.q-ma-md(v-if="createMode")
+          .row
+            q-btn(label="Back" color="primary" flat @click="createMode = false")
+          .row
+            CreateCard(@created="addImage" style="padding-top:0px; min-width:200px; max-width:90vw;" ref="createCard")
+      q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
+        ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
+        //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
         .centered.q-ma-md
-          q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
-  .lt-lg
-    .full-width
-      .centered.q-ma-md
-        q-btn(label="Create" color="primary" @click="createMode = true" v-if="!createMode")
-      div.q-ma-md(v-if="createMode")
-        .row
-          q-btn(label="Back" color="primary" flat @click="createMode = false")
-        .row
-          CreateCard(@created="addImage" style="padding-top:0px; min-width:200px; max-width:90vw;" ref="createCard")
-    q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
-      ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
-      //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
-      .centered.q-ma-md
-        q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
+          q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
+  div(v-else)
+    .centered.q-mt-xl
+      h3 You must be logged in to create images
 
 </template>
 
