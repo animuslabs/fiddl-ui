@@ -18,6 +18,7 @@ import { type CreatedItem } from "src/stores/createSessionStore"
 import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
 import { debounce, Scroll, throttle } from "quasar"
+let interval: any = null
 
 export default defineComponent({
   components: {
@@ -28,6 +29,7 @@ export default defineComponent({
     return {
       browserStore: useBrowserStore(),
       onScroll: null as any,
+      onScrollUp: null as any,
     }
   },
   computed: {
@@ -41,13 +43,26 @@ export default defineComponent({
       },
     },
   },
+  unmounted() {
+    if (interval) clearInterval(interval)
+  },
   async mounted() {
     // Create a throttled scroll handler
     this.onScroll = throttle(() => {
       void this.browserStore.loadCreations()
     }, 1000)
+    this.onScrollUp = throttle(() => {
+      void this.browserStore.loadRecentCreations()
+    }, 1000)
 
-    await this.browserStore.loadCreations()
+    // await this.browserStore.loadCreations()
+    await this.browserStore.loadRecentCreations()
+    interval = setInterval(
+      () => {
+        void this.browserStore.loadRecentCreations()
+      },
+      5 * 60 * 1000,
+    )
   },
   methods: {
     handleScroll(data: any) {
@@ -58,6 +73,9 @@ export default defineComponent({
       if (scrollPosition.top + windowHeight >= pageHeight / 1.5) {
         // console.log("Scrolled past the bottom!")
         this.onScroll()
+      } else if (scrollPosition.top <= 0) {
+        console.log("Scrolled to the top!")
+        this.onScrollUp()
       }
     },
     imgClass(index: number, ratio: AspectRatioGrade) {

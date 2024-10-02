@@ -145,6 +145,7 @@ export default defineComponent({
       this.upscaling = false
     },
     async loadHdImage(val: string) {
+      if (!this.$userAuth.loggedIn) return
       this.userOwnsImage = false
       let imageData = getImageFromCache(val)
       if (!imageData) {
@@ -219,6 +220,7 @@ export default defineComponent({
     },
     closeFullScreen() {
       this.isFullScreen = false
+      this.downloadMode = false
     },
 
     onImageClick(event: MouseEvent) {

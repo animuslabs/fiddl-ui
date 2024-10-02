@@ -5,7 +5,7 @@ import { AppRouter } from "fiddl-server/dist/server"
 import superjson from "superjson"
 // import { AppRouter } from "./server"
 // Set up the API URL
-export let apiUrl = process.env.API_URL || "localhost:4444"
+export let apiUrl = process.env.API_URL || "https://api.fiddl.art"
 if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl

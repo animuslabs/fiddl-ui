@@ -73,6 +73,7 @@ export default {
         }
         await this.userAuth.pkLogin(result)
         Notify.create({ message: "Logged in", color: "positive", icon: "check" })
+        this.$router.push({ name: "account" })
         this.hide()
       } catch (error: any) {
         console.error(error)

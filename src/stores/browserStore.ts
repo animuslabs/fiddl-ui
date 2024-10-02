@@ -68,6 +68,37 @@ export const useBrowserStore = defineStore("browserStore", {
         })
       }
     },
+    async loadRecentCreations() {
+      const firstItem = this.items[0]
+      let startDateTime
+      if (firstItem?.createdAt) {
+        startDateTime = firstItem.createdAt
+      }
+      const creations = await api.creations.browseCreateRequests.query({
+        order: "asc",
+        startDateTime: startDateTime || undefined,
+        limit: 150,
+      })
+      console.log("recent creations", creations)
+
+      for (const creation of creations) {
+        const newItem = {
+          id: creation.id,
+          aspectRatio: creation.aspectRatio as AspectRatio,
+          ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
+          cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
+          imageIds: creation.images.map((el: any) => el.id),
+          createdAt: new Date(creation.createdAt),
+        }
+
+        // Check if the item already exists
+        const exists = this.items.some((item) => item.id === newItem.id)
+        if (!exists) {
+          // Add the new item at the beginning
+          this.items.unshift(newItem)
+        }
+      }
+    },
   },
   persist: false,
 })
