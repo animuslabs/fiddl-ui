@@ -58,7 +58,7 @@ export default defineComponent({
         })
         await this.$userAuth.loadUserData()
         const redirect = this.$route.query?.redirect as string
-        await this.$router.push({ name: redirect || "index" })
+        await this.$router.push({ name: redirect || "account" })
       } catch (e: any) {
         console.error(e)
         this.$q
