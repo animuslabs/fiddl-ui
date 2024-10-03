@@ -1,15 +1,14 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogoWithText.svg" style="width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager" )
+    q-img(src="/fiddlLogoWithText.svg" style="width: 80vw; max-width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager")
   .centered
-    h4 Create and Earn with Generative Art
-  .q-mt-xl
+    h4.q-ma-md.text-center Create and Earn with Generative Art
+  .q-mt-sm
     .centered
-      q-card.q-pa-md(style="background-color: rgba(0,0,0,.3); max-width:600px;")
+      q-card.q-pa-md(style="background-color: rgba(0,0,0,.3); max-width: 90vw; margin: 0 auto;")
         .centered
-          .col-auto
-            h3 Welcome to the Alpha Launch of Fiddl.art
+          h4 Welcome to the Alpha Launch of Fiddl.art
         .centered.q-mt-md
           ul
             li
@@ -21,7 +20,7 @@ q-page.full-height.full-width.bgimg
             li
               h5 Earn points when someone purchases your images
         .centered.q-mt-md
-          h3 Have fun exploring the site
+          h5 Have fun exploring the site
 
   .centered.q-mt-xl
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)

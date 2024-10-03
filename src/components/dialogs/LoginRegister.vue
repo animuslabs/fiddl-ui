@@ -4,7 +4,7 @@ q-dialog(ref="dialog" @hide="onDialogHide")
     q-form(:submit="doRegister")
       .q-ma-md
         .row.justify-center
-          h5 Instant Login / Registration
+          h5 PassKey Login / Registration
         //- .centered.q-pt-md
           //- q-btn-toggle(v-model="loginMethod" :options="loginMethods")
         .centered.q-pa-lg

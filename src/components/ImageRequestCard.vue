@@ -1,5 +1,5 @@
 <template lang="pug">
-q-card(style="overflow:scroll" ).q-mb-md.q-pr-md.q-pl-md.q-pb-lg
+q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   .centered.full-width.q-pt-md.q-pb-md.q-gutter-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
