@@ -1,17 +1,17 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogoWithText.svg" style="width: 400px; opacity: 0.9")
+    q-img(src="/fiddlLogoWithText.svg" style="max-width:80vw; width: 400px; opacity: 0.9")
   //- .centered.q-mt-md
   //-   h1 Fiddl.art
   .centered
-    h5 Create, Vote, Earn with generative artwork.
+    h5.q-ma-md Create, Vote, Earn with generative artwork.
   .centered.q-mt-lg
     q-btn(size="xl" label="Alpha Is Live" color="secondary" type="a" href="https://alpha.fiddl.art")
   .centered.q-ma-lg
     h5 Join the Mailing List to be updated on new features and events.
   .centered
-    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 500px; width:500px;").bg-dark-page
+    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 500px; width:500px; max-width:100vw;").bg-dark-page
   .centered
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
     q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
