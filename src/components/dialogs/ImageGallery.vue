@@ -201,7 +201,11 @@ export default defineComponent({
       if (!currentImage) return
 
       if (window.location.hostname.includes("localhost")) copyToClipboard(currentImage)
-      else copyToClipboard(process.env.API_URL + currentImage) // eslint-disable-line no-undef
+      else {
+        const urlParams = new URL(currentImage).searchParams
+        const extractedUrl = urlParams.get("url")
+        if (extractedUrl) copyToClipboard(extractedUrl)
+      }
       if (this.isFullScreen) this.closeFullScreen()
       Dialog.create({
         title: "Image URL Copied",
