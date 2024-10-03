@@ -45,7 +45,7 @@ import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { throwErr } from "lib/util"
-import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/pointsPackages"
+import type { PointsPackageWithUsd } from "fiddl-server/src/lib/pointsPackages"
 import { Dialog } from "quasar"
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string

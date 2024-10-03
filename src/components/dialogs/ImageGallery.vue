@@ -191,8 +191,10 @@ export default defineComponent({
     },
     share() {
       const currentImage = this.images[this.currentIndex as number]
+      console.log("share", currentImage)
       if (!currentImage) return
       copyToClipboard(currentImage)
+      // copyToClipboard(process.env.API_URL + currentImage)
       if (this.isFullScreen) this.closeFullScreen()
       Dialog.create({
         title: "Image URL Copied",
