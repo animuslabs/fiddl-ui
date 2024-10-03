@@ -202,7 +202,7 @@ export default defineComponent({
 
       if (window.location.hostname.includes("localhost")) copyToClipboard(currentImage)
       else {
-        const urlParams = new URL(currentImage).searchParams
+        const urlParams = new URL("https://fiddl.art" + currentImage).searchParams
         const extractedUrl = urlParams.get("url")
         if (extractedUrl) copyToClipboard(extractedUrl)
       }
