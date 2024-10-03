@@ -43,11 +43,11 @@ div
         //- div {{ req }}
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
-        .centered(v-if="userAuth.userData")
-          q-btn( type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > userAuth.userData.availablePoints || req.prompt.length < 5" )
+        .centered(v-if="$userAuth.userData")
+          q-btn( type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
             .badge
               p {{ totalCost }}
-      div(v-if="userAuth.userData && totalCost > userAuth?.userData?.availablePoints|| 0").q-pt-md
+      div(v-if="$userAuth.userData && totalCost > $userAuth?.userData?.availablePoints|| 0").q-pt-md
         .centered
           p.text-accent.q-pt-md You don't have enough points to create this image
         .centered.q-ma-sm
@@ -56,13 +56,12 @@ div
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { useUserAuth } from "stores/userAuth"
-import { useCreateSession } from "stores/createSessionStore"
 import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { ImageModelData, imageModelDatas, aspectRatios, ImageModel } from "lib/imageModels"
-import { toObject } from "lib/util"
-import { Dialog, LocalStorage } from "quasar"
+import { aspectRatios, ImageModel, imageModelDatas } from "lib/imageModels"
+import { catchErr, toObject } from "lib/util"
+import { LocalStorage } from "quasar"
+import { useCreateSession } from "stores/createSessionStore"
+import { defineComponent } from "vue"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -72,7 +71,6 @@ export default defineComponent({
   emits: ["created"],
   data() {
     return {
-      userAuth: useUserAuth(),
       createSession: useCreateSession(),
       req: defaultImageRequest as CreateImageRequest,
       selectedModel: availableModels[2] as ImageModel,
@@ -123,39 +121,22 @@ export default defineComponent({
     },
     async newPrompt() {
       this.loading.new = true
-      try {
-        this.req.prompt = await this.$api.create.randomPrompt.mutate()
-      } catch (e: any) {
-        console.error(e)
-        Dialog.create({
-          title: "Error",
-          message: e.message,
-          ok: true,
-        })
-      }
+      this.req.prompt = (await this.$api.create.randomPrompt.mutate().catch(catchErr)) || this.req.prompt
       this.loading.new = false
-      await this.userAuth.loadUserData()
+      await this.$userAuth.loadUserData()
     },
     async improvePrompt() {
       this.loading.improve = true
-      try {
-        this.req.prompt = await this.$api.create.improvePrompt.mutate(this.req.prompt)
-      } catch (e) {
-        console.error(e)
-      }
+      this.req.prompt = (await this.$api.create.improvePrompt.mutate(this.req.prompt).catch(catchErr)) || this.req.prompt
       this.loading.improve = false
-      await this.userAuth.loadUserData()
+      await this.$userAuth.loadUserData()
     },
     async randomizePrompt() {
       this.loading.randomize = true
       const existingPrompt = this.req.prompt.length > 0 ? this.req.prompt : undefined
-      try {
-        this.req.prompt = await this.$api.create.randomPrompt.mutate(existingPrompt)
-      } catch (e) {
-        console.error(e)
-      }
+      this.req.prompt = (await this.$api.create.randomPrompt.mutate(existingPrompt).catch(catchErr)) || this.req.prompt
       this.loading.randomize = false
-      await this.userAuth.loadUserData()
+      await this.$userAuth.loadUserData()
     },
     updatePrivateMode(val: boolean) {
       this.privateMode = val
@@ -170,14 +151,10 @@ export default defineComponent({
     async createImage() {
       this.loading.create = true
       LocalStorage.set("req", this.req)
-      try {
-        await this.createSession.generateImage(toObject(this.req))
-        this.$emit("created")
-      } catch (e) {
-        console.error(e)
-      }
+      await this.createSession.generateImage(toObject(this.req)).catch(catchErr)
+      this.$emit("created")
       this.loading.create = false
-      void this.userAuth.loadUserData()
+      void this.$userAuth.loadUserData()
     },
   },
 })
