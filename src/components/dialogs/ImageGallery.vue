@@ -199,8 +199,9 @@ export default defineComponent({
       const currentImage = this.images[this.currentIndex as number]
       console.log("share", currentImage)
       if (!currentImage) return
-      copyToClipboard(currentImage)
-      // copyToClipboard(process.env.API_URL + currentImage)
+
+      if (window.location.hostname.includes("localhost")) copyToClipboard(currentImage)
+      else copyToClipboard(process.env.API_URL + currentImage) // eslint-disable-line no-undef
       if (this.isFullScreen) this.closeFullScreen()
       Dialog.create({
         title: "Image URL Copied",
