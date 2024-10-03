@@ -28,18 +28,20 @@
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
       q-linear-progress.absolute-bottom( indeterminate v-if="imgLoading || loading" )
       .absolute.full-width.full-height(style="background-color: rgba(0,0,0,.5);" v-if="imgLoading")
-      .absolute.full-width(style="background-color: rgba(0,0,0,.8); top:55px; height:100vh;" v-if="downloadMode")
+      .absolute.full-width(style="background-color: rgba(0,0,0,.8);  height:100vh;" v-if="downloadMode")
         .centered
           h4 Download Image
         .centered(v-if="!userOwnsImage")
-          div.q-ma-md
-            p.q-ma-md You do not own this image. It can be purchased with Fiddl Points.
-            p.q-ma-md When you purchase the image, it will always display in full resolution without a watermark on fiddl.art.
-            p.q-ma-md You will have access to the original full quality image as well as a 4k upscaled version suitable for printing.
-            .centered.q-pt-md
-              q-btn(color="accent" label="Purchase Image" @click="purchaseImage()")
-                .badge
-                  p 10
+          ul.q-ma-md
+            li You do not own this image. It can be purchased with Fiddl Points.
+            li When you purchase the image, it will always display in full resolution without a watermark on fiddl.art.
+            li You will have access to the original full quality image as well as a 4k upscaled version suitable for printing.
+          .centered.q-pt-md
+            q-btn(color="accent" label="Purchase Image" @click="purchaseImage()" :disable="!$userAuth.loggedIn")
+              .badge
+                p 10
+          .centered(v-if="!$userAuth.loggedIn").q-mt-lg
+            q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
         div(v-else style="height:30vh")
           .centered
             p.q-ma-md You own this image.
@@ -122,6 +124,10 @@ export default defineComponent({
     window.removeEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    goToLogin() {
+      this.closeFullScreen()
+      void this.$router.push({ name: "login" })
+    },
     async downloadOriginal() {
       if (!this.userOwnsImage) return
       if (!this.currentImageId) return
