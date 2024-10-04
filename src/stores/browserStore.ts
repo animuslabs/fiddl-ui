@@ -56,7 +56,7 @@ export const useBrowserStore = defineStore("browserStore", {
       const creations = await api.creations.browseCreateRequests.query({
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-        limit: 150,
+        limit: 100,
       })
       console.log("creations", creations)
       for (const creation of creations) {
@@ -81,7 +81,7 @@ export const useBrowserStore = defineStore("browserStore", {
       const creations = await api.creations.browseCreateRequests.query({
         order: "asc",
         startDateTime: startDateTime || undefined,
-        limit: 150,
+        limit: 100,
       })
       console.log("recent creations", creations)
 
