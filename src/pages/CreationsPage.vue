@@ -17,7 +17,7 @@ q-page.full-height.full-width
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id").q-mr-md
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
       .centered.q-ma-md
-        q-btn(label="Load More" @click="creationsStore.loadPurchases()")
+        q-btn(label="Load More" @click="load()")
 
 
 
@@ -63,6 +63,13 @@ export default defineComponent({
 
   mounted() {},
   methods: {
+    load() {
+      if (this.tab === "creations") {
+        void this.creationsStore.loadCreations()
+      } else {
+        void this.creationsStore.loadPurchases()
+      }
+    },
     showGallery(imageId: string) {
       const allImages = this.creationsStore.imagePurchases.map((el) => el.imageId)
       const index = allImages.findIndex((el) => el === imageId)
