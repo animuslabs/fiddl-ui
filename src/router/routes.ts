@@ -5,6 +5,7 @@ const asyncLazyLoad = (path: string) => defineAsyncComponent(() => import(`../pa
 
 const routeData = [
   ["index", "/", "IndexPage"],
+  ["stats", "/stats", "StatsPage"],
   ["search", "/search", "SearchPage"],
   ["create", "/create", "CreatePage"],
   ["vote", "/vote", "VotePage"],
