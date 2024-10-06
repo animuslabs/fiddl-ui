@@ -133,7 +133,7 @@ export default defineComponent({
       if (!this.currentImageId) return
       const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
       const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + ".png")
+      downloadFile(imageDataUrl, this.currentImageId + "-original.png")
     },
     async downloadUpscaled() {
       if (!this.userOwnsImage) return
@@ -146,7 +146,7 @@ export default defineComponent({
       const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
       if (!imageData) return console.error("No image data")
       const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + ".png")
+      downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
       Loading.hide()
       this.upscaling = false
     },
