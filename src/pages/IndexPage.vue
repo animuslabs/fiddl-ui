@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-height.full-width.bgimg
   .centered.q-mt-md
-    q-img(src="/fiddlLogoWithText.svg" style="width: 80vw; max-width: 400px; opacity: 0.9" no-transition loadingShowDelay="2" loading="eager")
+    img(src="/fiddlLogoWithText.svg" style=" max-width: 400px; width:90vw; opacity: 0.9; object-fit: contain;" no-transition loadingShowDelay="2" loading="eager")
   .centered
     h4.q-ma-md.text-center Create and Earn with Generative Art
   .q-mt-sm
