@@ -59,7 +59,7 @@ export default defineComponent({
     }, 1000)
 
     await this.browserStore.loadCreations()
-    // await this.browserStore.loadRecentCreations()
+    await this.browserStore.loadRecentCreations()
     interval = setInterval(
       () => {
         void this.browserStore.loadRecentCreations()
