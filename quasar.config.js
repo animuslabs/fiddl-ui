@@ -11,7 +11,30 @@
 const { configure } = require("quasar/wrappers")
 const path = require("node:path")
 require("dotenv").config()
+const fs = require("fs")
+const routeData = require("./src/router/routeData.json") // Adjust path as needed
 
+function generateSitemap() {
+  const baseUrl = "https://alpha.fiddl.art"
+  const currentDate = new Date().toISOString() // Get current date in ISO format
+  let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`
+  sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
+
+  routeData.forEach((route) => {
+    const path = route[1].replace(/:\w+\??/g, "") // Remove route params
+    const url = `${baseUrl}${path}`
+    sitemap += `  <url>\n`
+    sitemap += `    <loc>${url}</loc>\n`
+    sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
+    sitemap += `  </url>\n`
+  })
+
+  sitemap += `</urlset>`
+
+  // Write the sitemap to a file
+  fs.writeFileSync(path.resolve(__dirname, "public", "sitemap.xml"), sitemap)
+  console.log("Sitemap generated successfully")
+}
 module.exports = configure(function (/* ctx */) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -40,6 +63,9 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
+      beforeBuild: (params) => {
+        generateSitemap()
+      },
       env: {
         API_URL: process.env.API_URL,
         PAYPAL_ID: process.env.PAYPAL_ID,

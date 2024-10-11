@@ -1,26 +1,16 @@
 import { RouteRecordRaw } from "vue-router"
 import { defineAsyncComponent } from "vue"
+// import fs from "fs"
+import routeData from "./routeData.json"
 
-const asyncLazyLoad = (path: string) => defineAsyncComponent(() => import(`../pages/${path}.vue`))
+const asyncLazyLoad = (path: string) => defineAsyncComponent(() => import(`pages/${path}.vue`))
 
-const routeData = [
-  ["index", "/", "IndexPage"],
-  ["stats", "/stats", "StatsPage"],
-  ["search", "/search", "SearchPage"],
-  ["create", "/create", "CreatePage"],
-  ["vote", "/vote", "VotePage"],
-  ["mint", "/mint", "MintPage"],
-  ["browse", "/browse", "BrowsePage"],
-  ["account", "/account", "AccountPage"],
-  ["creations", "/creations/:accountId?", "CreationsPage"],
-  ["addPoints", "/addPoints", "AddPointsPage"],
-  ["login", "/login", "LoginPage"],
-]
+// const routeData = JSON.parse(fs.readFileSync("./routeData.json", "utf-8"))
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
-    component: () => import("../layouts/MainLayout.vue"),
+    component: () => import("layouts/MainLayout.vue"),
     children: [],
   },
   {
@@ -29,7 +19,7 @@ const routes: RouteRecordRaw[] = [
   },
 ]
 
-routeData.forEach((el) =>
+routeData.forEach((el: any) =>
   routes[0]?.children?.push({
     name: el[0] as string,
     path: el[1] as string,

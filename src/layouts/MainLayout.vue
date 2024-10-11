@@ -26,7 +26,7 @@ q-layout(view="lHh Lpr lFf")
         q-btn(rounded padding="0px" :color="pointsColor" v-if="userAuth.userData" @click="$router.push({ name: 'addPoints' })")
           .row.items-center
             div.q-ml-md {{ userAuth?.userData?.availablePoints || 0 }}
-            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;")
+            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;" alt="fiddl points logo")
           q-tooltip
             p Add Fiddl Points
         //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )

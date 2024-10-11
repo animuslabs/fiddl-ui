@@ -1,5 +1,5 @@
 <template lang="pug">
-q-img(:src="imageUrl" style="border-radius: 14px;")
+q-img(:src="imageUrl" style="border-radius: 14px;" alt="user created image")
 
 </template>
 

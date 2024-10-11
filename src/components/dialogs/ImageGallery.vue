@@ -1,6 +1,6 @@
 <template lang="pug">
 .carousel.carousel-container(@touchstart="onTouchStart" @touchmove="onTouchMove")
-  img.carousel-image(v-if="!hidden" :src="images[currentIndex]" alt="Carousel Image" @click="onImageClick")
+  img.carousel-image(v-if="!hidden" :src="images[currentIndex]" alt="Carousel Image" @click="onImageClick" alt="user created image")
 
   button.prev-button(@click="prev") ‹
   button.next-button(@click="next") ›
@@ -56,7 +56,7 @@
               small Upscaling can take 30+ seconds the first time
         .centered.q-mt-md
           q-btn(label="< back" color="grey" flat @click="downloadMode = false")
-      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage" @load="imgLoaded")
+      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image")
       .indicators(v-if="images.length > 1 && !downloadMode")
         span.indicator( v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
 </template>
