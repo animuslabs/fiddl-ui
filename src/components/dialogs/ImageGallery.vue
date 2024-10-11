@@ -1,6 +1,6 @@
 <template lang="pug">
 .carousel.carousel-container(@touchstart="onTouchStart" @touchmove="onTouchMove")
-  img.carousel-image(v-if="!hidden" :src="images[currentIndex]" alt="Carousel Image" @click="onImageClick" alt="user created image")
+  img.carousel-image(v-if="!hidden" :src="images[currentIndex]" alt="Carousel Image" @click="onImageClick" )
 
   button.prev-button(@click="prev") ‹
   button.next-button(@click="next") ›
