@@ -13,6 +13,7 @@ const path = require("node:path")
 require("dotenv").config()
 const fs = require("fs")
 const routeData = require("./src/router/routeData.json") // Adjust path as needed
+const viteCompression = require("vite-plugin-compression")
 
 function generateSitemap() {
   const baseUrl = "https://alpha.fiddl.art"
@@ -63,6 +64,12 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
+      minify: "terser",
+      sourcemap: false,
+      cssCodeSplit: true,
+      extractCSS: true,
+
+      htmlMinifyOptions: { minifyJS: true, minifyCSS: true },
       beforeBuild: (params) => {
         generateSitemap()
       },
@@ -71,9 +78,15 @@ module.exports = configure(function (/* ctx */) {
         PAYPAL_ID: process.env.PAYPAL_ID,
       },
       target: {
-        browser: ["edge88", "firefox78", "chrome87", "safari13.1"],
-        node: "node20",
+        browsers: ["edge88", "firefox78", "chrome87", "safari13.1"], // Exclude IE by targeting only modern browsers
+        // node: "node20",
       },
+      vitePlugins: [
+        viteCompression({
+          algorithm: "gzip", // Or 'brotliCompress'
+          ext: ".gz", // Or '.br' for Brotli
+        }),
+      ],
       // vitePlugins: [
       //   ["vite-tsconfig-paths", {
       //     // projects: ['./tsconfig.json', '../../tsconfig.json'] // if you have multiple tsconfig files (e.g. in a monorepo)
@@ -82,6 +95,7 @@ module.exports = configure(function (/* ctx */) {
       extendViteConf(viteConf, { isServer, isClient }) {
         // console.log(viteConf)
         viteConf.logLevel = "error"
+
         Object.assign(viteConf.resolve.alias, {
           lib: path.join(__dirname, "./src/lib"),
         })
