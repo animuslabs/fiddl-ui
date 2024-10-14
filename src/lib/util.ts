@@ -4,6 +4,7 @@ import crypto from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
 import type { AppRouter } from "lib/server"
 import { Dialog } from "quasar"
+import umami from "lib/umami"
 
 /**
  * Extracts the image ID from the URL.
@@ -29,8 +30,10 @@ export function generateShortHash(input: string): string {
 // Example usage
 const url = "http://localhost:4444/images/2e63a85c-3d16-4f89-aa6c-5db32b9c1c1b-lg.webp"
 const imageId = extractImageId(url)
+
 export const catchErr = (err: TRPCClientError<AppRouter>) => {
   console.error(err)
+  umami.track("error", { message: err.message, error: err })
   Dialog.create({
     title: "Error",
     message: err.message,

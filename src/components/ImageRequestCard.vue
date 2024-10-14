@@ -1,13 +1,13 @@
 <template lang="pug">
 q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
-  .centered.full-width.q-pt-md.q-pb-md.q-gutter-md
+  .row.full-width.q-pt-md.q-pb-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent Error during Image generation
-    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm
-      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" ).q-pa-md
-    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md
-      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" ).q-pa-sm
+    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm.q-pa-sm
+      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
+    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md.q-pa-sm
+      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
   q-separator(color="grey-9" spaced="20px")
   .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
     .col-auto

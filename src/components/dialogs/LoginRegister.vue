@@ -26,6 +26,8 @@ q-dialog(ref="dialog" @hide="onDialogHide")
 import { QDialog, Notify, Dialog } from "quasar"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
+import umami from "lib/umami"
+import { catchErr } from "lib/util"
 
 const loginMethods = [
   { label: "email", value: "email" },
@@ -64,11 +66,12 @@ export default {
         this.loginError = false
         this.registerError = false
         this.loading = true
-        const result = await passKeyAuth.findUserId({ email: this.email, phone: this.phone }).catch(console.error)
+        const result = await passKeyAuth.findUserId({ email: this.email, phone: this.phone }).catch(catchErr)
         console.log("result", result)
         if (!result) {
           this.loginError = true
           this.loading = false
+          umami.track("pkLoginError-findUser")
           return
         }
         await this.userAuth.pkLogin(result)
@@ -79,6 +82,7 @@ export default {
         console.error(error)
         this.loginError = true
         this.loading = false
+        umami.track("pkLoginError", error.message)
         Dialog.create({ message: "Error logging in: " + error.message + " try send link login", color: "negative" })
       }
     },
@@ -93,10 +97,12 @@ export default {
         .registerAndLogin({ phone, email })
         .then(() => {
           Notify.create({ message: "Logged in", color: "positive", icon: "check" })
+          umami.track("pkRegisterSuccess")
           this.hide()
         })
         .catch((el) => {
           console.error(el)
+          umami.track("pkRegisterError", el.message)
           // this.registerError = true
           void this.doLogin()
         })

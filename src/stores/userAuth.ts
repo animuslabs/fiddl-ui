@@ -4,6 +4,8 @@ import { createPinia, defineStore } from "pinia"
 import api, { type PointsTransfer, type UserData, type UserProfile } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
+import umami from "lib/umami"
+import { catchErr } from "lib/util"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -26,7 +28,8 @@ export const useUserAuth = defineStore("userAuth", {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      this.userProfile = await api.user.profile.query(userId!)
+      this.userProfile = (await api.user.profile.query(userId!).catch(catchErr)) || null
+      if (this.userProfile) umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
     },
     async loadPointsHistory(userId?: string) {
       if (!userId && !this.userId) return
@@ -80,6 +83,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = false
       this.userId = null
       this.userData = null
+      umami.identify({ userId: "logged-out" })
     },
   },
 })

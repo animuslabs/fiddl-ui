@@ -11,7 +11,7 @@ q-page.full-height.full-width
   .centered
     q-scroll-area(style="width:1900px; height:calc(100vh - 135px); max-width:95vw; overflow:auto")
       .centered.q-gutter-md(v-if="tab === 'creations'")
-        div(v-for="creation in creationsStore.creations"  :key="creation.id").q-mr-md
+        div(v-for="creation in creationsStore.creations"  :key="creation.id").q-mr-md.q-pl-md.full-width
           ImageRequestCard(:creation="creation")
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id").q-mr-md

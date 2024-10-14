@@ -19,6 +19,7 @@ import { defineComponent } from "vue"
 import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 import { Dialog, Loading, Notify } from "quasar"
 import SendLink from "src/components/dialogs/SendLink.vue"
+import umami from "lib/umami"
 
 export default defineComponent({
   components: {
@@ -59,6 +60,7 @@ export default defineComponent({
         await this.$userAuth.loadUserData()
         const redirect = this.$route.query?.redirect as string
         await this.$router.push({ name: redirect || "account" })
+        umami.track("linkLogin")
       } catch (e: any) {
         console.error(e)
         this.$q
@@ -69,15 +71,18 @@ export default defineComponent({
           .onDismiss(() => {
             void this.$router.replace({ name: "login" })
           })
+        umami.track("linkLoginError", e.message)
       }
       Loading.hide()
     },
     login() {
+      umami.track("pkLoginStart")
       Dialog.create({
         component: LoginDialog,
       })
     },
     sendLink() {
+      umami.track("sendLinkLoginStart")
       Dialog.create({
         component: SendLink,
       })

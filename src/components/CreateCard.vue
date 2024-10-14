@@ -62,6 +62,7 @@ import { catchErr, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
 import { useCreateSession } from "stores/createSessionStore"
 import { defineComponent } from "vue"
+import umami from "lib/umami"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -124,12 +125,14 @@ export default defineComponent({
       this.req.prompt = (await this.$api.create.randomPrompt.mutate().catch(catchErr)) || this.req.prompt
       this.loading.new = false
       await this.$userAuth.loadUserData()
+      umami.track("newPrompt")
     },
     async improvePrompt() {
       this.loading.improve = true
       this.req.prompt = (await this.$api.create.improvePrompt.mutate(this.req.prompt).catch(catchErr)) || this.req.prompt
       this.loading.improve = false
       await this.$userAuth.loadUserData()
+      umami.track("improvePrompt")
     },
     async randomizePrompt() {
       this.loading.randomize = true
@@ -137,6 +140,7 @@ export default defineComponent({
       this.req.prompt = (await this.$api.create.randomPrompt.mutate(existingPrompt).catch(catchErr)) || this.req.prompt
       this.loading.randomize = false
       await this.$userAuth.loadUserData()
+      umami.track("randomizePrompt")
     },
     updatePrivateMode(val: boolean) {
       this.privateMode = val
@@ -155,6 +159,7 @@ export default defineComponent({
       this.$emit("created")
       this.loading.create = false
       void this.$userAuth.loadUserData()
+      umami.track("createImage")
     },
   },
 })
