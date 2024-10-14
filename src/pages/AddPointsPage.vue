@@ -44,9 +44,10 @@ import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
-import { throwErr } from "lib/util"
+import { catchErr, throwErr } from "lib/util"
 import type { PointsPackageWithUsd } from "fiddl-server/src/lib/pointsPackages"
 import { Dialog } from "quasar"
+import umami from "lib/umami"
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string
 }
@@ -120,8 +121,8 @@ export default defineComponent({
         },
         createOrder: async () => {
           if (this.selectedPkgIndex === null) throwErr("Failed to create order")
-          const res = await this.$api.points.initBuyPackage.mutate({ method: "payPal", packageId: this.selectedPkgIndex })
-          if (!res) throwErr("Failed to create order")
+          const res = await this.$api.points.initBuyPackage.mutate({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
+          if (!res) return ""
           return res.id
         },
         onApprove: async (data, actions) => {
@@ -138,9 +139,11 @@ export default defineComponent({
               message: errorDetail.description,
               ok: true,
             })
+            umami.track("buyPointsPkgFailure", errorDetail)
             throwErr("Failed to capture order: ", errorDetail)
           }
           void this.userAuth.loadUserData()
+          umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
           Dialog.create({
             title: "Success",
             message: "Points added successfully",
