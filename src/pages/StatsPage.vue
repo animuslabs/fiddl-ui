@@ -20,6 +20,10 @@ q-page.full-height.full-width
       .col(style="overflow: auto; min-width:400px;")
         h2 Payments
         pre(style="font-size: 20px;") {{ stats.payments }}
+    .centered.q-ma-md
+      .col
+        h2 API Metrics
+        div(style="font-size: 15px; word-wrap: break-word; max-width:90vw;") {{ stats.apiMetrics }}
 
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
@@ -32,20 +36,11 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { jwt } from "lib/jwt"
-import { img } from "lib/netlifyImg"
-import { extractImageId } from "lib/util"
-import { copyToClipboard, Dialog, Notify } from "quasar"
-import CreatedImageCard from "src/components/CreatedImageCard.vue"
-import ImageRequestCard from "src/components/ImageRequestCard.vue"
-import { BrowserItem } from "src/stores/browserStore"
-import { useCreations } from "src/stores/creationsStore"
+import { copyToClipboard, Dialog } from "quasar"
 import { defineComponent } from "vue"
 
 export default defineComponent({
-  components: {
-    ImageRequestCard,
-    CreatedImageCard,
-  },
+  components: {},
   data() {
     return {
       stats: {} as any,
@@ -78,6 +73,7 @@ export default defineComponent({
       this.stats.images = await this.$api.stats.images.query()
       this.stats.collections = await this.$api.stats.collections.query()
       this.stats.payments = await this.$api.stats.payments.query()
+      this.stats.apiMetrics = await this.$api.stats.apiMetrics.query()
     },
   },
 })
