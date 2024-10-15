@@ -7,14 +7,15 @@ q-card
         small {{ timeSince(new Date(transferData.createdAt)) }}
         q-tooltip
           p {{ new Date(transferData.createdAt).toString() }}
-    .col-auto.q-pl-md.q-ma-md
-      .row.q-gutter-md
+    .col.q-pl-md.q-ma-md
+      .row.q-gutter-md.items-center
         .col-auto.gt-sm
           .row.q-gutter-md.no-wrap
         .col-auto
           small Final Balance: #[p {{ transferData.userFinalBalance }}]
         .col-auto
           small Type: #[p {{ transferData.type }}]
+        .col-grow
         .col-auto
           div
             q-btn(@click="showDetails()" size="sm" icon="info" round flat)
