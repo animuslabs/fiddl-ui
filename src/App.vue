@@ -8,7 +8,7 @@ router-view
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import { Loading, LoadingBar } from "quasar"
+import { Loading, LoadingBar, LocalStorage } from "quasar"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { toObject } from "lib/util"
 if (import.meta.hot) {
@@ -28,9 +28,23 @@ export default defineComponent({
       images: [] as string[],
     }
   },
+  watch: {
+    "$route.query": {
+      immediate: false,
+      handler(newQuery) {
+        console.log(newQuery)
+        const referredBy = this.$route.query?.referredBy as string | undefined
+        console.log(this.$route.query)
+        if (!referredBy) return
+        LocalStorage.set("referredBy", referredBy)
+      },
+    },
+  },
   created() {
     // this.$userAuth = useUserAuth()
+    // console.log(this.$route.query)
   },
+
   mounted() {
     void useUserAuth().attemptAutoLogin()
     LoadingBar.setDefaults({

@@ -23,7 +23,7 @@ q-dialog(ref="dialog" @hide="onDialogHide")
 </template>
 
 <script lang="ts">
-import { QDialog, Notify, Dialog } from "quasar"
+import { QDialog, Notify, Dialog, LocalStorage } from "quasar"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import umami from "lib/umami"
@@ -93,8 +93,9 @@ export default {
       const phone = this.phone.length === 0 ? undefined : this.phone
       const email = this.email.length === 0 ? undefined : this.email
       console.log({ phone, email })
+      const referredBy = LocalStorage.getItem("referredBy") as string | undefined
       await this.userAuth
-        .registerAndLogin({ phone, email })
+        .registerAndLogin({ phone, email, referredBy })
         .then(() => {
           Notify.create({ message: "Logged in", color: "positive", icon: "check" })
           umami.track("pkRegisterSuccess")

@@ -3,7 +3,7 @@ import api from "lib/api"
 import { normalizePhoneNumber, throwErr } from "lib/util"
 
 export const passKeyAuth = {
-  async register(data: { phone?: string; email?: string }) {
+  async register(data: { phone?: string; email?: string; referredBy?: string }) {
     const registration = await api.pkAuth.registerStart.mutate(data)
     console.log("registerResp", registration)
     const attResp = await webAuthN.startRegistration(registration)

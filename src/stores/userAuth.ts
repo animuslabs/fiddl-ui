@@ -73,7 +73,7 @@ export const useUserAuth = defineStore("userAuth", {
       const userId = await api.user.findByPhone.query(phoneNumber)
       await this.pkLogin(userId)
     },
-    async registerAndLogin(data: { email?: string; phone?: string }) {
+    async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {
       const result = await pkAuth.register(data)
       await this.pkLogin(result.registration.user.name)
       console.log(result.registration)

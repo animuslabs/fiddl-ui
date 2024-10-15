@@ -13,6 +13,12 @@ q-page.full-height.full-width
           .col-auto
             div
               q-btn(@click="editingUsername = true" round flat icon="edit" size="sm" )
+          .col-grow
+          .col-auto
+            div
+              q-btn(v-if="userAuth.userProfile?.username" label="Get Referral Link" @click="copyRefLink()")
+              div(v-else) Set a username to get a referral link
+
         .row.q-gutter-md.items-center(v-else)
           .col-auto
             q-input.q-pb-md( prefix="@" v-model="newUsername" label="Username" :rules="[validateUsername]" clearable)
@@ -20,12 +26,15 @@ q-page.full-height.full-width
             div
               q-btn(@click="editingUsername = false" round flat icon="close" color="negative")
               q-btn(@click="setNewUsername()" round flat icon="check" color="positive")
+        div(style="max-width: 400px;").q-mt-md
+          p You will earn a 10% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
         h6.q-pt-md Email
         .row.items-center
-          h5 {{ userAuth.userProfile?.email || "no email" }}
-          .q-ma-md
-            q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive")
-            q-icon(v-else name="close" color="negative")
+          div
+            h5 {{ userAuth.userProfile?.email?.toLowerCase() || "no email" }}
+          div.q-ml-md
+            q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
+            q-icon(v-else name="close" color="negative" size="sm")
           .q-ma-md(v-if="!userAuth.userProfile?.emailVerified")
             q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
         .centered(v-if="!userAuth.userProfile?.emailVerified")
@@ -61,7 +70,7 @@ q-page.full-height.full-width
 import { defineComponent } from "vue"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
-import { Dialog, Loading, Notify } from "quasar"
+import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
 
 function validateUsername(username: string): string | true {
@@ -106,6 +115,11 @@ export default defineComponent({
     this.loadData()
   },
   methods: {
+    copyRefLink() {
+      const refLink = window.location.origin + "/?referredBy=" + this.$userAuth.userProfile?.username
+      void copyToClipboard(refLink)
+      Notify.create({ message: "Referral link copied to clipboard", color: "positive", icon: "check" })
+    },
     setNewUsername() {
       this.$api.user.setUsername
         .mutate(this.newUsername)
