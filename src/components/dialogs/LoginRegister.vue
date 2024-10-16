@@ -27,7 +27,7 @@ import { QDialog, Notify, Dialog, LocalStorage } from "quasar"
 import { passKeyAuth } from "lib/auth"
 import { useUserAuth } from "src/stores/userAuth"
 import umami from "lib/umami"
-import { catchErr } from "lib/util"
+import { catchErr, getReferredBy } from "lib/util"
 
 const loginMethods = [
   { label: "email", value: "email" },
@@ -93,9 +93,9 @@ export default {
       const phone = this.phone.length === 0 ? undefined : this.phone
       const email = this.email.length === 0 ? undefined : this.email
       console.log({ phone, email })
-      const referredBy = LocalStorage.getItem("referredBy") as string | undefined
+      // const referredBy = LocalStorage.getItem("referredBy") as string | undefined
       await this.userAuth
-        .registerAndLogin({ phone, email, referredBy })
+        .registerAndLogin({ phone, email, referredBy: getReferredBy() })
         .then(() => {
           Notify.create({ message: "Logged in", color: "positive", icon: "check" })
           umami.track("pkRegisterSuccess")

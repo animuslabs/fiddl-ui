@@ -1,4 +1,5 @@
 import { AuthenticationResponseJSON, AuthenticatorTransportFuture, Base64URLString, CredentialDeviceType, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from "@simplewebauthn/types"
+import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 
 export type OutputFormat = "jpeg" | "png" | "webp"
 export type StabilityAIContentResponse = {
@@ -10,7 +11,12 @@ export type StabilityAIContentResponse = {
   errored: boolean
   seed: number
 }
-
+export interface CreatedItem {
+  request: CreateImageRequest
+  imageIds: string[]
+  id: string
+  createdAt: Date
+}
 export interface EssentialLinkProps {
   title: string
   caption?: string

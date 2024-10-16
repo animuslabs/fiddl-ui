@@ -3,13 +3,7 @@ import api, { type ImagePurchase } from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { toObject } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
-
-export interface CreatedItem {
-  request: CreateImageRequest
-  imageIds: string[]
-  id: string
-  createdAt: Date
-}
+import type { CreatedItem } from "lib/types"
 
 export const useCreations = defineStore("creationsStore", {
   state() {

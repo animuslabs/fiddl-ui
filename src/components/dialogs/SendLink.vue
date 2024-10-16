@@ -19,6 +19,7 @@ q-dialog(ref="dialog" @hide="onDialogHide")
 </template>
 
 <script lang="ts">
+import { getReferredBy } from "lib/util"
 import { QDialog, Notify, Dialog, LocalStorage } from "quasar"
 import { useUserAuth } from "src/stores/userAuth"
 
@@ -59,12 +60,11 @@ export default {
       let phone = this.phone.length > 0 ? this.phone : undefined
       if (!phone && !email) return
       this.loading = true
-      const referredBy = LocalStorage.getItem("referredBy") as string | undefined
       try {
         const result = await this.$api.loginLink.initLoginLink.mutate({
           phoneNumber: phone,
           email,
-          referredBy,
+          referredBy: getReferredBy(),
         })
         Dialog.create({
           message: result,

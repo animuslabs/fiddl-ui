@@ -2,13 +2,7 @@ import { defineStore } from "pinia"
 import api from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { toObject } from "lib/util"
-
-export interface CreatedItem {
-  request: CreateImageRequest
-  imageIds: string[]
-  id: string
-  createdAt: Date
-}
+import type { CreatedItem } from "lib/types"
 
 export const useCreateSession = defineStore("createSession", {
   state() {
