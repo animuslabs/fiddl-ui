@@ -78,3 +78,18 @@ export function getImageFromCache(imageName: string): string | undefined {
   }
   return imageData || undefined
 }
+
+/**
+ * Clear all images from the cache.
+ */
+export function clearImageCache(): void {
+  // Remove all cached images
+  for (const key in localStorage) {
+    if (key.startsWith(CACHE_KEY_PREFIX)) {
+      localStorage.removeItem(key)
+    }
+  }
+
+  // Reset the cache index
+  localStorage.removeItem(CACHE_INDEX_KEY)
+}

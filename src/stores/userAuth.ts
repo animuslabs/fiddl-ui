@@ -6,6 +6,7 @@ import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
 import { catchErr } from "lib/util"
+import { clearImageCache } from "lib/hdImageCache"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -38,6 +39,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.pointsHistory = await api.user.pointsHistory.query({ userId, limit: 100 })
     },
     setUserId(userId: string) {
+      // clearImageCache()
       this.userId = userId
     },
     async pkLogin(userId: string) {
@@ -84,6 +86,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.userId = null
       this.userData = null
       umami.identify({ userId: "logged-out" })
+      clearImageCache()
     },
   },
 })

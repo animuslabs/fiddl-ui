@@ -40,6 +40,7 @@ export type UserProfile = inferRouterOutputs<AppRouter>["user"]["profile"]
 export type PointsTransfer = inferRouterOutputs<AppRouter>["user"]["pointsHistory"][number]
 export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImagePurchases"][number]
 export type ImageCreateRequest = inferRouterOutputs<AppRouter>["creations"]["createRequest"]
+export type ImageData = inferRouterOutputs<AppRouter>["creations"]["imageData"]
 
 export default api
 export type APIType = typeof api

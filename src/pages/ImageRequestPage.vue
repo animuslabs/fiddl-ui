@@ -1,7 +1,8 @@
 <template lang="pug">
 q-page
-  h4 Image Request Page
-  //- ImageRequestCard(:creation="creation")
+  //- h4 Image Request Page
+  //- div(v-if="shortId") {{ imageRequests.imageRequests[shortId] }}
+  ImageRequestCard(v-if="creation" :creation="creation").q-ma-lg
 
 </template>
 <script lang="ts">
@@ -22,14 +23,30 @@ export default defineComponent({
       creation: null as CreatedItem | null,
     }
   },
-  mounted() {
+  async mounted() {
     const requestId = this.$route.params?.requestShortId
     if (!requestId || typeof requestId != "string") return void this.$router.push({ name: "browse" })
     console.log("requestId", requestId)
-    const shortId = requestId.length < 25 ? requestId : longIdToShort(requestId)
-    void this.$router.replace({ name: "imageRequest", params: { requestShortId: shortId } })
-    console.log("shortId", shortId)
-    const req = void this.imageRequests.getRequest(shortId)
+    this.shortId = requestId.length < 25 ? requestId : longIdToShort(requestId)
+    void this.$router.replace({ name: "imageRequest", params: { requestShortId: this.shortId } })
+    console.log("shortId", this.shortId)
+    const req = await this.imageRequests.getRequest(this.shortId)
+    if (req) {
+      this.creation = {
+        id: req.id,
+        imageIds: req.imageIds,
+        createdAt: new Date(req.createdAt),
+        request: {
+          aspectRatio: req.aspectRatio as any,
+          model: req.model as any,
+          prompt: req.prompt as any,
+          public: req.public,
+          quantity: req.quantity,
+          negativePrompt: req.negativePrompt,
+          seed: req.seed as any,
+        },
+      }
+    }
   },
 })
 </script>

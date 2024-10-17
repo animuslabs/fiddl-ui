@@ -37,7 +37,7 @@ import { defineComponent } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { timeSince } from "lib/util"
 import { PropType } from "vue"
-import { CreatedItem } from "src/stores/createSessionStore"
+import { CreatedItem } from "lib/types"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
 export default defineComponent({

@@ -108,6 +108,12 @@ export default defineComponent({
       },
       immediate: false,
     },
+    req: {
+      handler: function (val: any) {
+        LocalStorage.set("req", this.req)
+      },
+      deep: true,
+    },
   },
   mounted() {
     // this.selectedModel = availableModels[2]!
