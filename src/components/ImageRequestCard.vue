@@ -11,7 +11,10 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   q-separator(color="grey-9" spaced="20px")
   .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
     .col-auto
-      q-btn(icon="arrow_back" flat round @click="setRequest()")
+      .row
+        q-btn(icon="arrow_back" flat round @click="setRequest()" size="sm")
+      .row
+        q-btn(icon="link" flat round @click="goToRequestPage()" size="sm")
     .col(style="min-width:220px;")
       small Prompt: #[p.ellipsis-2-lines {{ creation.request.prompt }}]
     .col-grow.gt-sm
@@ -35,11 +38,12 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
 <script lang="ts">
 import { defineComponent } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { timeSince } from "lib/util"
+import { longIdToShort, timeSince, toObject } from "lib/util"
 import { PropType } from "vue"
 import { CreatedItem } from "lib/types"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
+import imageGallery from "lib/imageGallery"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -59,16 +63,23 @@ export default defineComponent({
     }
   },
   methods: {
+    goToRequestPage() {
+      const shortId = longIdToShort(this.creation.id)
+      void this.$router.push({ name: "imageRequest", params: { requestShortId: shortId } })
+    },
     showGallery(startIndex: number) {
       const root = this.$root
       if (!root) return
-      const images = this.creation.imageIds.map((el: any) => img(el, "lg"))
-      //@ts-expect-error root is not null
-      root.openDialog(startIndex, images)
+      const images = this.creation.imageIds
+      // root.openDialog(startIndex, images)
       // this.$root.openDialog(startIndex)
+      imageGallery.show(images, startIndex)
     },
     setRequest() {
-      this.$emit("setRequest", this.creation.request)
+      const req = toObject(this.creation.request)
+      req.seed = undefined
+      console.log("set request", req)
+      this.$emit("setRequest", req)
     },
   },
 })

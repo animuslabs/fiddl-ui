@@ -1,6 +1,6 @@
 <template lang="pug">
 //- div.bg-black(style="position:fixed").full-width.full-height.z-max
-ImageGallery(:images="images" ref="gallery" hidden)
+//- ImageGallery(:images="images" ref="gallery" hidden  )
 router-view
 
 </template>
@@ -34,7 +34,7 @@ export default defineComponent({
       handler(newQuery) {
         console.log(newQuery)
         const referredBy = this.$route.query?.referredBy as string | undefined
-        console.log(this.$route.query)
+        // console.log(this.$route.query)
         if (!referredBy) return
         LocalStorage.set("referredBy", referredBy)
       },
@@ -59,7 +59,8 @@ export default defineComponent({
       this.images = toObject(images)
       const gallery = this.$refs.gallery as InstanceType<typeof ImageGallery>
       console.log(gallery)
-      gallery.openDialog(startingIndex)
+      gallery.show()
+      // gallery.openDialog(startingIndex)
     },
   },
 })

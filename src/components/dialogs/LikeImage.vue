@@ -3,12 +3,13 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
   q-card.q-dialog-plugin(style="width:500px; max-width:90vw;")
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
-        h4 Download Image
+        h4 Like Image
       div(v-if="!userOwnsImage && !imageUnlocked")
         .centered
           h5.q-ma-md You have not unlocked this image.
         p.q-mb-md.q-ml-lg Unlock this image to access:
         ul.q-ma-md
+          li.q-ma-sm Like, and add the image to custom collections on your profile.
           li.q-ma-sm Full resolution display on fiddl.art without a watermark.
           li.q-ma-sm Download the original source image as well as a 4k upscale, suitable for printing.
           li.q-ma-sm Access the original prompt and model details, including the seed, necessary for creating similar images.
@@ -18,18 +19,6 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
               p 10
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
-      div(v-else style="height:30vh")
-        .centered
-          p.q-ma-md You own this image.
-        .centered
-          div
-            .row
-              p.q-ma-md Downloads
-            .col-auto
-              q-btn(label="original" icon="image" @click="downloadOriginal()")
-            .col-auto
-              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()")
-            small Upscaling can take 30+ seconds the first time
       .centered.q-pt-md.q-pb-md
         q-btn(label="< back" color="grey" flat @click="hide()")
 
@@ -91,7 +80,10 @@ export default {
         catchErr(err)
       }
       this.imageUnlocked = true
-      this.$emit("unlocked")
+      this.onOKClick()
+    },
+    startEditing() {
+      this.onOKClick()
     },
     show() {
       const dialog = this.$refs.dialog as QDialog

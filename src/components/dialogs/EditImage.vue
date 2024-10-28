@@ -3,7 +3,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
   q-card.q-dialog-plugin(style="width:500px; max-width:90vw;")
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
-        h4 Download Image
+        h4 Edit Image
       div(v-if="!userOwnsImage && !imageUnlocked")
         .centered
           h5.q-ma-md You have not unlocked this image.
@@ -22,14 +22,11 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered
           p.q-ma-md You own this image.
         .centered
-          div
+          div.q-pt-lg
             .row
-              p.q-ma-md Downloads
-            .col-auto
-              q-btn(label="original" icon="image" @click="downloadOriginal()")
-            .col-auto
-              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()")
-            small Upscaling can take 30+ seconds the first time
+              q-btn(label="Edit Image" @click="startEditing()" color="accent" icon="edit")
+              //- h4.q-ma-md Start Editing
+
       .centered.q-pt-md.q-pb-md
         q-btn(label="< back" color="grey" flat @click="hide()")
 
@@ -91,7 +88,9 @@ export default {
         catchErr(err)
       }
       this.imageUnlocked = true
-      this.$emit("unlocked")
+    },
+    startEditing() {
+      this.onOKClick()
     },
     show() {
       const dialog = this.$refs.dialog as QDialog

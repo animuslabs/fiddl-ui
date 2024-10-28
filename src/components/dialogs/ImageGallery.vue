@@ -1,87 +1,55 @@
 <template lang="pug">
-.carousel.carousel-container(@touchstart="onTouchStart" @touchmove="onTouchMove")
-  img.carousel-image(v-if="!hidden" :src="images[currentIndex]" alt="Carousel Image" @click="onImageClick" )
-
-  button.prev-button(@click="prev") ‹
-  button.next-button(@click="next") ›
-
-  .indicators(v-if="images.length > 1")
-    span.indicator(v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
-
-  .overlay(v-if="isFullScreen" tabindex="0" @click.self="closeFullScreen").z-top.cursor-pointer
-    .centered.bg-green
-    .overlay-content.relative-position
+q-dialog(ref="dialog" @hide="onDialogHide" maximized )
+  q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
+    .full-width(style="height:5vh").gt-sm
+    .relative-position
       //- q-spinner.absolute-center(size="100px")
-      .centered.q-mb-md.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+      .centered.q-mb-md.q-mt-lg.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
         div
-          q-btn(icon="share"  flat @click="share()" round color="grey-5")
+          q-btn(icon="share"  flat @click.native.stop="share()" round color="grey-5")
         div
-          q-btn(icon="download"  flat @click="downloadMode = true" round :class="downloadClass")
+          q-btn(icon="download"  flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
             q-tooltip
               p(v-if="userOwnsImage") You own the 4k download
               p(v-else) Download Image
-        //- q-btn(icon="edit" flat @click="closeFullScreen")
-        //- q-btn(icon="favorite" flat @click="closeFullScreen")
+        q-btn(icon="sym_o_edit" flat round @click.native.stop="editImage()" color="grey-5")
+        q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
         //- q-btn(icon="add" flat @click="closeFullScreen")
         div
-          q-btn(icon="close" flat @click="closeFullScreen" round color="grey-5")
+          q-btn(icon="close" flat @click.native.stop="closeFullScreen" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
-      q-linear-progress.absolute-bottom( indeterminate v-if="imgLoading || loading" )
       .absolute.full-width.full-height(style="background-color: rgba(0,0,0,.5);" v-if="imgLoading")
-      .absolute.full-width(style="background-color: rgba(0,0,0,.8);  height:100vh;" v-if="downloadMode")
-        .centered
-          h4 Download Image
-        .centered(v-if="!userOwnsImage")
-          ul.q-ma-md
-            li You do not own this image. It can be purchased with Fiddl Points.
-            li When you purchase the image, it will always display in full resolution without a watermark on fiddl.art.
-            li You will have access to the original full quality image as well as a 4k upscaled version suitable for printing.
-          .centered.q-pt-md
-            q-btn(color="accent" label="Purchase Image" @click="purchaseImage()" :disable="!$userAuth.loggedIn")
-              .badge
-                p 10
-          .centered(v-if="!$userAuth.loggedIn").q-mt-lg
-            q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
-        div(v-else style="height:30vh")
-          .centered
-            p.q-ma-md You own this image.
-          .centered
-            div
-              .row
-                p.q-ma-md Downloads
-              .col-auto
-                q-btn(label="original" icon="image" @click="downloadOriginal()")
-              .col-auto
-                q-btn(label="4k Upscale" icon="4k" :loading="upscaling" @click="downloadUpscaled()")
-              small Upscaling can take 30+ seconds the first time
-        .centered.q-mt-md
-          q-btn(label="< back" color="grey" flat @click="downloadMode = false")
-      img.overlay-image(:src="images[currentIndex]" @click="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image")
-      .indicators(v-if="images.length > 1 && !downloadMode")
-        span.indicator( v-for="(image, index) in images" :key="index" :class="{ active: index === currentIndex }" @click="goTo(index)")
+    .centered
+      div.relative-position
+        q-linear-progress.absolute-top.full-width( indeterminate v-if="imgLoading || loading" )
+        img(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;")
+    .centered
+        div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode")
+          span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
 </template>
 
 <script lang="ts">
 import { log } from "console"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash } from "lib/util"
-import { Dialog, Loading } from "quasar"
+import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
 import { defineComponent } from "vue"
 import DownloadImage from "./DownloadImage.vue"
+import { img } from "lib/netlifyImg"
+import EditImage from "./EditImage.vue"
+import LikeImage from "./LikeImage.vue"
 
 export default defineComponent({
   props: {
-    images: {
+    imageIds: {
       type: Array as () => string[],
       required: true,
     },
-    hidden: {
-      type: Boolean,
-      default: false,
-    },
   },
+  emits: ["ok", "hide"],
   data() {
     return {
+      preloaded: false,
       downloadMode: false,
       imgLoading: true,
       userOwnsImage: false,
@@ -92,71 +60,82 @@ export default defineComponent({
       touchEndX: 0,
       upscaling: false,
       threshold: 50, // Minimum swipe distance
+      imageUrls: [] as string[],
+      userLikedImage: false,
+      loadingLike: true,
     }
   },
   computed: {
+    favoriteBtnColor() {
+      return this.userLikedImage ? "accent" : "grey-5"
+    },
     downloadClass() {
-      return this.userOwnsImage ? "text-positive" : "text-white"
+      return this.userOwnsImage ? "text-positive" : "grey-5"
     },
     currentImageId() {
-      const currentImage = this.images[this.currentIndex as number]
-      if (!currentImage) return
-      return extractImageId(currentImage)
+      if (this.imageIds.length === 0) return ""
+      return this.imageIds[this.currentIndex] as string
     },
   },
   watch: {
-    currentImageId(val: string) {
-      if (!val) return
-      void this.$nextTick(() => {
-        this.imgLoading = true
-      })
-      void this.loadHdImage(val)
-    },
-    isFullScreen(newVal: boolean) {
-      if (newVal) {
-        window.addEventListener("keydown", this.handleKeyDown)
-      } else {
-        window.removeEventListener("keydown", this.handleKeyDown)
-      }
+    currentImageId: {
+      async handler(val: string) {
+        this.userLikedImage = false
+        this.loadingLike = true
+        this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
+        this.loadingLike = false
+      },
+      immediate: true,
     },
   },
   beforeUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown)
   },
+  mounted() {
+    this.imageUrls = this.imageIds.map((el) => img(el, "lg"))
+    this.preloadImages()
+    window.addEventListener("keydown", this.handleKeyDown)
+  },
   methods: {
-    goToLogin() {
-      this.closeFullScreen()
-      void this.$router.push({ name: "login" })
+    likeImage() {
+      if (!this.$userAuth.loggedIn) return
+      if (!this.userOwnsImage) {
+        Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } }).onOk(async () => {
+          await this.loadHdImage() // this will set userOwnsImage to true
+          this.likeImage()
+        })
+      } else {
+        this.userLikedImage = !this.userLikedImage
+        if (this.userLikedImage) this.$api.collections.likeImage.mutate(this.currentImageId)
+        else this.$api.collections.unlikeImage.mutate(this.currentImageId)
+      }
     },
-    async downloadOriginal() {
-      if (!this.userOwnsImage) return
-      if (!this.currentImageId) return
-      const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+    editImage() {
+      if (this.userOwnsImage) {
+        void this.$router.push({ name: "create", query: { imageId: this.currentImageId } })
+      } else {
+        Dialog.create({ component: EditImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } }).onOk(() => {
+          void this.$router.push({ name: "create", query: { imageId: this.currentImageId } })
+        })
+      }
     },
-    async downloadUpscaled() {
-      if (!this.userOwnsImage) return
-      if (!this.currentImageId) return
-      this.upscaling = true
-      Loading.show({
-        message: "Upscaling Image",
+    showDownloadWindow() {
+      Dialog.create({ component: DownloadImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } }).onDismiss(() => {
+        void this.loadHdImage()
       })
-
-      const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
-      if (!imageData) return console.error("No image data")
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
-      Loading.hide()
-      this.upscaling = false
     },
-    async loadHdImage(val: string) {
+    async loadHdImage(val?: string) {
+      if (!val) val = this.currentImageId
       if (!this.$userAuth.loggedIn) return
       this.userOwnsImage = false
       let imageData = getImageFromCache(val)
       if (!imageData) {
+        if (SessionStorage.getItem("noHdImage-" + val)) return
         this.loading = true
-        imageData = (await this.$api.creations.hdImage.query(val).catch(() => {})) || undefined
+        imageData =
+          (await this.$api.creations.hdImage.query(val).catch(() => {
+            SessionStorage.setItem("noHdImage-" + val, true)
+          })) || undefined
         this.loading = false
         if (!imageData) return
         storeImageInCache(val, imageData)
@@ -168,22 +147,18 @@ export default defineComponent({
         if (img) img.src = imageDataUrl
       })
     },
-    async purchaseImage() {
-      if (!this.currentImageId) return
-      const result = await this.$api.creations.purchaseImage.mutate(this.currentImageId).catch(catchErr)
-      if (!result) return
-      this.userOwnsImage = true
-      void this.loadHdImage(this.currentImageId)
-    },
     preloadImages() {
-      this.images.forEach((src, index) => {
+      this.imageUrls.forEach((src, index) => {
         if (index !== this.currentIndex) {
           const img = new Image()
           img.src = src
         }
       })
     },
-    imgLoaded(event: Event) {
+    async imgLoaded(event: Event) {
+      await this.loadHdImage()
+      if (this.preloaded) return
+      this.preloaded = true
       // console.log(event)
       console.log("imgLoaded")
       this.preloadImages()
@@ -196,17 +171,10 @@ export default defineComponent({
       // Dialog.create({ component: DownloadImage })
     },
     share() {
-      const currentImage = this.images[this.currentIndex as number]
-      console.log("share", currentImage)
-      if (!currentImage) return
-
-      if (window.location.hostname.includes("localhost")) copyToClipboard(currentImage)
-      else {
-        const urlParams = new URL("https://fiddl.art" + currentImage).searchParams
-        const extractedUrl = urlParams.get("url")
-        if (extractedUrl) copyToClipboard(extractedUrl)
-      }
-      if (this.isFullScreen) this.closeFullScreen()
+      const shareUrl = img(this.currentImageId, "lg")
+      console.log("share", shareUrl)
+      if (!shareUrl) return
+      copyToClipboard(shareUrl)
       Dialog.create({
         title: "Image URL Copied",
         message: "The image URL has been copied to your clipboard",
@@ -218,12 +186,12 @@ export default defineComponent({
       this.isFullScreen = true
     },
     next() {
-      console.log("next")
-      if (this.loading || this.imgLoading) return
-      this.currentIndex = (this.currentIndex + 1) % this.images.length
+      // console.log("next", this.loading, this.imgLoading)
+      // if (this.loading || this.imgLoading) return
+      this.currentIndex = (this.currentIndex + 1) % this.imageIds.length
     },
     prev() {
-      this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length
+      this.currentIndex = (this.currentIndex - 1 + this.imageIds.length) % this.imageIds.length
     },
     goTo(index: number) {
       this.currentIndex = index
@@ -242,21 +210,14 @@ export default defineComponent({
       const rect = target.getBoundingClientRect()
       const clickX = event.clientX - rect.left
       const width = rect.width
-      console.log(event.target)
-      if (this.isFullScreen) {
-        console.log(clickX)
-        if (clickX < width / 2) {
-          this.prev()
-        } else {
-          this.next()
-        }
+      console.log(clickX)
+      if (clickX < width / 2) {
+        this.prev()
       } else {
-        this.openFullScreen()
+        this.next()
       }
     },
     handleKeyDown(e: KeyboardEvent) {
-      if (!this.isFullScreen) return
-
       switch (e.key) {
         case "ArrowLeft":
           this.prev()
@@ -291,6 +252,28 @@ export default defineComponent({
       // }
       // this.touchStartX = 0
       // this.touchEndX = 0
+    },
+    show() {
+      const dialog = this.$refs.dialog as QDialog
+      dialog.show()
+    },
+    hide() {
+      const dialog = this.$refs.dialog as QDialog
+      dialog.hide()
+    },
+
+    onDialogHide() {
+      this.$emit("hide")
+    },
+
+    onOKClick() {
+      this.$emit("ok")
+
+      this.hide()
+    },
+
+    onCancelClick() {
+      this.hide()
     },
   },
 })

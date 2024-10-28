@@ -8,7 +8,7 @@ q-page
             CreateCard.q-mt-md(@created="addImage" style="padding-top:0px; min-width:300px; max-width:600px;" ref="createCard")
         q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
           .centered.q-ma-md
-            ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq(creation.request)")
+            ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq")
           .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
             q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
     .lt-lg
@@ -21,7 +21,7 @@ q-page
           .row
             CreateCard(@created="addImage" style="padding-top:0px; min-width:200px; max-width:90vw;" ref="createCard")
       q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
-        ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq(creation.request,true)")
+        ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq($event,true)")
         //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
         .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
           q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
@@ -40,6 +40,8 @@ import { useCreateSession } from "stores/createSessionStore"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import ImageRequestCard from "components/ImageRequestCard.vue"
 import { toObject, timeSince } from "lib/util"
+import { request } from "http"
+import { Dialog } from "quasar"
 export default defineComponent({
   components: {
     CreateCard,
@@ -56,6 +58,38 @@ export default defineComponent({
     }
   },
   watch: {
+    "$route.query": {
+      async handler(val) {
+        console.log(val)
+        const targetImageId = this.$route.query.imageId
+        if (targetImageId && typeof targetImageId == "string") {
+          const imageMeta = await this.$api.creations.imageData.query(targetImageId)
+          const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
+          console.log(imageMeta, requestMeta)
+          console.log("width:", this.$q.screen.width)
+          this.setReq(
+            {
+              aspectRatio: requestMeta.aspectRatio as any,
+              model: requestMeta.model as any,
+              prompt: requestMeta.prompt || "",
+              public: requestMeta.public,
+              quantity: 1,
+              negativePrompt: requestMeta.negativePrompt,
+              seed: imageMeta.seed,
+            },
+            this.$q.screen.width < 1440,
+          )
+
+          Dialog.create({
+            title: "Image Parameters Applied",
+            message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
+          }).onDismiss(async () => {
+            await this.$router.replace({ query: {} })
+          })
+        }
+      },
+      immediate: true,
+    },
     "$userAuth.loggedIn": {
       immediate: true,
       handler(val) {
@@ -66,9 +100,12 @@ export default defineComponent({
   },
   mounted() {
     console.log()
-    if (this.$q.platform.is.mobile) this.createMode = true
+    if (this.$q.screen.width < 1440) this.createMode = true
   },
   methods: {
+    // async setImageMeta(){
+
+    // },
     async loadCreations() {
       if (!this.$userAuth.userId) return
       const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]

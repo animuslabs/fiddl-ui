@@ -22,6 +22,9 @@ import { extractImageId, pickRand } from "lib/util"
 import { BrowserItem } from "src/stores/browserStore"
 import { PropType } from "vue"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
+import ImageGallery from "./dialogs/ImageGallery.vue"
+import { Dialog } from "quasar"
+import imageGallery from "lib/imageGallery"
 
 export default {
   name: "ImageMosaic",
@@ -39,11 +42,7 @@ export default {
       img,
     }
   },
-  computed: {
-    images(): string[] {
-      return this.items.map((id) => img(id.imageIds[0] as string, "md") || "")
-    },
-  },
+  computed: {},
   methods: {
     getRandImg(imageIds: string[]) {
       return pickRand(imageIds) as string
@@ -53,9 +52,7 @@ export default {
       const id = extractImageId(target.src)
       if (!id) return
       const index = (id: string) => item.imageIds.findIndex((el) => el === id)
-      const images = item.imageIds.map((el) => img(el, "lg"))
-      // @ts-expect-error root is not null
-      this.$root.openDialog(index(id), images)
+      imageGallery.show(item.imageIds, index(id))
     },
   },
 }

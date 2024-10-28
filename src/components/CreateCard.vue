@@ -22,10 +22,13 @@ div
           div.q-ma-md
             p Quantity
             .row
-              q-input(v-model.number="req.quantity" type="number" :min="1" :max="10" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading" )
+              q-input(v-model.number="req.quantity" type="number" :min="1" :max="10" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading ||req.seed != undefined" )
+              q-tooltip(v-if="req.seed")
+                p Can't adjust quantity when using custom seed
               .column
-                q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >=10" )
-                q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <=1" )
+                q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >=10 || req.seed != undefined" )
+                q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <=1 || req.seed != undefined" )
+
           div.q-ma-md
             p.relative-position Model
               .badge
@@ -40,6 +43,13 @@ div
             p Private Mode
             .row
               q-toggle( :modelValue="privateMode" @update:model-value="updatePrivateMode" color="primary" :disable="anyLoading" )
+          div.q-ma-md
+            p Seed
+            .row
+              q-input(v-model.number="req.seed" type="number" placeholder="Random" clearable :disable="anyLoading")
+              .column(v-if="req.seed")
+                q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed" )
+                q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed" )
         //- div {{ req }}
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
@@ -110,25 +120,29 @@ export default defineComponent({
     },
     req: {
       handler: function (val: any) {
+        if (this.req.seed) this.req.quantity = 1
+        if (this.req.seed == null) this.req.seed = undefined
         LocalStorage.set("req", this.req)
       },
       deep: true,
     },
   },
   mounted() {
-    // this.selectedModel = availableModels[2]!
-    this.req = LocalStorage.getItem("req") || defaultImageRequest
-    this.privateMode = !this.req.public
-    this.selectedModel = this.req.model
+    this.setReq(LocalStorage.getItem("req") || defaultImageRequest)
   },
   methods: {
     setReq(req: CreateImageRequest) {
       this.selectedModel = req.model
+      this.privateMode = !this.req.public
       this.req = toObject(req)
     },
     async newPrompt() {
       this.loading.new = true
       this.req.prompt = (await this.$api.create.randomPrompt.mutate().catch(catchErr)) || this.req.prompt
+      if (this.req.seed) {
+        this.req.seed = undefined
+        this.req.quantity = 4
+      }
       this.loading.new = false
       await this.$userAuth.loadUserData()
       umami.track("newPrompt")
@@ -161,6 +175,7 @@ export default defineComponent({
     async createImage() {
       this.loading.create = true
       LocalStorage.set("req", this.req)
+      // if (this.req.seed == null) this.req.seed = undefined
       await this.createSession.generateImage(toObject(this.req)).catch(catchErr)
       this.$emit("created")
       this.loading.create = false
