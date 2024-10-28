@@ -12,9 +12,9 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
     .col-auto
       .row
-        q-btn(icon="arrow_back" flat round @click="setRequest()" size="sm")
+        q-btn(icon="edit" flat round @click="setRequest()" size="sm")
       .row
-        q-btn(icon="link" flat round @click="goToRequestPage()" size="sm")
+        q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
     .col(style="min-width:220px;")
       small Prompt: #[p.ellipsis-2-lines {{ creation.request.prompt }}]
     .col-grow.gt-sm
@@ -44,6 +44,7 @@ import { CreatedItem } from "lib/types"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
+import { Dialog } from "quasar"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -54,6 +55,7 @@ export default defineComponent({
       type: Object as PropType<CreatedItem>,
       required: true,
     },
+    hideLinkBtn: Boolean,
   },
   emits: ["setRequest"],
   data() {
@@ -76,10 +78,24 @@ export default defineComponent({
       imageGallery.show(images, startIndex)
     },
     setRequest() {
-      const req = toObject(this.creation.request)
-      req.seed = undefined
-      console.log("set request", req)
-      this.$emit("setRequest", req)
+      if (this.creation.request.prompt == undefined) {
+        if (!this.$userAuth.loggedIn) {
+          Dialog.create({
+            title: "Login Required",
+            message: "You need to be logged in to view the request details",
+          })
+        } else {
+          Dialog.create({
+            title: "Error",
+            message: "You need to unlock at least one image in this request to view the request details",
+          })
+        }
+      } else {
+        const req = toObject(this.creation.request)
+        req.seed = undefined
+        console.log("set request", req)
+        this.$emit("setRequest", req)
+      }
     },
   },
 })

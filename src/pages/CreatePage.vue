@@ -62,6 +62,7 @@ export default defineComponent({
       async handler(val) {
         console.log(val)
         const targetImageId = this.$route.query.imageId
+        const encodedRequestData = this.$route.query.requestData
         if (targetImageId && typeof targetImageId == "string") {
           const imageMeta = await this.$api.creations.imageData.query(targetImageId)
           const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
@@ -83,6 +84,15 @@ export default defineComponent({
           Dialog.create({
             title: "Image Parameters Applied",
             message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
+          }).onDismiss(async () => {
+            await this.$router.replace({ query: {} })
+          })
+        } else if (encodedRequestData && typeof encodedRequestData == "string") {
+          const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
+          this.setReq(decoded, this.$q.screen.width < 1440)
+          Dialog.create({
+            title: "Image Parameters Applied",
+            message: "The create panel has been updated with the details of the image request.",
           }).onDismiss(async () => {
             await this.$router.replace({ query: {} })
           })

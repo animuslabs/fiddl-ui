@@ -16,7 +16,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized )
         q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
         //- q-btn(icon="add" flat @click="closeFullScreen")
         div
-          q-btn(icon="close" flat @click.native.stop="closeFullScreen" round color="grey-5")
+          q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
       .absolute.full-width.full-height(style="background-color: rgba(0,0,0,.5);" v-if="imgLoading")
     .centered
@@ -62,7 +62,7 @@ export default defineComponent({
       threshold: 50, // Minimum swipe distance
       imageUrls: [] as string[],
       userLikedImage: false,
-      loadingLike: true,
+      loadingLike: false,
     }
   },
   computed: {
@@ -80,6 +80,7 @@ export default defineComponent({
   watch: {
     currentImageId: {
       async handler(val: string) {
+        if (!this.$userAuth.loggedIn) return
         this.userLikedImage = false
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
@@ -98,7 +99,7 @@ export default defineComponent({
   },
   methods: {
     likeImage() {
-      if (!this.$userAuth.loggedIn) return
+      // if (!this.$userAuth.loggedIn) return
       if (!this.userOwnsImage) {
         Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } }).onOk(async () => {
           await this.loadHdImage() // this will set userOwnsImage to true

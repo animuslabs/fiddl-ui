@@ -12,7 +12,7 @@ q-page.full-height.full-width
     q-scroll-area(style="width:1900px; height:calc(100vh - 135px); max-width:95vw; overflow:auto")
       .centered.q-gutter-md(v-if="tab === 'creations'")
         div(v-for="creation in creationsStore.creations"  :key="creation.id").q-mr-md.q-pl-md.full-width
-          ImageRequestCard(:creation="creation")
+          ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage")
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id").q-mr-md
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
@@ -20,12 +20,13 @@ q-page.full-height.full-width
         q-btn(label="Load More" @click="load()")
 
 
-
 </template>
 
 <script lang="ts">
+import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
-import { extractImageId } from "lib/util"
+import { extractImageId, toObject } from "lib/util"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
@@ -70,14 +71,17 @@ export default defineComponent({
         void this.creationsStore.loadPurchases()
       }
     },
+    editOnCreatePage(requestData: CreateImageRequest) {
+      console.log("editOnCreatePage")
+      const req = toObject(requestData)
+      if (req.seed) req.seed = undefined
+      const encodedRequest = encodeURIComponent(JSON.stringify(req))
+      void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
+    },
     showGallery(imageId: string) {
       const allImages = this.creationsStore.imagePurchases.map((el) => el.imageId)
       const index = allImages.findIndex((el) => el === imageId)
-      const imageUrls = allImages.map((el: any) => img(el, "md"))
-      console.log("imageUrls", imageUrls)
-      console.log("index", index)
-      // @ts-expect-error root is not null
-      this.$root.openDialog(index, imageUrls)
+      imageGallery.show(allImages, index)
     },
   },
 })

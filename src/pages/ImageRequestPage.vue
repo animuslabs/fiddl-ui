@@ -2,12 +2,12 @@
 q-page
   //- h4 Image Request Page
   //- div(v-if="shortId") {{ imageRequests.imageRequests[shortId] }}
-  ImageRequestCard(v-if="creation" :creation="creation").q-ma-lg
+  ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn).q-ma-lg
 
 </template>
 <script lang="ts">
 import { CreatedItem } from "lib/types"
-import { longIdToShort, shortIdToLong } from "lib/util"
+import { longIdToShort, shortIdToLong, toObject } from "lib/util"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { useImageRequests } from "src/stores/imageRequestsStore"
 import { defineComponent } from "vue"
@@ -47,6 +47,16 @@ export default defineComponent({
         },
       }
     }
+  },
+  methods: {
+    editOnCreatePage() {
+      console.log("editOnCreatePage")
+      if (!this.creation) return
+      const req = toObject(this.creation.request)
+      if (req.seed) req.seed = undefined
+      const encodedRequest = encodeURIComponent(JSON.stringify(req))
+      void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
+    },
   },
 })
 </script>
