@@ -132,9 +132,11 @@ export default defineComponent({
     editImage() {
       if (this.userOwnsImage) {
         void this.$router.push({ name: "create", query: { imageId: this.currentImageId } })
+        this.hide()
       } else {
         Dialog.create({ component: EditImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } }).onOk(() => {
           void this.$router.push({ name: "create", query: { imageId: this.currentImageId } })
+          this.hide()
         })
       }
     },

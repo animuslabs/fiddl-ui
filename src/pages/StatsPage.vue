@@ -23,7 +23,8 @@ q-page.full-height.full-width
     .centered.q-ma-md
       .col
         h2 API Metrics
-        div(style="font-size: 15px; word-wrap: break-word; max-width:90vw;") {{ stats.apiMetrics }}
+        div(style="font-size: 15px; word-wrap: break-word; max-width:90vw;")
+          pre {{ stats.apiMetrics }}
 
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
