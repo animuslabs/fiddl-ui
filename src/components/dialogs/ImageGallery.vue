@@ -1,5 +1,5 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" maximized )
+q-dialog(ref="dialog" @hide="onDialogHide" maximized persistent )
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
     .full-width(style="height:5vh").gt-sm
     .relative-position
@@ -7,6 +7,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized )
       .centered.q-mb-md.q-mt-lg.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
         div
           q-btn(icon="share"  flat @click.native.stop="share()" round color="grey-5")
+        q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="imageRequestId.length != 0")
         div
           q-btn(icon="download"  flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
             q-tooltip
@@ -31,7 +32,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized )
 <script lang="ts">
 import { log } from "console"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
-import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash } from "lib/util"
+import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort } from "lib/util"
 import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
 import { defineComponent } from "vue"
 import DownloadImage from "./DownloadImage.vue"
@@ -44,6 +45,16 @@ export default defineComponent({
     imageIds: {
       type: Array as () => string[],
       required: true,
+    },
+    imageRequestId: {
+      type: String,
+      default: "",
+      required: false,
+    },
+    startIndex: {
+      type: Number,
+      default: 0,
+      required: false,
     },
   },
   emits: ["ok", "hide"],
@@ -85,6 +96,7 @@ export default defineComponent({
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
         this.loadingLike = false
+        void this.$router.replace({ query: { index: this.currentIndex } })
       },
       immediate: true,
     },
@@ -93,11 +105,17 @@ export default defineComponent({
     window.removeEventListener("keydown", this.handleKeyDown)
   },
   mounted() {
+    this.currentIndex = this.startIndex
     this.imageUrls = this.imageIds.map((el) => img(el, "lg"))
     this.preloadImages()
     window.addEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    goToRequestPage() {
+      if (!this.imageRequestId || this.imageRequestId.length == 0) return
+      this.hide()
+      void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.imageRequestId) } })
+    },
     likeImage() {
       // if (!this.$userAuth.loggedIn) return
       if (!this.userOwnsImage) {

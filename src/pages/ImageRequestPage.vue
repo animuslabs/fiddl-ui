@@ -1,11 +1,10 @@
 <template lang="pug">
 q-page
-  //- h4 Image Request Page
-  //- div(v-if="shortId") {{ imageRequests.imageRequests[shortId] }}
-  ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn).q-ma-lg
+  ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn ).q-ma-lg
 
 </template>
 <script lang="ts">
+import imageGallery from "lib/imageGallery"
 import { CreatedItem } from "lib/types"
 import { longIdToShort, shortIdToLong, toObject } from "lib/util"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
@@ -28,7 +27,7 @@ export default defineComponent({
     if (!requestId || typeof requestId != "string") return void this.$router.push({ name: "browse" })
     console.log("requestId", requestId)
     this.shortId = requestId.length < 25 ? requestId : longIdToShort(requestId)
-    void this.$router.replace({ name: "imageRequest", params: { requestShortId: this.shortId } })
+    // void this.$router.replace({ name: "imageRequest", params: { requestShortId: this.shortId } })
     console.log("shortId", this.shortId)
     const req = await this.imageRequests.getRequest(this.shortId)
     if (req) {
@@ -45,6 +44,11 @@ export default defineComponent({
           negativePrompt: req.negativePrompt,
           seed: req.seed as any,
         },
+      }
+      const targetIndex = this.$route.query.index
+      console.log("targetIndex", targetIndex)
+      if (targetIndex != undefined && typeof targetIndex == "string") {
+        imageGallery.show(this.creation.imageIds, parseInt(targetIndex))
       }
     }
   },

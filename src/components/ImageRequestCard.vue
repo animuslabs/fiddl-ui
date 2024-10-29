@@ -9,7 +9,7 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
     .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md.q-pa-sm
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
   q-separator(color="grey-9" spaced="20px")
-  .row.q-gutter-md.no-wrap(style="padding-left:20px; padding-right:20px;")
+  .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
     .col-auto
       .row
         q-btn(icon="edit" flat round @click="setRequest()" size="sm")
@@ -18,8 +18,8 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
     .col(style="min-width:220px;")
       small Prompt: #[p.ellipsis-2-lines {{ creation.request.prompt }}]
     .col-grow.gt-sm
-    .col-auto.gt-sm
-      .row.q-gutter-md.no-wrap
+    .col-auto
+      .row.q-gutter-md
         .col-auto
           small Created: #[p {{ timeSince(creation.createdAt) }}]
           q-tooltip
@@ -75,7 +75,7 @@ export default defineComponent({
       const images = this.creation.imageIds
       // root.openDialog(startIndex, images)
       // this.$root.openDialog(startIndex)
-      imageGallery.show(images, startIndex)
+      imageGallery.show(images, startIndex, this.creation.id)
     },
     setRequest() {
       if (this.creation.request.prompt == undefined) {
