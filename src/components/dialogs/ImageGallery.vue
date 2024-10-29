@@ -1,5 +1,5 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" maximized persistent )
+q-dialog(ref="dialog" @hide="onDialogHide" maximized )
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
     .full-width(style="height:5vh").gt-sm
     .relative-position
@@ -119,10 +119,14 @@ export default defineComponent({
     likeImage() {
       // if (!this.$userAuth.loggedIn) return
       if (!this.userOwnsImage) {
-        Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } }).onOk(async () => {
-          await this.loadHdImage() // this will set userOwnsImage to true
-          this.likeImage()
-        })
+        Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } })
+          .onOk(async () => {
+            await this.loadHdImage() // this will set userOwnsImage to true
+            this.likeImage()
+          })
+          .onCancel(() => {
+            this.hide()
+          })
       } else {
         this.userLikedImage = !this.userLikedImage
         if (this.userLikedImage) this.$api.collections.likeImage.mutate(this.currentImageId)
