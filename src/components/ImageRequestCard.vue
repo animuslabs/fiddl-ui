@@ -73,8 +73,7 @@ export default defineComponent({
       const root = this.$root
       if (!root) return
       const images = this.creation.imageIds
-      // root.openDialog(startIndex, images)
-      // this.$root.openDialog(startIndex)
+      console.log("creationId", this.creation.id)
       imageGallery.show(images, startIndex, this.creation.id)
     },
     setRequest() {

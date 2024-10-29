@@ -1,19 +1,11 @@
 <template lang="pug">
-  .container
-    div(v-for="item in items" :key="item.id" :class="item.cssClass")
-      CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)")
-      .absolute-bottom
-        .centered
-          div(v-for="img in item.imageIds.length").q-mb-xs
-            div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6
-
-          //- q-btn(flat icon="favorite" color="grey-7")
-          //- h4 {{ item.imageIds.length }}
-      //- .absolute-top
-        //- q-btn(flat icon="favorite" color="grey-7" @click="favorite(item.id)")
-        //- .row
-          //- h4 {{ item.imageIds.length }}
-      //- div {{ item.cssClass }}
+.container
+  div(v-for="item in items" :key="item.id" :class="item.cssClass")
+    CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)")
+    .absolute-bottom
+      .centered
+        div(v-for="img in item.imageIds.length").q-mb-xs
+          div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6
 </template>
 
 <script lang="ts">
@@ -52,7 +44,7 @@ export default {
       const id = extractImageId(target.src)
       if (!id) return
       const index = (id: string) => item.imageIds.findIndex((el) => el === id)
-      imageGallery.show(item.imageIds, index(id))
+      imageGallery.show(item.imageIds, index(id), item.id)
     },
   },
 }
