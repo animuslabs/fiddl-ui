@@ -58,5 +58,15 @@
     "imageRequest",
     "/r/:requestShortId?",
     "ImageRequestPage"
+  ],
+  [
+    "admin",
+    "/admin",
+    "AdminPage"
+  ],
+  [
+    "claim",
+    "/claim/:claimShortId?",
+    "ClaimPage"
   ]
 ]
