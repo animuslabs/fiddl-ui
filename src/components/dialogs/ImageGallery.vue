@@ -1,5 +1,5 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" maximized )
+q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" )
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
     .full-width(style="height:5vh").gt-sm
     .relative-position
@@ -32,7 +32,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized )
 <script lang="ts">
 import { log } from "console"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
-import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort } from "lib/util"
+import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort, updateQueryParams } from "lib/util"
 import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
 import { defineComponent } from "vue"
 import DownloadImage from "./DownloadImage.vue"
@@ -60,6 +60,7 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      isPersistent: false,
       preloaded: false,
       downloadMode: false,
       imgLoading: true,
@@ -96,7 +97,12 @@ export default defineComponent({
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
         this.loadingLike = false
-        // void this.$router.replace({ query: { index: this.currentIndex } })
+        // dialog.persistent = true
+        const query = { index: this.currentIndex }
+        const newQuery = { ...this.$route.query, ...query }
+        void this.$nextTick(() => {
+          updateQueryParams(newQuery)
+        })
       },
       immediate: true,
     },
@@ -195,17 +201,19 @@ export default defineComponent({
       // downloadImage(currentImage, "fiddl.art-" + extractImageId(currentImage) + ".webp")
       // Dialog.create({ component: DownloadImage })
     },
-    share() {
-      // const shareUrl = img(this.currentImageId, "lg")
-      // console.log("share", shareUrl)
-      // if (!shareUrl) return
-      const url = this.$router.resolve({ name: "imageRequest", params: { requestShortId: longIdToShort(this.imageRequestId) }, query: { index: this.currentIndex } }).href
+    async share() {
+      const params: any = { requestShortId: longIdToShort(this.imageRequestId) }
+      let query: any = { index: this.currentIndex }
+      await this.$userAuth.loadUserProfile()
+      const hasUsername = !!(this.$userAuth.loggedIn && this.$userAuth.userProfile?.username)
+      if (hasUsername) query.referredBy = this.$userAuth.userProfile?.username
+      const url = this.$router.resolve({ name: "imageRequest", params, query }).href
       const fullUrl = window.location.origin + url
       console.log("share", fullUrl)
       copyToClipboard(fullUrl)
       Dialog.create({
         title: "Image URL Copied",
-        message: "The image URL has been copied to your clipboard",
+        message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your refferal link is also included in the url.",
         position: "top",
       })
     },

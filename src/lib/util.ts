@@ -174,6 +174,24 @@ export function downloadImage(imageUrl: string, filename = "downloaded-image") {
 //   document.body.removeChild(link)
 // }
 
+type QueryParams = Record<string, string | number | boolean | null | undefined>
+
+export function updateQueryParams(params: QueryParams): void {
+  const currentParams = new URLSearchParams(window.location.search)
+
+  // Update or add each key-value pair in `params`
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined) {
+      currentParams.delete(key) // Remove key if value is null or undefined
+    } else {
+      currentParams.set(key, String(value)) // Convert value to string
+    }
+  })
+
+  // Update the URL without reloading the page
+  window.history.replaceState(null, "", `${window.location.pathname}?${currentParams.toString()}`)
+}
+
 export function copyToClipboard(text: string) {
   navigator.clipboard
     .writeText(text)
