@@ -13,7 +13,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
             q-tooltip
               p(v-if="userOwnsImage") You own the 4k download
               p(v-else) Download Image
-        q-btn(icon="sym_o_edit" flat round @click.native.stop="editImage()" color="grey-5")
+        q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
         q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
         //- q-btn(icon="add" flat @click="closeFullScreen")
         div
@@ -79,10 +79,13 @@ export default defineComponent({
   },
   computed: {
     favoriteBtnColor() {
-      return this.userLikedImage ? "accent" : "grey-5"
+      return this.userLikedImage ? "accent" : this.userOwnsImage ? "grey-5" : "grey-6"
+    },
+    editBtnColor() {
+      return this.userOwnsImage ? "primary" : "grey-6"
     },
     downloadClass() {
-      return this.userOwnsImage ? "text-positive" : "grey-5"
+      return this.userOwnsImage ? "text-positive" : "text-grey-6"
     },
     currentImageId() {
       if (this.imageIds.length === 0) return ""
