@@ -28,7 +28,7 @@ export const useCreateSession = defineStore("createSession", {
     async generateImage(request: CreateImageRequest) {
       const result = await api.create.image.mutate(request)
       const createdItem: CreatedItem = {
-        imageIds: result.ids,
+        imageIds: result.ids.reverse(),
         request: toObject(request),
         id: result.id,
         createdAt: new Date(),
