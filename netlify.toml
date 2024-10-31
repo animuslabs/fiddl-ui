@@ -3,16 +3,17 @@
   publish = "dist/spa"
   command = "yarn build"
   functions = "netlify/functions/dist"
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+
 [[redirects]]
   from = "/r/*"
   to = "/.netlify/functions/renderMetadata"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 [images]
   remote_images = ["https://api.fiddl.art/images/.*"]
-
-
