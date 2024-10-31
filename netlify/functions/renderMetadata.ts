@@ -16,7 +16,7 @@ const generateMetadata = (dynamicId: string, index: string): Metadata => {
 
 const handler: Handler = builder(async (event) => {
   const { path, queryStringParameters, headers } = event
-
+  const queryParamsString = queryStringParameters.toString()
   const dynamicId = path?.split("/").pop() || ""
   const index = queryStringParameters?.index || "1"
 
@@ -40,7 +40,7 @@ const handler: Handler = builder(async (event) => {
         <meta property="og:image" content="${pageData.image}" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://alpha.fiddl.art${path}?index=${index}" />
-        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:card" content="${pageData.image}" />
         <meta name="twitter:title" content="${pageData.title}" />
         <meta name="twitter:description" content="${pageData.description}" />
         <meta name="twitter:image" content="${pageData.image}" />
