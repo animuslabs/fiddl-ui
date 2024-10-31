@@ -85,7 +85,7 @@ export default defineComponent({
       return this.userOwnsImage ? "primary" : "grey-6"
     },
     downloadClass() {
-      return this.userOwnsImage ? "text-positive" : "text-grey-6"
+      return this.userOwnsImage ? "text-primary" : "text-grey-6"
     },
     currentImageId() {
       if (this.imageIds.length === 0) return ""

@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist", // Output directory specific to functions
+    "rootDir": "./", // Sets root to current directory
+    "module": "commonjs", // Required for Node.js
+    "target": "es6"
+  },
+  "include": ["**/*.ts"], // Only include .ts files in this directory
+  "exclude": ["../node_modules"] // Exclude node_modules in root
+}

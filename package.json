@@ -10,11 +10,14 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "build": "quasar build",
+    "build:func": "tsc -p netlfiy/functions/tsconfig.json",
+    "dev:func": "tsc -p netlfiy/functions/tsconfig.json --watch",
     "lint": "eslint --fix ./src",
     "tsc": "npx vue-tsc --noEmit",
     "format": "prettier --write \"src/**/*.{js,ts,css,html,vue}\""
   },
   "dependencies": {
+    "@netlify/functions": "^2.8.2",
     "@paypal/paypal-js": "8.1.1",
     "@quasar/extras": "1.16.12",
     "@simplewebauthn/browser": "10.0.0",
