@@ -191,12 +191,10 @@ export default defineComponent({
     },
     async imgLoaded(event: Event) {
       await this.loadHdImage()
+      this.imgLoading = false
       if (this.preloaded) return
       this.preloaded = true
-      // console.log(event)
-      console.log("imgLoaded")
       this.preloadImages()
-      this.imgLoading = false
     },
     downloadImage() {
       // const currentImage = this.images[this.currentIndex as number]
@@ -226,10 +224,13 @@ export default defineComponent({
     },
     next() {
       // console.log("next", this.loading, this.imgLoading)
-      // if (this.loading || this.imgLoading) return
+      if (this.loading || this.imgLoading) return
+      this.imgLoading = true
       this.currentIndex = (this.currentIndex + 1) % this.imageIds.length
     },
     prev() {
+      if (this.loading || this.imgLoading) return
+      this.imgLoading = true
       this.currentIndex = (this.currentIndex - 1 + this.imageIds.length) % this.imageIds.length
     },
     goTo(index: number) {
