@@ -22,7 +22,11 @@ const handler: Handler = builder(async (event) => {
 
   const pageData = generateMetadata(dynamicId, index)
 
-  const isBot = !headers["referer"] || headers["referer"].includes("telegram") || headers["referer"].includes("facebook")
+  const userAgent = headers["user-agent"] || ""
+  const referer = headers["referer"] || ""
+
+  // Bot detection based on User-Agent, Referer, and webdriver indicator
+  const isBot = /bot|crawl|slurp|spider|mediapartners/i.test(userAgent) || !referer || referer.includes("telegram") || referer.includes("facebook")
 
   return {
     statusCode: 200,
