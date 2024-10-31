@@ -1,5 +1,5 @@
 import { Handler, builder } from "@netlify/functions"
-import { shortIdToLong } from "./util"
+// import { shortIdToLong } from "./util"
 
 interface Metadata {
   title: string
