@@ -10,7 +10,7 @@ const generateMetadata = (dynamicId: string, index: string): Metadata => {
   return {
     title: `Page for ${dynamicId} - Index ${index}`,
     description: `This is a description for ${dynamicId} at index ${index}.`,
-    image: "https://api.fiddl.art/images/27ec020b-8b85-46ef-ae20-c8f72eff646b-md.webp",
+    image: "https://eospowerup.io/eospowerupio.jpg",
   }
 }
 
