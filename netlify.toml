@@ -10,7 +10,7 @@
   to = "/.netlify/functions/renderMetadata"
   status = 200
   force = true
-  conditions = { User-Agent = "Googlebot|Bingbot|Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|WhatsApp|Slackbot|Discordbot|Pinterest" }
+  # conditions = { User-Agent = "Googlebot|Bingbot|Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|WhatsApp|Slackbot|Discordbot|Pinterest" }
 
 [[redirects]]
   from = "/*"
