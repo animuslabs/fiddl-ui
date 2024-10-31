@@ -4,11 +4,11 @@
   command = "yarn build"
   functions = "netlify/functions/dist"
 
-[[redirects]]
-  from = "/r/*"
-  to = "/.netlify/functions/renderMetadata"
-  status = 200
-  force = true
+# [[redirects]]
+#   from = "/r/*"
+#   to = "/.netlify/functions/renderMetadata"
+#   status = 200
+#   force = true
 
 [[redirects]]
   from = "/*"
