@@ -1,4 +1,5 @@
 import { Handler, builder } from "@netlify/functions"
+import { shortIdToLong } from "./util"
 
 interface Metadata {
   title: string
@@ -6,7 +7,7 @@ interface Metadata {
   image: string
 }
 
-const generateMetadata = (dynamicId: string, index: string): Metadata => {
+const generateMetadata = async (dynamicId: string, index: string): Promise<Metadata> => {
   return {
     title: `Page for ${dynamicId} - Index ${index}`,
     description: `This is a description for ${dynamicId} at index ${index}.`,
@@ -20,7 +21,7 @@ const handler: Handler = builder(async (event) => {
   const dynamicId = path?.split("/").pop() || ""
   const index = queryStringParameters?.index || "1"
 
-  const pageData = generateMetadata(dynamicId, index)
+  const pageData = await generateMetadata(dynamicId, index)
 
   const userAgent = headers["user-agent"] || ""
   const referer = headers["referer"] || ""
@@ -35,16 +36,26 @@ const handler: Handler = builder(async (event) => {
       <!DOCTYPE html>
       <html>
       <head>
-        <meta property="og:title" content="${pageData.title}" />
-        <meta property="og:description" content="${pageData.description}" />
-        <meta property="og:image" content="${pageData.image}" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://alpha.fiddl.art${path}?index=${index}" />
-        <meta name="twitter:card" content="${pageData.image}" />
-        <meta name="twitter:title" content="${pageData.title}" />
-        <meta name="twitter:description" content="${pageData.description}" />
-        <meta name="twitter:image" content="${pageData.image}" />
-        <title>${pageData.title}</title>
+      <!-- Primary Meta Tags -->
+      <title>Page for StxXwHQySwGBzFrsGFJKIQ - Index 1</title>
+      <meta name="title" content="Page for StxXwHQySwGBzFrsGFJKIQ - Index 1" />
+      <meta name="description" content="This is a description for StxXwHQySwGBzFrsGFJKIQ at index 1." />
+
+      <!-- Open Graph / Facebook -->
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://alpha.fiddl.art/r/StxXwHQySwGBzFrsGFJKIQ?index=0&referredBy=JD" />
+      <meta property="og:title" content="Page for StxXwHQySwGBzFrsGFJKIQ - Index 1" />
+      <meta property="og:description" content="This is a description for StxXwHQySwGBzFrsGFJKIQ at index 1." />
+      <meta property="og:image" content="https://metatags.io/images/meta-tags.png" />
+
+      <!-- Twitter -->
+      <meta property="twitter:card" content="summary_large_image" />
+      <meta property="twitter:url" content="https://alpha.fiddl.art/r/StxXwHQySwGBzFrsGFJKIQ?index=0&referredBy=JD" />
+      <meta property="twitter:title" content="Page for StxXwHQySwGBzFrsGFJKIQ - Index 1" />
+      <meta property="twitter:description" content="This is a description for StxXwHQySwGBzFrsGFJKIQ at index 1." />
+      <meta property="twitter:image" content="https://metatags.io/images/meta-tags.png" />
+
+      <!-- Meta Tags Generated with https://metatags.io -->
         ${
           isBot
             ? ""
