@@ -24,10 +24,7 @@ const handler: Handler = builder(async (event) => {
   const pageData = await generateMetadata(dynamicId, index)
 
   const userAgent = headers["user-agent"] || ""
-  const referer = headers["referer"] || ""
-
-  // Bot detection based on User-Agent, Referer, and webdriver indicator
-  const isBot = /bot|crawl|slurp|spider|mediapartners/i.test(userAgent) || !referer || referer.includes("telegram") || referer.includes("facebook")
+  const isBot = /bot|crawl|spider|slurp|facebookexternalhit|linkedinbot|embedly|quora|pinterest|reddit|slackbot|twitterbot|whatsapp/i.test(userAgent)
 
   return {
     statusCode: 200,
