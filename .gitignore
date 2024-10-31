@@ -6,7 +6,7 @@ node_modules
 .quasar
 /dist
 /quasar.config.*.temporary.compiled*
-
+/netlify/functions/dist
 # Cordova related directories and files
 /src-cordova/node_modules
 /src-cordova/platforms
