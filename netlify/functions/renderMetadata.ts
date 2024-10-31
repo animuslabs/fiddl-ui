@@ -15,11 +15,12 @@ const generateMetadata = (dynamicId: string, index: string): Metadata => {
 }
 
 const handler: Handler = builder(async (event) => {
-  const { path, queryStringParameters } = event
+  const { path, queryStringParameters, headers } = event
 
   const dynamicId = path?.split("/").pop() || ""
   const index = queryStringParameters?.index || "1"
 
+  // Generate metadata
   const pageData = generateMetadata(dynamicId, index)
 
   return {
@@ -34,8 +35,10 @@ const handler: Handler = builder(async (event) => {
         <meta property="og:image" content="${pageData.image}" />
         <title>${pageData.title}</title>
         <script>
-          if (typeof window !== 'undefined') {
-            window.location.href = "https://alpha.fiddl.art${path}?index=${index}";
+          // Redirect only if not already on the main SPA
+          const spaUrl = "https://alpha.fiddl.art${path}?index=${index}";
+          if (window.location.href !== spaUrl) {
+            window.location.replace(spaUrl);
           }
         </script>
       </head>
