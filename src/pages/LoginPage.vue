@@ -5,13 +5,13 @@ q-page.full-height.full-width
   div(v-if="!loggingIn").full-width
     .centered.q-gutter-md.q-mt-md
       q-btn(label="Send Link" flat size="xl" icon="email" color="primary" @click="sendLink")
+      //- q-btn(label="Send Text" flat size="xl" icon="sms" color="secondary" @click="sendText")
     .centered.q-mt-xl
       div.q-ma-md
         q-btn(label="passKey Login (experimental)" flat small color="grey-8" @click="login")
   div(v-else).full-width
     .centered.q-mt-md
       q-btn(label="login" size="lg" color="primary" @click="handleLoginLink")
-
 </template>
 
 <script lang="ts">
@@ -20,6 +20,7 @@ import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 import { Dialog, Loading, Notify } from "quasar"
 import SendLink from "src/components/dialogs/SendLink.vue"
 import umami from "lib/umami"
+import SendText from "src/components/dialogs/SendText.vue"
 
 export default defineComponent({
   components: {
@@ -85,6 +86,12 @@ export default defineComponent({
       umami.track("sendLinkLoginStart")
       Dialog.create({
         component: SendLink,
+      })
+    },
+    sendText() {
+      umami.track("sendLinkLoginStart")
+      Dialog.create({
+        component: SendText,
       })
     },
   },

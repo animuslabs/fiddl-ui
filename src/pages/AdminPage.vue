@@ -40,7 +40,7 @@ q-page.full-height.full-width
 import { PromoCode } from "lib/api"
 import { jwt } from "lib/jwt"
 import { longIdToShort } from "lib/util"
-import { copyToClipboard, Dialog } from "quasar"
+import { copyToClipboard, Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
 
 export default defineComponent({
@@ -73,6 +73,11 @@ export default defineComponent({
       const claimUrl = `${window.location.origin}/claim/${longIdToShort(code.id)}`
       void copyToClipboard(claimUrl)
       void this.load()
+      Notify.create({
+        message: `Promo code with ${this.promoPoints} points created, copied URL to clipboard`,
+        type: "success",
+        color: "positive",
+      })
     },
     async load() {
       const allPromoCodes = await this.$api.promo.getPromoCodes.query()

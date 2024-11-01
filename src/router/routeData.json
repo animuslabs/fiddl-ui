@@ -36,8 +36,13 @@
   ],
   [
     "account",
-    "/account",
-    "AccountPage"
+    "/a",
+    "AccountSettings"
+  ],
+  [
+    "settings",
+    "/settings",
+    "AccountSettings"
   ],
   [
     "creations",

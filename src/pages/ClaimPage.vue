@@ -74,6 +74,9 @@ export default defineComponent({
           Dialog.create({
             title: "Success",
             message: "Promo code claimed successfully",
+          }).onDismiss(() => {
+            void this.$userAuth.loadUserData()
+            void this.$router.push({ name: "browse" })
           })
         })
     },

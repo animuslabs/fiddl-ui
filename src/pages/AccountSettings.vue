@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-height.full-width
   .centered.q-mt-md
-    h2 My Account
+    h2 Account Settings
   .centered.q-gutter-md.q-mt-md
     q-card(v-if="userAuth.loggedIn")
       q-card-section
@@ -39,29 +39,6 @@ q-page.full-height.full-width
             q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
         .centered(v-if="!userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you verify your email
-
-      q-card.q-ma-md
-        h6 Fiddl Points
-        .row
-          .col-auto
-            .row.q-gutter-md.items-center
-              .col
-                q-img(src="/fiddlPointsLogo-sm.svg" style="width:50px;")
-              .col-auto
-                .centered
-                  h5 {{ $userAuth.userData?.availablePoints || 0 }}
-                .centered
-                  h6 Available
-              .col-auto
-                .centered
-                  h5 {{ $userAuth.userData?.spentPoints || 0 }}
-                .centered
-                  h6 Spent
-        q-separator.q-mt-md(color="primary")
-        q-list
-          PointsTransfer.q-pt-md(v-for="transfer of userAuth.pointsHistory" :transferData="transfer" :key="transfer.id")
-          .centered(v-if="userAuth.pointsHistory.length == 0")
-            h6.q-mt-md No points history
     .centered.q-mt-md(v-else)
       h4 Please login to view your account
 </template>

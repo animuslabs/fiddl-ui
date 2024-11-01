@@ -10,9 +10,9 @@ q-layout(view="lHh Lpr lFf")
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)
           //-   | Search
-          q-route-tab(:to="{ name: 'create' }").gt-md
+          q-route-tab(:to="{ name: 'create' }").gt-md.text-white
             | create
-          q-route-tab(:to="{ name: 'browse' }").gt-md
+          q-route-tab(:to="{ name: 'browse' }").gt-md.text-white
             | browse
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
@@ -44,15 +44,21 @@ q-layout(view="lHh Lpr lFf")
           @click="menu = false"
         )
           q-list
-            q-item(clickable @click="$router.push({ name: 'account' })" v-close-popup)
+            q-item(clickable @click="$router.push({ name: 'settings' })" v-close-popup)
               q-item-section
-                | My Account
+                .row.items-center
+                  q-icon(name="settings" size="20px").q-mr-md
+                  div Settings
             q-item(clickable @click="$router.push({name:'creations',params:{ accountId:userAuth.userId }})" v-close-popup)
               q-item-section
-                | My Creations
+                .row.items-center
+                  q-icon(name="photo_library" size="20px").q-mr-md
+                  div My Account
             q-item(clickable @click="userAuth.logout()" v-close-popup)
               q-item-section
-                | Logout
+                .row.items-center
+                  q-icon(name="logout" size="20px").q-mr-md
+                  div  Logout
 
   q-page-container.centered.bg-grey-10
     .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
@@ -61,9 +67,9 @@ q-layout(view="lHh Lpr lFf")
     q-toolbar.bg-grey-10
       .centered.full-width
         q-tabs
-          q-route-tab(:to="{ name: 'create' }")
+          q-route-tab(:to="{ name: 'create' }").text-white
             | create
-          q-route-tab(:to="{ name: 'browse' }")
+          q-route-tab(:to="{ name: 'browse' }").text-white
             | browse
 </template>
 
