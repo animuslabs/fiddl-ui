@@ -21,6 +21,10 @@ q-page.full-height.full-width.bgimg
               h5 Earn points when someone purchases your images
         .centered.q-mt-md
           h5 Have fun exploring the site
+  .centered.q-mt-lg
+    h5 Join the mailing list to be updated on new features and events.
+  .centered
+    iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 300px; width:500px; max-width:100vw;").bg-dark-page
 
   .centered.q-mt-xl
     q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)

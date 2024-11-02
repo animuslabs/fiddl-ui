@@ -33,6 +33,7 @@ export default ts.config(
       ],
       "@typescript-eslint/await-thenable": "error",
       "require-await": "warn",
+      "vue/multi-word-component-names": "off",
     },
   },
   eslintConfigPrettier,

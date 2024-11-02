@@ -73,5 +73,10 @@
     "claim",
     "/claim/:claimShortId?",
     "ClaimPage"
+  ],
+  [
+    "tos",
+    "/tos",
+    "TosPage"
   ]
 ]
