@@ -15,9 +15,10 @@
 #   force = true
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  from = "https://alpha.fiddl.art/*"
+  to = "https://fiddl.art/:splat"
+  status = 301
+  force = true
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*"]
