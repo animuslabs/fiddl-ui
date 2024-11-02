@@ -203,7 +203,15 @@ export default defineComponent({
       // Dialog.create({ component: DownloadImage })
     },
     async share() {
-      const params: any = { requestShortId: longIdToShort(this.imageRequestId) }
+      let params: any = { requestShortId: "" }
+      if (!this.imageRequestId) {
+        const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
+        if (!imageMeta) return
+        console.log(imageMeta)
+        params.requestShortId = longIdToShort(imageMeta.imageRequestId)
+      } else {
+        params.requestShortId = longIdToShort(this.imageRequestId)
+      }
       let query: any = { index: this.currentIndex }
       await this.$userAuth.loadUserProfile()
       const hasUsername = !!(this.$userAuth.loggedIn && this.$userAuth.userProfile?.username)

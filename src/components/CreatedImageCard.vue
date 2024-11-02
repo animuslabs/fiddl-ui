@@ -5,7 +5,6 @@ q-img(:src="imageUrl" style="border-radius: 14px;" alt="user created image")
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
-import { CreatedItem } from "stores/createSessionStore"
 import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
 import { img } from "lib/netlifyImg"
 
