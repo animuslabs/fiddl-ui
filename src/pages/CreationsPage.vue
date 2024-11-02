@@ -4,9 +4,12 @@ q-page.full-height.full-width
   //-   h4 Creations
   div
     .centered.q-pb-md
-      div(style="max-width:900px;")
-        q-tabs(v-model="tab" align="justify" class="full-width"  active-color="white" indicator-color="secondary")
-          q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label")
+      q-tabs(v-model="tab" class="full-width"  active-color="white" indicator-color="secondary")
+        q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" )
+          .row.items-center.full-width
+            q-icon(:name="tab.icon" size="25px")
+            .q-ml-sm {{ tab.label }}
+
     //- q-separator(color="primary")
   .centered
     q-scroll-area(style="width:1900px; height:calc(100vh - 135px); max-width:95vw; overflow:auto")
@@ -16,6 +19,9 @@ q-page.full-height.full-width
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id").q-mr-md
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
+      .centered.q-gutter-md(v-if="tab === 'favorites'")
+        div(v-for="favoriteImage in creationsStore.favorites"  :key="favoriteImage.id").q-mr-md
+          CreatedImageCard(:imageId="favoriteImage.id" style="width:300px; height:300px;" @click="showGallery(favoriteImage.id)").cursor-pointer
       .centered.q-ma-md
         q-btn(label="Load More" @click="load()")
 
@@ -43,8 +49,9 @@ export default defineComponent({
       creationsStore: useCreations(),
       tab: "creations",
       tabs: [
-        { label: "My Creations", name: "creations" },
-        { label: "Purchased Images", name: "purchased" },
+        { label: "My Creations", name: "creations", icon: "sym_o_create" },
+        { label: "unlocked Images", name: "purchased", icon: "sym_o_lock_open" },
+        { label: "Favorites", name: "favorites", icon: "sym_o_favorite" },
       ],
     }
   },
@@ -57,6 +64,7 @@ export default defineComponent({
         } else {
           void this.creationsStore.loadCreations()
           void this.creationsStore.loadPurchases()
+          void this.creationsStore.loadFavorites()
         }
       },
     },
@@ -67,8 +75,10 @@ export default defineComponent({
     load() {
       if (this.tab === "creations") {
         void this.creationsStore.loadCreations()
-      } else {
+      } else if (this.tab === "purchased") {
         void this.creationsStore.loadPurchases()
+      } else if (this.tab === "favorites") {
+        void this.creationsStore.loadFavorites()
       }
     },
     editOnCreatePage(requestData: CreateImageRequest) {
@@ -78,10 +88,14 @@ export default defineComponent({
       const encodedRequest = encodeURIComponent(JSON.stringify(req))
       void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
     },
-    showGallery(imageId: string) {
-      const allImages = this.creationsStore.imagePurchases.map((el) => el.imageId)
+    async showGallery(imageId: string) {
+      let allImages: string[] = []
+      if (this.tab == "purchased") allImages = this.creationsStore.imagePurchases.map((el) => el.imageId)
+      else if (this.tab == "favorites") allImages = this.creationsStore.favorites.map((el) => el.id)
+      else return
       const index = allImages.findIndex((el) => el === imageId)
-      imageGallery.show(allImages, index)
+      await imageGallery.show(allImages, index)
+      this.load()
     },
   },
 })

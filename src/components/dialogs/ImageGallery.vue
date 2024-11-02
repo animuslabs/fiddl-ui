@@ -15,6 +15,38 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
               p(v-else) Download Image
         q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
         q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
+        //- q-btn(icon="more_vert" flat round @click.native.stop="likeImage()" color="grey-5")
+        div.relative-position
+          //- div {{menu}}
+          q-btn(
+            icon="more_vert"
+            round
+            flat
+            color="grey-5"
+            @click.stop="menu = true"
+          )
+            q-menu(
+              v-if="menu"
+              anchor="bottom right"
+              self="top right"
+              @click.native.stop="menu = false"
+            )
+              q-list
+                q-item(clickable @click="setProfileImage()" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="account_circle" size="20px").q-mr-md
+                      div Use as Profile Image
+            //- q-item(clickable @click="$router.push({name:'creations',params:{ accountId:userAuth.userId }})" v-close-popup)
+            //-   q-item-section
+            //-     .row.items-center
+            //-       q-icon(name="photo_library" size="20px").q-mr-md
+            //-       div My Account
+            //- q-item(clickable @click="userAuth.logout()" v-close-popup)
+            //-   q-item-section
+            //-     .row.items-center
+            //-       q-icon(name="logout" size="20px").q-mr-md
+            //-       div  Logout
         //- q-btn(icon="add" flat @click="closeFullScreen")
         div
           q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
@@ -60,6 +92,7 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      menu: true,
       isPersistent: false,
       preloaded: false,
       downloadMode: false,
@@ -120,6 +153,9 @@ export default defineComponent({
     window.addEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    setProfileImage() {
+      console.log("setProfileImage")
+    },
     goToRequestPage() {
       if (!this.imageRequestId || this.imageRequestId.length == 0) return
       this.hide()

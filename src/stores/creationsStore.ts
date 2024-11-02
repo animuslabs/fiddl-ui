@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
-import api, { type ImagePurchase } from "lib/api"
+import api, { type ImagePurchase, type Image } from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { toObject } from "lib/util"
+import { catchErr, toObject } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
 import type { CreatedItem } from "lib/types"
 
@@ -10,6 +10,9 @@ export const useCreations = defineStore("creationsStore", {
     return {
       creations: [] as CreatedItem[],
       imagePurchases: [] as ImagePurchase[],
+      favorites: [] as Image[],
+      favoritesCollectionId: null as string | null,
+      activeUserId: null as string | null,
     }
   },
   getters: {},
@@ -26,6 +29,7 @@ export const useCreations = defineStore("creationsStore", {
     async loadCreations(userId?: string) {
       if (!userId) userId = useUserAuth().userId || undefined
       if (!userId) return
+      this.activeUserId = userId
       const lastItem = this.creations[this.creations.length - 1]
       console.log("lastItem", lastItem)
       const creations = await api.creations.createRequests.query({
@@ -52,6 +56,7 @@ export const useCreations = defineStore("creationsStore", {
     async loadPurchases(userId?: string) {
       if (!userId) userId = useUserAuth().userId || undefined
       if (!userId) return
+      this.activeUserId = userId
       const lastItem = this.imagePurchases[this.imagePurchases.length - 1]
       console.log("lastItem", lastItem)
       const purchases = await api.creations.userImagePurchases.query({
@@ -66,8 +71,15 @@ export const useCreations = defineStore("creationsStore", {
         const idExists = this.imagePurchases.some((i) => i.id === purchase.id)
         if (!idExists) this.imagePurchases.push(purchase)
       }
-
-      // this.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.createdAt) })
+    },
+    async loadFavorites(userId?: string) {
+      if (!userId) userId = useUserAuth().userId || undefined
+      if (!userId) return
+      if (this.activeUserId !== userId) this.favoritesCollectionId = null
+      this.activeUserId = userId
+      if (!this.favoritesCollectionId) this.favoritesCollectionId = (await api.collections.findCollectionByName.query({ collectionName: "likes", ownerId: userId }).then((res) => res.id)) || null
+      if (!this.favoritesCollectionId) return
+      this.favorites = await api.collections.getCollectionImages.query(this.favoritesCollectionId)
     },
   },
   persist: false,

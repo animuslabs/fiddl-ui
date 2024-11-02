@@ -42,6 +42,7 @@ export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImag
 export type ImageCreateRequest = inferRouterOutputs<AppRouter>["creations"]["createRequest"]
 export type ImageData = inferRouterOutputs<AppRouter>["creations"]["imageData"]
 export type PromoCode = inferRouterOutputs<AppRouter>["promo"]["getPromoCodeDetails"]
+export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
 
 export default api
 export type APIType = typeof api
