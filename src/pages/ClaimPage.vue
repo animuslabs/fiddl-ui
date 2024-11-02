@@ -55,7 +55,7 @@ export default defineComponent({
   },
 
   mounted() {
-    const claimShortId = this.$route.params.claimShortId
+    const claimShortId = this.$route?.params?.claimShortId
     if (!claimShortId || typeof claimShortId != "string") return
     this.promoCode = claimShortId
     void this.loadPromoDetails()

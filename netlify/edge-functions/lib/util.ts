@@ -1,11 +1,11 @@
 export function setSocialMetadata(html: string, title: string, description: string, imageUrl: string, canonicalUrl: string): string {
   // Helper to create or update meta tags in HTML content
   const updateMetaTag = (html: string, property: string, content: string, attribute: string = "content"): string => {
-    const metaTagRegex = new RegExp(`<meta property="${property}" ${attribute}="[^"]*"`, "i")
-    const newMetaTag = `<meta property="${property}" ${attribute}="${content}"`
+    // Matching meta tags with flexible attribute formats
+    const metaTagRegex = new RegExp(`<meta\\s+[^>]*?property=["']?${property}["']?\\s+[^>]*${attribute}=["']?[^"']*["']?\\s*/?>`, "gi")
+    const newMetaTag = `<meta property="${property}" ${attribute}="${content}" />`
 
-    // Check if the meta tag exists
-    if (html.match(metaTagRegex)) {
+    if (html.search(metaTagRegex) !== -1) {
       // Replace existing meta tag
       return html.replace(metaTagRegex, newMetaTag)
     } else {
@@ -15,11 +15,11 @@ export function setSocialMetadata(html: string, title: string, description: stri
   }
 
   const updateLinkTag = (html: string, rel: string, href: string): string => {
-    const linkTagRegex = new RegExp(`<link rel="${rel}" href="[^"]*"`, "i")
-    const newLinkTag = `<link rel="${rel}" href="${href}"`
+    // Matching link tags with flexible attribute formats
+    const linkTagRegex = new RegExp(`<link\\s+[^>]*?rel=["']?${rel}["']?\\s+[^>]*href=["']?[^"']*["']?\\s*/?>`, "gi")
+    const newLinkTag = `<link rel="${rel}" href="${href}" />`
 
-    // Check if the link tag exists
-    if (html.match(linkTagRegex)) {
+    if (html.search(linkTagRegex) !== -1) {
       // Replace existing link tag
       return html.replace(linkTagRegex, newLinkTag)
     } else {
@@ -28,6 +28,7 @@ export function setSocialMetadata(html: string, title: string, description: stri
     }
   }
 
+  // Update meta tags
   html = updateMetaTag(html, "og:title", title)
   html = updateMetaTag(html, "og:description", description)
   html = updateMetaTag(html, "og:image", imageUrl)

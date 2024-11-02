@@ -61,8 +61,8 @@ export default defineComponent({
     "$route.query": {
       async handler(val) {
         console.log(val)
-        const targetImageId = this.$route.query.imageId
-        const encodedRequestData = this.$route.query.requestData
+        const targetImageId = this.$route.query?.imageId
+        const encodedRequestData = this.$route.query?.requestData
         if (targetImageId && typeof targetImageId == "string") {
           const imageMeta = await this.$api.creations.imageData.query(targetImageId)
           const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)

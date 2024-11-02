@@ -2,11 +2,13 @@
   base = "."
   publish = "dist/spa"
   command = "yarn build"
-  # functions = "netlify/functions/dist"
 
 [[edge_functions]]
   function = "handleRequestPage"
   path = "/r/*"
+
+[functions]
+  included_files = ["netlify/edge-functions/lib/**"]
 
 # [[redirects]]
 #   from = "/r/*"
@@ -21,3 +23,5 @@
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*"]
+
+

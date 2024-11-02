@@ -1,20 +1,17 @@
 import { Context } from "@netlify/edge-functions"
-
+import { setSocialMetadata } from "./lib/util.ts"
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
-  // request.
-  // Since this function is only triggered by the path defined in netlify.toml, no need to check the URL path
-  const metaTags = `
-    <meta name="description" content="Special content for ${url.pathname}">
-    <meta property="og:title" content="Custom Page ${url.pathname}">
-    <meta property="og:description" content="Detailed description for ${url.pathname}">
-  `
-
   const response = await context.next()
+  const text = await response.text()
+  for (const [key] of url.searchParams) {
+    if (key !== "index") {
+      url.searchParams.delete(key)
+    }
+  }
 
-  // Modify the HTML response
-  let text = await response.text()
-  text = text.replace("</head>", `${metaTags}</head>`)
-
-  return new Response(text, response)
+  const segments = url.pathname.split("/")
+  const id = segments[2]
+  const updatedHtml = setSocialMetadata(text, id || "image id", "My Description", "https://api.fiddl.art/images/07f9e0f4-cb76-4408-9ed4-7815781bd957-lg.webp", url.toString())
+  return new Response(updatedHtml, response)
 }

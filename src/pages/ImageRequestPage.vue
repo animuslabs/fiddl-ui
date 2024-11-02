@@ -6,7 +6,7 @@ q-page
 <script lang="ts">
 import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
-import { setSocialMetadata } from "lib/socialMeta"
+
 import { CreatedItem } from "lib/types"
 import { longIdToShort, shortIdToLong, toObject } from "lib/util"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
@@ -47,11 +47,11 @@ export default defineComponent({
           seed: req.seed as any,
         },
       }
-      const targetIndex = this.$route.query.index
+      const targetIndex = this.$route.query?.index
       console.log("targetIndex", targetIndex)
       if (targetIndex != undefined && typeof targetIndex == "string") {
-        imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id)
-        setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
+        void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id)
+        // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
       }
     }
   },

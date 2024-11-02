@@ -15,9 +15,9 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { useBrowserStore } from "src/stores/browserStore"
-import CreatedImageCard from "src/components/CreatedImageCard.vue"
-import { type CreatedItem } from "src/stores/createSessionStore"
+import { useBrowserStore } from "stores/browserStore"
+import CreatedImageCard from "components/CreatedImageCard.vue"
+import { type CreatedItem } from "lib/types"
 import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
 import { debounce, Scroll, throttle } from "quasar"

@@ -174,8 +174,8 @@ export default defineComponent({
           })
       } else {
         this.userLikedImage = !this.userLikedImage
-        if (this.userLikedImage) this.$api.collections.likeImage.mutate(this.currentImageId)
-        else this.$api.collections.unlikeImage.mutate(this.currentImageId)
+        if (this.userLikedImage) void this.$api.collections.likeImage.mutate(this.currentImageId)
+        else void this.$api.collections.unlikeImage.mutate(this.currentImageId)
       }
     },
     editImage() {

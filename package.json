@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build && yarn build:func",
+    "build": "quasar build",
     "build:func": "tsc -p netlify/functions/tsconfig.json",
     "dev:func": "tsc -p netlify/functions/tsconfig.json --watch",
     "lint": "eslint --fix ./src",
