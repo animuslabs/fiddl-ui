@@ -1,5 +1,5 @@
 import { Context } from "@netlify/edge-functions"
-import { setSocialMetadata } from "./lib/util.ts"
+import { setSocialMetadata, shortIdToLong } from "./lib/util.ts"
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
   const response = await context.next()
@@ -12,6 +12,7 @@ export default async (request: Request, context: Context) => {
 
   const segments = url.pathname.split("/")
   const id = segments[2]
-  const updatedHtml = setSocialMetadata(text, id || "image id", "My Description", "https://api.fiddl.art/images/07f9e0f4-cb76-4408-9ed4-7815781bd957-lg.webp", url.toString())
+  const imageUrl = `https://api.fiddl.art/images/${shortIdToLong(id)}-md.webp`
+  const updatedHtml = setSocialMetadata(text, id || "image id", "A creation on Fiddl.art", imageUrl, url.toString(), "summary_large_image")
   return new Response(updatedHtml, response)
 }

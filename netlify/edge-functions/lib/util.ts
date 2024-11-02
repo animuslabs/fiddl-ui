@@ -1,6 +1,8 @@
-export function setSocialMetadata(html: string, title: string, description: string, imageUrl: string, canonicalUrl: string): string {
+type TwitterCardType = "summary" | "summary_large_image" | "app" | "player"
+
+export function setSocialMetadata(html: string, title: string, description: string, imageUrl: string, canonicalUrl: string, twitterCard: TwitterCardType): string {
   // Helper to create or update meta tags in HTML content
-  const updateMetaTag = (html: string, property: string, content: string, attribute: string = "content"): string => {
+  const updateMetaTag = (html: string, property: string, content: string, attribute = "content"): string => {
     // Matching meta tags with flexible attribute formats
     const metaTagRegex = new RegExp(`<meta\\s+[^>]*?property=["']?${property}["']?\\s+[^>]*${attribute}=["']?[^"']*["']?\\s*/?>`, "gi")
     const newMetaTag = `<meta property="${property}" ${attribute}="${content}" />`
@@ -32,10 +34,30 @@ export function setSocialMetadata(html: string, title: string, description: stri
   html = updateMetaTag(html, "og:title", title)
   html = updateMetaTag(html, "og:description", description)
   html = updateMetaTag(html, "og:image", imageUrl)
+  html = updateMetaTag(html, "twitter:card", twitterCard)
   html = updateMetaTag(html, "twitter:title", title)
   html = updateMetaTag(html, "twitter:description", description)
   html = updateMetaTag(html, "twitter:image", imageUrl)
   html = updateLinkTag(html, "canonical", canonicalUrl)
 
   return html
+}
+
+export function shortIdToLong(base64url: string): string {
+  // Convert Base64 URL encoding to standard Base64
+  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/")
+  // Pad the Base64 string to make its length a multiple of 4
+  const paddingNeeded = (4 - (base64.length % 4)) % 4
+  base64 += "=".repeat(paddingNeeded)
+  // Decode the Base64 string to an ArrayBuffer
+  const buffer = base64ToArrayBuffer(base64)
+  const bytes = new Uint8Array(buffer)
+  // Convert the byte array to a hex string
+  let hexStr = ""
+  for (let i = 0; i < bytes.length; i++) {
+    hexStr += bytes[i].toString(16).padStart(2, "0")
+  }
+  // Re-insert hyphens to format it as a UUID
+  const uuid = `${hexStr.substr(0, 8)}-${hexStr.substr(8, 4)}-${hexStr.substr(12, 4)}-${hexStr.substr(16, 4)}-${hexStr.substr(20)}`
+  return uuid
 }
