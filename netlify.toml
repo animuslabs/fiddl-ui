@@ -2,7 +2,11 @@
   base = "."
   publish = "dist/spa"
   command = "yarn build"
-  functions = "netlify/functions/dist"
+  # functions = "netlify/functions/dist"
+
+[[edge_functions]]
+  function = "handleRequestPage"
+  path = "/r/*"
 
 # [[redirects]]
 #   from = "/r/*"

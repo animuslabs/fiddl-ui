@@ -17,6 +17,7 @@
     "format": "prettier --write \"src/**/*.{js,ts,css,html,vue}\""
   },
   "dependencies": {
+    "@netlify/edge-functions": "^2.11.0",
     "@netlify/functions": "^2.8.2",
     "@paypal/paypal-js": "8.1.1",
     "@quasar/extras": "1.16.12",

@@ -308,6 +308,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@netlify/edge-functions@^2.11.0":
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/@netlify/edge-functions/-/edge-functions-2.11.0.tgz#31697e37d10958717f7c9c08df4b906342096a86"
+  integrity sha512-DZrDHdPX44Cj7T9geKdiIwHB6OScL7QFL10voC8TApgEwY/NhKfABBGF2cbUIfbAh3IAMBeikelT8PU0MqYnyg==
+
 "@netlify/functions@^2.8.2":
   version "2.8.2"
   resolved "https://registry.yarnpkg.com/@netlify/functions/-/functions-2.8.2.tgz#653395b901a74a6189e913a089f9cb90083ca6ce"
