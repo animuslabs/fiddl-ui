@@ -51,15 +51,33 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
         div
           q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
-      .absolute.full-width.full-height(style="background-color: rgba(0,0,0,.5);" v-if="imgLoading")
     .centered
       div.relative-position
-        q-linear-progress.absolute-top.full-width( indeterminate v-if="imgLoading || loading" )
-        img(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;")
+        transition(name="fade")
+          //- q-linear-progress.absolute-top.full-width( indeterminate color="primary" track-color="transparent"  )
+          q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
+        img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
     .centered
         div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode")
           span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
 </template>
+<style>
+.fade-enter-active {
+  transition: opacity 0.5s ease 0.5s; /* 0.5s delay before the 0.5s transition */
+}
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-to {
+  opacity: 1;
+}
+.image-darken {
+  transition: filter 0.5s ease;
+}
+.image-darken.active {
+  filter: brightness(50%);
+}
+</style>
 
 <script lang="ts">
 import { log } from "console"
@@ -111,6 +129,9 @@ export default defineComponent({
     }
   },
   computed: {
+    imgClass() {
+      return this.loading || this.imgLoading ? "active" : ""
+    },
     favoriteBtnColor() {
       return this.userLikedImage ? "accent" : this.userOwnsImage ? "grey-5" : "grey-6"
     },
