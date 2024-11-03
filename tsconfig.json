@@ -42,5 +42,10 @@
       "stores/*": ["src/stores/*"]
     }
   },
-  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", "dist", ".quasar", "node_modules"]
+  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", "dist", ".quasar", "node_modules"],
+  "include": [
+    "src/**/*.ts",
+    "src/quasar.d.ts", // Explicitly include your custom type definitions
+    "src/**/*.vue"
+  ]
 }

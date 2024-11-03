@@ -129,6 +129,7 @@ export default defineComponent({
     currentImageId: {
       async handler(val: string) {
         if (!this.$userAuth.loggedIn) return
+
         this.userLikedImage = false
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
@@ -267,12 +268,14 @@ export default defineComponent({
       this.isFullScreen = true
     },
     next() {
+      if (this.imageIds.length == 1) return
       // console.log("next", this.loading, this.imgLoading)
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
       this.currentIndex = (this.currentIndex + 1) % this.imageIds.length
     },
     prev() {
+      if (this.imageIds.length == 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
       this.currentIndex = (this.currentIndex - 1 + this.imageIds.length) % this.imageIds.length

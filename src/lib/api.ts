@@ -10,7 +10,7 @@ if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl
 }
-import { inferRouterOutputs } from "@trpc/server"
+import { inferRouterOutputs, type inferRouterInputs } from "@trpc/server"
 
 console.log("API URL", apiUrl)
 
@@ -43,6 +43,7 @@ export type ImageCreateRequest = inferRouterOutputs<AppRouter>["creations"]["cre
 export type ImageData = inferRouterOutputs<AppRouter>["creations"]["imageData"]
 export type PromoCode = inferRouterOutputs<AppRouter>["promo"]["getPromoCodeDetails"]
 export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
-
+export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
+export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
 export default api
 export type APIType = typeof api

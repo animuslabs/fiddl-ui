@@ -1,7 +1,7 @@
 import { reactive } from "vue"
 import { passKeyAuth as pkAuth } from "lib/auth"
 import { createPinia, defineStore } from "pinia"
-import api, { type PointsTransfer, type UserData, type UserProfile } from "lib/api"
+import api, { type NotificationConfig, type PointsTransfer, type UserData, type UserProfile } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
@@ -15,10 +15,17 @@ export const useUserAuth = defineStore("userAuth", {
       userId: null as string | null,
       userData: null as UserData | null,
       userProfile: null as UserProfile | null,
+      notificationConfig: null as NotificationConfig | null,
       pointsHistory: [] as PointsTransfer[],
     }
   },
   actions: {
+    async loadNotificationConfig(userId?: string) {
+      if (!userId && !this.userId) return
+      if (!userId && this.userId) userId = this.userId
+      if (userId) this.userId = userId
+      this.notificationConfig = await api.user.getNotificationConfig.query()
+    },
     async loadUserData(userId?: string) {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
@@ -85,6 +92,8 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = false
       this.userId = null
       this.userData = null
+      this.notificationConfig = null
+      this.userProfile = null
       umami.identify({ userId: "logged-out" })
       clearImageCache()
     },

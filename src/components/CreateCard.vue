@@ -54,7 +54,12 @@ div
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
         .centered(v-if="$userAuth.userData")
-          q-btn( type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
+          div(v-if="!turnstileValidated")
+            .row.items-center.q-gutter-md
+              div Validating...
+              q-spinner
+            //- Turnstile( @success="turnstileValidated = true" @expired="turnstileValidated = false" @error="turnstileValidated = false" )
+          q-btn( v-else type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
             .badge
               p {{ totalCost }}
       div(v-if="$userAuth.userData && totalCost > $userAuth?.userData?.availablePoints|| 0").q-pt-md
@@ -73,12 +78,13 @@ import { LocalStorage } from "quasar"
 import { useCreateSession } from "stores/createSessionStore"
 import { defineComponent } from "vue"
 import umami from "lib/umami"
+import Turnstile from "./Turnstile.vue"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
 // const models = Models
 export default defineComponent({
-  components: {},
+  components: { Turnstile },
   emits: ["created"],
   data() {
     return {
@@ -88,6 +94,7 @@ export default defineComponent({
       availableModels,
       availableAspectRatios,
       privateMode: false,
+      turnstileValidated: true,
       loading: {
         new: false,
         randomize: false,

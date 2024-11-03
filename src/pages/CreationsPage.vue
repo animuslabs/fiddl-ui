@@ -8,7 +8,7 @@ q-page.full-height.full-width
         q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" )
           .row.items-center.full-width
             q-icon(:name="tab.icon" size="25px")
-            .q-ml-sm {{ tab.label }}
+            .q-ml-sm.gt-sm {{ tab.label }}
 
     //- q-separator(color="primary")
   .centered

@@ -28,12 +28,13 @@ q-page
   div(v-else)
     .centered.q-mt-xl
       h3 You must be logged in to create images
+    .centered
+      q-btn(label="Login" color="primary" @click="$router.push({name:'login'})" flat)
 
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { useUserAuth } from "stores/userAuth"
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useCreateSession } from "stores/createSessionStore"
@@ -51,7 +52,6 @@ export default defineComponent({
   data() {
     return {
       timeSince,
-      userAuth: useUserAuth(),
       createSession: useCreateSession(),
       images: [] as string[],
       createMode: false,
@@ -120,6 +120,7 @@ export default defineComponent({
       if (!this.$userAuth.userId) return
       const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]
       console.log("lastItem", lastItem)
+
       const creations = await this.$api.creations.createRequests.query({
         userId: this.$userAuth.userId,
         includeMetadata: true,
@@ -128,6 +129,7 @@ export default defineComponent({
         limit: 15,
       })
       console.log("creations", creations)
+
       for (const creation of creations) {
         const request: CreateImageRequest = {
           prompt: creation.prompt,
@@ -137,7 +139,6 @@ export default defineComponent({
           quantity: creation.quantity,
           negativePrompt: creation.negativePrompt || undefined,
         }
-
         this.createSession.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.createdAt) })
       }
     },

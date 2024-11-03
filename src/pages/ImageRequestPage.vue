@@ -8,7 +8,8 @@ import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
 
 import { CreatedItem } from "lib/types"
-import { longIdToShort, shortIdToLong, toObject } from "lib/util"
+import { getReferredBy, longIdToShort, shortIdToLong, toObject } from "lib/util"
+import { LocalStorage } from "quasar"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { useImageRequests } from "src/stores/imageRequestsStore"
 import { defineComponent } from "vue"
@@ -53,6 +54,10 @@ export default defineComponent({
         void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id)
         // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
       }
+      const referrerAlreadySet = getReferredBy()
+      if (referrerAlreadySet) return
+      const creatorUsername = await this.$api.user.getUsername.query(req.creatorId)
+      if (creatorUsername) LocalStorage.set("referredBy", creatorUsername)
     }
   },
   methods: {

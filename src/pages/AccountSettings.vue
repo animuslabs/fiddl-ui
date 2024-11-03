@@ -3,20 +3,20 @@ q-page.full-height.full-width
   .centered.q-mt-md
     h2 Account Settings
   .centered.q-gutter-md.q-mt-md
-    q-card(v-if="userAuth.loggedIn")
+    q-card(v-if="$userAuth.loggedIn")
       q-card-section
         h3 Profile
         h6 Username
         .row.q-gutter-md.items-center(v-if="!editingUsername")
           .col-auto
-            h5 {{ userAuth.userProfile?.username || "no username" }}
+            h5 {{ $userAuth.userProfile?.username || "no username" }}
           .col-auto
             div
               q-btn(@click="editingUsername = true" round flat icon="edit" size="sm" )
           .col-grow
           .col-auto
             div
-              q-btn(v-if="userAuth.userProfile?.username" label="Get Referral Link" @click="copyRefLink()")
+              q-btn(v-if="$userAuth.userProfile?.username" label="Get Referral Link" @click="copyRefLink()")
               div(v-else) Set a username to get a referral link
 
         .row.q-gutter-md.items-center(v-else)
@@ -31,14 +31,20 @@ q-page.full-height.full-width
         h6.q-pt-md Email
         .row.items-center
           div
-            h5 {{ userAuth.userProfile?.email?.toLowerCase() || "no email" }}
+            h5 {{ $userAuth.userProfile?.email?.toLowerCase() || "no email" }}
           div.q-ml-md
-            q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
+            q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
-          .q-ma-md(v-if="!userAuth.userProfile?.emailVerified")
+          .q-ma-md(v-if="!$userAuth.userProfile?.emailVerified")
             q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
-        .centered(v-if="!userAuth.userProfile?.emailVerified")
+        .centered(v-if="!$userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you verify your email
+        h6.q-pt-md Notifications
+        .row(v-if="$userAuth.notificationConfig")
+          //- pre {{ $userAuth.notificationConfig }}
+          .row.items-center.q-gutter-md
+            q-toggle(v-model="$userAuth.notificationConfig.email" label="Email Notifications" @click="updateNotificationConfig()")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.emailFrequency" label="Email Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 140px; text-transform: capitalize;")
     .centered.q-mt-md(v-else)
       h4 Please login to view your account
 </template>
@@ -74,7 +80,6 @@ export default defineComponent({
   components: { PointsTransfer },
   data() {
     return {
-      userAuth: useUserAuth(),
       editingUsername: false,
       newUsername: "",
       validateUsername,
@@ -92,6 +97,10 @@ export default defineComponent({
     this.loadData()
   },
   methods: {
+    updateNotificationConfig() {
+      if (!this.$userAuth.notificationConfig) return
+      this.$api.user.setNotificationConfig.mutate(this.$userAuth.notificationConfig as any).catch(catchErr)
+    },
     copyRefLink() {
       const refLink = window.location.origin + "/?referredBy=" + this.$userAuth.userProfile?.username
       void copyToClipboard(refLink)
@@ -102,7 +111,7 @@ export default defineComponent({
         .mutate(this.newUsername)
         .then(() => {
           this.editingUsername = false
-          void this.userAuth.loadUserProfile()
+          void this.$userAuth.loadUserProfile()
           Notify.create({ message: "Username updated", color: "positive", icon: "check" })
         })
         .catch((err: any) => {
@@ -120,9 +129,10 @@ export default defineComponent({
       })
     },
     loadData() {
-      void this.userAuth.loadUserData()
-      void this.userAuth.loadUserProfile()
-      void this.userAuth.loadPointsHistory()
+      void this.$userAuth.loadUserData()
+      void this.$userAuth.loadUserProfile()
+      void this.$userAuth.loadPointsHistory()
+      void this.$userAuth.loadNotificationConfig()
     },
   },
 })
