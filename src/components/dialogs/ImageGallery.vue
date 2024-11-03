@@ -52,9 +52,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
           q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
     .centered
-      div.relative-position
+      div.relative-position.bg-black
         transition(name="fade")
-          //- q-linear-progress.absolute-top.full-width( indeterminate color="primary" track-color="transparent"  )
           q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
         img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
     .centered
@@ -72,6 +71,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
   opacity: 1;
 }
 .image-darken {
+  background-color: transparent;
+  color: transparent;
   transition: filter 0.5s ease;
 }
 .image-darken.active {
@@ -120,6 +121,7 @@ export default defineComponent({
       currentIndex: 0,
       isFullScreen: false,
       touchStartX: 0,
+      firstImageLoaded: false,
       touchEndX: 0,
       upscaling: false,
       threshold: 50, // Minimum swipe distance
@@ -130,7 +132,8 @@ export default defineComponent({
   },
   computed: {
     imgClass() {
-      return this.loading || this.imgLoading ? "active" : ""
+      if (!this.firstImageLoaded) return ""
+      else return this.loading || this.imgLoading ? "image-darken active" : "image-darken"
     },
     favoriteBtnColor() {
       return this.userLikedImage ? "accent" : this.userOwnsImage ? "grey-5" : "grey-6"
@@ -249,6 +252,7 @@ export default defineComponent({
     },
     async imgLoaded(event: Event) {
       await this.loadHdImage()
+      this.firstImageLoaded = true
       this.imgLoading = false
       if (this.preloaded) return
       this.preloaded = true
