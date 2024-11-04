@@ -126,7 +126,7 @@ export default {
       const zoomFactor = 0.001
       const delta = event.deltaY * zoomFactor
       this.scale -= delta
-      if (this.scale < 0.5) this.scale = 0.5
+      if (this.scale < 0.1) this.scale = 0.1
       if (this.scale > 3) this.scale = 3
     },
     onMouseDown(event: MouseEvent) {
@@ -149,7 +149,7 @@ export default {
     },
     zoomImage(deltaScale: number) {
       this.scale += deltaScale
-      if (this.scale < 0.5) this.scale = 0.5
+      if (this.scale < 0.1) this.scale = 0.1
       if (this.scale > 3) this.scale = 3
     },
     async acceptCrop() {
