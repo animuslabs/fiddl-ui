@@ -6,6 +6,14 @@ q-page.full-height.full-width
     q-card(v-if="$userAuth.loggedIn")
       q-card-section
         h3 Profile
+        .centered.q-mt-md
+          q-img(v-if="$userAuth.userId" :src="avatarImg($userAuth.userId)" alt="avatar" width="100px" height="100px" placeholder-src="/blankAvatar.webp")
+            q-tooltip(slot="overlay")
+              p To change your Avatar, use the button at the top right when viewing an image
+        .centered.q-mt-sm
+          h5 {{ $userAuth.userProfile?.username || "no username" }}
+        h6 Avatar
+          p(style="max-width:400px;") To change your Avatar, use the button at the top right when viewing an image
         h6 Username
         .row.q-gutter-md.items-center(v-if="!editingUsername")
           .col-auto
@@ -55,6 +63,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
+import { avatarImg } from "lib/netlifyImg"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -83,6 +92,7 @@ export default defineComponent({
       editingUsername: false,
       newUsername: "",
       validateUsername,
+      avatarImg,
     }
   },
   watch: {
