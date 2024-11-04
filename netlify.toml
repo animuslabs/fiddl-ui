@@ -22,6 +22,6 @@
   status = 200
 
 [images]
-  remote_images = ["https://api.fiddl.art/images/.*"]
+  remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
 
 
