@@ -19,6 +19,7 @@ export function avatarImg(userId: string, width?: number | false, format?: strin
   if (width) params += `&w=${width}`
   if (format) params += `&fm=${format}`
   if (quality) params += `&q=${quality}`
-  if (window.location.hostname === "localhost") return `${avatarsApiUrl}${userId}.webp`
-  else return netlifyAvatarsPath + `${userId}.webp` + params
+  return `${avatarsApiUrl}${userId}.webp`
+  // if (window.location.hostname === "localhost") return `${avatarsApiUrl}${userId}.webp`
+  // else return netlifyAvatarsPath + `${userId}.webp` + params
 }

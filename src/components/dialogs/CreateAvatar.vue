@@ -35,6 +35,7 @@ import { catchErr, downloadFile } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { PropType } from "vue"
 import ImageCropper, { CropData } from "components/ImageCropper.vue"
+import reloadAvatar from "lib/reloadAvatar"
 export default {
   components: {
     ImageCropper,
@@ -70,12 +71,15 @@ export default {
       this.$api.user.setAvatar
         .mutate({ imageId: this.currentImageId, position, scale })
         .then(() => {
+          reloadAvatar.value = Date.now()
+          this.$root?.$forceUpdate()
           Notify.create({
             message: "Avatar updated",
             color: "positive",
           })
           Loading.hide()
           this.hide()
+          window.location.reload()
         })
         .catch((err) => {
           Loading.hide()
