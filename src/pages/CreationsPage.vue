@@ -4,10 +4,11 @@ q-page.full-height.full-width
   //-   h4 Creations
   div
     .centered.q-pb-md
-      q-tabs(v-model="tab" class="full-width"  active-color="white" indicator-color="secondary")
-        q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" )
+      q-tabs(v-model="tab" class="full-width"  active-color="white" indicator-color="secondary" inline-label active-class="accent" )
+        q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name"  )
           .row.items-center.full-width
-            q-icon(:name="tab.icon" size="25px")
+            .centered
+              q-icon(:name="tab.icon" size="25px").q-ml-sm
             .q-ml-sm.gt-sm {{ tab.label }}
 
     //- q-separator(color="primary")

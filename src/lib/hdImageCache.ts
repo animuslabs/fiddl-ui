@@ -1,4 +1,4 @@
-const MAX_CACHE_SIZE = 5 * 1024 * 1024 // 5 MB limit
+const MAX_CACHE_SIZE = 3 * 1024 * 1024 // 5 MB limit
 const CACHE_KEY_PREFIX = "image_cache_"
 const CACHE_INDEX_KEY = "image_cache_index"
 
@@ -57,6 +57,7 @@ function removeLRUItem(): void {
  */
 export function storeImageInCache(imageName: string, imageData: string): void {
   // Remove items if exceeding the storage limit
+  console.log("cache size:", getCacheSize())
   while (getCacheSize() + imageData.length > MAX_CACHE_SIZE) {
     removeLRUItem()
   }

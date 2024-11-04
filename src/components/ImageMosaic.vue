@@ -44,7 +44,7 @@ export default {
       const id = extractImageId(target.src)
       if (!id) return
       const index = (id: string) => item.imageIds.findIndex((el) => el === id)
-      imageGallery.show(item.imageIds, index(id), item.id)
+      void imageGallery.show(item.imageIds, index(id), item.id)
     },
   },
 }

@@ -20,7 +20,7 @@ import CreatedImageCard from "components/CreatedImageCard.vue"
 import { type CreatedItem } from "lib/types"
 import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
-import { debounce, Scroll, throttle } from "quasar"
+import { throttle } from "quasar"
 let interval: any = null
 
 export default defineComponent({

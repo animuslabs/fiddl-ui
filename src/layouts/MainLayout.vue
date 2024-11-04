@@ -4,8 +4,8 @@ q-layout(view="lHh Lpr lFf")
     q-toolbar.bg-grey-10
       .row.q-mr-lg.no-wrap.items-center
         q-tabs
-          q-route-tab(:to="{ name: 'index' }" no-caps exact)
-            .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;" @click="$router.push({ name: 'index' })")
+          q-route-tab(:to="{ name: 'index' }" no-caps exact).text-white
+            .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
               q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)

@@ -90,7 +90,7 @@ import DownloadImage from "./DownloadImage.vue"
 import { img } from "lib/netlifyImg"
 import EditImage from "./EditImage.vue"
 import LikeImage from "./LikeImage.vue"
-
+import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
 export default defineComponent({
   props: {
     imageIds: {
@@ -159,11 +159,13 @@ export default defineComponent({
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
         this.loadingLike = false
         // dialog.persistent = true
-        const query = { index: this.currentIndex }
-        const newQuery = { ...this.$route.query, ...query }
-        void this.$nextTick(() => {
-          updateQueryParams(newQuery)
-        })
+        if (this.$route.name == "imageRequest") {
+          const query = { index: this.currentIndex }
+          const newQuery = { ...this.$route.query, ...query }
+          void this.$nextTick(() => {
+            updateQueryParams(newQuery)
+          })
+        }
       },
       immediate: true,
     },
@@ -180,6 +182,7 @@ export default defineComponent({
   methods: {
     setProfileImage() {
       console.log("setProfileImage")
+      Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } })
     },
     goToRequestPage() {
       if (!this.imageRequestId || this.imageRequestId.length == 0) return
