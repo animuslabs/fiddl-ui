@@ -23,7 +23,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         //- .centered
         //-   p.q-ma-md You own this image.
         .centered.q-mt-lg.q-pb-lg
-          ImageCropper(:imageSrc="imageSrc" @cropAccepted="setAvatar" @cancel="hide")
+          ImageCropper(v-if="currentImageId" :imageId="currentImageId" @cropAccepted="setAvatar" @cancel="hide")
       //- .centered.q-pt-md.q-pb-md
       //-   q-btn(label="< back" color="grey" flat @click="hide()")
 
@@ -57,15 +57,16 @@ export default {
   watch: {},
   mounted() {
     if (this.currentImageId) {
-      this.imageSrc = img(this.currentImageId, "md")
+      this.imageSrc = img(this.currentImageId, "lg")
     }
   },
 
   methods: {
-    setAvatar(cropData: { cropX: number; cropY: number; cropWidth: number; cropHeight: number }) {
+    setAvatar(cropData: CropData) {
       console.log("setAvatar", cropData)
       if (!this.currentImageId) return
       const { position, scale } = cropData
+      Loading.show({ message: "Updating avatar" })
       this.$api.user.setAvatar
         .mutate({ imageId: this.currentImageId, position, scale })
         .then(() => {
@@ -73,7 +74,8 @@ export default {
             message: "Avatar updated",
             color: "positive",
           })
-          // this.hide()
+          Loading.hide()
+          this.hide()
         })
         .catch(catchErr)
     },

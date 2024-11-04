@@ -14,6 +14,11 @@ const routes: RouteRecordRaw[] = [
     children: [],
   },
   {
+    path: "/avatarCrop",
+    component: () => import("pages/AvatarCrop.vue"),
+    children: [],
+  },
+  {
     path: "/:catchAll(.*)*",
     component: asyncLazyLoad("ErrorNotFound"),
   },

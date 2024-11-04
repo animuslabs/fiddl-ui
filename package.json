@@ -28,6 +28,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "eventemitter3": "5.0.1",
+    "html2canvas": "^1.4.1",
     "pinia": "^2.2.2",
     "pinia-plugin-persistedstate": "4.0.1",
     "quasar": "2.16.11",

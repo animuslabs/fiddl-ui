@@ -1,12 +1,12 @@
 <template lang="pug">
 .image-cropper-container
-  .image-cropper.bg-black(@wheel="onWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd")
+  .image-cropper.bg-black( ref="stage" @wheel="onWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd")
     //- Blurred Background Image
-    img(:src="imageSrc" :style="transformStyle" class="blurred-image" draggable="false")
+    img(:src="imageSrc" :style="transformStyle" class="blurred-image" draggable="false" ref="image")
     //- Mask Container with Fixed Circular Mask
     .mask-container
       //- Non-Blurred Foreground Image
-      img(:src="imageSrc" @load="onImageLoad" :style="transformStyle" draggable="false")
+      img(:src="imageSrc" @load="onImageLoad" :style="transformStyle" draggable="false" ref="maskImage")
     //- SVG Overlay
     svg.overlay(viewBox="0 0 300 300")
       //- Darken the outside area
@@ -29,7 +29,9 @@
 </template>
 
 <script lang="ts">
-import { QBtn } from "quasar"
+import html2canvas from "html2canvas"
+import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
+import { QBtn, SessionStorage } from "quasar"
 
 export interface CropData {
   scale: number
@@ -42,22 +44,24 @@ export default {
     QBtn,
   },
   props: {
-    imageSrc: {
+    imageId: {
       type: String,
       required: true,
     },
   },
   emits: {
-    cropAccepted: (data: { cropX: number; cropY: number; cropWidth: number; cropHeight: number }) => true,
+    cropAccepted: (data: CropData) => true,
     cancel: () => true,
   },
   data() {
     return {
-      scale: 1,
+      scale: 0.5,
       position: { x: 0, y: 0 },
       isDragging: false,
       startX: 0,
       startY: 0,
+      imageSrc: undefined as string | undefined,
+      loading: false,
     }
   },
   computed: {
@@ -67,7 +71,30 @@ export default {
       }
     },
   },
+  mounted() {
+    this.loadHdImage()
+  },
   methods: {
+    async loadHdImage(val?: string) {
+      if (!val) val = this.imageId
+      if (!this.$userAuth.loggedIn) return
+      let imageData = getImageFromCache(val)
+      if (!imageData) {
+        if (SessionStorage.getItem("noHdImage-" + val)) return
+        this.loading = true
+        imageData =
+          (await this.$api.creations.hdImage.query(val).catch(() => {
+            SessionStorage.setItem("noHdImage-" + val, true)
+          })) || undefined
+        this.loading = false
+        if (!imageData) return
+        storeImageInCache(val, imageData)
+      }
+      const imageDataUrl = `data:image/webp;base64,${imageData}`
+      void this.$nextTick(() => {
+        this.imageSrc = imageDataUrl
+      })
+    },
     onTouchStart(event: TouchEvent) {
       if (event.touches[0]) {
         this.isDragging = true
@@ -91,8 +118,8 @@ export default {
       const imgHeight = img.naturalHeight
 
       // Calculate initial position to center the image
-      this.position.x = (300 - imgWidth * this.scale) / 2
-      this.position.y = (300 - imgHeight * this.scale) / 2
+      this.position.x = (300 - imgWidth) / 2
+      this.position.y = (300 - imgHeight) / 2
     },
     onWheel(event: WheelEvent) {
       event.preventDefault()
@@ -125,22 +152,15 @@ export default {
       if (this.scale < 0.5) this.scale = 0.5
       if (this.scale > 3) this.scale = 3
     },
-    // acceptCrop() {
-    //   this.$emit("cropAccepted", {
-    //     scale: this.scale,
-    //     position: this.position,
-    //   })
-    // },
-    acceptCrop() {
-      const scaledWidth = this.$refs.image.naturalWidth * this.scale
-      const scaledHeight = this.$refs.image.naturalHeight * this.scale
-      const cropX = Math.max(0, -this.position.x)
-      const cropY = Math.max(0, -this.position.y)
-
+    async acceptCrop() {
+      // const result = await html2canvas(this.$refs.stage as HTMLElement, { foreignObjectRendering: false, useCORS: true, allowTaint: true })
+      // const link = document.createElement("a")
+      // link.href = result.toDataURL("image/png")
+      // link.download = "cropped-image.png"
+      // link.click()
       this.$emit("cropAccepted", {
         scale: this.scale,
-        cropX,
-        cropY,
+        position: this.position,
       })
     },
   },
