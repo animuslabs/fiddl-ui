@@ -77,7 +77,10 @@ export default {
           Loading.hide()
           this.hide()
         })
-        .catch(catchErr)
+        .catch((err) => {
+          Loading.hide()
+          catchErr(err)
+        })
     },
     goToLogin() {
       void this.$router.push({ name: "login" })
