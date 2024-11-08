@@ -70,11 +70,14 @@ export default defineComponent({
       const shortId = longIdToShort(this.creation.id)
       void this.$router.push({ name: "imageRequest", params: { requestShortId: shortId } })
     },
-    showGallery(startIndex: number) {
+    async showGallery(startIndex: number) {
       const root = this.$root
       if (!root) return
       const images = this.creation.imageIds
       console.log("creationId", this.creation.id)
+      // this.creation.
+      // const creatorName = (await this.$api.user.getUsername.query(this.creation.request.).catch(console.error)) || ""
+      // const creatorMeta = { id: item.creatorId, username: creatorName }
       void imageGallery.show(images, startIndex, this.creation.id)
     },
     setRequest() {

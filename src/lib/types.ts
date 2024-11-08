@@ -12,6 +12,7 @@ export type StabilityAIContentResponse = {
   seed: number
 }
 export interface CreatedItem {
+  creatorId: string
   request: CreateImageRequest
   imageIds: string[]
   id: string

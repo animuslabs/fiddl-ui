@@ -38,6 +38,7 @@ export default defineComponent({
         id: req.id,
         imageIds: req.imageIds,
         createdAt: new Date(req.createdAt),
+        creatorId: req.creatorId,
         request: {
           aspectRatio: req.aspectRatio as any,
           model: req.model as any,

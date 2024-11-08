@@ -139,7 +139,13 @@ export default defineComponent({
           quantity: creation.quantity,
           negativePrompt: creation.negativePrompt || undefined,
         }
-        this.createSession.addItem({ id: creation.id, imageIds: creation.imageIds, request, createdAt: new Date(creation.createdAt) })
+        this.createSession.addItem({
+          id: creation.id,
+          imageIds: creation.imageIds,
+          request,
+          createdAt: new Date(creation.createdAt),
+          creatorId: creation.creatorId,
+        })
       }
     },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
