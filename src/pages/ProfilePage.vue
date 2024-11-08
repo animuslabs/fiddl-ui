@@ -24,8 +24,8 @@ q-page.full-height.full-width
       .centered.q-gutter-md(v-if="tab === 'favorites'")
         div(v-for="favoriteImage in creationsStore.favorites"  :key="favoriteImage.id").q-mr-md
           CreatedImageCard(:imageId="favoriteImage.id" style="width:300px; height:300px;" @click="showGallery(favoriteImage.id)").cursor-pointer
-      //- .centered.q-ma-md
-      //-   q-btn(label="Load More" @click="load()")
+      .centered.q-ma-md
+        q-btn(label="Load More" @click="load()")
 
 
 </template>
