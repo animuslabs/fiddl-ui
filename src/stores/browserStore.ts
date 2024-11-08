@@ -20,6 +20,7 @@ export interface BrowserItem {
   aspectRatio: AspectRatio
   ratioGrade: AspectRatioGrade
   cssClass: string
+  creatorId: string
 }
 
 export const useBrowserStore = defineStore("browserStore", {
@@ -67,6 +68,7 @@ export const useBrowserStore = defineStore("browserStore", {
           cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
           imageIds: creation.images.map((el: any) => el.id),
           createdAt: new Date(creation.createdAt),
+          creatorId: creation.user.id,
         })
       }
       this.loading = false
@@ -93,6 +95,7 @@ export const useBrowserStore = defineStore("browserStore", {
           cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
           imageIds: creation.images.map((el: any) => el.id),
           createdAt: new Date(creation.createdAt),
+          creatorId: creation.user.id,
         }
 
         // Check if the item already exists

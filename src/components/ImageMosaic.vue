@@ -1,15 +1,16 @@
 <template lang="pug">
 .container
   div(v-for="item in items" :key="item.id" :class="item.cssClass")
-    CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)")
+    CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :creatorId="item.creatorId" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)" )
     .absolute-bottom
       .centered
         div(v-for="img in item.imageIds.length").q-mb-xs
           div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6
+    //- q-img.absolute-bottom(:src="avatarImg(item.creatorId)" style="width: 50px; height: 50px; border-radius: 50%;").q-mt-md
 </template>
 
 <script lang="ts">
-import { img } from "lib/netlifyImg"
+import { avatarImg, img } from "lib/netlifyImg"
 import { extractImageId, pickRand } from "lib/util"
 import { BrowserItem } from "src/stores/browserStore"
 import { PropType } from "vue"
@@ -32,6 +33,7 @@ export default {
   data() {
     return {
       img,
+      avatarImg,
     }
   },
   computed: {},
@@ -39,12 +41,14 @@ export default {
     getRandImg(imageIds: string[]) {
       return pickRand(imageIds) as string
     },
-    showGallery(val: PointerEvent, item: BrowserItem) {
+    async showGallery(val: PointerEvent, item: BrowserItem) {
       const target = val.target as HTMLImageElement
       const id = extractImageId(target.src)
       if (!id) return
       const index = (id: string) => item.imageIds.findIndex((el) => el === id)
-      void imageGallery.show(item.imageIds, index(id), item.id)
+      const creatorName = (await this.$api.user.getUsername.query(item.creatorId).catch(console.error)) || ""
+      const creatorMeta = { id: item.creatorId, username: creatorName }
+      void imageGallery.show(item.imageIds, index(id), item.id, creatorMeta)
     },
   },
 }

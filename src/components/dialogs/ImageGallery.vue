@@ -52,10 +52,15 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
           q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
       //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
     .centered
-      div.relative-position.bg-black
+      div.relative-position
         transition(name="fade")
           q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
         img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
+        .row(v-if="creatorMeta" style="bottom:-0px" @click="goToCreator()").items-center.q-ma-md.absolute-bottom
+          .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.4);")
+            .row
+              q-img(v-if="creatorMeta" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
+              h6.q-mr-sm(v-if="creatorMeta") @{{creatorMeta.username}}
     .centered
         div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode")
           span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
@@ -85,9 +90,9 @@ import { log } from "console"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort, updateQueryParams } from "lib/util"
 import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
-import { defineComponent } from "vue"
+import { defineComponent, PropType } from "vue"
 import DownloadImage from "./DownloadImage.vue"
-import { img } from "lib/netlifyImg"
+import { avatarImg, img } from "lib/netlifyImg"
 import EditImage from "./EditImage.vue"
 import LikeImage from "./LikeImage.vue"
 import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
@@ -107,10 +112,15 @@ export default defineComponent({
       default: 0,
       required: false,
     },
+    creatorMeta: {
+      type: Object as PropType<{ id: string; username: string } | null>,
+      default: null,
+    },
   },
   emits: ["ok", "hide"],
   data() {
     return {
+      avatarImg,
       menu: true,
       isPersistent: false,
       preloaded: false,
@@ -180,6 +190,10 @@ export default defineComponent({
     window.addEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    goToCreator() {
+      if (!this.creatorMeta) return
+      void this.$router.push({ name: "profile", params: { username: this.creatorMeta.username } })
+    },
     setProfileImage() {
       console.log("setProfileImage")
       Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } })

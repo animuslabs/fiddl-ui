@@ -4,7 +4,7 @@ import router from "src/router"
 import globalRouter from "src/router/globalRouter"
 
 const imageGallery = {
-  show(imageIds: string[], startIndex = 0, imageRequestId?: string) {
+  show(imageIds: string[], startIndex = 0, imageRequestId?: string, creatorMeta?: { id: string; username: string }) {
     return new Promise<void>((res) => {
       Dialog.create({
         component: ImageGallery,
@@ -15,6 +15,7 @@ const imageGallery = {
           imageIds,
           startIndex,
           imageRequestId,
+          creatorMeta,
         },
       }).onDismiss(() => {
         // void router.replace({ query: {} })

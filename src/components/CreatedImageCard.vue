@@ -1,12 +1,14 @@
 <template lang="pug">
-q-img(:src="imageUrl" style="border-radius: 14px;" alt="user created image")
+.relative-position
+  q-img.full-height.full-width(:src="imageUrl" style="border-radius: 14px;" alt="user created image")
+//- q-img(:src="creatorAvatarUrl")
 
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
 import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
-import { img } from "lib/netlifyImg"
+import { avatarImg, img } from "lib/netlifyImg"
 
 export default defineComponent({
   components: {},
@@ -20,6 +22,11 @@ export default defineComponent({
       required: false,
       default: "md",
     },
+    creatorId: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   emits: [],
   data() {
@@ -27,6 +34,7 @@ export default defineComponent({
       imageUrl: "" as string,
       internalSize: this.size as ImageSize,
       fullscreen: false as boolean,
+      creatorAvatarUrl: "" as string,
     }
   },
   computed: {
@@ -53,6 +61,7 @@ export default defineComponent({
   methods: {
     loadImage() {
       this.imageUrl = img(this.imageId, this.size)
+      if (this.creatorId) this.creatorAvatarUrl = avatarImg(this.creatorId, 100)
     },
   },
 })
