@@ -50,7 +50,7 @@ export const useCreations = defineStore("creationsStore", {
           negativePrompt: creation.negativePrompt || undefined,
         }
 
-        this.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.createdAt) })
+        this.addItem({ id: creation.id, imageIds: creation.imageIds, request, createdAt: new Date(creation.createdAt) })
       }
     },
     async loadPurchases(userId?: string) {

@@ -5,16 +5,32 @@ q-page.full-height.full-width
   .centered.q-gutter-md.q-mt-md
     q-card(v-if="$userAuth.loggedIn")
       q-card-section
-        h3 Profile
+        .row.q-gutter-md.items-center
+          h3 Profile
+          q-btn(@click="$router.push({name:'index',params:{username:'@'+$userAuth.userProfile?.username}})" icon="link" flat round size="sm" :disable="!$userAuth.userProfile?.username")
+            q-tooltip
+              p View your public profile
         .centered.q-mt-md
           q-img(v-if="$userAuth.userId" :src="avatarImg($userAuth.userId)" alt="avatar" width="100px" height="100px" placeholder-src="/blankAvatar.webp")
             q-tooltip(slot="overlay")
               p To change your Avatar, use the button at the top right when viewing an image
         .centered.q-mt-sm
           h5 {{ $userAuth.userProfile?.username || "no username" }}
-        h6 Avatar
-          p(style="max-width:400px;") To change your Avatar, use the button at the top right when viewing an image
-        h6 Username
+        div(v-if="!hasAvatar")
+          h6 Avatar
+            p(style="max-width:400px;") To change your Avatar, use the button at the top right when viewing an image
+        h6 Bio
+          q-btn(icon="edit" size="sm" round flat v-if="!bioEditMode" @click="bioEditMode = true")
+            q-tooltip()
+              p Edit Bio
+          q-input(v-model="userBio" type="textarea" autogrow clearable :disable="!bioEditMode" counter :rules="[v => v.length <= 100 || 'Max 200 characters']")
+          .row.q-gutter-md.q-pt-md.justify-end.full-width(v-if="bioEditMode")
+            q-btn(icon="close"  label="cancel" flat color="negative" @click="bioEditMode = false; userBio = $userAuth.userProfile?.bio || ''")
+            q-btn(icon="check" label="update Bio" flat color="positive" @click="updateBio()")
+        //- .row.q-gutter-md.items-center
+        //-   .col-auto(v-if="$userAuth.userProfile?.bio")
+        //-     q-input(v-model="$userAuth.userProfile?.bio" type="textarea")
+        h6.q-mt-md Username
         .row.q-gutter-md.items-center(v-if="!editingUsername")
           .col-auto
             h5 {{ $userAuth.userProfile?.username || "no username" }}
@@ -26,7 +42,6 @@ q-page.full-height.full-width
             div
               q-btn(v-if="$userAuth.userProfile?.username" label="Get Referral Link" @click="copyRefLink()")
               div(v-else) Set a username to get a referral link
-
         .row.q-gutter-md.items-center(v-else)
           .col-auto
             q-input.q-pb-md( prefix="@" v-model="newUsername" label="Username" :rules="[validateUsername]" clearable)
@@ -93,20 +108,41 @@ export default defineComponent({
       newUsername: "",
       validateUsername,
       avatarImg,
+      userBio: "",
+      bioEditMode: false,
     }
   },
+  computed: {
+    hasAvatar() {
+      return !!this.$userAuth.userData?.AvatarConfig
+    },
+    hasBio() {
+      return !!this.$userAuth.userProfile?.bio
+    },
+  },
   watch: {
-    "userAuth.loggedIn": {
+    "$userAuth.loggedIn": {
       immediate: true,
-      handler() {
-        // reload any user specific stuff here
+      handler(val) {
+        if (!val) return
+        this.loadData()
+      },
+    },
+    $userAuth: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (!val.userProfile) return
+        this.userBio = val.userProfile.bio || ""
       },
     },
   },
-  mounted() {
-    this.loadData()
-  },
+  mounted() {},
   methods: {
+    updateBio() {
+      this.$api.user.setBio.mutate(this.userBio || "").catch(catchErr)
+      this.bioEditMode = false
+    },
     updateNotificationConfig() {
       if (!this.$userAuth.notificationConfig) return
       this.$api.user.setNotificationConfig.mutate(this.$userAuth.notificationConfig as any).catch(catchErr)

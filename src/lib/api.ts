@@ -45,5 +45,6 @@ export type PromoCode = inferRouterOutputs<AppRouter>["promo"]["getPromoCodeDeta
 export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
 export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
 export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
+export type PublicProfile = inferRouterOutputs<AppRouter>["user"]["publicProfile"]
 export default api
 export type APIType = typeof api

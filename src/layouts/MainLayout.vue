@@ -1,18 +1,18 @@
 <template lang="pug">
-q-layout(view="lHh Lpr lFf")
+q-layout(view="lHh Lpr lFf" )
   q-header
     q-toolbar.bg-grey-10
       .row.q-mr-lg.no-wrap.items-center
         q-tabs
-          q-route-tab(:to="{ name: 'index' }" no-caps exact).text-white
+          q-route-tab(:to="{ name: 'index',params:{'username':''},force:true }" no-caps exact).text-white
             .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
               q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)
           //-   | Search
-          q-route-tab(:to="{ name: 'create' }").gt-md.text-white
+          q-route-tab(:to="{ name: 'create' }").gt-xs.text-white
             | create
-          q-route-tab(:to="{ name: 'browse' }").gt-md.text-white
+          q-route-tab(:to="{ name: 'browse' }").gt-xs.text-white
             | browse
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
@@ -64,14 +64,12 @@ q-layout(view="lHh Lpr lFf")
   q-page-container.centered.bg-grey-10
     .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
       router-view
-  q-footer.lt-lg
-    q-toolbar.bg-grey-10
-      .centered.full-width
-        q-tabs
-          q-route-tab(:to="{ name: 'create' }").text-white
-            | create
-          q-route-tab(:to="{ name: 'browse' }").text-white
-            | browse
+  q-footer.lt-lg(color="black").bg-grey-10
+    q-tabs(color="black").lt-sm
+      q-route-tab(:to="{ name: 'create' }").text-white
+        | create
+      q-route-tab(:to="{ name: 'browse' }").text-white
+        | browse
 </template>
 
 <script lang="ts">
