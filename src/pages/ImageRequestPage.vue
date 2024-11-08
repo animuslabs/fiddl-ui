@@ -16,7 +16,7 @@ import imageGallery from "lib/imageGallery"
 import { avatarImg, img } from "lib/netlifyImg"
 
 import { CreatedItem } from "lib/types"
-import { getReferredBy, longIdToShort, shortIdToLong, toObject } from "lib/util"
+import { getReferredBy, longIdToShort, setReferredBy, shortIdToLong, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { useImageRequests } from "src/stores/imageRequestsStore"
@@ -70,7 +70,7 @@ export default defineComponent({
       const referrerAlreadySet = getReferredBy()
       if (referrerAlreadySet) return
       const creatorUsername = await this.$api.user.getUsername.query(req.creatorId)
-      if (creatorUsername) LocalStorage.set("referredBy", creatorUsername)
+      if (creatorUsername) setReferredBy(creatorUsername)
     }
   },
   methods: {

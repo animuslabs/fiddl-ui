@@ -35,7 +35,7 @@ import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { PublicProfile } from "lib/api"
 import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
-import { catchErr, extractImageId, toObject } from "lib/util"
+import { catchErr, extractImageId, getReferredBy, setReferredBy, toObject } from "lib/util"
 import { Notify } from "quasar"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
@@ -85,9 +85,7 @@ export default defineComponent({
   async mounted() {
     this.creationsStore.reset()
     const username = this.$route.params?.username
-    if (!username || typeof username != "string") {
-      void this.$router.replace({ name: "index", force: true, params: {} })
-    }
+    if (!username || typeof username != "string") return
     const userId = await this.$api.user.findByUsername.query(username as string).catch(console.error)
     if (!userId) {
       this.userId = null
@@ -97,6 +95,8 @@ export default defineComponent({
     } else {
       this.userId = userId
     }
+    const referrerAlreadySet = getReferredBy()
+    if (!referrerAlreadySet) setReferredBy(username)
   },
   methods: {
     load() {

@@ -29,6 +29,9 @@ export const catchErr = (err: TRPCClientError<AppRouter>) => {
 export function getReferredBy(): string | undefined {
   return (LocalStorage.getItem("referredBy") as string) || undefined
 }
+export function setReferredBy(referredBy: string) {
+  LocalStorage.set("referredBy", referredBy)
+}
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64)
