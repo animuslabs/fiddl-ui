@@ -7,7 +7,7 @@ q-page.full-height.full-width
       q-card-section
         .row.q-gutter-md.items-center
           h3 Profile
-          //- q-btn(@click="$router.push({name:'index',params:{username:'@'+$userAuth.userProfile?.username}})" icon="link" flat round size="sm" :disable="!$userAuth.userProfile?.username")
+          q-btn(@click="$router.push({name:'profile',params:{username:$userAuth.userProfile?.username}})" icon="link" flat round size="sm" :disable="!$userAuth.userProfile?.username")
             q-tooltip
               p View your public profile
         .centered.q-mt-md

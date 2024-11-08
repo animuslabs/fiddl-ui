@@ -1,8 +1,8 @@
 <template lang="pug">
   q-card.q-pa-md
-    .row(style="max-width: 900px;")
+    .row(style="max-width: 90vw;")
       div
-        img(:src="profileImage" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; ")
+        img(:src="profileImage" alt="Profile" style="width: 250px; height: 250px; border-radius: 50%; ")
       div.q-ml-lg
         .row.q-mb-sm.q-gutter-md.items-center
           h4 @{{profile.profile.username}}
@@ -21,9 +21,9 @@
             div(style="font-size: 12px;") Favorites Received
             q-tooltip
               p Creations of @{{profile.profile.username}} favorited by others
-    div(v-if="profile.profile.bio").q-mt-md
-      .row
-        p {{ profile.profile.bio }}
+        div(v-if="profile.profile.bio").q-mt-md
+          .row
+            p {{ profile.profile.bio }}
 </template>
 
 <script lang="ts">
