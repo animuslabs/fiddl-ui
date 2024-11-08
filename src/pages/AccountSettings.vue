@@ -23,7 +23,7 @@ q-page.full-height.full-width
           q-btn(icon="edit" size="sm" round flat v-if="!bioEditMode" @click="bioEditMode = true")
             q-tooltip()
               p Edit Bio
-          q-input(v-model="userBio" type="textarea" autogrow clearable :disable="!bioEditMode" counter :rules="[v => v.length <= 100 || 'Max 200 characters']")
+          q-input(v-model="userBio" type="textarea" autogrow clearable :disable="!bioEditMode" counter :rules="[v => v.length <= 200 || 'Max 200 characters']")
           .row.q-gutter-md.q-pt-md.justify-end.full-width(v-if="bioEditMode")
             q-btn(icon="close"  label="cancel" flat color="negative" @click="bioEditMode = false; userBio = $userAuth.userProfile?.bio || ''")
             q-btn(icon="check" label="update Bio" flat color="positive" @click="updateBio()")
