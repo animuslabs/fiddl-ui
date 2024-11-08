@@ -17,6 +17,7 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
         q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
     .col(style="min-width:220px;")
       small Prompt: #[p.ellipsis-2-lines {{ creation.request.prompt }}]
+      p.text-italic.text-positive(v-if="creation.request.prompt == undefined") Purchase any image to unlock the prompt
     .col-grow.gt-sm
     .col-auto
       .row.q-gutter-md
@@ -74,7 +75,7 @@ export default defineComponent({
       if (!root) return
       const images = this.creation.imageIds
       console.log("creationId", this.creation.id)
-      imageGallery.show(images, startIndex, this.creation.id)
+      void imageGallery.show(images, startIndex, this.creation.id)
     },
     setRequest() {
       if (this.creation.request.prompt == undefined) {
