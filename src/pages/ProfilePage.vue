@@ -83,6 +83,7 @@ export default defineComponent({
     },
   },
   async mounted() {
+    this.creationsStore.reset()
     const username = this.$route.params?.username
     if (!username || typeof username != "string") {
       void this.$router.replace({ name: "index", force: true, params: {} })

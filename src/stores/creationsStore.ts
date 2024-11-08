@@ -24,6 +24,10 @@ export const useCreations = defineStore("creationsStore", {
     },
     reset() {
       this.creations = []
+      this.imagePurchases = []
+      this.favorites = []
+      this.favoritesCollectionId = null
+      this.activeUserId = null
       // const rev = this.reverse
     },
     async loadCreations(userId?: string) {
