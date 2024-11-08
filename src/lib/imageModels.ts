@@ -1,10 +1,8 @@
 import { z } from "zod"
 
-export const imageModels = ["ultra", "sd3-lg", "core"] as const
+export const imageModels = ["ultra", "sd3-lg", "core", "dall-e-3"] as const
 export type ImageModel = (typeof imageModels)[number]
-export type ImageModelData = { name: ImageModel; pointsCost: number }
-// Ensure imageModelDatas is declared as const
-export const imageModelDatas: ImageModelData[] = [
+export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   {
     name: "ultra",
     pointsCost: 16,
@@ -16,6 +14,10 @@ export const imageModelDatas: ImageModelData[] = [
   {
     name: "core",
     pointsCost: 6,
+  },
+  {
+    name: "dall-e-3",
+    pointsCost: 25,
   },
 ]
 

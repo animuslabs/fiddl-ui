@@ -7,7 +7,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
       .centered.q-mb-md.q-mt-lg.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
         div
           q-btn(icon="share"  flat @click.native.stop="share()" round color="grey-5")
-        q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="imageRequestId.length != 0")
+        q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
         div
           q-btn(icon="download"  flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
             q-tooltip
@@ -138,6 +138,7 @@ export default defineComponent({
       imageUrls: [] as string[],
       userLikedImage: false,
       loadingLike: false,
+      loadedRequestId: null as string | null,
     }
   },
   computed: {
@@ -160,6 +161,13 @@ export default defineComponent({
     },
   },
   watch: {
+    imageRequestId: {
+      handler(val: string) {
+        if (!val) return
+        this.loadedRequestId = val
+      },
+      immediate: true,
+    },
     currentImageId: {
       async handler(val: string) {
         if (!this.$userAuth.loggedIn) return
@@ -190,6 +198,12 @@ export default defineComponent({
     window.addEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    async loadRequestId() {
+      if (this.imageRequestId) return
+      const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
+      if (!imageMeta) return
+      this.loadedRequestId = imageMeta.imageRequestId
+    },
     goToCreator() {
       if (!this.creatorMeta) return
       void this.$router.push({ name: "profile", params: { username: this.creatorMeta.username } })
@@ -199,9 +213,9 @@ export default defineComponent({
       Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } })
     },
     goToRequestPage() {
-      if (!this.imageRequestId || this.imageRequestId.length == 0) return
+      if (!this.loadedRequestId || this.loadedRequestId.length == 0) return
       this.hide()
-      void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.imageRequestId) } })
+      void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.loadedRequestId) } })
     },
     likeImage() {
       // if (!this.$userAuth.loggedIn) return
@@ -274,6 +288,7 @@ export default defineComponent({
       if (this.preloaded) return
       this.preloaded = true
       this.preloadImages()
+      await this.loadRequestId()
     },
     downloadImage() {
       // const currentImage = this.images[this.currentIndex as number]
@@ -283,15 +298,20 @@ export default defineComponent({
     },
     async share() {
       let params: any = { requestShortId: "" }
-      if (!this.imageRequestId) {
+      let query: any = { index: this.currentIndex }
+      let imageRequestId = this.imageRequestId
+      if (!imageRequestId) {
         const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
         if (!imageMeta) return
-        console.log(imageMeta)
-        params.requestShortId = longIdToShort(imageMeta.imageRequestId)
+        imageRequestId = imageMeta.imageRequestId
+        params.requestShortId = longIdToShort(imageRequestId)
       } else {
-        params.requestShortId = longIdToShort(this.imageRequestId)
+        params.requestShortId = longIdToShort(imageRequestId)
       }
-      let query: any = { index: this.currentIndex }
+      const request = await this.$api.creations.createRequest.query(imageRequestId)
+      // find the index of this image in the request
+      const imageIndex = request.imageIds.findIndex((el) => el == this.currentImageId) || 0
+      query.index = imageIndex
       await this.$userAuth.loadUserProfile()
       const hasUsername = !!(this.$userAuth.loggedIn && this.$userAuth.userProfile?.username)
       if (hasUsername) query.referredBy = this.$userAuth.userProfile?.username

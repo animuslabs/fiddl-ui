@@ -92,7 +92,6 @@ export default defineComponent({
       req: defaultImageRequest as CreateImageRequest,
       selectedModel: availableModels[2] as ImageModel,
       availableModels,
-      availableAspectRatios,
       privateMode: false,
       turnstileValidated: true,
       loading: {
@@ -104,6 +103,10 @@ export default defineComponent({
     }
   },
   computed: {
+    availableAspectRatios() {
+      if (this.selectedModel.includes("dall")) return ["1:1", "16:9", "9:16"]
+      else return availableAspectRatios
+    },
     selectedModelPrice() {
       return imageModelDatas.find((m) => m.name === this.selectedModel)?.pointsCost || 0
     },
@@ -120,8 +123,14 @@ export default defineComponent({
   },
   watch: {
     selectedModel: {
-      handler: function (val: any) {
-        this.req.model = val
+      handler(newModel: ImageModel) {
+        this.req.model = newModel
+
+        // Adjust aspect ratio based on the new model's constraints
+        const validRatios = this.availableAspectRatios
+        if (!validRatios.includes(this.req.aspectRatio)) {
+          this.req.aspectRatio = validRatios[0] as any
+        }
       },
       immediate: false,
     },
