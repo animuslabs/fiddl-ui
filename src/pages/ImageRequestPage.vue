@@ -1,11 +1,19 @@
 <template lang="pug">
 q-page
-  ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn ).q-ma-lg
+  .q-ma-md
+    ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn )
+    p.q-mb-xs Author
+    div
+      .row(v-if="creation").q-gutter-md.items-center
+        .col-auto.bg-grey-10.q-pa-md.cursor-pointer(style="border-radius: 10px;" @click="$router.push({ name: 'profile', params: { username: creatorUsername } })")
+          .row.items-center.q-gutter-md
+            q-img(:src="avatarImg(creation?.creatorId)" style="width: 50px; height: 50px; border-radius: 50%;").q-mt-md
+            h4 @{{ creatorUsername }}
 
 </template>
 <script lang="ts">
 import imageGallery from "lib/imageGallery"
-import { img } from "lib/netlifyImg"
+import { avatarImg, img } from "lib/netlifyImg"
 
 import { CreatedItem } from "lib/types"
 import { getReferredBy, longIdToShort, shortIdToLong, toObject } from "lib/util"
@@ -19,6 +27,8 @@ export default defineComponent({
   },
   data() {
     return {
+      avatarImg,
+      creatorUsername: "",
       // imageRequestId: null as string | null,
       imageRequests: useImageRequests(),
       shortId: null as string | null,
@@ -49,10 +59,12 @@ export default defineComponent({
           seed: req.seed as any,
         },
       }
+      this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
       const targetIndex = this.$route.query?.index
       console.log("targetIndex", targetIndex)
       if (targetIndex != undefined && typeof targetIndex == "string") {
-        void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id)
+        const creatorMeta = { id: req.creatorId, username: this.creatorUsername }
+        void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id, creatorMeta)
         // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
       }
       const referrerAlreadySet = getReferredBy()

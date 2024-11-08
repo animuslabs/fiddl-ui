@@ -57,7 +57,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
           q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
         img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
         .row(v-if="creatorMeta" style="bottom:-0px" @click="goToCreator()").items-center.q-ma-md.absolute-bottom
-          .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.4);")
+          .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.5);")
             .row.items-center
               q-img( :src="avatarImg(creatorMeta.id)" style="width:50px; height:50px; border-radius:50%;").q-mr-sm
               h4.q-mr-sm @{{creatorMeta.username}}

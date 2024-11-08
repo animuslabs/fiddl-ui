@@ -19,9 +19,10 @@ const imageGallery = {
         },
       }).onDismiss(() => {
         // void router.replace({ query: {} })
-        // const { pathname } = window.location
+
+        const { pathname } = window.location
         // // Update URL without changing the scroll position
-        // window.history.replaceState({}, "", pathname)
+        window.history.replaceState({}, "", pathname)
         res()
       })
     })

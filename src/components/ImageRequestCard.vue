@@ -56,6 +56,11 @@ export default defineComponent({
       type: Object as PropType<CreatedItem>,
       required: true,
     },
+    creatorUsername: {
+      type: String,
+      required: false,
+      default: "",
+    },
     hideLinkBtn: Boolean,
   },
   emits: ["setRequest"],
@@ -63,6 +68,7 @@ export default defineComponent({
     return {
       timeSince,
       img,
+      localCreatorUsername: this.creatorUsername,
     }
   },
   methods: {
@@ -74,11 +80,10 @@ export default defineComponent({
       const root = this.$root
       if (!root) return
       const images = this.creation.imageIds
-      console.log("creationId", this.creation.id)
-      // this.creation.
-      // const creatorName = (await this.$api.user.getUsername.query(this.creation.request.).catch(console.error)) || ""
-      // const creatorMeta = { id: item.creatorId, username: creatorName }
-      void imageGallery.show(images, startIndex, this.creation.id)
+      let creatorName = this.creatorUsername
+      if (creatorName.length == 0) creatorName = (await this.$api.user.getUsername.query(this.creation.creatorId).catch(console.error)) || ""
+      const creatorMeta = { id: this.creation.creatorId, username: creatorName }
+      void imageGallery.show(images, startIndex, this.creation.id, creatorMeta)
     },
     setRequest() {
       if (this.creation.request.prompt == undefined) {
