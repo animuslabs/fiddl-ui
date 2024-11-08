@@ -1,7 +1,7 @@
 <template lang="pug">
-.full-height.full-width
+q-page.full-height.full-width
   .centered(v-if="publicProfile").q-mt-md.q-mb-md
-    ProfileCard(:profile="publicProfile" :userId="userId" :favoritesCount="creationsStore.favorites.length")
+    ProfileCard(v-if="userId" :profile="publicProfile" :userId="userId" :favoritesCount="creationsStore.favorites.length")
   div
     .centered
       q-tabs(v-model="tab" class="full-width"  active-color="white" indicator-color="secondary" inline-label active-class="accent" )
@@ -36,6 +36,7 @@ import { PublicProfile } from "lib/api"
 import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
 import { catchErr, extractImageId, toObject } from "lib/util"
+import { Notify } from "quasar"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import ProfileCard from "src/components/ProfileCard.vue"
@@ -49,14 +50,10 @@ export default defineComponent({
     CreatedImageCard,
     ProfileCard,
   },
-  props: {
-    userId: {
-      type: String,
-      required: true,
-    },
-  },
+  props: {},
   data() {
     return {
+      userId: null as null | string,
       publicProfile: null as PublicProfile | null,
       creationsStore: useCreations(),
       tab: "favorites",
@@ -72,6 +69,7 @@ export default defineComponent({
       immediate: true,
       async handler(val, oldVal) {
         if (!val || oldVal != val) this.creationsStore.reset()
+        if (!val) return
         this.creationsStore.activeUserId = val
         this.publicProfile = (await this.$api.user.publicProfile.query(val).catch(catchErr)) || null
         void this.load()
@@ -84,10 +82,24 @@ export default defineComponent({
       },
     },
   },
-
-  mounted() {},
+  async mounted() {
+    const username = this.$route.params?.username
+    if (!username || typeof username != "string") {
+      void this.$router.replace({ name: "index", force: true, params: {} })
+    }
+    const userId = await this.$api.user.findByUsername.query(username as string).catch(console.error)
+    if (!userId) {
+      this.userId = null
+      Notify.create({ message: "User not found", color: "negative" })
+      void this.$router.replace({ name: "index" })
+      return
+    } else {
+      this.userId = userId
+    }
+  },
   methods: {
     load() {
+      if (!this.userId) return
       if (this.tab === "creations") {
         void this.creationsStore.loadCreations(this.userId)
       } else if (this.tab === "purchased") {

@@ -1,8 +1,13 @@
 [
   [
     "index",
-    "/:username?",
+    "",
     "IndexPage"
+  ],
+  [
+    "profile",
+    "@:username",
+    "ProfilePage"
   ],
   [
     "stats",

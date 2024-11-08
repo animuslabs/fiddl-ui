@@ -17,7 +17,7 @@
             q-tooltip
               p Creations favorited by @{{profile.profile.username}}
           div
-            div(style="font-weight: bold;") {{ profile.imagesFavorited }}
+            div(style="font-weight: bold;") {{ favoritesCount }}
             div(style="font-size: 12px;") Favorites Received
             q-tooltip
               p Creations of @{{profile.profile.username}} favorited by others
@@ -39,6 +39,11 @@ export default {
     userId: {
       type: String,
       required: true,
+    },
+    favoritesCount: {
+      type: Number,
+      required: false,
+      default: 0,
     },
   },
   data() {

@@ -132,14 +132,14 @@ export default defineComponent({
 
       for (const creation of creations) {
         const request: CreateImageRequest = {
-          prompt: creation.prompt,
+          prompt: creation.prompt || "",
           aspectRatio: creation.aspectRatio as any,
           model: creation.model as any,
           public: creation.public,
           quantity: creation.quantity,
           negativePrompt: creation.negativePrompt || undefined,
         }
-        this.createSession.addItem({ id: creation.id, imageIds: creation.images.map((el: any) => el.id), request, createdAt: new Date(creation.createdAt) })
+        this.createSession.addItem({ id: creation.id, imageIds: creation.imageIds, request, createdAt: new Date(creation.createdAt) })
       }
     },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {

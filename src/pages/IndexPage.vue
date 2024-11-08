@@ -77,29 +77,7 @@ export default defineComponent({
       userId: null as null | string,
     }
   },
-  watch: {
-    "$route.params": {
-      immediate: true,
-      deep: true,
-      async handler() {
-        const username = this.$route.params?.username
-        if (!username || typeof username != "string" || username[0] != "@") {
-          if (username) void this.$router.replace({ force: true, params: { username: "" } })
-          this.userId = null
-          return
-        }
-        const userId = await this.$api.user.findByUsername.query(username.split("@")[1] as string).catch(console.error)
-        if (!userId) {
-          this.userId = null
-          Notify.create({ message: "User not found", color: "negative" })
-          void this.$router.replace({ force: true, params: { username: "" } })
-          return
-        } else {
-          this.userId = userId
-        }
-      },
-    },
-  },
+  watch: {},
   async mounted() {},
   methods: {},
 })

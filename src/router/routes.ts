@@ -20,7 +20,8 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/:catchAll(.*)*",
-    component: asyncLazyLoad("ErrorNotFound"),
+    component: () => import("layouts/MainLayout.vue"),
+    children: [{ name: "404", component: () => import("pages/IndexPage.vue"), path: "" }],
   },
 ]
 

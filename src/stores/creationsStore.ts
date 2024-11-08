@@ -42,7 +42,7 @@ export const useCreations = defineStore("creationsStore", {
       console.log("creations", creations)
       for (const creation of creations) {
         const request: CreateImageRequest = {
-          prompt: creation.prompt,
+          prompt: creation.prompt || "",
           aspectRatio: creation.aspectRatio as any,
           model: creation.model as any,
           public: creation.public,
