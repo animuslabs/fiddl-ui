@@ -37,7 +37,7 @@ export const useCreations = defineStore("creationsStore", {
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-        limit: 5,
+        limit: 25,
       })
       console.log("creations", creations)
       for (const creation of creations) {
@@ -70,7 +70,7 @@ export const useCreations = defineStore("creationsStore", {
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt ? new Date(lastItem.createdAt) : undefined,
-        limit: 15,
+        limit: 25,
       })
       console.log("purchases", purchases)
       for (const purchase of purchases) {

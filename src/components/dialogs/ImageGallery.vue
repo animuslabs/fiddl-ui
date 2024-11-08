@@ -58,9 +58,9 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
         img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
         .row(v-if="creatorMeta" style="bottom:-0px" @click="goToCreator()").items-center.q-ma-md.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.4);")
-            .row
-              q-img(v-if="creatorMeta" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
-              h6.q-mr-sm(v-if="creatorMeta") @{{creatorMeta.username}}
+            .row.items-center
+              q-img( :src="avatarImg(creatorMeta.id)" style="width:50px; height:50px; border-radius:50%;").q-mr-sm
+              h4.q-mr-sm @{{creatorMeta.username}}
     .centered
         div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode")
           span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
