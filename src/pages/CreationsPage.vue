@@ -95,6 +95,7 @@ export default defineComponent({
       else if (this.tab == "favorites") allImages = this.creationsStore.favorites.map((el) => el.id)
       else return
       const index = allImages.findIndex((el) => el === imageId)
+      // const creatorName = (await this.$api.user.getUsername.query(creatorId).catch(console.error)) || ""
       await imageGallery.show(allImages, index)
       this.load()
     },
