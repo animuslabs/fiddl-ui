@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const imageModels = ["ultra", "sd3-lg", "core", "dall-e-3"] as const
+export const imageModels = ["ultra", "sd3-lg", "core", "dall-e-3", "flux-pro-ultra", "flux-dev", "flux-pro"] as const
 export type ImageModel = (typeof imageModels)[number]
 export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   {
@@ -17,7 +17,19 @@ export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   },
   {
     name: "dall-e-3",
-    pointsCost: 25,
+    pointsCost: 20,
+  },
+  {
+    name: "flux-pro-ultra",
+    pointsCost: 20,
+  },
+  {
+    name: "flux-pro",
+    pointsCost: 16,
+  },
+  {
+    name: "flux-dev",
+    pointsCost: 8,
   },
 ]
 

@@ -105,7 +105,9 @@ export default defineComponent({
   computed: {
     availableAspectRatios() {
       if (this.selectedModel.includes("dall")) return ["1:1", "16:9", "9:16"]
-      else return availableAspectRatios
+      if (this.selectedModel.includes("flux")) {
+        return ["1:1", "16:9", "9:16", "4:5", "5:4"]
+      } else return availableAspectRatios
     },
     selectedModelPrice() {
       return imageModelDatas.find((m) => m.name === this.selectedModel)?.pointsCost || 0
