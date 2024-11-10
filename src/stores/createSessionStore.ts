@@ -1,9 +1,10 @@
 import { defineStore } from "pinia"
 import api from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { toObject } from "lib/util"
+import { catchErr, toObject } from "lib/util"
 import type { CreatedItem } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
+import { Dialog } from "quasar"
 
 export const useCreateSession = defineStore("createSession", {
   state() {
@@ -29,7 +30,18 @@ export const useCreateSession = defineStore("createSession", {
     async generateImage(request: CreateImageRequest) {
       const creatorId = useUserAuth().userId
       if (!creatorId) throw new Error("User not authenticated")
-      const result = await api.create.image.mutate(request)
+      const result = await api.create.image.mutate(request).catch(catchErr)
+      if (!result) return
+      if (result.errors.length > 0) {
+        for (const err of result.errors) {
+          Dialog.create({
+            title: "Error",
+            message: err,
+            ok: true,
+            color: "negative",
+          })
+        }
+      }
       const createdItem: CreatedItem = {
         imageIds: result.ids.reverse(),
         request: toObject(request),
