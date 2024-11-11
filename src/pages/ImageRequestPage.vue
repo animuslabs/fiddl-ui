@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page
   .q-ma-md
-    ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn )
+    ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn @reload="load" )
     p.q-mb-xs Author
     div
       .row(v-if="creation").q-gutter-md.items-center
@@ -35,45 +35,49 @@ export default defineComponent({
       creation: null as CreatedItem | null,
     }
   },
-  async mounted() {
-    const requestId = this.$route.params?.requestShortId
-    if (!requestId || typeof requestId != "string") return void this.$router.push({ name: "browse" })
-    console.log("requestId", requestId)
-    this.shortId = requestId.length < 25 ? requestId : longIdToShort(requestId)
-    // void this.$router.replace({ name: "imageRequest", params: { requestShortId: this.shortId } })
-    console.log("shortId", this.shortId)
-    const req = await this.imageRequests.getRequest(this.shortId)
-    if (req) {
-      this.creation = {
-        id: req.id,
-        imageIds: req.imageIds,
-        createdAt: new Date(req.createdAt),
-        creatorId: req.creatorId,
-        request: {
-          aspectRatio: req.aspectRatio as any,
-          model: req.model as any,
-          prompt: req.prompt as any,
-          public: req.public,
-          quantity: req.quantity,
-          negativePrompt: req.negativePrompt,
-          seed: req.seed as any,
-        },
-      }
-      this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
-      const targetIndex = this.$route.query?.index
-      console.log("targetIndex", targetIndex)
-      if (targetIndex != undefined && typeof targetIndex == "string") {
-        const creatorMeta = { id: req.creatorId, username: this.creatorUsername }
-        void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id, creatorMeta)
-        // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
-      }
-      const referrerAlreadySet = getReferredBy()
-      if (referrerAlreadySet) return
-      const creatorUsername = await this.$api.user.getUsername.query(req.creatorId)
-      if (creatorUsername) setReferredBy(creatorUsername)
-    }
+  mounted() {
+    void this.load()
   },
   methods: {
+    async load() {
+      const requestId = this.$route.params?.requestShortId
+      if (!requestId || typeof requestId != "string") return void this.$router.push({ name: "browse" })
+      console.log("requestId", requestId)
+      this.shortId = requestId.length < 25 ? requestId : longIdToShort(requestId)
+      // void this.$router.replace({ name: "imageRequest", params: { requestShortId: this.shortId } })
+      console.log("shortId", this.shortId)
+      const req = await this.imageRequests.getRequest(this.shortId)
+      console.log("req", req)
+      if (req) {
+        this.creation = {
+          id: req.id,
+          imageIds: req.imageIds,
+          createdAt: new Date(req.createdAt),
+          creatorId: req.creatorId,
+          request: {
+            aspectRatio: req.aspectRatio as any,
+            model: req.model as any,
+            prompt: req.prompt as any,
+            public: req.public,
+            quantity: req.quantity,
+            negativePrompt: req.negativePrompt,
+            seed: req.seed as any,
+          },
+        }
+        this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
+        const targetIndex = this.$route.query?.index
+        console.log("targetIndex", targetIndex)
+        if (targetIndex != undefined && typeof targetIndex == "string") {
+          const creatorMeta = { id: req.creatorId, username: this.creatorUsername }
+          void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id, creatorMeta)
+          // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
+        }
+        const referrerAlreadySet = getReferredBy()
+        if (referrerAlreadySet) return
+        const creatorUsername = await this.$api.user.getUsername.query(req.creatorId)
+        if (creatorUsername) setReferredBy(creatorUsername)
+      }
+    },
     editOnCreatePage() {
       console.log("editOnCreatePage")
       if (!this.creation) return

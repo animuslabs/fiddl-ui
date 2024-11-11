@@ -21,7 +21,8 @@ export const useImageRequests = defineStore("imageRequests", {
       console.log(this.imageRequests)
     },
     async getRequest(shortId: string) {
-      if (!this.imageRequests[shortId]) await this.loadRequest(shortId)
+      // if (!this.imageRequests[shortId]) await this.loadRequest(shortId)
+      await this.loadRequest(shortId)
       return this.imageRequests[shortId]
     },
   },

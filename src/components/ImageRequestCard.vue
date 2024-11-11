@@ -63,7 +63,7 @@ export default defineComponent({
     },
     hideLinkBtn: Boolean,
   },
-  emits: ["setRequest"],
+  emits: ["setRequest", "reload"],
   data() {
     return {
       timeSince,
@@ -83,7 +83,9 @@ export default defineComponent({
       let creatorName = this.creatorUsername
       if (creatorName.length == 0) creatorName = (await this.$api.user.getUsername.query(this.creation.creatorId).catch(console.error)) || ""
       const creatorMeta = { id: this.creation.creatorId, username: creatorName }
-      void imageGallery.show(images, startIndex, this.creation.id, creatorMeta)
+      await imageGallery.show(images, startIndex, this.creation.id, creatorMeta)
+      console.log("gallery closed,trigger reload event")
+      this.$emit("reload")
     },
     setRequest() {
       if (this.creation.request.prompt == undefined) {
