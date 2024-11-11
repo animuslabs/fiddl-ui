@@ -4,7 +4,8 @@ q-page.full-height.full-width
     h4 Claim Promo Code
   div.q-pt-md
     .centered
-      h4.text-grey-8 {{ promoCode }}
+      .q-ma-md
+        h4.text-grey-8 {{ promoCode }}
     //- .centered.q-mb-md.q-gutter-md.q-mt-md
       //- q-btn(label="Load Promo Details" @click="loadPromoDetails()")
       //- q-btn(label="Claim Promo" @click="loadPromoDetails()" :disabled="!promoDetails")
