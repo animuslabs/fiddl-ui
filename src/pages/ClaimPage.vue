@@ -4,22 +4,25 @@ q-page.full-height.full-width
     h4 Claim Promo Code
   div.q-pt-md
     .centered
-      h4.text-grey {{ promoCode }}
+      h4.text-grey-8 {{ promoCode }}
     //- .centered.q-mb-md.q-gutter-md.q-mt-md
       //- q-btn(label="Load Promo Details" @click="loadPromoDetails()")
       //- q-btn(label="Claim Promo" @click="loadPromoDetails()" :disabled="!promoDetails")
     //- pre {{ promoDetails }}
     .centered(v-if="promoDetails")
       div(v-if="!promoDetails.claimedAt")
-        h4  This Promo Code is worth {{ promoDetails?.points }} points
+        .q-ma-md
+          h4  This Promo Code is worth {{ promoDetails?.points }} points
         .centered.q-ma-md
           q-btn(label="Claim" @click="claimCode()" color="accent" size="lg" :disabled="!$userAuth.loggedIn")
         .centered.q-ma-md(v-if="!$userAuth.loggedIn")
           q-btn(label="You must Login First" @click="$router.push({name:'login'})" color="primary" )
       div(v-else).q-mt-md
-        h4  This Promo Code has already been claimed
+        .q-ma-md
+          h4 This Promo Code has already been claimed
     .centered(v-else)
-      h4  Promo Code not found
+      .q-ma-md
+        h4  Promo Code not found
 
   //- .centered.q-gutter-lg.q-ma-md(v-else)
   //-   h2 You need to be logged in as an admin to view this page
