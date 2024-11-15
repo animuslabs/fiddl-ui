@@ -1,9 +1,12 @@
 <template lang="pug">
 div
   q-card
+    //- div {{ customModel.slug }}
     .q-pa-md
-      .centered
-        //- h4 Describe your vision
+      .centered.items-center.q-gutter-md(style="text-transform: capitalize;" v-if="customModel" )
+        h4 Using {{customModel.modelType}} Model:
+        h4 {{ customModel?.name }}
+        q-btn(round flat icon="edit" @click="pickModel()")
       q-form(@submit="createImage")
         .centered.q-pa-md
           q-input(v-model="req.prompt" :disable="anyLoading"  @keydown="handleKeydown"  color="primary" filled type="textarea" placeholder="Enter a description of the image to create" ).full-width
@@ -29,7 +32,7 @@ div
                 q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >=10 || req.seed != undefined" )
                 q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <=1 || req.seed != undefined" )
 
-          div.q-ma-md
+          div.q-ma-md(v-if="!customModel")
             p.relative-position Model
               .badge
                 p {{ selectedModelPrice }}
@@ -76,19 +79,29 @@ import { aspectRatios, ImageModel, imageModelDatas } from "lib/imageModels"
 import { catchErr, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
 import { useCreateSession } from "stores/createSessionStore"
-import { defineComponent } from "vue"
+import { defineComponent, PropType } from "vue"
 import umami from "lib/umami"
 import Turnstile from "./Turnstile.vue"
+import { CustomModel } from "lib/api"
+import { useCreations } from "src/stores/creationsStore"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
 // const models = Models
 export default defineComponent({
   components: { Turnstile },
+  props: {
+    customModel: {
+      type: Object as PropType<CustomModel> | null,
+      default: null,
+      required: false,
+    },
+  },
   emits: ["created"],
   data() {
     return {
       createSession: useCreateSession(),
+      creations: useCreations(),
       req: defaultImageRequest as CreateImageRequest,
       selectedModel: availableModels[2] as ImageModel,
       availableModels,
@@ -105,7 +118,7 @@ export default defineComponent({
   computed: {
     availableAspectRatios() {
       if (this.selectedModel.includes("dall")) return ["1:1", "16:9", "9:16"]
-      if (this.selectedModel.includes("flux")) {
+      if (this.selectedModel.includes("flux") || this.selectedModel.includes("custom")) {
         return ["1:1", "16:9", "9:16", "4:5", "5:4"]
       } else return availableAspectRatios
     },
@@ -124,6 +137,15 @@ export default defineComponent({
     },
   },
   watch: {
+    customModel: {
+      handler(newModel: CustomModel) {
+        if (!newModel) return
+        this.req.customModelId = newModel.id
+        this.req.model = "custom"
+        this.selectedModel = "custom"
+      },
+      immediate: true,
+    },
     selectedModel: {
       handler(newModel: ImageModel) {
         this.req.model = newModel
@@ -146,9 +168,13 @@ export default defineComponent({
     },
   },
   mounted() {
-    this.setReq(LocalStorage.getItem("req") || defaultImageRequest)
+    console.log("mounted createcard, customModel:", this.customModel)
+    if (!this.customModel) this.setReq(LocalStorage.getItem("req") || defaultImageRequest)
   },
   methods: {
+    pickModel() {
+      void this.$router.push({ name: "create", params: { tab: "faceClone" } })
+    },
     setReq(req: CreateImageRequest) {
       this.selectedModel = req.model
       this.privateMode = !this.req.public
@@ -192,9 +218,16 @@ export default defineComponent({
     },
     async createImage() {
       this.loading.create = true
-      LocalStorage.set("req", this.req)
+
+      if (!this.customModel) LocalStorage.set("req", this.req)
       // if (this.req.seed == null) this.req.seed = undefined
-      await this.createSession.generateImage(toObject(this.req)).catch(catchErr)
+      if (this.customModel) {
+        this.req.customModelId = this.customModel.id
+        this.req.model = "custom"
+      }
+
+      // await this.createSession.generateImage(toObject(this.req)).catch(catchErr)
+      await this.creations.generateImage(toObject(this.req)).catch(catchErr)
       this.$emit("created")
       this.loading.create = false
       void this.$userAuth.loadUserData()

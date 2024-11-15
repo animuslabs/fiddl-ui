@@ -3,37 +3,13 @@ q-page.full-width
   div(v-if="$userAuth.loggedIn").full-width
     .centered
       div(style="max-width:900px;")
-        //- q-tabs(v-model="tab" align="justify" class="full-width")
-        //-   q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label")
+        q-tabs(v-model="tab" align="justify" class="full-width")
+          q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label")
     div(v-if="tab == 'faceClone'")
       .centered
-        FaceCloneTab
+        FaceCloneTab(ref="faceCloneTab")
     div(v-if="tab == 'prompt'")
-      .centered
-        .gt-md
-          .row.full-height.full-width.no-wrap
-            .gt-md
-              .centered
-                CreateCard.q-mt-md(@created="addImage" style="padding-top:0px; min-width:300px; max-width:600px;" ref="createCard")
-            q-scroll-area(style="width:1140px; max-width:90vw; height:calc(100vh - 60px);")
-              .centered.q-ma-md
-                ImageRequestCard.full-width(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id"  @setRequest="setReq")
-              .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
-                q-btn(label="Load More" @click="loadCreations()" :disable="createSession.sessionItems.length < 1")
-        .lt-lg
-          .full-width
-            .centered.q-ma-md
-              q-btn(label="Create" color="primary" @click="createMode = true" v-if="!createMode")
-            div.q-ma-md(v-if="createMode")
-              .row
-                q-btn(label="Back" color="primary" flat @click="createMode = false")
-              .row
-                CreateCard(@created="addImage" style="padding-top:0px; min-width:200px; max-width:90vw;" ref="createCard")
-          q-scroll-area(style="height:calc(100vh - 175px); width:100vw; " v-if="!createMode").q-pl-lg.q-pr-lg
-            ImageRequestCard(v-for="creation in createSession.sessionItems" :creation="creation" :key="creation.id" @setRequest="setReq($event,true)")
-            //- ImageRequestCard(v-if="createSession.sessionItems[0]" :creation="createSession.sessionItems[0]" :key="createSession.sessionItems[0].id" @setRequest="setReq(createSession.sessionItems[0].request,true)")
-            .centered.q-ma-md(v-if="createSession.sessionItems.length > 9")
-              q-btn(label="Load More" @click="loadCreations()" icon="arrow_downward" v-if="createSession.sessionItems.length > 0")
+      PromptTab(:id="1")
   div(v-else)
     .centered.q-mt-xl
       h3 You must be logged in to create images
@@ -49,11 +25,12 @@ import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useCreateSession } from "stores/createSessionStore"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import ImageRequestCard from "components/ImageRequestCard.vue"
-import { toObject, timeSince } from "lib/util"
+import { toObject, timeSince, catchErr } from "lib/util"
 import { request } from "http"
 import { Dialog } from "quasar"
 import UploaderCard from "src/components/UploaderCard.vue"
 import FaceCloneTab from "src/components/FaceCloneTab.vue"
+import PromptTab from "src/components/PromptTab.vue"
 
 export default defineComponent({
   components: {
@@ -62,6 +39,7 @@ export default defineComponent({
     ImageRequestCard,
     UploaderCard,
     FaceCloneTab,
+    PromptTab,
   },
   data() {
     return {
@@ -92,7 +70,7 @@ export default defineComponent({
       immediate: true,
     },
     "$route.params": {
-      async handler(val) {
+      handler(val) {
         console.log("route params", val)
         if (val.tab) this.tab = val.tab
         if (!val.tab || val.tab == "") this.tab = "prompt"
@@ -101,48 +79,63 @@ export default defineComponent({
     },
     "$route.query": {
       async handler(val) {
-        if (this.$route.params?.tab == "faceClone") {
-          const targetFaceCloneId = this.$route.query?.faceCloneId
-          console.log("targetFaceCloneId", targetFaceCloneId)
-        } else if (this.$route.params?.tab == "prompt") {
-          console.log(val)
-          const targetImageId = this.$route.query?.imageId
-          const encodedRequestData = this.$route.query?.requestData
-          if (targetImageId && typeof targetImageId == "string") {
-            const imageMeta = await this.$api.creations.imageData.query(targetImageId)
-            const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
-            console.log(imageMeta, requestMeta)
-            console.log("width:", this.$q.screen.width)
-            this.setReq(
-              {
-                aspectRatio: requestMeta.aspectRatio as any,
-                model: requestMeta.model as any,
-                prompt: requestMeta.prompt || "",
-                public: requestMeta.public,
-                quantity: 1,
-                negativePrompt: requestMeta.negativePrompt,
-                seed: imageMeta.seed,
-              },
-              this.$q.screen.width < 1440,
-            )
-
-            Dialog.create({
-              title: "Image Parameters Applied",
-              message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
-            }).onDismiss(async () => {
-              await this.$router.replace({ query: {} })
-            })
-          } else if (encodedRequestData && typeof encodedRequestData == "string") {
-            const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
-            this.setReq(decoded, this.$q.screen.width < 1440)
-            Dialog.create({
-              title: "Image Parameters Applied",
-              message: "The create panel has been updated with the details of the image request.",
-            }).onDismiss(async () => {
-              await this.$router.replace({ query: {} })
+        const targetFaceCloneId = this.$route.query?.faceCloneId
+        if (targetFaceCloneId && typeof targetFaceCloneId == "string") {
+          const faceCloneModel = await this.$api.models.getModel.query(targetFaceCloneId).catch(catchErr)
+          if (!faceCloneModel) {
+            void this.$router.replace({ query: {}, params: { tab: "faceClone" } })
+          } else {
+            this.tab = "faceClone"
+            void this.$nextTick(() => {
+              const faceCloneTab = this.$refs.faceCloneTab as InstanceType<typeof FaceCloneTab>
+              faceCloneTab.selectModel(faceCloneModel)
             })
           }
+        } else {
+          void this.$nextTick(() => {
+            const faceCloneTab = this.$refs.faceCloneTab as InstanceType<typeof FaceCloneTab>
+            if (faceCloneTab) faceCloneTab.selectModel(null)
+          })
         }
+
+        console.log(val)
+        const targetImageId = this.$route.query?.imageId
+        const encodedRequestData = this.$route.query?.requestData
+        if (targetImageId && typeof targetImageId == "string") {
+          const imageMeta = await this.$api.creations.imageData.query(targetImageId)
+          const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
+          console.log(imageMeta, requestMeta)
+          console.log("width:", this.$q.screen.width)
+          this.setReq(
+            {
+              aspectRatio: requestMeta.aspectRatio as any,
+              model: requestMeta.model as any,
+              prompt: requestMeta.prompt || "",
+              public: requestMeta.public,
+              quantity: 1,
+              negativePrompt: requestMeta.negativePrompt,
+              seed: imageMeta.seed,
+            },
+            this.$q.screen.width < 1440,
+          )
+
+          Dialog.create({
+            title: "Image Parameters Applied",
+            message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
+          }).onDismiss(async () => {
+            await this.$router.replace({ query: {} })
+          })
+        } else if (encodedRequestData && typeof encodedRequestData == "string") {
+          const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
+          this.setReq(decoded, this.$q.screen.width < 1440)
+          Dialog.create({
+            title: "Image Parameters Applied",
+            message: "The create panel has been updated with the details of the image request.",
+          }).onDismiss(async () => {
+            await this.$router.replace({ query: {} })
+          })
+        }
+        // }
       },
       immediate: true,
     },

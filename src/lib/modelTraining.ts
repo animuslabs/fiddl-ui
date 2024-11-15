@@ -9,7 +9,7 @@ export interface TrainingLog {
 export function parseTrainingLog(logs: string): TrainingLog {
   const lastLine = logs.split("\n").filter(Boolean).pop()
   const percentProgress = lastLine?.match(/(\d+)%/)?.[1]
-  const elapsedTime = lastLine?.match(/\[(\d+:\d+)\</)?.[1]
+  const elapsedTime = lastLine?.match(/\[(\d+:\d+)</)?.[1]
   return {
     percentProgress: parseInt(percentProgress || "0"),
     elapsedTime: elapsedTime || "0:00",
