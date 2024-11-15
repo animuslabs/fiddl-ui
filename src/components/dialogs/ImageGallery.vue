@@ -62,7 +62,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
               q-img( :src="avatarImg(creatorMeta.id)" style="width:50px; height:50px; border-radius:50%;").q-mr-sm
               h4.q-mr-sm @{{creatorMeta.username}}
     .centered
-        div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode")
+        div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode && imageUrls.length < 11")
           span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
 </template>
 <style>
@@ -274,6 +274,7 @@ export default defineComponent({
       })
     },
     preloadImages() {
+      if (this.imageUrls.length > 9) return
       this.imageUrls.forEach((src, index) => {
         if (index !== this.currentIndex) {
           const img = new Image()

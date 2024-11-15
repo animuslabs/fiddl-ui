@@ -35,6 +35,36 @@ const api = createTRPCProxyClient<AppRouter>({
     }),
   ],
 })
+
+export async function uploadTrainingImages(modelid: string, form: FormData) {
+  const headers = {
+    Authorization: `Bearer ${jwt.read()?.token}`,
+    modelid,
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}/uploadTrainingImages`, {
+      method: "POST",
+      headers,
+      body: form,
+    })
+
+    if (!response.ok) {
+      // Handle HTTP errors
+      const errorData = await response.json()
+      throw new Error(errorData.error || "File upload failed")
+    }
+
+    // Parse and return the JSON response
+    const result = await response.json()
+    return result
+  } catch (error) {
+    // Handle errors (network issues, server errors, etc.)
+    console.error("Upload failed:", error)
+    throw error // Rethrow to handle errors where this function is called
+  }
+}
+
 export type UserData = inferRouterOutputs<AppRouter>["user"]["get"]
 export type UserProfile = inferRouterOutputs<AppRouter>["user"]["profile"]
 export type PointsTransfer = inferRouterOutputs<AppRouter>["user"]["pointsHistory"][number]
@@ -46,5 +76,7 @@ export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionI
 export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
 export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
 export type PublicProfile = inferRouterOutputs<AppRouter>["user"]["publicProfile"]
+export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getUserModels"][number]
+export type TrainingData = inferRouterOutputs<AppRouter>["models"]["getTrainingStatus"]
 export default api
 export type APIType = typeof api

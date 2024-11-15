@@ -17,12 +17,12 @@ export function generateShortHash(input: string): string {
   return crypto.HmacMD5(input, "Key").toString()
 }
 
-export const catchErr = (err: TRPCClientError<AppRouter>) => {
+export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
   console.error(err)
   umami.track("error", { message: err.message, error: err })
   Dialog.create({
     title: "Error",
-    message: err.message,
+    message: err.message || err,
     ok: true,
   })
 }

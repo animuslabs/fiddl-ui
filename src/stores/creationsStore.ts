@@ -89,7 +89,7 @@ export const useCreations = defineStore("creationsStore", {
       this.activeUserId = userId
       if (!this.favoritesCollectionId) this.favoritesCollectionId = (await api.collections.findCollectionByName.query({ collectionName: "likes", ownerId: userId }).then((res) => res.id)) || null
       if (!this.favoritesCollectionId) return
-      this.favorites = await api.collections.getCollectionImages.query(this.favoritesCollectionId)
+      this.favorites = (await api.collections.getCollectionImages.query(this.favoritesCollectionId)).reverse()
     },
   },
   persist: false,
