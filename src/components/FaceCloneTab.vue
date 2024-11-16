@@ -129,7 +129,7 @@ export default defineComponent({
     },
     async handleFormData(imageData: FormData) {
       try {
-        Loading.show()
+        Loading.show({ message: "uploading files" })
         const modelId = await this.$api.models.createModel.mutate({ name: Math.random().toString(32).substring(8, 15), type: "faceClone" }).catch(catchErr)
         if (!modelId) return Loading.hide()
         console.log("Model ID:", modelId)
