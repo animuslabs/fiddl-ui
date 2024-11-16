@@ -1,5 +1,6 @@
 <template lang="pug">
 q-card.q-pa-md
+  h4 Images Added: {{ previewFiles.length  }} / 30
   q-uploader.q-mb-md.relative-position(
     ref="uploader"
     accept="image/*"
@@ -16,8 +17,8 @@ q-card.q-pa-md
     class="hide-upload-button"
   )
   .absolute-center.full-width(style="top:120px;" @click="pickFiles").cursor-pointer
-    .centered.text-white.q-pa-md(style="z-index: 10; opacity: 0.9; border-radius: 8px;" v-if="showDragMsg")
-      p.q-ma-md Drag and drop images here, or use the button below
+    //- .centered.text-white.q-pa-md(style="z-index: 10; opacity: 0.9; border-radius: 8px;" v-if="showDragMsg")
+      //- p.q-ma-md Drag and drop images here, or use the button below
 
   .centered.full-width
     .col-auto.q-mr-md
@@ -36,7 +37,7 @@ export default defineComponent({
   props: {
     maxFiles: {
       type: Number,
-      default: 20,
+      default: 30,
     },
     maxFileSize: {
       type: Number,
@@ -83,7 +84,7 @@ export default defineComponent({
       })
     },
     handleFileRemoved(files: readonly any[]) {
-      this.previewFiles = this.previewFiles.filter((f) => !files.includes(f.file))
+      this.previewFiles = this.previewFiles.filter((f: any) => !files.includes(f.file))
     },
     handleRejected(rejectedEntries: QRejectedEntry[]) {
       rejectedEntries.forEach((entry) => {
@@ -113,7 +114,7 @@ export default defineComponent({
 
 <style lang="css">
 /* Hide the default upload button */
-.hide-upload-button .q-uploader__header {
+.q-uploader__header .q-btn {
   display: none;
 }
 </style>

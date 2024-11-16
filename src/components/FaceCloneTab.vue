@@ -9,7 +9,7 @@
         q-btn(label="Create Face Clone" @click="mode= 'createModel'" flat color="primary" size="lg")
     div(v-if="mode == 'createModel'").q-mt-md
       div.q-ma-lg
-        p Upload 10-20 images of a person's face to create a custom model
+        p Upload 15-30 images of a person's face to create a custom model
         p The more diverse the images, the better the model will be
         p You can use the same person's face in different poses, lighting, and expressions
         p The cost to create a model is 3000 Fiddl points
