@@ -71,7 +71,10 @@ export default defineComponent({
     },
   },
 
-  mounted() {},
+  mounted() {
+    this.creationsStore.reset()
+    void this.load()
+  },
   methods: {
     load() {
       if (this.tab === "creations") {
