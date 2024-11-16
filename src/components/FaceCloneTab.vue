@@ -128,17 +128,23 @@ export default defineComponent({
       // this.models = (await this.$api.models.getModels.query().catch(catchErr)) || []
     },
     async handleFormData(imageData: FormData) {
-      Loading.show()
-      const modelId = await this.$api.models.createModel.mutate({ name: "test", type: "faceClone" }).catch(catchErr)
-      if (!modelId) return Loading.hide()
-      console.log("Model ID:", modelId)
-      const result = await uploadTrainingImages(modelId, imageData)
-      console.log("Upload result:", result)
-      this.targetModelId = modelId
-      this.mode = "watchTraining"
-      void this.loadTrainingData()
-      Loading.hide()
-      this.$q.notify({ color: "positive", message: "Files uploaded!" })
+      try {
+        Loading.show()
+        const modelId = await this.$api.models.createModel.mutate({ name: Math.random().toString(32).substring(8, 15), type: "faceClone" }).catch(catchErr)
+        if (!modelId) return Loading.hide()
+        console.log("Model ID:", modelId)
+        const result = await uploadTrainingImages(modelId, imageData)
+        console.log("Upload result:", result)
+        this.targetModelId = modelId
+        this.mode = "watchTraining"
+        void this.loadTrainingData()
+        Loading.hide()
+        this.$q.notify({ color: "positive", message: "Files uploaded!" })
+      } catch (err: any) {
+        console.error(err)
+        Loading.hide()
+        this.$q.dialog({ color: "negative", message: "Error uploading files: " + err.message })
+      }
     },
   },
 })
