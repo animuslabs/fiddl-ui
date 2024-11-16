@@ -1,6 +1,6 @@
 <template lang="pug">
 q-card.q-pa-md
-  h4 Images Added: {{ previewFiles.length  }} / 30
+  h6 Images Added: {{ previewFiles.length  }} / 30
   q-uploader.q-mb-md.relative-position(
     ref="uploader"
     accept="image/*"
