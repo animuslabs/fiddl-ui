@@ -85,7 +85,7 @@ import Turnstile from "./Turnstile.vue"
 import { CustomModel } from "lib/api"
 import { useCreations } from "src/stores/creationsStore"
 const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
-const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
+const availableModels = Object.freeze(imageModelDatas.map((el) => el.name).filter((el) => el != "custom"))
 const availableAspectRatios = Object.freeze(aspectRatios)
 // const models = Models
 export default defineComponent({

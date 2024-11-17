@@ -8,13 +8,19 @@
       .centered
         q-btn(label="Create Face Clone" @click="mode= 'createModel'" flat color="primary" size="lg")
     div(v-if="mode == 'createModel'").q-mt-md
-      div.q-ma-lg
-        p Upload 15-30 images of a person's face to create a custom model
-        p The more diverse the images, the better the model will be
-        p You can use the same person's face in different poses, lighting, and expressions
-        p The cost to create a model is 3000 Fiddl points
-      .centered.q-ma-md
-        UploaderCard(@formData="handleFormData")
+      div(v-if="notEnoughPoints").full-width
+        .centered
+          h5 You don't Have enough Fiddl Points to proceed
+        .centered.q-ma-md
+          q-btn(label="Get more points" @click="$router.push({name:'addPoints'})" flat color="accent" size="lg")
+      .centered
+        div.q-ma-lg(style="max-width:800px")
+          p Upload 15-30 images of a person's face to create a custom model
+          p The more diverse the images, the better the model will be
+          p You can use the same person's face in different poses, lighting, and expressions
+          p The cost to create a model is 3000 Fiddl points
+        .centered.q-ma-md(v-if="!notEnoughPoints")
+          UploaderCard(@formData="handleFormData")
     div(v-if="mode == 'watchTraining'").q-mt-md
       .centered
         .q-ma-md
@@ -69,12 +75,24 @@ export default defineComponent({
     }
   },
   computed: {
+    notEnoughPoints() {
+      return (this.$userAuth.userData?.availablePoints || 0) < 3000
+    },
     trainingProgress() {
       if (!this.trainingData?.logs) return null
       return parseTrainingLog(this.trainingData.logs)
     },
   },
   watch: {
+    $userAuth: {
+      handler(val) {
+        if (val.loggedIn) {
+          void this.$userAuth.loadUserData()
+          void this.loadUserModels()
+        }
+      },
+      immediate: true,
+    },
     targetModelId: {
       handler(val) {
         console.log("Target model ID:", val)
