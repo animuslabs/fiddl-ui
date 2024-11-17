@@ -2,11 +2,11 @@
   div
     div(v-if="mode == 'pickModel'").q-mt-md
       .centered
-        h5 Face Clones
+        h5 Face Forge Models
       .centered.q-ma-md
         CustomModelsList(style="width:600px; max-width:90vw;" @modelClicked="selectModel")
       .centered
-        q-btn(label="Create Face Clone" @click="mode= 'createModel'" flat color="primary" size="lg")
+        q-btn(label="Create Face Forge" @click="mode= 'createModel'" flat color="primary" size="lg")
     div(v-if="mode == 'createModel'").q-mt-md
       div(v-if="notEnoughPoints").full-width
         .centered
@@ -96,7 +96,7 @@ export default defineComponent({
     targetModelId: {
       handler(val) {
         console.log("Target model ID:", val)
-        if (val) void this.$router.replace({ query: { faceCloneId: val } })
+        if (val) void this.$router.replace({ query: { faceForgeId: val } })
       },
       immediate: true,
     },
@@ -148,7 +148,7 @@ export default defineComponent({
     async handleFormData(imageData: FormData) {
       try {
         Loading.show({ message: "uploading files" })
-        const modelId = await this.$api.models.createModel.mutate({ name: Math.random().toString(32).substring(8, 15), type: "faceClone" }).catch(catchErr)
+        const modelId = await this.$api.models.createModel.mutate({ name: Math.random().toString(32).substring(8, 15), type: "faceForge" }).catch(catchErr)
         if (!modelId) return Loading.hide()
         console.log("Model ID:", modelId)
         const result = await uploadTrainingImages(modelId, imageData)

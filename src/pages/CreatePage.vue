@@ -5,9 +5,9 @@ q-page.full-width
       div(style="max-width:900px;")
         q-tabs(v-model="tab" align="justify" class="full-width")
           q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label")
-    div(v-if="tab == 'faceClone'")
+    div(v-if="tab == 'faceForge'")
       .centered
-        FaceCloneTab(ref="faceCloneTab")
+        faceForgeTab(ref="faceForgeTab")
     div(v-if="tab == 'prompt'")
       PromptTab(:id="1")
   div(v-else)
@@ -29,7 +29,7 @@ import { toObject, timeSince, catchErr } from "lib/util"
 import { request } from "http"
 import { Dialog } from "quasar"
 import UploaderCard from "src/components/UploaderCard.vue"
-import FaceCloneTab from "src/components/FaceCloneTab.vue"
+import faceForgeTab from "src/components/faceForgeTab.vue"
 import PromptTab from "src/components/PromptTab.vue"
 
 export default defineComponent({
@@ -38,7 +38,7 @@ export default defineComponent({
     CreatedImageCard,
     ImageRequestCard,
     UploaderCard,
-    FaceCloneTab,
+    faceForgeTab,
     PromptTab,
   },
   data() {
@@ -54,8 +54,8 @@ export default defineComponent({
           label: "Prompt",
         },
         {
-          name: "faceClone",
-          label: "Face Clone",
+          name: "faceForge",
+          label: "Face Forge",
         },
       ],
     }
@@ -79,22 +79,22 @@ export default defineComponent({
     },
     "$route.query": {
       async handler(val) {
-        const targetFaceCloneId = this.$route.query?.faceCloneId
-        if (targetFaceCloneId && typeof targetFaceCloneId == "string") {
-          const faceCloneModel = await this.$api.models.getModel.query(targetFaceCloneId).catch(catchErr)
-          if (!faceCloneModel) {
-            void this.$router.replace({ query: {}, params: { tab: "faceClone" } })
+        const targetfaceForgeId = this.$route.query?.faceForgeId
+        if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
+          const faceForgeModel = await this.$api.models.getModel.query(targetfaceForgeId).catch(catchErr)
+          if (!faceForgeModel) {
+            void this.$router.replace({ query: {}, params: { tab: "faceForge" } })
           } else {
-            this.tab = "faceClone"
+            this.tab = "faceForge"
             void this.$nextTick(() => {
-              const faceCloneTab = this.$refs.faceCloneTab as InstanceType<typeof FaceCloneTab>
-              faceCloneTab.selectModel(faceCloneModel)
+              const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof faceForgeTab>
+              faceForgeTab.selectModel(faceForgeModel)
             })
           }
         } else {
           void this.$nextTick(() => {
-            const faceCloneTab = this.$refs.faceCloneTab as InstanceType<typeof FaceCloneTab>
-            if (faceCloneTab) faceCloneTab.selectModel(null)
+            const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof faceForgeTab>
+            if (faceForgeTab) faceForgeTab.selectModel(null)
           })
         }
 

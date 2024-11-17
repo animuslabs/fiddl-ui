@@ -173,7 +173,7 @@ export default defineComponent({
   },
   methods: {
     pickModel() {
-      void this.$router.push({ name: "create", params: { tab: "faceClone" } })
+      void this.$router.push({ name: "create", params: { tab: "faceForge" } })
     },
     setReq(req: CreateImageRequest) {
       this.selectedModel = req.model
