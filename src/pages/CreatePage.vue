@@ -29,7 +29,7 @@ import { toObject, timeSince, catchErr } from "lib/util"
 import { request } from "http"
 import { Dialog } from "quasar"
 import UploaderCard from "src/components/UploaderCard.vue"
-import faceForgeTab from "src/components/faceForgeTab.vue"
+import FaceForgeTab from "src/components/FaceForgeTab.vue"
 import PromptTab from "src/components/PromptTab.vue"
 
 export default defineComponent({
@@ -38,7 +38,7 @@ export default defineComponent({
     CreatedImageCard,
     ImageRequestCard,
     UploaderCard,
-    faceForgeTab,
+    FaceForgeTab,
     PromptTab,
   },
   data() {
@@ -87,13 +87,13 @@ export default defineComponent({
           } else {
             this.tab = "faceForge"
             void this.$nextTick(() => {
-              const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof faceForgeTab>
+              const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof FaceForgeTab>
               faceForgeTab.selectModel(faceForgeModel)
             })
           }
         } else {
           void this.$nextTick(() => {
-            const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof faceForgeTab>
+            const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof FaceForgeTab>
             if (faceForgeTab) faceForgeTab.selectModel(null)
           })
         }
