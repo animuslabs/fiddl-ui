@@ -17,7 +17,7 @@ q-page.full-height.full-width
     div.q-ma-md
       .centered.q-gutter-md(v-if="tab === 'creations'")
         div(v-for="creation in creationsStore.creations"  :key="creation.id").q-mr-md.q-pl-md.full-width
-          ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage")
+          ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted")
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id").q-mr-md
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
@@ -99,6 +99,9 @@ export default defineComponent({
     if (!referrerAlreadySet) setReferredBy(username)
   },
   methods: {
+    handleDeleted(requestId: string) {
+      this.creationsStore.creations = this.creationsStore.creations.filter((el) => el.id !== requestId)
+    },
     load() {
       if (!this.userId) return
       if (this.tab === "creations") {
