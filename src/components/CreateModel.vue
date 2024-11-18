@@ -37,13 +37,11 @@ div.q-mt-md
 <script lang="ts">
 import { defineComponent } from "vue"
 import UploaderCard from "./UploaderCard.vue"
-const trainingModes = ["simple", "normal", "advanced", "extreme"] as const
+const trainingModes = ["normal", "advanced"] as const
 type FaceForgeMode = (typeof trainingModes)[number]
 export const pricingMap: Record<FaceForgeMode, number> = {
-  simple: 3000,
   normal: 6000,
   advanced: 15000,
-  extreme: 35000,
 }
 
 export default defineComponent({
