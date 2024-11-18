@@ -17,6 +17,7 @@ export default ts.config(
       },
     },
     rules: {
+      "vue/require-default-prop": "off",
       "vue/no-mutating-props": "off",
       "vue/component-tags-order": "off",
       "vue/max-attributes-per-line": "off",
