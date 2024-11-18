@@ -50,9 +50,6 @@ export default defineComponent({
   components: {
     UploaderCard,
   },
-  props: {
-    notEnoughPoints: Boolean,
-  },
   emits: {
     startTraining: (data: { modelName: string; trainingMode: FaceForgeMode; formData: FormData }) => true,
   },
@@ -65,6 +62,9 @@ export default defineComponent({
     }
   },
   computed: {
+    notEnoughPoints() {
+      return this.cost > (this.$userAuth.userData?.availablePoints || 0)
+    },
     cost() {
       return this.pricingMap[this.trainingMode] || 0
     },

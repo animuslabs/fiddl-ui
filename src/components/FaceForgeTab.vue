@@ -7,9 +7,6 @@ div
   )
   CreateModelComponent(
     v-if="mode === 'createModel'"
-    :notEnoughPoints="notEnoughPoints"
-    :pricingMap="pricingMap"
-    :trainingModes="trainingModes"
     @startTraining="startTraining"
   )
   WatchTrainingComponent(
@@ -33,17 +30,6 @@ import CreateModelComponent from "./CreateModel.vue"
 import WatchTrainingComponent from "./WatchTraining.vue"
 import UseModelComponent from "./UseModel.vue"
 
-const trainingModes = ["simple", "normal", "advanced", "extreme"] as const
-type FaceForgeMode = (typeof trainingModes)[number]
-
-export const pricingMap: Record<FaceForgeMode, number> = {
-  simple: 3000,
-  normal: 6000,
-  advanced: 15000,
-  extreme: 35000,
-}
-const defaultTrainingData = {}
-
 export default defineComponent({
   components: {
     PickModelComponent,
@@ -54,8 +40,6 @@ export default defineComponent({
   data() {
     return {
       mode: "pickModel",
-      trainingModes,
-      pricingMap,
       targetModelId: null as string | null,
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
@@ -63,9 +47,6 @@ export default defineComponent({
     }
   },
   computed: {
-    notEnoughPoints() {
-      return (this.$userAuth.userData?.availablePoints || 0) < 3000
-    },
     trainingProgress() {
       if (!this.trainingData?.logs) return null
       return parseTrainingLog(this.trainingData.logs)
@@ -126,14 +107,14 @@ export default defineComponent({
     async loadUserModels() {
       // Load user models if needed
     },
-    async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: FaceForgeMode; formData: FormData }) {
+    async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: string; formData: FormData }) {
       try {
         Loading.show({ message: "Uploading files" })
         const modelId = await this.$api.models.createModel
           .mutate({
             name: modelName,
             type: "faceForge",
-            trainingPreset: trainingMode,
+            trainingPreset: trainingMode as any,
           })
           .catch(() => null)
         if (!modelId) return Loading.hide()

@@ -1,6 +1,8 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" )
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
+    div {{ currentIndex }}
+    div {{ currentImageId }}
     .full-width(style="height:5vh").gt-sm
     .relative-position
       //- q-spinner.absolute-center(size="100px")
@@ -42,20 +44,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
                     .row.items-center
                       q-icon(name="delete" size="20px").q-mr-md
                       div Delete
-            //- q-item(clickable @click="$router.push({name:'creations',params:{ accountId:userAuth.userId }})" v-close-popup)
-            //-   q-item-section
-            //-     .row.items-center
-            //-       q-icon(name="photo_library" size="20px").q-mr-md
-            //-       div My Account
-            //- q-item(clickable @click="userAuth.logout()" v-close-popup)
-            //-   q-item-section
-            //-     .row.items-center
-            //-       q-icon(name="logout" size="20px").q-mr-md
-            //-       div  Logout
-        //- q-btn(icon="add" flat @click="closeFullScreen")
         div
           q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
-      //- q-img.overlay-image(:src="images[currentIndex]" alt="Full Screen Image"  no-transition @click="onImageClick" ref="overlayImage")
     .centered
       div.relative-position
         transition(name="fade")
@@ -227,10 +217,12 @@ export default defineComponent({
         this.loading = true
         this.imageDeleted = true
         void this.$api.creations.deleteImage.mutate(this.currentImageId).catch(catchErr)
+        if (this.localImageIds.length == 1) this.hide()
         this.localImageIds = this.localImageIds.filter((el) => el !== this.currentImageId)
-        if (this.localImageIds.length == 0) this.hide()
-        else this.next()
-        this.loading = false
+        if (this.currentIndex >= this.localImageIds.length - 2) this.currentIndex--
+        setTimeout(() => {
+          this.loading = false
+        }, 500)
       })
     },
     async loadRequestId() {
