@@ -37,6 +37,11 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
                     .row.items-center
                       q-icon(name="account_circle" size="20px").q-mr-md
                       div Use as Profile Image
+                q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="delete" size="20px").q-mr-md
+                      div Delete
             //- q-item(clickable @click="$router.push({name:'creations',params:{ accountId:userAuth.userId }})" v-close-popup)
             //-   q-item-section
             //-     .row.items-center
@@ -55,15 +60,15 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
       div.relative-position
         transition(name="fade")
           q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
-        img.image-darken(:src="imageUrls[currentIndex]" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
+        img.image-darken(:src="currentImageUrl" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
         .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.q-ma-md.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.5);")
             .row.items-center
               q-img( :src="avatarImg(creatorMeta.id)" style="width:50px; height:50px; border-radius:50%;").q-mr-sm
               h4.q-mr-sm @{{creatorMeta.username}}
     .centered
-        div.q-mt-md(v-if="imageUrls.length > 1 && !downloadMode && imageUrls.length < 11")
-          span.indicator( v-for="(image, index) in imageUrls" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
+        div.q-mt-md(v-if="localImageIds.length > 1 && !downloadMode && localImageIds.length < 11")
+          span.indicator( v-for="(image, index) in localImageIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
 </template>
 <style>
 .fade-enter-active {
@@ -120,7 +125,9 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      localImageIds: [] as string[],
       avatarImg,
+      imageDeleted: true,
       menu: true,
       isPersistent: false,
       preloaded: false,
@@ -135,13 +142,19 @@ export default defineComponent({
       touchEndX: 0,
       upscaling: false,
       threshold: 50, // Minimum swipe distance
-      imageUrls: [] as string[],
       userLikedImage: false,
       loadingLike: false,
       loadedRequestId: null as string | null,
     }
   },
   computed: {
+    currentImageUrl() {
+      return img(this.currentImageId, "lg")
+    },
+    userCreatedImage() {
+      if (!this.creatorMeta) return false
+      return this.creatorMeta.id == this.$userAuth.userId
+    },
     imgClass() {
       if (!this.firstImageLoaded) return ""
       else return this.loading || this.imgLoading ? "image-darken active" : "image-darken"
@@ -171,7 +184,7 @@ export default defineComponent({
     currentImageId: {
       async handler(val: string) {
         if (!this.$userAuth.loggedIn) return
-
+        console.log("current id triggered")
         this.userLikedImage = false
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
@@ -192,12 +205,32 @@ export default defineComponent({
     window.removeEventListener("keydown", this.handleKeyDown)
   },
   mounted() {
+    this.localImageIds = [...this.imageIds]
     this.currentIndex = this.startIndex
-    this.imageUrls = this.imageIds.map((el) => img(el, "lg"))
     this.preloadImages()
     window.addEventListener("keydown", this.handleKeyDown)
   },
   methods: {
+    deleteImage() {
+      Dialog.create({
+        title: "Delete Image",
+        message: "Are you sure you want to delete this image?",
+        ok: {
+          label: "Delete",
+          color: "negative",
+        },
+        cancel: {
+          label: "Cancel",
+          color: "primary",
+        },
+      }).onOk(() => {
+        this.imageDeleted = true
+        void this.$api.creations.deleteImage.mutate(this.currentImageId).catch(catchErr)
+        this.localImageIds = this.localImageIds.filter((el) => el !== this.currentImageId)
+        if (this.localImageIds.length == 0) this.hide()
+        else this.next()
+      })
+    },
     async loadRequestId() {
       if (this.imageRequestId) return
       const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
@@ -274,13 +307,13 @@ export default defineComponent({
       })
     },
     preloadImages() {
-      if (this.imageUrls.length > 9) return
-      this.imageUrls.forEach((src, index) => {
-        if (index !== this.currentIndex) {
-          const img = new Image()
-          img.src = src
-        }
-      })
+      if (this.localImageIds.length > 9) return
+      // this.localImageIds.forEach((src, index) => {
+      //   if (index !== this.currentIndex) {
+      //     const img = new Image()
+      //     img.src = src
+      //   }
+      // })
     },
     async imgLoaded(event: Event) {
       await this.loadHdImage()
@@ -331,17 +364,17 @@ export default defineComponent({
       this.isFullScreen = true
     },
     next() {
-      if (this.imageIds.length == 1) return
+      if (this.localImageIds.length == 1) return
       // console.log("next", this.loading, this.imgLoading)
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
-      this.currentIndex = (this.currentIndex + 1) % this.imageIds.length
+      this.currentIndex = (this.currentIndex + 1) % this.localImageIds.length
     },
     prev() {
-      if (this.imageIds.length == 1) return
+      if (this.localImageIds.length == 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
-      this.currentIndex = (this.currentIndex - 1 + this.imageIds.length) % this.imageIds.length
+      this.currentIndex = (this.currentIndex - 1 + this.localImageIds.length) % this.localImageIds.length
     },
     goTo(index: number) {
       this.currentIndex = index
@@ -409,6 +442,7 @@ export default defineComponent({
     },
     hide() {
       const dialog = this.$refs.dialog as QDialog
+      if (this.imageDeleted) window.location.reload()
       dialog.hide()
     },
 

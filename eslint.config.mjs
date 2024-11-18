@@ -17,6 +17,7 @@ export default ts.config(
       },
     },
     rules: {
+      "vue/no-mutating-props": "off",
       "vue/component-tags-order": "off",
       "vue/max-attributes-per-line": "off",
       "@typescript-eslint/no-unused-vars": "off",
