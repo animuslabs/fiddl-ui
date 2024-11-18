@@ -22,7 +22,7 @@ export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
   umami.track("error", { message: err.message, error: err })
   Dialog.create({
     title: "Error",
-    message: err.message || err,
+    message: err,
     ok: true,
   })
 }
