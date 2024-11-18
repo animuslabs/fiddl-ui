@@ -1,8 +1,6 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" )
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
-    div {{ currentIndex }}
-    div {{ currentImageId }}
     .full-width(style="height:5vh").gt-sm
     .relative-position
       //- q-spinner.absolute-center(size="100px")
