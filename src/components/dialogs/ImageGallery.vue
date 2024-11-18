@@ -127,7 +127,7 @@ export default defineComponent({
     return {
       localImageIds: [] as string[],
       avatarImg,
-      imageDeleted: true,
+      imageDeleted: false,
       menu: true,
       isPersistent: false,
       preloaded: false,
