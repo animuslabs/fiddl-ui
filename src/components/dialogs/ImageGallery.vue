@@ -169,8 +169,8 @@ export default defineComponent({
       return this.userOwnsImage ? "text-primary" : "text-grey-6"
     },
     currentImageId() {
-      if (this.imageIds.length === 0) return ""
-      return this.imageIds[this.currentIndex] as string
+      if (this.localImageIds.length === 0) return ""
+      return this.localImageIds[this.currentIndex] as string
     },
   },
   watch: {
@@ -224,11 +224,13 @@ export default defineComponent({
           color: "primary",
         },
       }).onOk(() => {
+        this.loading = true
         this.imageDeleted = true
         void this.$api.creations.deleteImage.mutate(this.currentImageId).catch(catchErr)
         this.localImageIds = this.localImageIds.filter((el) => el !== this.currentImageId)
         if (this.localImageIds.length == 0) this.hide()
         else this.next()
+        this.loading = false
       })
     },
     async loadRequestId() {
