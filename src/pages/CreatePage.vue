@@ -31,6 +31,7 @@ import { Dialog } from "quasar"
 import UploaderCard from "src/components/UploaderCard.vue"
 import FaceForgeTab from "src/components/FaceForgeTab.vue"
 import PromptTab from "src/components/PromptTab.vue"
+import { useCreateCardStore } from "src/stores/createCardStore"
 
 export default defineComponent({
   components: {
@@ -44,6 +45,7 @@ export default defineComponent({
   data() {
     return {
       timeSince,
+      createStore: useCreateCardStore(),
       createSession: useCreateSession(),
       images: [] as string[],
       createMode: false,
@@ -192,7 +194,7 @@ export default defineComponent({
       void this.$nextTick(() => {
         const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
         // createCard.req = toObject(request)
-        createCard.setReq(request)
+        this.createStore.setReq(request)
       })
     },
     addImage(data: string) {

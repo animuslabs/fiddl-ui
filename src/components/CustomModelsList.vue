@@ -50,7 +50,7 @@
           q-btn(label="Update" @click="setModelName()" color="primary" flat)
 </template>
 <script lang="ts">
-import { CustomModel } from "lib/api"
+import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
@@ -64,7 +64,7 @@ export default defineComponent({
   },
   data: function () {
     return {
-      models: [] as CustomModel[] | null,
+      models: [] as CustomModelWithRequests[] | null,
       timeSince,
       img,
       newModelName: "",

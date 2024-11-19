@@ -76,7 +76,8 @@ export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionI
 export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
 export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
 export type PublicProfile = inferRouterOutputs<AppRouter>["user"]["publicProfile"]
-export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getUserModels"][number]
+export type CustomModelWithRequests = inferRouterOutputs<AppRouter>["models"]["getUserModels"][number]
+export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getModel"]
 export type TrainingData = inferRouterOutputs<AppRouter>["models"]["getTrainingStatus"]
 export default api
 export type APIType = typeof api

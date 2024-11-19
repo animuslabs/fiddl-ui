@@ -77,6 +77,7 @@ import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { Dialog } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"
+import { useCreateCardStore } from "src/stores/createCardStore"
 
 export default defineComponent({
   name: "PromptTab",
@@ -94,6 +95,7 @@ export default defineComponent({
   data() {
     return {
       creationsStore: useCreations(),
+      createStore: useCreateCardStore(),
       createMode: false,
     }
   },
@@ -122,9 +124,9 @@ export default defineComponent({
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
       void this.$nextTick(() => {
-        const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
-        console.log("createCard setReq Triggered", createCard)
-        createCard.setReq(request)
+        // const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
+        // console.log("createCard setReq Triggered", createCard)
+        this.createStore.setReq(request)
       })
     },
     addImage(data: string) {

@@ -25,44 +25,44 @@ div
           div.q-ma-md
             p Quantity
             .row
-              q-input(v-model.number="req.quantity" type="number" :min="1" :max="10" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading ||req.seed != undefined" )
-              q-tooltip(v-if="req.seed")
+              q-input(v-model.number="createStore.req.quantity" type="number" :min="1" :max="10" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading ||req.seed != undefined" )
+              q-tooltip(v-if="createStore.req.seed")
                 p Can't adjust quantity when using custom seed
               .column
-                q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >=10 || req.seed != undefined" )
-                q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <=1 || req.seed != undefined" )
+                q-btn(size="sm" icon="add" flat round @click="createStore.req.quantity++" :disable="req.quantity >=10 || createStore.req.seed != undefined" )
+                q-btn(size="sm" icon="remove" flat round @click="createStore.req.quantity--" :disable="req.quantity <=1 || createStore.req.seed != undefined" )
 
           div.q-ma-md(v-if="!customModel")
             p.relative-position Model
               .badge
                 p {{ selectedModelPrice }}
             .row
-              q-select(v-model="selectedModel" :options="availableModels" style="font-size:20px;" :disable="anyLoading" )
+              q-select(v-model="createStore.selectedModel" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
           div.q-ma-md
             p Aspect Ratio
             .row
-              q-select(v-model="req.aspectRatio" :options="availableAspectRatios" style="font-size:20px;" :disable="anyLoading" )
+              q-select(v-model="createStore.req.aspectRatio" :options="availableAspectRatios" style="font-size:20px;" :disable="anyLoading" )
           div.q-ma-md
             p Private Mode
             .row
-              q-toggle( :modelValue="privateMode" @update:model-value="updatePrivateMode" color="primary" :disable="anyLoading" )
+              q-toggle( :modelValue="createStore.privateMode" @update:model-value="updatePrivateMode" color="primary" :disable="anyLoading" )
           div.q-ma-md
             p Seed
             .row
-              q-input(v-model.number="req.seed" type="number" placeholder="Random" clearable :disable="anyLoading")
-              .column(v-if="req.seed")
-                q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed" )
-                q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed" )
+              q-input(v-model.number="createStore.req.seed" type="number" placeholder="Random" clearable :disable="anyLoading")
+              .column(v-if="createStore.req.seed")
+                q-btn(size="sm" icon="add" flat round @click="createStore.req.seed++" :disable="!createStore.req.seed" )
+                q-btn(size="sm" icon="remove" flat round @click="createStore.req.seed--" :disable="!createStore.req.seed" )
         //- div {{ req }}
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
         .centered(v-if="$userAuth.userData")
-          div(v-if="!turnstileValidated")
-            .row.items-center.q-gutter-md
-              div Validating...
-              q-spinner
-            //- Turnstile( @success="turnstileValidated = true" @expired="turnstileValidated = false" @error="turnstileValidated = false" )
-          q-btn( v-else type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
+          //- div(v-if="!turnstileValidated")
+          //-   .row.items-center.q-gutter-md
+          //-     div Validating...
+          //-     q-spinner
+          //-   //- Turnstile( @success="turnstileValidated = true" @expired="turnstileValidated = false" @error="turnstileValidated = false" )
+          q-btn( type="submit" label="Create" color="primary" :loading="createStore.loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
             .badge
               p {{ totalCost }}
       div(v-if="$userAuth.userData && totalCost > $userAuth?.userData?.availablePoints|| 0").q-pt-md
@@ -72,22 +72,14 @@ div
           q-btn(label="Get more points" color="primary" @click="$router.push({name:'addPoints'})" flat )
             //- p.q-ml-sm  ({{ totalCost }})
 </template>
-
 <script lang="ts">
-import { type CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { aspectRatios, ImageModel, imageModelDatas } from "lib/imageModels"
-import { catchErr, toObject } from "lib/util"
-import { LocalStorage } from "quasar"
-import { useCreateSession } from "stores/createSessionStore"
 import { defineComponent, PropType } from "vue"
-import umami from "lib/umami"
+import { useCreateCardStore } from "stores/createCardStore"
 import Turnstile from "./Turnstile.vue"
 import { CustomModel } from "lib/api"
-import { useCreations } from "src/stores/creationsStore"
-const defaultImageRequest: CreateImageRequest = { prompt: "", model: "core", aspectRatio: "1:1", public: true, quantity: 1 }
-const availableModels = Object.freeze(imageModelDatas.map((el) => el.name).filter((el) => el != "custom"))
-const availableAspectRatios = Object.freeze(aspectRatios)
-// const models = Models
+import { LocalStorage } from "quasar"
+import { toObject } from "lib/util"
+
 export default defineComponent({
   components: { Turnstile },
   props: {
@@ -100,115 +92,79 @@ export default defineComponent({
   emits: ["created"],
   data() {
     return {
-      createSession: useCreateSession(),
-      creations: useCreations(),
-      req: defaultImageRequest as CreateImageRequest,
-      selectedModel: availableModels[2] as ImageModel,
-      availableModels,
-      privateMode: false,
-      turnstileValidated: true,
-      loading: {
-        new: false,
-        randomize: false,
-        improve: false,
-        create: false,
-      },
+      createStore: useCreateCardStore(),
     }
   },
   computed: {
+    req() {
+      return this.createStore.req
+    },
+    loading() {
+      return this.createStore.loading
+    },
     availableAspectRatios() {
-      if (this.selectedModel.includes("dall")) return ["1:1", "16:9", "9:16"]
-      if (this.selectedModel.includes("flux") || this.selectedModel.includes("custom")) {
-        return ["1:1", "16:9", "9:16", "4:5", "5:4"]
-      } else return availableAspectRatios
+      return this.createStore.availableAspectRatios
     },
     selectedModelPrice() {
-      return imageModelDatas.find((m) => m.name === this.selectedModel)?.pointsCost || 0
+      return this.createStore.selectedModelPrice
     },
     anyLoading() {
-      return Object.values(this.loading).some((v) => v)
+      return this.createStore.anyLoading
     },
     totalCost() {
-      const modelCost = imageModelDatas.find((m) => m.name === this.req.model)?.pointsCost
-      // console.log("model", this.req.model)
-      // console.log("modelCost", modelCost)
-      if (!modelCost) return 0
-      return this.req.quantity * modelCost
+      return this.createStore.totalCost
     },
   },
   watch: {
     customModel: {
-      handler(newModel: CustomModel) {
+      handler(newModel) {
         if (!newModel) return
-        this.req.customModelId = newModel.id
-        this.req.model = "custom"
-        this.selectedModel = "custom"
+        this.createStore.req.customModelId = newModel.id
+        this.createStore.req.model = "custom"
+        this.createStore.selectedModel = "custom"
       },
       immediate: true,
     },
-    selectedModel: {
-      handler(newModel: ImageModel) {
-        this.req.model = newModel
+    "createCardStore.selectedModel": {
+      handler(newModel) {
+        this.createStore.req.model = newModel
 
         // Adjust aspect ratio based on the new model's constraints
-        const validRatios = this.availableAspectRatios
-        if (!validRatios.includes(this.req.aspectRatio)) {
-          this.req.aspectRatio = validRatios[0] as any
+        const validRatios = this.createStore.availableAspectRatios
+        if (!validRatios.includes(this.createStore.req.aspectRatio)) {
+          this.createStore.req.aspectRatio = validRatios[0] as any
         }
       },
       immediate: false,
     },
-    req: {
-      handler: function (val: any) {
-        if (this.req.seed) this.req.quantity = 1
-        if (this.req.seed == null) this.req.seed = undefined
-        LocalStorage.set("req", this.req)
+    "createCardStore.req": {
+      handler(val) {
+        if (this.createStore.req.seed) this.createStore.req.quantity = 1
+        if (this.createStore.req.seed == null) this.createStore.req.seed = undefined
+        LocalStorage.set("req", this.createStore.req)
       },
       deep: true,
     },
   },
   mounted() {
     console.log("mounted createcard, customModel:", this.customModel)
-    if (!this.customModel) this.setReq(LocalStorage.getItem("req") || defaultImageRequest)
+    if (!this.customModel) this.createStore.setReq(LocalStorage.getItem("req") || this.createStore.req)
   },
   methods: {
     pickModel() {
-      void this.$router.push({ name: "create", params: { tab: "faceForge" } })
+      this.createStore.pickModel()
     },
-    setReq(req: CreateImageRequest) {
-      this.selectedModel = req.model
-      this.privateMode = !this.req.public
-      this.req = toObject(req)
+    newPrompt() {
+      void this.createStore.newPrompt()
     },
-    async newPrompt() {
-      this.loading.new = true
-      this.req.prompt = (await this.$api.create.randomPrompt.mutate().catch(catchErr)) || this.req.prompt
-      if (this.req.seed) {
-        this.req.seed = undefined
-        this.req.quantity = 4
-      }
-      this.loading.new = false
-      await this.$userAuth.loadUserData()
-      umami.track("newPrompt")
+    improvePrompt() {
+      void this.createStore.improvePrompt()
     },
-    async improvePrompt() {
-      this.loading.improve = true
-      this.req.prompt = (await this.$api.create.improvePrompt.mutate(this.req.prompt).catch(catchErr)) || this.req.prompt
-      this.loading.improve = false
-      await this.$userAuth.loadUserData()
-      umami.track("improvePrompt")
-    },
-    async randomizePrompt() {
-      this.loading.randomize = true
-      const existingPrompt = this.req.prompt.length > 0 ? this.req.prompt : undefined
-      this.req.prompt = (await this.$api.create.randomPrompt.mutate(existingPrompt).catch(catchErr)) || this.req.prompt
-      this.loading.randomize = false
-      await this.$userAuth.loadUserData()
-      umami.track("randomizePrompt")
+    randomizePrompt() {
+      void this.createStore.randomizePrompt()
     },
     updatePrivateMode(val: boolean) {
-      this.privateMode = val
-      this.req.public = !val
+      this.createStore.updatePrivateMode(val)
     },
     handleKeydown(e: KeyboardEvent) {
       if (e.key === "Enter") {
@@ -217,21 +173,8 @@ export default defineComponent({
       }
     },
     async createImage() {
-      this.loading.create = true
-
-      if (!this.customModel) LocalStorage.set("req", this.req)
-      // if (this.req.seed == null) this.req.seed = undefined
-      if (this.customModel) {
-        this.req.customModelId = this.customModel.id
-        this.req.model = "custom"
-      }
-
-      // await this.createSession.generateImage(toObject(this.req)).catch(catchErr)
-      await this.creations.generateImage(toObject(this.req)).catch(catchErr)
+      await this.createStore.createImage()
       this.$emit("created")
-      this.loading.create = false
-      void this.$userAuth.loadUserData()
-      umami.track("createImage")
     },
   },
 })
