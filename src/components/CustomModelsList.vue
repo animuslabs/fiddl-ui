@@ -1,16 +1,32 @@
 <template lang="pug">
-  QList(v-if="models?.length")
+  QList(v-if="models?.length").full-width
     QItem(v-for="model in models" :key="model.id")
       .row.q-gutter-md.items-center
         div
           q-btn(icon="delete" flat color="red" @click="deleteModel(model)")
         div.cursor-pointer(@click="handleModelClick(model)")
-          QItemLabel
-            h4 {{ model.name }}
-          QItemLabel
-            p {{ model.status }}
-          QItemLabel
-            p {{ model.createdAt }}
+          .q-ml-md(style="text-transform: capitalize;")
+            h3 {{ model.name }}
+          .row.q-gutter-md.full-width
+            .col-auto(style="width:100px;")
+              QItemLabel
+                p Status
+                h4 {{ model.status }}
+            .col-auto(style="width:200px;")
+              QItemLabel
+                p Created
+                h5 {{ timeSince(new Date(model.createdAt)) }}
+            .col
+              QItemLabel
+                p Preset
+                h4(style="text-transform:capitalize") {{ model.trainingPreset }}
+            .col-auto(v-if="model.imageRequests.length")
+              .row.q-ml-lg
+                div(v-for="imageRequest in model.imageRequests" :key="imageRequest.id")
+                  .relative-position(style="width:60px; height:50px;")
+                    img(:src="img((imageRequest.images[0]?.id||''),'sm')" style="max-width:100px; max-height:100px; object-fit:contain; margin:5px; border-radius:25px; position:absolute; bottom:-30px; box-shadow: 0px 1px 15px rgba(1,1,1,.1) !important")
+        .full-width
+          q-separator(color="grey" spaced="20px")
   div(v-else)
     .full-width(style="height: '100px'")
       .centered
@@ -22,6 +38,8 @@ import { CustomModel } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
+import { timeSince } from "lib/util"
+import { img } from "lib/netlifyImg"
 
 export default defineComponent({
   components: {},
@@ -31,6 +49,8 @@ export default defineComponent({
   data: function () {
     return {
       models: [] as CustomModel[] | null,
+      timeSince,
+      img,
     }
   },
   watch: {

@@ -6,8 +6,8 @@ div.q-mt-md
       h2 {{ modelData.name }}
       .centered
         .q-pa-md.relative-position(style="height:110px; width:110px; border-radius: 100%;")
-          q-spinner-grid.absolute-center(size="100px" color="primary" )
-          q-spinner-cube.absolute-center(size="100px" color="primary" )
+          q-spinner-grid.absolute-center(size="80px" color="primary" )
+          q-spinner-cube.absolute-center(size="80px" color="primary" )
       div.q-mt-lg
         p This will take 15 - 30 minutes
         p This page will automatically update when training is complete
@@ -17,14 +17,26 @@ div.q-mt-md
           div.q-ma-md(v-if="trainingData.error")
             h6.text-accent Error:
             p {{ trainingData.error }}
-          div(v-if="trainingData.logs")
+          div
             h6 Status:
             .full-width(style="height: 200px; overflow-y: auto")
-              h3(v-if="(trainingProgress?.percentProgress||0)>0") {{ trainingData.status }}
-              h3(v-else) Initializing...
+              h3(v-if="(trainingProgress?.percentProgress||0)>0")
+                q-spinner.q-mr-md(color="primary")
+                | {{ trainingData.status }}
+              h3(v-else)
+                q-spinner.q-mr-md
+                | Initializing...
               div(v-if="trainingProgress").q-mt-md
                 h4 {{ trainingProgress.percentProgress }}%
-                q-linear-progress(:value="trainingProgress?.percentProgress /100" stripe size="20px" track-color="grey")
+                q-linear-progress(:value="trainingProgress?.percentProgress /100" stripe size="20px" track-color="grey" )
+                .row.q-gutter-md
+                  div
+                    h6 Elapsed:
+                    h4 {{ trainingProgress.elapsedTime }}
+                  .col-grow
+                  div
+                    h6 Remaining:
+                    h4 {{ trainingProgress.remainingTime }}
             //- div
             //-   pre(style="height:900px;") {{trainingData}}
   .centered.q-ma-md
