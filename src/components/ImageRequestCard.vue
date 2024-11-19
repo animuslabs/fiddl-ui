@@ -1,7 +1,7 @@
 <template lang="pug">
 q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
-  div custom model id: {{ creation.customModelId }}
-  div custom model name: {{ creation.customModelName }}
+  //- div custom model id: {{ creation.customModelId }}
+  //- div custom model name: {{ creation.customModelName }}
   .row.full-width.q-pt-md.q-pb-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
@@ -37,8 +37,10 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Created: #[p {{ timeSince(creation.createdAt) }}]
           q-tooltip
             p {{ creation.createdAt.toString() }}
-        .col-auto
+        .col-auto(v-if="!creation.customModelName")
           small Model: #[p {{ creation.request.model }}]
+        .col-auto(v-else)
+          small Custom Model: #[p {{ creation.customModelName }}]
         .col-auto
           small Aspect Ratio: #[p {{ creation.request.aspectRatio }}]
         .col-auto
