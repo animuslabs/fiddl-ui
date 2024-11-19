@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   q-card
-    //- div {{ customModel.slug }}
+    div {{ req }}
     .q-pa-md
       .centered.items-center.q-gutter-md(style="text-transform: capitalize;" v-if="customModel" )
         h4 Using {{customModel.modelType}} Model:
@@ -37,7 +37,7 @@ div
               .badge
                 p {{ selectedModelPrice }}
             .row
-              q-select(v-model="createStore.selectedModel" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
+              q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
           div.q-ma-md
             p Aspect Ratio
             .row
@@ -127,20 +127,18 @@ export default defineComponent({
     },
     "createCardStore.selectedModel": {
       handler(newModel) {
-        this.createStore.req.model = newModel
-
-        // Adjust aspect ratio based on the new model's constraints
-        const validRatios = this.createStore.availableAspectRatios
-        if (!validRatios.includes(this.createStore.req.aspectRatio)) {
-          this.createStore.req.aspectRatio = validRatios[0] as any
-        }
+        // this.createStore.req.model = newModel
       },
-      immediate: false,
+      immediate: true,
     },
     "createCardStore.req": {
       handler(val) {
         if (this.createStore.req.seed) this.createStore.req.quantity = 1
         if (this.createStore.req.seed == null) this.createStore.req.seed = undefined
+        const validRatios = this.createStore.availableAspectRatios
+        if (!validRatios.includes(this.createStore.req.aspectRatio)) {
+          this.createStore.req.aspectRatio = validRatios[0] as any
+        }
         LocalStorage.set("req", this.createStore.req)
       },
       deep: true,
