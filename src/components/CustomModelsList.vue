@@ -1,13 +1,13 @@
 <template lang="pug">
   QList(v-if="models?.length").full-width
     QItem(v-for="model in models" :key="model.id")
-      .row.q-gutter-md.items-center
+      .row.q-gutter-xs.items-center
         .col-auto
           .row
-            q-btn(icon="delete" flat color="accent" @click="deleteModel(model)")
+            q-btn(icon="delete" flat color="accent" @click="deleteModel(model)" round)
           .row
-            q-btn(icon="edit" flat color="white" @click="editModelName(model)")
-        div.cursor-pointer(@click="handleModelClick(model)")
+            q-btn(icon="edit" flat color="white" @click="editModelName(model)" round)
+        .col.cursor-pointer(@click="handleModelClick(model)")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ model.name }}
           .row.q-gutter-md.full-width
@@ -19,17 +19,21 @@
               QItemLabel
                 p Created
                 h5 {{ timeSince(new Date(model.createdAt)) }}
-            .col
+            .col-auto(style="width:120px;")
               QItemLabel
                 p Preset
                 h4(style="text-transform:capitalize") {{ model.trainingPreset }}
             .col-auto(v-if="model.imageRequests.length")
-              .row.q-ml-lg
+              .lt-md.full-width.q-mt-xl
+              .row
+                .gt-sm.q-ml-md
                 div(v-for="imageRequest in model.imageRequests" :key="imageRequest.id")
                   .relative-position(style="width:60px; height:50px;")
-                    img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:100px; height:100px; object-fit:cover; margin:5px; border-radius:25px; position:absolute; bottom:-30px; box-shadow: 0px 1px 15px rgba(1,1,1,.1) !important")
+                    img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:100px; height:100px; object-fit:cover; border-radius:25px; position:absolute; bottom:-5px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
+              .lt-md.full-width.q-mt-md
+
         .full-width
-          q-separator(color="grey" spaced="20px")
+          q-separator(color="grey-9" spaced="20px")
 
   div(v-else)
     .full-width(style="height: '100px'")
