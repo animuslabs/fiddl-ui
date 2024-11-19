@@ -17,6 +17,8 @@ export interface CreatedItem {
   imageIds: string[]
   id: string
   createdAt: Date
+  customModelId?: string
+  customModelName?: string
 }
 export interface EssentialLinkProps {
   title: string

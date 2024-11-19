@@ -72,7 +72,10 @@ export default {
         message: "Upscaling Image",
       })
       const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
-      if (!imageData) return console.error("No image data")
+      if (!imageData) {
+        Loading.hide()
+        return console.error("No image data")
+      }
       const imageDataUrl = `data:image/png;base64,${imageData}`
       downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
       Loading.hide()

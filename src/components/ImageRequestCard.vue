@@ -1,5 +1,7 @@
 <template lang="pug">
 q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
+  div custom model id: {{ creation.customModelId }}
+  div custom model name: {{ creation.customModelName }}
   .row.full-width.q-pt-md.q-pb-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl

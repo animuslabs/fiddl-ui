@@ -67,6 +67,7 @@ export const useCreations = defineStore("creationsStore", {
           public: creation.public,
           quantity: creation.quantity,
           negativePrompt: creation.negativePrompt || undefined,
+          customModelId: creation.customModelId || undefined,
         }
 
         this.addItem({
@@ -75,6 +76,8 @@ export const useCreations = defineStore("creationsStore", {
           request,
           createdAt: new Date(creation.createdAt),
           creatorId: creation.creatorId,
+          customModelId: creation.customModelId,
+          customModelName: creation.customModelName,
         })
       }
     },
