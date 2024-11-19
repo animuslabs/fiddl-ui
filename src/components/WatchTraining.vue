@@ -2,39 +2,66 @@
 div.q-mt-md
   .centered
     .q-ma-md
-      h5 Training in progress
-      p This will take 10 - 20 minutes
-      p This page will automatically update when training is complete
-  div(v-if="trainingData")
-    .centered
-      div(style="max-width:800px").q-ma-md
-        div.q-ma-md(v-if="trainingData.logs")
-          h4 Status:
-          .full-width(style="height: 200px; overflow-y: auto")
-            p {{ trainingData.status }}
-            pre {{ trainingProgress }}
+      h6 Training Model:
+      h2 {{ modelData.name }}
+      .centered
+        .q-pa-md.relative-position(style="height:110px; width:110px; border-radius: 100%;")
+          q-spinner-grid.absolute-center(size="100px" color="primary" )
+          q-spinner-cube.absolute-center(size="100px" color="primary" )
+      div.q-mt-lg
+        p This will take 15 - 30 minutes
+        p This page will automatically update when training is complete
+    div(v-if="trainingData" style="width:800px; max-width:90vw")
+      .centered
+        div(style="max-width:800px").q-ma-md.full-width
+          div.q-ma-md(v-if="trainingData.error")
+            h6.text-accent Error:
+            p {{ trainingData.error }}
+          div(v-if="trainingData.logs")
+            h6 Status:
+            .full-width(style="height: 200px; overflow-y: auto")
+              h3(v-if="(trainingProgress?.percentProgress||0)>0") {{ trainingData.status }}
+              h3(v-else) Initializing...
+              div(v-if="trainingProgress").q-mt-md
+                h4 {{ trainingProgress.percentProgress }}%
+                q-linear-progress(:value="trainingProgress?.percentProgress /100" stripe size="20px" track-color="grey")
+            //- div
+            //-   pre(style="height:900px;") {{trainingData}}
   .centered.q-ma-md
-    q-btn(
-      label="Back"
-      @click="$emit('back')"
-      flat
-      color="primary"
-      size="lg"
-    )
+    q-btn( label="Back" @click="$emit('back')" flat color="primary" size="lg" )
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
-import { TrainingData } from "lib/api"
+import { CustomModel, TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
+import { Dialog } from "quasar"
 export default defineComponent({
   props: {
     trainingData: { required: false, type: Object as PropType<TrainingData>, default: null },
+    modelData: { required: true, type: Object as PropType<CustomModel> },
   },
+  emits: ["back", "finished"],
   computed: {
     trainingProgress() {
       if (!this.trainingData?.logs) return null
       return parseTrainingLog(this.trainingData.logs)
+    },
+  },
+  watch: {
+    trainingData: {
+      handler(val) {
+        if (val?.status === "succeeded") {
+          Dialog.create({
+            title: "Training Complete",
+            message: "Your model is ready to use",
+            ok: true,
+          })
+          void this.$emit("finished")
+        }
+      },
+      immediate: true,
+      deep: true,
     },
   },
 })

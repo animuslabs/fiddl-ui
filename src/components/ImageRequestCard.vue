@@ -10,22 +10,24 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
   q-separator(color="grey-9" spaced="20px")
   .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
-    .col-auto
-      .row
-        q-btn(icon="edit" flat round @click="setRequest()" size="sm")
-          q-tooltip
-            p Create using the creation details
-      .row
-        q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
-          q-tooltip
-            p Go to creation
-      .row
-        q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
-          q-tooltip
-            p Delete
-    .col(style="min-width:220px;")
-      small Prompt: #[p.ellipsis-3-lines {{ creation.request.prompt }}]
-      p.text-italic.text-positive(v-if="creation.request.prompt == undefined || creation.request.prompt.length==0") Purchase any image to unlock the prompt
+    .col-grow(style="min-width:150px;")
+      .row(style="max-width:600px;")
+        .col-auto
+          .row
+            q-btn(icon="edit" flat round @click="setRequest()" size="sm")
+              q-tooltip
+                p Create using the creation details
+          .row
+            q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
+              q-tooltip
+                p Go to creation
+          .row
+            q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
+              q-tooltip
+                p Delete
+        .col.q-ml-md
+          small Prompt: #[p.ellipsis-3-lines {{ creation.request.prompt }}]
+          p.text-italic.text-positive(v-if="creation.request.prompt == undefined || creation.request.prompt.length==0") Purchase any image to unlock the prompt
     .col-grow.gt-sm
     .col-auto
       .row.q-gutter-md
@@ -96,7 +98,7 @@ export default defineComponent({
           color: "primary",
         },
       }).onOk(() => {
-        this.$api.creations.deleteRequest
+        void this.$api.creations.deleteRequest
           .mutate(this.creation.id)
           .catch(catchErr)
           .then(() => {
@@ -110,7 +112,7 @@ export default defineComponent({
     },
     updatePrivacy() {
       console.log("update privacy", this.creation.request.public)
-      this.$api.creations.setRequestPrivacy
+      void this.$api.creations.setRequestPrivacy
         .mutate({ requestId: this.creation.id, public: this.creation.request.public })
         .catch(catchErr)
         .then(() => {

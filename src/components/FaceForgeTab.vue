@@ -10,9 +10,11 @@ div
     @startTraining="startTraining"
   )
   WatchTrainingComponent(
-    v-if="mode === 'watchTraining'"
+    v-if="mode === 'watchTraining' && targetModelData"
     :trainingData="trainingData"
+    :modelData="targetModelData"
     @back="mode = 'pickModel'"
+    @finished="mode = 'useModel'"
   )
   UseModelComponent(
     v-if="mode === 'useModel'"

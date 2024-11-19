@@ -7,6 +7,7 @@ export interface TrainingLog {
 }
 
 export function parseTrainingLog(logs: string): TrainingLog {
+  if (!logs || logs.includes("flux_train_replicate") === false) return { percentProgress: 0, elapsedTime: "0:00", remainingTime: "0:00" }
   const lastLine = logs.split("\n").filter(Boolean).pop()
   const percentProgress = lastLine?.match(/(\d+)%/)?.[1]
   const elapsedTime = lastLine?.match(/\[(\d+:\d+)</)?.[1]
