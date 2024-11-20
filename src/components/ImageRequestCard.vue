@@ -31,7 +31,9 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Prompt: #[p.ellipsis-3-lines {{ creation.request.prompt }}]
           p.text-italic.text-positive(v-if="creation.request.prompt == undefined || creation.request.prompt.length==0") Purchase any image to unlock the prompt
           .absolute-bottom-right
-            q-btn(icon="content_copy" round flat size="sm" color="grey-5" @click="copyPrompt")
+            q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.request.prompt.length > 0")
+              q-tooltip
+                p Copy Prompt
     .col-grow.gt-sm
     .col-auto
       .row.q-gutter-md
