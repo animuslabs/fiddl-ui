@@ -8,8 +8,12 @@ div
         h4 {{ customModel?.name }}
         q-btn(round flat icon="edit" @click="pickModel()")
       q-form(@submit="createImage")
-        .centered.q-pa-md
-          q-input(v-model="req.prompt" :disable="anyLoading"  @keydown="handleKeydown"  color="primary" filled type="textarea" placeholder="Enter a description of the image to create" ).full-width
+        .centered.q-pa-md.relative-position
+          q-input(style="resize:none;" v-model="req.prompt" :disable="anyLoading"  @keydown="handleKeydown"  color="primary" filled type="textarea" placeholder="Enter a description of the image to create" ).full-width
+          .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
+            q-btn(icon="clear" flat @click="req.prompt = ''" :disable="anyLoading" round)
+            q-tooltip
+              p Clear Prompt
         .centered.q-ma-md
           q-btn(label="new idea" icon="lightbulb" flat @click="newPrompt()" :loading="loading.new" :disable="anyLoading" )
             .badge
@@ -72,6 +76,11 @@ div
           q-btn(label="Get more points" color="primary" @click="$router.push({name:'addPoints'})" flat )
             //- p.q-ml-sm  ({{ totalCost }})
 </template>
+<style>
+textarea::-webkit-resizer {
+  display: none;
+}
+</style>
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
 import { useCreateCardStore } from "stores/createCardStore"
