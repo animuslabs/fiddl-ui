@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   q-card
-    div {{ req }}
+    //- div {{ req }}
     .q-pa-md
       .centered.items-center.q-gutter-md(style="text-transform: capitalize;" v-if="customModel" )
         h4 Using {{customModel.modelType}} Model:
@@ -43,9 +43,9 @@ div
             .row
               q-select(v-model="createStore.req.aspectRatio" :options="availableAspectRatios" style="font-size:20px;" :disable="anyLoading" )
           div.q-ma-md
-            p Private Mode
+            p {{printPrivacy}}
             .row
-              q-toggle( :modelValue="createStore.privateMode" @update:model-value="updatePrivateMode" color="primary" :disable="anyLoading" )
+              q-toggle( v-model="createStore.req.public" color="primary" :disable="anyLoading" )
           div.q-ma-md
             p Seed
             .row
@@ -96,6 +96,9 @@ export default defineComponent({
     }
   },
   computed: {
+    printPrivacy() {
+      return this.createStore.req.public ? "Public" : "Private"
+    },
     req() {
       return this.createStore.req
     },
@@ -121,13 +124,6 @@ export default defineComponent({
         if (!newModel) return
         this.createStore.req.customModelId = newModel.id
         this.createStore.req.model = "custom"
-        this.createStore.selectedModel = "custom"
-      },
-      immediate: true,
-    },
-    "createCardStore.selectedModel": {
-      handler(newModel) {
-        // this.createStore.req.model = newModel
       },
       immediate: true,
     },

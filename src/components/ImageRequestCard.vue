@@ -27,14 +27,16 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
             q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
               q-tooltip
                 p Delete
-        .col.q-ml-md
+        .col.q-ml-md.relative-position
           small Prompt: #[p.ellipsis-3-lines {{ creation.request.prompt }}]
           p.text-italic.text-positive(v-if="creation.request.prompt == undefined || creation.request.prompt.length==0") Purchase any image to unlock the prompt
+          .absolute-bottom-right
+            q-btn(icon="content_copy" round flat size="sm" color="grey-5" @click="copyPrompt")
     .col-grow.gt-sm
     .col-auto
       .row.q-gutter-md
         .col-auto
-          small Created: #[p {{ timeSince(creation.createdAt) }}]
+          small Created: #[p {{ printCreated }}]
           q-tooltip
             p {{ creation.createdAt.toString() }}
         .col-auto(v-if="!creation.customModelName")
@@ -48,8 +50,8 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
         .col-auto(v-if="creation.creatorId != $userAuth.userId")
           small Private: #[p {{ !creation.request.public }}]
         .col-auto(v-else)
-          q-toggle(v-model="creation.request.public" @click="updatePrivacy()")
           p {{ printPrivacy() }}
+          q-toggle(v-model="creation.request.public" @click="updatePrivacy()")
 
 </template>
 
@@ -62,7 +64,7 @@ import { CreatedItem } from "lib/types"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
-import { Dialog, Notify } from "quasar"
+import { copyToClipboard, Dialog, Notify } from "quasar"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -88,7 +90,19 @@ export default defineComponent({
       localCreatorUsername: this.creatorUsername,
     }
   },
+  computed: {
+    printCreated() {
+      return timeSince(this.creation.createdAt)
+    },
+  },
   methods: {
+    copyPrompt() {
+      void copyToClipboard(this.creation.request.prompt)
+      Notify.create({
+        message: "Prompt Copied",
+        color: "positive",
+      })
+    },
     deleteRequest() {
       Dialog.create({
         title: "Delete Request",

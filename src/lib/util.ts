@@ -90,7 +90,9 @@ export function longIdToShort(uuid: string): string {
 }
 
 export function timeSince(date: Date): string {
-  return formatDistanceToNow(date, { addSuffix: true })
+  const result = formatDistanceToNow(date, { addSuffix: true })
+  const includesAbout = result.includes("about")
+  return includesAbout ? result.replace("about ", "") : result
 }
 export function normalizePhoneNumber(phoneNumber: string, defaultCountryCode = "+1") {
   // Remove all non-digit characters except the plus sign

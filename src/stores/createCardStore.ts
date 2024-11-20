@@ -27,7 +27,6 @@ export const useCreateCardStore = defineStore("createCardStore", {
     createSession: useCreateSession(),
     creations: useCreations(),
     req: { ...defaultImageRequest } as CreateImageRequest,
-    selectedModel: availableModels[2] as ImageModel,
     availableModels,
     userAuth: useUserAuth(),
     api,
@@ -43,13 +42,13 @@ export const useCreateCardStore = defineStore("createCardStore", {
   }),
   getters: {
     availableAspectRatios(state) {
-      if (state.selectedModel.includes("dall")) return ["1:1", "16:9", "9:16"]
-      if (state.selectedModel.includes("flux") || state.selectedModel.includes("custom")) {
+      if (state.req.model.includes("dall")) return ["1:1", "16:9", "9:16"]
+      if (state.req.model.includes("flux") || state.req.model.includes("custom")) {
         return ["1:1", "16:9", "9:16", "4:5", "5:4"]
       } else return availableAspectRatios
     },
     selectedModelPrice(state) {
-      return imageModelDatas.find((m) => m.name === state.selectedModel)?.pointsCost || 0
+      return imageModelDatas.find((m) => m.name === state.req.model)?.pointsCost || 0
     },
     anyLoading(state) {
       return Object.values(state.loading).some((v) => v)
@@ -62,7 +61,6 @@ export const useCreateCardStore = defineStore("createCardStore", {
   },
   actions: {
     setReq(req: CreateImageRequest) {
-      this.selectedModel = req.model
       this.privateMode = !req.public
       this.req = toObject(req)
     },
