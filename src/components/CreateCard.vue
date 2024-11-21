@@ -1,11 +1,8 @@
 <template lang="pug">
 div
   q-card
-    //- div {{ req }}
     .q-pa-md
       .centered.items-center.q-gutter-md(style="text-transform: capitalize;" v-if="customModel" )
-        h4 Using {{customModel.modelType}} Model:
-        h4 {{ customModel?.name }}
         q-btn(round flat icon="edit" @click="pickModel()")
       q-form(@submit="createImage")
         .centered.q-pa-md.relative-position
@@ -35,13 +32,6 @@ div
               .column
                 q-btn(size="sm" icon="add" flat round @click="createStore.req.quantity++" :disable="req.quantity >=10 || createStore.req.seed != undefined" )
                 q-btn(size="sm" icon="remove" flat round @click="createStore.req.quantity--" :disable="req.quantity <=1 || createStore.req.seed != undefined" )
-
-          div.q-ma-md(v-if="!customModel")
-            p.relative-position Model
-              .badge
-                p {{ selectedModelPrice }}
-            .row
-              q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
           div.q-ma-md
             p Aspect Ratio
             .row
@@ -50,13 +40,21 @@ div
             p {{printPrivacy}}
             .row
               q-toggle( v-model="createStore.req.public" color="primary" :disable="anyLoading" )
-          div.q-ma-md
+          div.q-ma-md(v-if="createStore.req.seed")
             p Seed
-            .row
+            .row(style="max-width:150px;").no-wrap
               q-input(v-model.number="createStore.req.seed" type="number" placeholder="Random" clearable :disable="anyLoading")
               .column(v-if="createStore.req.seed")
                 q-btn(size="sm" icon="add" flat round @click="createStore.req.seed++" :disable="!createStore.req.seed" )
                 q-btn(size="sm" icon="remove" flat round @click="createStore.req.seed--" :disable="!createStore.req.seed" )
+        .row
+          div.q-ma-md
+            p.relative-position Model:
+              .badge
+                p {{ selectedModelPrice }}
+            .row
+              q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
+              //- h4 {{ req.model }}
         //- div {{ req }}
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
@@ -130,9 +128,13 @@ export default defineComponent({
   watch: {
     customModel: {
       handler(newModel) {
-        if (!newModel) return
-        this.createStore.req.customModelId = newModel.id
-        this.createStore.req.model = "custom"
+        if (!newModel) {
+          this.createStore.req.customModelId = undefined
+          // this.createStore.req.model = "flux"
+        } else {
+          this.createStore.req.customModelId = newModel.id
+          this.createStore.req.model = "custom"
+        }
       },
       immediate: true,
     },
@@ -147,11 +149,12 @@ export default defineComponent({
         LocalStorage.set("req", this.createStore.req)
       },
       deep: true,
+      immediate: true,
     },
   },
   mounted() {
-    console.log("mounted createcard, customModel:", this.customModel)
-    if (!this.customModel) this.createStore.setReq(LocalStorage.getItem("req") || this.createStore.req)
+    // console.log("mounted createcard, customModel:", this.customModel)
+    this.createStore.setReq(LocalStorage.getItem("req") || this.createStore.req)
   },
   methods: {
     pickModel() {

@@ -1,24 +1,23 @@
 import { defineStore } from "pinia"
 import api from "lib/api"
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, type CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { catchErr, toObject } from "lib/util"
-import type { CreatedItem } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
 
 export const useCreateSession = defineStore("createSession", {
   state() {
     return {
-      sessionItems: [] as CreatedItem[],
+      sessionItems: [] as CreateImageRequestData[],
     }
   },
   getters: {
-    reverse(): CreatedItem[] {
+    reverse(): CreateImageRequestData[] {
       return this.sessionItems.slice().reverse()
     },
   },
   actions: {
-    addItem(item: CreatedItem) {
+    addItem(item: CreateImageRequestData) {
       const idExists = this.sessionItems.some((i) => i.id === item.id)
       if (idExists) return
       this.sessionItems.push(item)
@@ -42,9 +41,9 @@ export const useCreateSession = defineStore("createSession", {
           })
         }
       }
-      const createdItem: CreatedItem = {
+      const createdItem: CreateImageRequestData = {
+        ...request,
         imageIds: result.ids.reverse(),
-        request: toObject(request),
         id: result.id,
         createdAt: new Date(),
         creatorId,

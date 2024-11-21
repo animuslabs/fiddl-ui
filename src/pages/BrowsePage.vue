@@ -17,10 +17,10 @@ q-page.full-height.full-width
 import { defineComponent } from "vue"
 import { useBrowserStore } from "stores/browserStore"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { type CreatedItem } from "lib/types"
 import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
 import { throttle } from "quasar"
+import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 let interval: any = null
 
 export default defineComponent({
@@ -88,7 +88,7 @@ export default defineComponent({
       classes.push(ratio)
       return classes
     },
-    reqFirstImg(req: CreatedItem) {
+    reqFirstImg(req: CreateImageRequestData) {
       return req.imageIds[0] || false
     },
   },

@@ -2,15 +2,14 @@
 
 import { defineStore } from "pinia"
 import api, { type ImagePurchase, type Image } from "lib/api"
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
-import type { CreatedItem } from "lib/types"
 import { catchErr, toObject } from "lib/util"
 import { Dialog } from "quasar"
 
 export const useCreations = defineStore("creationsStore", {
   state: () => ({
-    creations: [] as CreatedItem[],
+    creations: [] as CreateImageRequestData[],
     imagePurchases: [] as ImagePurchase[],
     favorites: [] as Image[],
     favoritesCollectionId: null as string | null,
@@ -18,7 +17,7 @@ export const useCreations = defineStore("creationsStore", {
     customModelId: null as string | null,
   }),
   actions: {
-    addItem(item: CreatedItem) {
+    addItem(item: CreateImageRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return
       this.creations.push(item)
@@ -60,24 +59,9 @@ export const useCreations = defineStore("creationsStore", {
       console.log("creations", creations)
 
       for (const creation of creations) {
-        const request: CreateImageRequest = {
-          prompt: creation.prompt || "",
-          aspectRatio: creation.aspectRatio as any,
-          model: creation.model as any,
-          public: creation.public,
-          quantity: creation.quantity,
-          negativePrompt: creation.negativePrompt || undefined,
-          customModelId: creation.customModelId || undefined,
-        }
-
         this.addItem({
-          id: creation.id,
-          imageIds: creation.imageIds,
-          request,
+          ...creation,
           createdAt: new Date(creation.createdAt),
-          creatorId: creation.creatorId,
-          customModelId: creation.customModelId,
-          customModelName: creation.customModelName,
         })
       }
     },
@@ -130,15 +114,14 @@ export const useCreations = defineStore("creationsStore", {
           })
         }
       }
-      const createdItem: CreatedItem = {
+      const createdItem: CreateImageRequestData = {
+        ...request,
         imageIds: result.ids.reverse(),
-        request: toObject(request),
         id: result.id,
         createdAt: new Date(),
         creatorId,
       }
       this.creations.unshift(createdItem)
-      // console.log(this.sessionItems)
     },
   },
   persist: false,

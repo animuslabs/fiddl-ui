@@ -105,7 +105,9 @@ export const useCreateCardStore = defineStore("createCardStore", {
         this.req.customModelId = this.customModel.id
         this.req.model = "custom"
       }
-
+      if (typeof this.req.seed != "number") this.req.seed = undefined
+      if (this.req.model == "custom" && !this.req.customModelId) this.req.model = "flux-dev"
+      console.log("req", this.req)
       await this.creations.generateImage(toObject(this.req)).catch(catchErr)
       this.loading.create = false
       void this.userAuth.loadUserData()

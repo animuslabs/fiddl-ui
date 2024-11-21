@@ -28,10 +28,10 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
               q-tooltip
                 p Delete
         .col.q-ml-md.relative-position
-          small Prompt: #[p.ellipsis-3-lines {{ creation.request.prompt }}]
-          p.text-italic.text-positive(v-if="creation.request.prompt == undefined || creation.request.prompt.length==0") Purchase any image to unlock the prompt
+          small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
+          p.text-italic.text-positive(v-if="!creation") Purchase any image to unlock the prompt
           .absolute-bottom-right
-            q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.request.prompt.length > 0").text-grey-6
+            q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
               q-tooltip
                 p Copy Prompt
     .col-grow.gt-sm
@@ -42,18 +42,18 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           q-tooltip
             p {{ creation.createdAt.toString() }}
         .col-auto(v-if="!creation.customModelName")
-          small Model: #[p {{ creation.request.model }}]
+          small Model: #[p {{ creation.model }}]
         .col-auto(v-else)
           small Custom Model: #[p {{ creation.customModelName }}]
         .col-auto
-          small Aspect Ratio: #[p {{ creation.request.aspectRatio }}]
-        .col-auto
-          small Quantity: #[p {{ creation.request.quantity }}]
+          small Aspect Ratio: #[p {{ creation.aspectRatio }}]
+        //- .col-auto
+        //-   small Quantity: #[p {{ creation.quantity }}]
         .col-auto(v-if="creation.creatorId != $userAuth.userId")
-          small Private: #[p {{ !creation.request.public }}]
+          small Private: #[p {{ !creation.public }}]
         .col-auto(v-else)
-          p {{ printPrivacy() }}
-          q-toggle(v-model="creation.request.public" @click="updatePrivacy()")
+          p {{ printPrivacy }}
+          q-toggle(v-model="creation.public" @click="updatePrivacy()")
 
 </template>
 
@@ -62,11 +62,12 @@ import { defineComponent } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { catchErr, longIdToShort, timeSince, toObject } from "lib/util"
 import { PropType } from "vue"
-import { CreatedItem } from "lib/types"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
 import { copyToClipboard, Dialog, Notify } from "quasar"
+import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { useCreateCardStore } from "src/stores/createCardStore"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -74,7 +75,7 @@ export default defineComponent({
   },
   props: {
     creation: {
-      type: Object as PropType<CreatedItem>,
+      type: Object as PropType<CreateImageRequestData>,
       required: true,
     },
     creatorUsername: {
@@ -93,13 +94,17 @@ export default defineComponent({
     }
   },
   computed: {
+    printPrivacy() {
+      return this.creation.public ? "Public" : "Private"
+    },
     printCreated() {
       return timeSince(this.creation.createdAt)
     },
   },
   methods: {
     copyPrompt() {
-      void copyToClipboard(this.creation.request.prompt)
+      if (!this.creation.prompt) return
+      void copyToClipboard(this.creation.prompt)
       Notify.create({
         message: "Prompt Copied",
         color: "positive",
@@ -131,9 +136,9 @@ export default defineComponent({
       })
     },
     updatePrivacy() {
-      console.log("update privacy", this.creation.request.public)
+      console.log("update privacy", this.creation.public)
       void this.$api.creations.setRequestPrivacy
-        .mutate({ requestId: this.creation.id, public: this.creation.request.public })
+        .mutate({ requestId: this.creation.id, public: this.creation.public })
         .catch(catchErr)
         .then(() => {
           // Notify.create({
@@ -141,9 +146,6 @@ export default defineComponent({
           //   color: "positive",
           // })
         })
-    },
-    printPrivacy() {
-      return this.creation.request.public ? "Public" : "Private"
     },
     goToRequestPage() {
       const shortId = longIdToShort(this.creation.id)
@@ -161,7 +163,7 @@ export default defineComponent({
       this.$emit("reload")
     },
     setRequest() {
-      if (this.creation.request.prompt == undefined) {
+      if (this.creation.prompt == undefined) {
         if (!this.$userAuth.loggedIn) {
           Dialog.create({
             title: "Login Required",
@@ -174,10 +176,21 @@ export default defineComponent({
           })
         }
       } else {
-        const req = toObject(this.creation.request)
-        req.seed = undefined
-        console.log("set request", req)
-        this.$emit("setRequest", req)
+        // void this.$router.push({ name: "create", query: { imageId: this.creation.imageIds[0] } })
+        console.log("set request", this.creation)
+        const req: CreateImageRequest = {
+          aspectRatio: (this.creation.aspectRatio as any) || "1:1",
+          customModelId: this.creation.customModelId,
+          model: (this.creation.model as any) || "flux-dev",
+          prompt: this.creation.prompt,
+          quantity: this.creation.quantity || 1,
+          seed: undefined,
+          public: this.creation.public,
+          negativePrompt: this.creation.negativePrompt,
+        }
+        const encodedRequest = encodeURIComponent(JSON.stringify(req))
+        if (this.$route.name == "create") void this.$router.replace({ query: { requestData: encodedRequest } })
+        else void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
       }
     },
   },

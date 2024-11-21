@@ -9,7 +9,7 @@ q-page.full-width
       .centered
         faceForgeTab(ref="faceForgeTab")
     div(v-if="tab == 'prompt'")
-      PromptTab(:id="1")
+      PromptTab(:id="1" ref="promptTab")
   div(v-else)
     .centered.q-mt-xl
       h3 You must be logged in to create images
@@ -105,8 +105,9 @@ export default defineComponent({
         const encodedRequestData = this.$route.query?.requestData
         if (targetImageId && typeof targetImageId == "string") {
           const imageMeta = await this.$api.creations.imageData.query(targetImageId)
+          console.log("imageMeta", imageMeta)
           const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
-          console.log(imageMeta, requestMeta)
+          // console.log(imageMeta, requestMeta)
           console.log("width:", this.$q.screen.width)
           this.setReq(
             {
@@ -172,38 +173,27 @@ export default defineComponent({
       console.log("creations", creations)
 
       for (const creation of creations) {
-        const request: CreateImageRequest = {
-          prompt: creation.prompt || "",
-          aspectRatio: creation.aspectRatio as any,
-          model: creation.model as any,
-          public: creation.public,
-          quantity: creation.quantity,
-          negativePrompt: creation.negativePrompt || undefined,
-        }
         this.createSession.addItem({
+          ...creation,
           id: creation.id,
           imageIds: creation.imageIds,
-          request,
           createdAt: new Date(creation.createdAt),
           creatorId: creation.creatorId,
         })
       }
     },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
-      if (toggleCreateMode) this.createMode = true
-      void this.$nextTick(() => {
-        const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
-        // createCard.req = toObject(request)
-        this.createStore.setReq(request)
-      })
+      console.log("setReq", toggleCreateMode)
+      if (toggleCreateMode) {
+        const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
+        promptTab.createMode = true
+        this.createMode = true
+      }
+      this.createStore.setReq(request)
     },
     addImage(data: string) {
       console.log("add Image triggered")
       if (this.createMode) this.createMode = false
-      // this.createSession.generateImage({ prompt: data })
-      // console.log('add image', data)
-      // const blobUrl = await api.image.load(data)
-      // this.images = [blobUrl, ...this.images]
     },
   },
 })

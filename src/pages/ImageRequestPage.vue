@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page
   .q-ma-md
-    ImageRequestCard(v-if="creation" :creation="creation" @setRequest="editOnCreatePage" hideLinkBtn @reload="load" )
+    ImageRequestCard(v-if="creation" :creation="creation" hideLinkBtn @reload="load" )
     p.q-mb-xs Author
     div
       .row(v-if="creation").q-gutter-md.items-center
@@ -12,10 +12,10 @@ q-page
 
 </template>
 <script lang="ts">
+import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import imageGallery from "lib/imageGallery"
 import { avatarImg, img } from "lib/netlifyImg"
 
-import { CreatedItem } from "lib/types"
 import { getReferredBy, longIdToShort, setReferredBy, shortIdToLong, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
@@ -32,7 +32,7 @@ export default defineComponent({
       // imageRequestId: null as string | null,
       imageRequests: useImageRequests(),
       shortId: null as string | null,
-      creation: null as CreatedItem | null,
+      creation: null as CreateImageRequestData | null,
     }
   },
   mounted() {
@@ -54,15 +54,13 @@ export default defineComponent({
           imageIds: req.imageIds,
           createdAt: new Date(req.createdAt),
           creatorId: req.creatorId,
-          request: {
-            aspectRatio: req.aspectRatio as any,
-            model: req.model as any,
-            prompt: req.prompt as any,
-            public: req.public,
-            quantity: req.quantity,
-            negativePrompt: req.negativePrompt,
-            seed: req.seed as any,
-          },
+          aspectRatio: req.aspectRatio,
+          model: req.model,
+          prompt: req.prompt,
+          public: req.public,
+          quantity: req.quantity,
+          negativePrompt: req.negativePrompt,
+          seed: req.seed,
         }
         this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
         const targetIndex = this.$route.query?.index
@@ -79,12 +77,14 @@ export default defineComponent({
       }
     },
     editOnCreatePage() {
-      console.log("editOnCreatePage")
-      if (!this.creation) return
-      const req = toObject(this.creation.request)
-      if (req.seed) req.seed = undefined
-      const encodedRequest = encodeURIComponent(JSON.stringify(req))
-      void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
+      console.log("TODO editOnCreatePage")
+      // if (!this.creation) return
+      // const req = toObject(this.creation)
+      // delete req.imageIds
+      // delete
+      // if (req.seed) req.seed = undefined
+      // const encodedRequest = encodeURIComponent(JSON.stringify(req))
+      // void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
     },
   },
 })

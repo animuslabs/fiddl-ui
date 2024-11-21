@@ -1,7 +1,5 @@
-import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { ImageCreateRequest } from "lib/api"
 import api from "lib/api"
-import type { CreatedItem } from "lib/types"
 import { shortIdToLong } from "lib/util"
 import { defineStore } from "pinia"
 
