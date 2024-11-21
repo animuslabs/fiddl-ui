@@ -28,7 +28,7 @@
               .row
                 .gt-sm.q-ml-md
                 div(v-for="imageRequest in model.imageRequests" :key="imageRequest.id")
-                  .relative-position(style="width:60px; height:50px;")
+                  .relative-position(style="width:60px; height:90px;")
                     img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:100px; height:100px; object-fit:cover; border-radius:25px; position:absolute; bottom:-5px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
               .lt-md.full-width.q-mt-md
 
@@ -82,7 +82,7 @@ export default defineComponent({
     },
   },
   mounted() {
-    console.log("mounted")
+    console.log("mounted customModelsList")
   },
   methods: {
     async setModelName() {

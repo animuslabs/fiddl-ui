@@ -67,7 +67,7 @@ import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
-import { useCreateCardStore } from "src/stores/createCardStore"
+import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -178,9 +178,10 @@ export default defineComponent({
       } else {
         // void this.$router.push({ name: "create", query: { imageId: this.creation.imageIds[0] } })
         console.log("set request", this.creation)
-        const req: CreateImageRequest = {
+        const req: CreateImageRequestWithCustomModel = {
           aspectRatio: (this.creation.aspectRatio as any) || "1:1",
           customModelId: this.creation.customModelId,
+          customModelName: this.creation.customModelName,
           model: (this.creation.model as any) || "flux-dev",
           prompt: this.creation.prompt,
           quantity: this.creation.quantity || 1,

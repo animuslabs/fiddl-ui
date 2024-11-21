@@ -2,7 +2,7 @@
 .centered
   .gt-md
     .row.full-height.full-width.no-wrap
-      .gt-md
+      div(v-if="$q.screen.width > 1440")
         .centered
           CreateCard.q-mt-md(
             @created="addImage"
@@ -18,7 +18,6 @@
             v-for="creation in creationsStore.creations"
             :creation="creation"
             :key="creation.id"
-            @setRequest="setReq"
           )
         .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
           q-btn(
@@ -26,7 +25,7 @@
             @click="creationsStore.loadCreations()"
             :disable="creationsStore.creations.length < 1"
           )
-  .lt-lg
+  div(v-if="$q.screen.width <= 1440")
     .full-width
       .centered.q-ma-md
         q-btn(

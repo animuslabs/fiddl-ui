@@ -6,6 +6,7 @@ import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/li
 import { useUserAuth } from "src/stores/userAuth"
 import { catchErr, toObject } from "lib/util"
 import { Dialog } from "quasar"
+import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"
 
 export const useCreations = defineStore("creationsStore", {
   state: () => ({
@@ -99,10 +100,12 @@ export const useCreations = defineStore("creationsStore", {
       if (!this.favoritesCollectionId) return
       this.favorites = (await api.collections.getCollectionImages.query(this.favoritesCollectionId)).reverse()
     },
-    async generateImage(request: CreateImageRequest) {
+    async generateImage(request: CreateImageRequestWithCustomModel) {
       const creatorId = useUserAuth().userId
       if (!creatorId) throw new Error("User not authenticated")
-      const result = await api.create.image.mutate(request).catch(catchErr)
+      if (!request.prompt) throw new Error("Prompt is required")
+      if (typeof request.prompt !== "string") throw new Error("Prompt must be a string")
+      const result = await api.create.image.mutate(request as any).catch(catchErr)
       if (!result) return
       if (result.errors.length > 0) {
         for (const err of result.errors) {
@@ -120,6 +123,8 @@ export const useCreations = defineStore("creationsStore", {
         id: result.id,
         createdAt: new Date(),
         creatorId,
+        customModelId: request.customModelId,
+        customModelName: request.customModelName,
       }
       this.creations.unshift(createdItem)
     },

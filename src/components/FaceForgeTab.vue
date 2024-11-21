@@ -31,6 +31,7 @@ import PickModelComponent from "./PickModel.vue"
 import CreateModelComponent from "./CreateModel.vue"
 import WatchTrainingComponent from "./WatchTraining.vue"
 import UseModelComponent from "./UseModel.vue"
+import { useCreateCardStore } from "src/stores/createCardStore"
 
 export default defineComponent({
   components: {
@@ -46,6 +47,7 @@ export default defineComponent({
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
       loadTrainingInterval: null as any,
+      createStore: useCreateCardStore(),
     }
   },
   computed: {
@@ -99,6 +101,8 @@ export default defineComponent({
       if (model.status === "training") {
         this.mode = "watchTraining"
       } else if (model.status === "trained") {
+        this.createStore.req.customModelId = model.id
+        this.createStore.req.customModelName = model.name
         this.mode = "useModel"
       }
     },

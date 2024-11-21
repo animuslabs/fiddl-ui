@@ -111,6 +111,7 @@ export default defineComponent({
           console.log("width:", this.$q.screen.width)
           this.setReq(
             {
+              customModelId: requestMeta.customModelId,
               aspectRatio: requestMeta.aspectRatio as any,
               model: requestMeta.model as any,
               prompt: requestMeta.prompt || "",
@@ -189,6 +190,7 @@ export default defineComponent({
         promptTab.createMode = true
         this.createMode = true
       }
+
       this.createStore.setReq(request)
     },
     addImage(data: string) {

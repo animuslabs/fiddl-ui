@@ -19,14 +19,16 @@ const defaultImageRequest: CreateImageRequest = {
   quantity: 1,
 }
 
-const availableModels = Object.freeze(imageModelDatas.map((el) => el.name).filter((el) => el !== "custom"))
+export type CreateImageRequestWithCustomModel = CreateImageRequest & { customModelName?: string }
+
+const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
 
 export const useCreateCardStore = defineStore("createCardStore", {
   state: () => ({
     createSession: useCreateSession(),
     creations: useCreations(),
-    req: { ...defaultImageRequest } as CreateImageRequest,
+    req: { ...defaultImageRequest } as CreateImageRequestWithCustomModel,
     availableModels,
     userAuth: useUserAuth(),
     api,
@@ -60,9 +62,10 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
   },
   actions: {
-    setReq(req: CreateImageRequest) {
-      this.privateMode = !req.public
-      this.req = toObject(req)
+    setReq(req: CreateImageRequestWithCustomModel) {
+      console.log("setReq in createCardStore")
+      // this.req = toObject(req)
+      this.req = { ...this.req, ...req } // Merge instead of overwriting
     },
     updatePrivateMode(val: boolean) {
       this.privateMode = val
@@ -99,10 +102,10 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
     async createImage() {
       this.loading.create = true
-
-      if (!this.customModel) LocalStorage.set("req", this.req)
+      LocalStorage.set("req", this.req)
       if (this.customModel) {
         this.req.customModelId = this.customModel.id
+        this.req.customModelName = this.customModel.name
         this.req.model = "custom"
       }
       if (typeof this.req.seed != "number") this.req.seed = undefined
