@@ -36,7 +36,7 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
                 p Copy Prompt
     .col-grow.gt-sm
     .col-auto
-      .row.q-gutter-md
+      .row.q-gutter-md.full-width
         .col-auto
           small Created: #[p {{ printCreated }}]
           q-tooltip
@@ -49,6 +49,7 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           small Aspect Ratio: #[p {{ creation.aspectRatio }}]
         //- .col-auto
         //-   small Quantity: #[p {{ creation.quantity }}]
+        .col-grow
         .col-auto(v-if="creation.creatorId != $userAuth.userId")
           small Private: #[p {{ !creation.public }}]
         .col-auto(v-else)

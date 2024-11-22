@@ -1,15 +1,7 @@
 <template lang="pug">
 q-page.full-width
   div(v-if="$userAuth.loggedIn").full-width
-    .centered
-      div(style="max-width:900px;")
-        q-tabs(v-model="tab" align="justify" class="full-width")
-          q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label")
-    div(v-if="tab == 'faceForge'")
-      .centered
-        faceForgeTab(ref="faceForgeTab")
-    div(v-if="tab == 'prompt'")
-      PromptTab(:id="1" ref="promptTab")
+    PromptTab(:id="1" ref="promptTab")
   div(v-else)
     .centered.q-mt-xl
       h3 You must be logged in to create images
@@ -49,57 +41,11 @@ export default defineComponent({
       createSession: useCreateSession(),
       images: [] as string[],
       createMode: false,
-      tab: null as string | null,
-      tabs: [
-        {
-          name: "prompt",
-          label: "Prompt",
-        },
-        {
-          name: "faceForge",
-          label: "Face Forge",
-        },
-      ],
     }
   },
   watch: {
-    tab: {
-      handler(val: string | null) {
-        console.log("tab watch triggered", this.tab)
-        if (val) void this.$router.replace({ params: { tab: val } })
-      },
-      deep: true,
-      immediate: true,
-    },
-    "$route.params": {
-      handler(val) {
-        console.log("route params", val)
-        if (val.tab) this.tab = val.tab
-        if (!val.tab || val.tab == "") this.tab = "prompt"
-      },
-      immediate: true,
-    },
     "$route.query": {
       async handler(val) {
-        const targetfaceForgeId = this.$route.query?.faceForgeId
-        if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
-          const faceForgeModel = await this.$api.models.getModel.query(targetfaceForgeId).catch(catchErr)
-          if (!faceForgeModel) {
-            void this.$router.replace({ query: {}, params: { tab: "faceForge" } })
-          } else {
-            this.tab = "faceForge"
-            void this.$nextTick(() => {
-              const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof FaceForgeTab>
-              faceForgeTab.selectModel(faceForgeModel)
-            })
-          }
-        } else {
-          void this.$nextTick(() => {
-            const faceForgeTab = this.$refs.faceForgeTab as InstanceType<typeof FaceForgeTab>
-            if (faceForgeTab) faceForgeTab.selectModel(null)
-          })
-        }
-
         console.log(val)
         const targetImageId = this.$route.query?.imageId
         const encodedRequestData = this.$route.query?.requestData

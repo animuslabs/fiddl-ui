@@ -59,6 +59,13 @@ import { img } from "lib/netlifyImg"
 
 export default defineComponent({
   components: {},
+  props: {
+    trainedOnly: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+  },
   emits: {
     modelClicked: (model: CustomModel) => true,
   },
@@ -99,7 +106,12 @@ export default defineComponent({
     },
     async loadData() {
       console.log("loadData")
-      this.models = (await this.$api.models.getUserModels.query().catch(catchErr)) || null
+      const models = (await this.$api.models.getUserModels.query().catch(catchErr)) || []
+      if (!this.trainedOnly) {
+        this.models = models
+      } else {
+        this.models = models?.filter((m) => m.status === "trained")
+      }
     },
     handleModelClick(model: CustomModel) {
       // console.log(model)

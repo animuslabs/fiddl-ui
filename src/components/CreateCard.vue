@@ -1,7 +1,7 @@
 <template lang="pug">
 div
-  q-card.q-mt-md
-    .q-pa-md
+  q-card
+    .q-pa-sm
       //- h4 {{ createStore.req.customModelName }}
       //- .centered.items-center.q-gutter-md(style="text-transform: capitalize;" v-if="customModel" )
       //-   q-btn(round flat icon="edit" @click="pickModel()")
@@ -28,6 +28,9 @@ div
               p 2
             q-tooltip
               p Improve the prompt
+          q-btn( icon="accessibility" flat @click="showPresets = true" :loading="loading.improve" :disable="anyLoading" )
+            q-tooltip
+              p Presets
         q-separator(color="grey-9" spaced="20px" inset)
         .centered
           div.q-ma-md
@@ -58,13 +61,15 @@ div
             .row.items-center
               q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
               div.q-ml-md(v-if="createStore.req.customModelName")
-                h4 {{ createStore.req.customModelName }}
+                .row.q-gutter-md
+                  h4 {{ createStore.req.customModelName }}
+                  q-btn(round flat icon="list" @click="showModelPicker = true")
 
               //- h4 {{ req.model }}
         //- div {{ req }}
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
-        .centered(v-if="$userAuth.userData").relative-position
+        .centered(v-if="$userAuth.userData").relative-position.q-mb-md
           div
             q-btn( type="submit" label="Create" color="primary" :loading="createStore.loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
               .badge
@@ -80,8 +85,16 @@ div
       q-dialog(v-model="showModelPicker")
         q-card
           .q-ma-md
-            h5.q-mb-sm Select a custom model
-            CustomModelsList(@modelClicked="setCustomModel")
+            .row
+              h5.q-mb-sm Select a custom model
+              .col-grow
+              q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'faceForge',params:{mode:'create'}})")
+            q-separator(color="primary" )
+            CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
+    // q-dialog(v-model="showCreateFaceForge")
+        q-card
+          FaceForgeTab
+
 
 </template>
 <style>
@@ -97,6 +110,7 @@ import { CustomModel } from "lib/api"
 import { LocalStorage, Notify } from "quasar"
 import { toObject } from "lib/util"
 import CustomModelsList from "./CustomModelsList.vue"
+import FaceForgeTab from "./FaceForgeTab.vue"
 
 export default defineComponent({
   components: { Turnstile, CustomModelsList },
@@ -112,6 +126,8 @@ export default defineComponent({
     return {
       showModelPicker: false,
       createStore: useCreateCardStore(),
+      showCreateFaceForge: false,
+      showPresets: false,
     }
   },
   computed: {
@@ -154,7 +170,8 @@ export default defineComponent({
       handler(val: string) {
         console.log("model changed", val)
         if (val == "custom") {
-          if (!this.createStore.req.customModelId) {
+          console.log(this.createStore.req.customModelId)
+          if (!this.createStore.req.customModelId && !this.createStore.customModel) {
             console.log("trigger popup")
             if (!this.showModelPicker) this.showModelPicker = true
           }

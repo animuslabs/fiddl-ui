@@ -1,15 +1,14 @@
 <template lang="pug">
-.centered
-  .gt-md
+.centered.full-height.full-width
+  div(v-if="$q.screen.width > 1440")
     .row.full-height.full-width.no-wrap
-      div(v-if="$q.screen.width > 1440")
-        .centered
-          CreateCard.q-mt-md(
-            @created="addImage"
-            style="padding-top:0px; min-width:300px; max-width:600px;"
-            ref="createCard"
-            :customModel="customModel"
-          )
+      .centered(style="width:450px; padding:0px;")
+        CreateCard.q-mt-md.full-width(
+          @created="addImage"
+          style="padding-top:0px; min-width:300px; max-width:600px;"
+          ref="createCard"
+          :customModel="customModel"
+        )
       q-scroll-area(
         style="width:1140px; max-width:90vw; height:calc(100vh - 60px);"
       )
@@ -34,7 +33,7 @@
           @click="createMode = true"
           v-if="!createMode"
         )
-      div.q-ma-md(v-if="createMode")
+      div(v-if="createMode")
         .row
           q-btn(
             label="Back"
@@ -45,14 +44,13 @@
         .row
           CreateCard(
             @created="addImage"
-            style="padding-top:0px; min-width:200px; max-width:90vw;"
+            style="width:100vw;"
             ref="createCard"
             :customModel="customModel"
           )
     q-scroll-area(
       style="height:calc(100vh - 175px); width:100vw;"
-      v-if="!createMode"
-    ).q-pl-lg.q-pr-lg
+      v-if="!createMode")
       ImageRequestCard(
         v-for="creation in creationsStore.creations"
         :creation="creation"

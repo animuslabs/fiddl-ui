@@ -14,6 +14,8 @@ q-layout(view="lHh Lpr lFf" )
             | create
           q-route-tab(:to="{ name: 'browse' }").gt-xs.text-white
             | browse
+          q-route-tab(:to="{ name: 'faceForge' }").gt-xs.text-white
+            | Face Forge
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
           //- q-route-tab(:to="{ name: 'mint' }")
@@ -70,6 +72,8 @@ q-layout(view="lHh Lpr lFf" )
         | create
       q-route-tab(:to="{ name: 'browse' }").text-white
         | browse
+      q-route-tab(:to="{ name: 'faceForge' }").text-white
+        | Face Forge
 </template>
 
 <script lang="ts">

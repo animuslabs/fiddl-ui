@@ -1,24 +1,22 @@
 <template lang="pug">
-div
+q-page
   PickModelComponent(
-    v-if="mode === 'pickModel'"
+    v-if="mode === 'pick'"
     @selectModel="selectModel"
-    @createModel="mode = 'createModel'"
+    @createModel="mode = 'create'"
   )
-  CreateModelComponent(
-    v-if="mode === 'createModel'"
-    @startTraining="startTraining"
-  )
+  div(v-if="mode == 'create'")
+    CreateModelComponent(
+      @startTraining="startTraining"
+    )
+    .centered
+      q-btn(label="back" @click="mode='pick'" color="primary" flat)
   WatchTrainingComponent(
-    v-if="mode === 'watchTraining' && targetModelData"
+    v-if="mode === 'train' && targetModelData"
     :trainingData="trainingData"
     :modelData="targetModelData"
-    @back="mode = 'pickModel'"
-    @finished="mode = 'useModel'"
-  )
-  UseModelComponent(
-    v-if="mode === 'useModel'"
-    :customModel="targetModelData"
+    @back="pickMode()"
+    @finished="useModel(targetModelData)"
   )
 </template>
 
@@ -27,12 +25,13 @@ import { defineComponent } from "vue"
 import { Loading } from "quasar"
 import { CustomModel, uploadTrainingImages, type TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
-import PickModelComponent from "./PickModel.vue"
-import CreateModelComponent from "./CreateModel.vue"
-import WatchTrainingComponent from "./WatchTraining.vue"
-import UseModelComponent from "./UseModel.vue"
+import PickModelComponent from "components/PickModel.vue"
+import CreateModelComponent from "components/CreateModel.vue"
+import WatchTrainingComponent from "components/WatchTraining.vue"
+import UseModelComponent from "components/UseModel.vue"
 import { useCreateCardStore } from "src/stores/createCardStore"
-
+import { catchErr } from "lib/util"
+type FaceForgeMode = "pick" | "create" | "train"
 export default defineComponent({
   components: {
     PickModelComponent,
@@ -42,7 +41,7 @@ export default defineComponent({
   },
   data() {
     return {
-      mode: "pickModel",
+      mode: "pick" as FaceForgeMode,
       targetModelId: null as string | null,
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
@@ -57,6 +56,30 @@ export default defineComponent({
     },
   },
   watch: {
+    "$route.params": {
+      handler() {
+        console.log("route params changed", this.$route.params)
+        this.mode = (this.$route.params?.mode as FaceForgeMode) || "pick"
+      },
+      immediate: true,
+      deep: true,
+    },
+    "$route.query": {
+      async handler() {
+        const targetfaceForgeId = this.$route.query?.faceForgeId
+        if (this.mode == "pick") return
+        if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
+          const faceForgeModel = await this.$api.models.getModel.query(targetfaceForgeId).catch(catchErr)
+          if (!faceForgeModel) {
+            this.mode = "pick"
+          } else {
+            this.selectModel(faceForgeModel)
+          }
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
     $userAuth: {
       handler(val) {
         if (val.loggedIn) {
@@ -67,18 +90,23 @@ export default defineComponent({
       immediate: true,
     },
     targetModelId: {
-      handler(val) {
-        if (val) void this.$router.replace({ query: { faceForgeId: val } })
+      async handler(val) {
+        if (val) await this.$router.replace({ params: { mode: this.mode }, query: { faceForgeId: val } })
+        else await this.$router.replace({ params: { mode: this.mode }, query: {} })
       },
-      immediate: true,
+      immediate: false,
     },
     mode: {
-      handler(val) {
-        if (val === "pickModel") {
+      async handler(val: FaceForgeMode) {
+        console.log("mode changed", val, this.$route.query)
+        setTimeout(() => {
+          void this.$router.replace({ params: { mode: val }, query: { ...this.$route.query } })
+        }, 100)
+        if (val === "pick") {
           this.targetModelId = null
           this.trainingData = undefined
         }
-        if (val === "watchTraining") {
+        if (val === "train") {
           void this.loadTrainingData()
           this.loadTrainingInterval = setInterval(() => void this.loadTrainingData(), 5000)
         } else {
@@ -89,23 +117,35 @@ export default defineComponent({
     },
   },
   methods: {
+    async pickMode() {
+      // await this.$router.replace({ params: { mode: "pick" }, query: {} })
+      this.mode = "pick"
+    },
     selectModel(model: CustomModel | null) {
+      if (model?.status === "trained") return this.useModel(model)
       console.log("select   model", model)
       if (!model) {
         this.targetModelId = null
         this.targetModelData = undefined
-        this.mode = "pickModel"
+        this.mode = "pick"
         return
       }
       this.targetModelId = model.id
       this.targetModelData = model
       if (model.status === "training") {
-        this.mode = "watchTraining"
-      } else if (model.status === "trained") {
-        this.createStore.req.customModelId = model.id
-        this.createStore.req.customModelName = model.name
-        this.mode = "useModel"
+        this.mode = "train"
+        void this.loadTrainingData()
       }
+    },
+    useModel(model: CustomModel) {
+      this.createStore.customModel = model
+      let req = this.createStore.req
+      req.customModelId = model.id
+      req.customModelName = model.name
+      req.model = "custom"
+      req.prompt = ""
+      req.quantity = 4
+      void this.$router.push({ name: "create" })
     },
     async loadTrainingData() {
       if (!this.targetModelId) return
@@ -127,7 +167,7 @@ export default defineComponent({
         if (!modelId) return Loading.hide()
         await uploadTrainingImages(modelId, formData)
         this.targetModelId = modelId
-        this.mode = "watchTraining"
+        this.mode = "train"
         void this.loadTrainingData()
         Loading.hide()
         this.$q.notify({ color: "positive", message: "Files uploaded!" })

@@ -21,8 +21,13 @@
   ],
   [
     "create",
-    "/create/:tab?",
+    "/create",
     "CreatePage"
+  ],
+  [
+    "faceForge",
+    "/faceForge/:mode?",
+    "FaceForgePage"
   ],
   [
     "vote",

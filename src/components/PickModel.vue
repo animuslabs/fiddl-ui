@@ -2,21 +2,31 @@
 div.q-mt-md
   .centered
     h5 Face Forge Models
-  .centered.q-ma-md
-    CustomModelsList(style="width:600px; max-width:90vw;" @modelClicked="handleModelClicked")
-  .centered
+  .centered.q-mt-md
     q-btn(
       label="Create Face Forge"
       @click="$emit('createModel')"
       flat
+      icon="add"
       color="primary"
-      size="lg"
     )
+  .centered.q-ma-md
+    CustomModelsList(style="width:600px; max-width:90vw;" @modelClicked="handleModelClicked")
+  .centered.q-mb-xl
+    q-btn(
+      label="Create Face Forge"
+      @click="$emit('createModel')"
+      flat
+      icon="add"
+      color="primary"
+    )
+
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue"
 import CustomModelsList from "./CustomModelsList.vue"
+import { CustomModel } from "lib/api"
 
 export default defineComponent({
   components: {
@@ -24,10 +34,10 @@ export default defineComponent({
   },
   emits: {
     createModel: null,
-    selectModel: (model: any) => true,
+    selectModel: (model: CustomModel) => true,
   },
   methods: {
-    handleModelClicked(model: any) {
+    handleModelClicked(model: CustomModel) {
       this.$emit("selectModel", model)
     },
   },
