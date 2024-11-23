@@ -25,9 +25,9 @@
                 h4(style="text-transform:capitalize") {{ model.trainingPreset }}
           .row.q-ml-md
             .col-auto(v-if="model.imageRequests.length")
-              .lt-md.full-width.q-mt-md
+              .full-width.q-mt-md
               .row
-                .gt-sm.q-ml-md
+                div
                 div(v-for="imageRequest in model.imageRequests" :key="imageRequest.id")
                   .relative-position(style="width:60px; height:90px;")
                     img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:100px; height:100px; object-fit:cover; border-radius:25px; position:absolute; bottom:-5px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
@@ -51,7 +51,7 @@
             .col-auto(v-if="model.imageRequests.length").q-mt-sm
               .lt-md.full-width
               .row
-                .gt-sm.q-ml-md
+                .q-ml-sm
                 div(v-for="imageRequest in model.imageRequests" :key="imageRequest.id")
                   .relative-position(style="width:30px; height:20px;")
                     img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:50px; height:50px; object-fit:cover; border-radius:5px; position:absolute; bottom:-25px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
