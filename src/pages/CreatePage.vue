@@ -55,19 +55,30 @@ export default defineComponent({
           const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
           // console.log(imageMeta, requestMeta)
           console.log("width:", this.$q.screen.width)
-          this.setReq(
-            {
-              customModelId: requestMeta.customModelId,
-              aspectRatio: requestMeta.aspectRatio as any,
-              model: requestMeta.model as any,
-              prompt: requestMeta.prompt || "",
-              public: requestMeta.public,
-              quantity: 1,
-              negativePrompt: requestMeta.negativePrompt,
-              seed: imageMeta.seed,
-            },
-            this.$q.screen.width < 1440,
-          )
+          const req = {
+            customModelId: requestMeta.customModelId,
+            aspectRatio: requestMeta.aspectRatio as any,
+            model: requestMeta.model as any,
+            prompt: requestMeta.prompt || "",
+            public: requestMeta.public,
+            quantity: 1,
+            negativePrompt: requestMeta.negativePrompt,
+            seed: imageMeta.seed,
+          }
+          if (req.model == "custom" && req.customModelId) {
+            const customModel = await this.$api.models.getModel.query(req.customModelId).catch(console.error)
+            if (!customModel) {
+              req.customModelId = undefined
+              // req.customModelName = undefined
+              req.model = "flux-dev"
+              Dialog.create({
+                message: "Custom model is private, using flux-dev model instead",
+                color: "negative",
+                persistent: true,
+              })
+            }
+          }
+          this.setReq(req, this.$q.screen.width < 1440)
 
           Dialog.create({
             title: "Image Parameters Applied",

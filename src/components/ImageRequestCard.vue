@@ -50,9 +50,7 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
         //- .col-auto
         //-   small Quantity: #[p {{ creation.quantity }}]
         .col-grow
-        .col-auto(v-if="creation.creatorId != $userAuth.userId")
-          small Private: #[p {{ !creation.public }}]
-        .col-auto(v-else)
+        .col-auto(v-if="creation.creatorId == $userAuth.userId")
           p {{ printPrivacy }}
           q-toggle(v-model="creation.public" @click="updatePrivacy()")
 

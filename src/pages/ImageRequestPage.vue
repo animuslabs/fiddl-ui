@@ -61,6 +61,8 @@ export default defineComponent({
           quantity: req.quantity,
           negativePrompt: req.negativePrompt,
           seed: req.seed,
+          customModelId: req.customModelId,
+          customModelName: req.customModelName,
         }
         this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
         const targetIndex = this.$route.query?.index
