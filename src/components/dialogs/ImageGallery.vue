@@ -49,11 +49,11 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
         transition(name="fade")
           q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
         img.image-darken(:src="currentImageUrl" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
-        .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.q-ma-md.absolute-bottom
-          .col-auto.q-pa-sm.cursor-pointer(style="border-radius:10%; background-color:rgba(0,0,0,0.5);")
-            .row.items-center
-              q-img( :src="avatarImg(creatorMeta.id)" style="width:50px; height:50px; border-radius:50%;").q-mr-sm
-              h4.q-mr-sm @{{creatorMeta.username}}
+        .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
+          .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
+            .row.items-center.q-mb-xs
+              q-img( placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
+              h6.q-mr-sm @{{creatorMeta.username}}
     .centered
         div.q-mt-md(v-if="localImageIds.length > 1 && !downloadMode && localImageIds.length < 11")
           span.indicator( v-for="(image, index) in localImageIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
