@@ -89,7 +89,8 @@ div
               h5.q-mb-sm Select a custom model
               .col-grow
               q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'faceForge',params:{mode:'create'}})")
-            q-separator(color="primary" )
+            q-separator(color="primary").q-mb-lg
+
             CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
     // q-dialog(v-model="showCreateFaceForge")
         q-card
@@ -169,7 +170,7 @@ export default defineComponent({
     "createStore.req.model": {
       handler(val: string) {
         console.log("model changed", val)
-        if (val == "custom") {
+        if (val == "custom" && !this.createStore.req.customModelId) {
           console.log(this.createStore.req.customModelId)
           if (!this.createStore.req.customModelId && !this.createStore.customModel) {
             console.log("trigger popup")
@@ -177,7 +178,7 @@ export default defineComponent({
           }
         }
       },
-      immediate: true,
+      immediate: false,
     },
     "createStore.req": {
       handler(val: CreateImageRequestWithCustomModel) {

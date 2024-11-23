@@ -19,29 +19,32 @@ const defaultImageRequest: CreateImageRequest = {
   quantity: 1,
 }
 
-export type CreateImageRequestWithCustomModel = CreateImageRequest & { customModelName?: string }
+export type CreateImageRequestWithCustomModel = CreateImageRequest & { customModelName?: string; customModelId?: string }
 
 const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
 
 export const useCreateCardStore = defineStore("createCardStore", {
-  state: () => ({
-    createSession: useCreateSession(),
-    creations: useCreations(),
-    req: { ...defaultImageRequest } as CreateImageRequestWithCustomModel,
-    availableModels,
-    userAuth: useUserAuth(),
-    api,
-    privateMode: false,
-    turnstileValidated: true,
-    loading: {
-      new: false,
-      randomize: false,
-      improve: false,
-      create: false,
-    },
-    customModel: null as CustomModel | null,
-  }),
+  state: () => {
+    const loadedRequest = LocalStorage.getItem("req") as CreateImageRequestWithCustomModel | null
+    return {
+      createSession: useCreateSession(),
+      creations: useCreations(),
+      req: loadedRequest ? loadedRequest : { ...defaultImageRequest },
+      availableModels,
+      userAuth: useUserAuth(),
+      api,
+      privateMode: false,
+      turnstileValidated: true,
+      loading: {
+        new: false,
+        randomize: false,
+        improve: false,
+        create: false,
+      },
+      customModel: null as CustomModel | null,
+    }
+  },
   getters: {
     availableAspectRatios(state) {
       if (state.req.model.includes("dall")) return ["1:1", "16:9", "9:16"]
@@ -62,10 +65,17 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
   },
   actions: {
-    setReq(req: CreateImageRequestWithCustomModel) {
+    async loadCustomModel(modelId: string) {
+      const customModel = await api.models.getModel.query(modelId)
+      this.customModel = customModel
+      this.req.customModelName = customModel.name
+      this.req.customModelId = customModel.id
+    },
+    setReq(req: Partial<CreateImageRequestWithCustomModel>) {
       console.log("setReq in createCardStore")
-      // this.req = toObject(req)
-      this.req = { ...this.req, ...req } // Merge instead of overwriting
+      this.req = { ...this.req, ...req }
+      if (req.customModelId) void this.loadCustomModel(req.customModelId)
+      LocalStorage.set("req", this.req)
     },
     updatePrivateMode(val: boolean) {
       this.privateMode = val

@@ -29,7 +29,7 @@ import PickModelComponent from "components/PickModel.vue"
 import CreateModelComponent from "components/CreateModel.vue"
 import WatchTrainingComponent from "components/WatchTraining.vue"
 import UseModelComponent from "components/UseModel.vue"
-import { useCreateCardStore } from "src/stores/createCardStore"
+import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
 import { catchErr } from "lib/util"
 type FaceForgeMode = "pick" | "create" | "train"
 export default defineComponent({
@@ -139,12 +139,14 @@ export default defineComponent({
     },
     useModel(model: CustomModel) {
       this.createStore.customModel = model
-      let req = this.createStore.req
-      req.customModelId = model.id
-      req.customModelName = model.name
-      req.model = "custom"
-      req.prompt = ""
-      req.quantity = 4
+      const newReq: Partial<CreateImageRequestWithCustomModel> = {
+        customModelId: model.id,
+        customModelName: model.name,
+        model: "custom",
+        prompt: "",
+        quantity: 4,
+      }
+      this.createStore.setReq(newReq)
       void this.$router.push({ name: "create" })
     },
     async loadTrainingData() {

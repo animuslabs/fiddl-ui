@@ -2,6 +2,7 @@
 const Umami = window.umami
 //@ts-ignore
 if (window.location.hostname === "localhost") localStorage.setItem("umami.disabled", 1)
+else localStorage.removeItem("umami.disabled")
 
 const umami = {
   identify(data: { userId: string; userName?: string }) {
