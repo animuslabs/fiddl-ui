@@ -74,6 +74,10 @@ export const useCreateCardStore = defineStore("createCardStore", {
     setReq(req: Partial<CreateImageRequestWithCustomModel>) {
       console.log("setReq in createCardStore")
       this.req = { ...this.req, ...req }
+      if (!req.customModelId) {
+        this.customModel = null
+        this.req.customModelName = undefined
+      }
       if (req.customModelId) void this.loadCustomModel(req.customModelId)
       LocalStorage.set("req", this.req)
     },

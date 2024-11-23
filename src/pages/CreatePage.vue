@@ -133,7 +133,7 @@ export default defineComponent({
       console.log("setReq", toggleCreateMode)
       if (toggleCreateMode) {
         const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
-        promptTab.createMode = true
+        if (promptTab) promptTab.createMode = true
         this.createMode = true
       }
 

@@ -69,6 +69,7 @@ import imageGallery from "lib/imageGallery"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
+import api from "lib/api"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -163,7 +164,7 @@ export default defineComponent({
       console.log("gallery closed,trigger reload event")
       this.$emit("reload")
     },
-    setRequest() {
+    async setRequest() {
       if (this.creation.prompt == undefined) {
         if (!this.$userAuth.loggedIn) {
           Dialog.create({
@@ -189,6 +190,19 @@ export default defineComponent({
           seed: undefined,
           public: this.creation.public,
           negativePrompt: this.creation.negativePrompt,
+        }
+        if (this.creation.model == "custom" && this.creation.customModelId) {
+          const customModel = await api.models.getModel.query(this.creation.customModelId).catch(console.error)
+          if (!customModel) {
+            req.customModelId = undefined
+            req.customModelName = undefined
+            req.model = "flux-dev"
+            Dialog.create({
+              message: "Custom model is private, using flux-dev model instead",
+              color: "negative",
+              persistent: true,
+            })
+          }
         }
         const encodedRequest = encodeURIComponent(JSON.stringify(req))
         if (this.$route.name == "create") void this.$router.replace({ query: { requestData: encodedRequest } })

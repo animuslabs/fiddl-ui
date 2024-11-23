@@ -68,8 +68,8 @@ export default defineComponent({
             title: "Training Complete",
             message: "Your model is ready to use",
             ok: true,
-          })
-          void this.$emit("finished")
+          }).onOk(() => this.$emit("finished"))
+          // void this.$emit("finished")
         }
       },
       immediate: true,

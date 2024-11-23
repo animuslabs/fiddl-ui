@@ -7,6 +7,8 @@
             q-btn(icon="delete" flat color="accent" @click="deleteModel(model)" round)
           .row
             q-btn(icon="edit" flat color="white" @click="editModelName(model)" round)
+          .row
+            q-btn(:icon="privacyIcon(model)" flat color="white" @click="toggleModelPrivacy(model)" round)
         .col.cursor-pointer(@click="handleModelClick(model)" v-if="$q.screen.width > 500")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ model.name }}
@@ -104,6 +106,7 @@ export default defineComponent({
       editingModelNameId: null as string | null,
     }
   },
+  computed: {},
   watch: {
     "$userAuth.loggedIn": {
       async handler(val) {
@@ -117,6 +120,18 @@ export default defineComponent({
     console.log("mounted customModelsList")
   },
   methods: {
+    toggleModelPrivacy(model: CustomModel) {
+      this.$api.models.setModelPrivacy
+        .mutate({ id: model.id, public: !model.Public })
+        .catch(catchErr)
+        .then(() => {
+          Notify.create(`${model.name} privacy updated to: ${!model.Public ? "Public" : "Private"}`)
+          model.Public = !model.Public
+        })
+    },
+    privacyIcon(model: CustomModel) {
+      return model.Public ? "visibility" : "visibility_off"
+    },
     async setModelName() {
       if (!this.editingModelNameId) return
       await this.$api.models.setModelName.mutate({ id: this.editingModelNameId, name: this.newModelName }).catch(catchErr)
