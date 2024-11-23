@@ -18,6 +18,11 @@ export const useCreations = defineStore("creationsStore", {
     customModelId: null as string | null,
   }),
   actions: {
+    deleteItem(id: string) {
+      const index = this.creations.findIndex((i) => i.id === id)
+      if (index < 0) return
+      this.creations.splice(index, 1)
+    },
     addItem(item: CreateImageRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return

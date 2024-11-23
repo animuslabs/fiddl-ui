@@ -17,6 +17,11 @@ export const useCreateSession = defineStore("createSession", {
     },
   },
   actions: {
+    deleteItem(id: string) {
+      const index = this.sessionItems.findIndex((i) => i.id === id)
+      if (index < 0) return
+      this.sessionItems.splice(index, 1)
+    },
     addItem(item: CreateImageRequestData) {
       const idExists = this.sessionItems.some((i) => i.id === item.id)
       if (idExists) return

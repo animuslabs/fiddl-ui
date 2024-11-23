@@ -68,6 +68,8 @@ import { copyToClipboard, Dialog, Notify } from "quasar"
 import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
 import api from "lib/api"
+import { useCreateSession } from "src/stores/createSessionStore"
+import { useCreations } from "src/stores/creationsStore"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -132,6 +134,8 @@ export default defineComponent({
               message: "Creation Deleted",
               color: "negative",
             })
+            useCreations().deleteItem(this.creation.id)
+            if (this.$route.name == "imageRequest") void this.$router.push({ name: "browse" })
           })
       })
     },

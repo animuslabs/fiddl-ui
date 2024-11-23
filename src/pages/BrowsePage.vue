@@ -1,7 +1,23 @@
 <template lang="pug">
-q-page.full-height.full-width
+q-page.full-height.full-width.realtive-position
   .centered.q-mt-sm
-    h2 Browse
+    .search-bar
+      .centered
+        q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:95vw;")
+          .row
+            q-btn-dropdown(:label="browserStore.filter.aspectRatio ||'Aspect Ratio'" flat)
+              q-list
+                q-item(clickable @click="browserStore.filter.aspectRatio = undefined" v-close-popup) Any
+                q-item(clickable @click="browserStore.filter.aspectRatio = ratio" v-for="ratio of aspectRatios" v-close-popup) {{ ratio }}
+            q-btn-dropdown(:label="browserStore.filter.model || 'Model'"  flat)
+              q-list
+                q-item(clickable @click="browserStore.filter.model = undefined" v-close-popup) Any
+                q-item(clickable @click="browserStore.filter.model = model" v-for="model of imageModels" v-close-popup) {{ model }}
+            q-btn(size="sm" icon="clear" flat @click="browserStore.resetFilters()" :disable="!browserStore.filterActive")
+          .row
+            q-input( @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" style="width:80%;")
+            q-btn(icon="search" type="submit" flat )
+        //- q-input(v-model="browserStore.search" filled placeholder="search" style="width:50%;")
   .centered
     //- q-spinner(size="10px" :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}")
     q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
@@ -12,12 +28,24 @@ q-page.full-height.full-width
   q-scroll-observer(@scroll="handleScroll")
 
 </template>
+<style>
+.search-bar {
+  position: relative;
+  width: 95vw;
+  /* height: 95px; */
+  /* background: rgba(1, 1, 1, 0.1);
+  backdrop-filter: blur(50px);
+  border-radius: 10px; */
+  /* padding: 20px; */
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+}
+</style>
 
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useBrowserStore } from "stores/browserStore"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { AspectRatioGrade, ratioRatings } from "lib/imageModels"
+import { AspectRatioGrade, aspectRatios, imageModels, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
 import { throttle } from "quasar"
 import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
@@ -33,6 +61,8 @@ export default defineComponent({
       browserStore: useBrowserStore(),
       onScroll: null as any,
       onScrollUp: null as any,
+      aspectRatios,
+      imageModels,
     }
   },
   computed: {
@@ -43,6 +73,13 @@ export default defineComponent({
       immediate: true,
       handler() {
         // reload any user specific stuff here
+      },
+    },
+    "browserStore.filter": {
+      deep: true,
+      handler() {
+        this.browserStore.reset()
+        // void this.browserStore.loadCreations()
       },
     },
   },

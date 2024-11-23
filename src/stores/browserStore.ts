@@ -2,7 +2,7 @@ import { defineStore } from "pinia"
 import api from "lib/api"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { pickRand, toObject } from "lib/util"
-import { ratioRatings, type AspectRatio, type AspectRatioGrade } from "lib/imageModels"
+import { ratioRatings, type AspectRatio, type AspectRatioGrade, type ImageModel } from "lib/imageModels"
 
 function getImgClass(ratioGrade: AspectRatioGrade) {
   const squareSizes = ["small", "medium", "large"]
@@ -28,21 +28,41 @@ export const useBrowserStore = defineStore("browserStore", {
     return {
       items: [] as BrowserItem[],
       loading: false,
+      search: null as string | null,
+      filter: {
+        aspectRatio: undefined as AspectRatio | undefined,
+        model: undefined as ImageModel | undefined,
+      },
     }
   },
   getters: {
     reverse(): BrowserItem[] {
       return this.items.slice().reverse()
     },
+    filterActive(): boolean {
+      return !!this.filter.aspectRatio || !!this.filter.model
+    },
   },
   actions: {
+    resetFilters() {
+      this.filter = {
+        aspectRatio: undefined,
+        model: undefined,
+      }
+    },
+    searchCreations() {
+      this.items = []
+      void this.loadCreations()
+    },
     addItem(item: BrowserItem) {
       const idExists = this.items.some((i) => i.id === item.id)
       if (idExists) return
       this.items.push(item)
     },
     reset() {
+      console.log("reset", this.search)
       this.items = []
+      void this.loadCreations()
       // const rev = this.reverse
     },
     async loadCreations() {
@@ -58,9 +78,12 @@ export const useBrowserStore = defineStore("browserStore", {
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
         limit: 100,
+        promptIncludes: this.search?.length ? this.search : undefined,
+        aspectRatio: this.filter.aspectRatio || undefined,
+        model: this.filter.model || undefined,
       })
       console.log("creations", creations)
-      for (const creation of creations) {
+      for (const creation of creations as any) {
         this.addItem({
           id: creation.id,
           aspectRatio: creation.aspectRatio as AspectRatio,
@@ -84,10 +107,13 @@ export const useBrowserStore = defineStore("browserStore", {
         order: "asc",
         startDateTime: startDateTime || undefined,
         limit: 100,
+        promptIncludes: this.search?.length ? this.search : undefined,
+        aspectRatio: this.filter.aspectRatio || undefined,
+        model: this.filter.model || undefined,
       })
       console.log("recent creations", creations)
 
-      for (const creation of creations) {
+      for (const creation of creations as any) {
         const newItem = {
           id: creation.id,
           aspectRatio: creation.aspectRatio as AspectRatio,
