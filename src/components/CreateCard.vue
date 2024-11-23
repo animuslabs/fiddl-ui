@@ -60,7 +60,7 @@ div
                 p {{ selectedModelPrice }}
             .row.items-center
               q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
-              div.q-ml-md(v-if="createStore.req.customModelName")
+              div.q-ml-md(v-if="createStore.req.model == 'custom'")
                 .row.q-gutter-md
                   h4 {{ createStore.req.customModelName }}
                   q-btn(round flat icon="list" @click="showModelPicker = true")
@@ -169,9 +169,14 @@ export default defineComponent({
     },
     "createStore.req.model": {
       handler(val: string) {
-        console.log("model changed", val)
+        console.log("model changed", val, this.createStore.req)
         if (val == "custom" && !this.createStore.req.customModelId) {
           console.log(this.createStore.req.customModelId)
+          console.log(this.createStore.customModel)
+          if (this.createStore.customModel) {
+            this.createStore.req.customModelId = this.createStore.customModel.id
+            this.createStore.req.customModelName = this.createStore.customModel.name
+          }
           if (!this.createStore.req.customModelId && !this.createStore.customModel) {
             console.log("trigger popup")
             if (!this.showModelPicker) this.showModelPicker = true
