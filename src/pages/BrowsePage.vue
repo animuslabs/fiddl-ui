@@ -23,7 +23,7 @@ q-page.full-height.full-width.realtive-position
     q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
   .q-ma-md
     ImageMosaic(:items="browserStore.items")
-  .centered.q-ma-md
+  //- .centered.q-ma-md
     q-btn(label="Load More" @click="browserStore.loadCreations()" :disable="browserStore.items.length < 1" :loading="browserStore.loading")
   q-scroll-observer(@scroll="handleScroll")
 
