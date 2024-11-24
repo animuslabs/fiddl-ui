@@ -1,12 +1,20 @@
 <template lang="pug">
-.container
-  div(v-for="item in items" :key="item.id" :class="item.cssClass")
-    CreatedImageCard.cursor-pointer.container-image(:imageId="getRandImg(item.imageIds)" :creatorId="item.creatorId" :size="item.cssClass == 'small'?'sm':'md'" @click="showGallery($event,item)" )
+div(:class="containerClass")
+  div(
+    v-for="item in computedItems"
+    :key="item.id"
+    :class="getItemClass(item)"
+  )
+    CreatedImageCard.cursor-pointer.container-image(
+      :imageId="getRandImg(item.imageIds)"
+      :creatorId="item.creatorId"
+      :size="getImageSize(item)"
+      @click="showGallery($event, item)"
+    )
     .absolute-bottom
       .centered
         div(v-for="img in item.imageIds.length").q-mb-xs
           div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6
-    //- q-img.absolute-bottom(:src="avatarImg(item.creatorId)" style="width: 50px; height: 50px; border-radius: 50%;").q-mt-md
 </template>
 
 <script lang="ts">
@@ -15,8 +23,6 @@ import { extractImageId, pickRand } from "lib/util"
 import { BrowserItem } from "src/stores/browserStore"
 import { PropType } from "vue"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
-import ImageGallery from "./dialogs/ImageGallery.vue"
-import { Dialog } from "quasar"
 import imageGallery from "lib/imageGallery"
 
 export default {
@@ -29,6 +35,14 @@ export default {
       type: Array as PropType<BrowserItem[]>,
       required: true,
     },
+    gridMode: {
+      type: Boolean,
+      default: false,
+    },
+    imageSize: {
+      type: String as PropType<"small" | "medium" | "large" | null>,
+      default: null,
+    },
   },
   data() {
     return {
@@ -36,8 +50,38 @@ export default {
       avatarImg,
     }
   },
-  computed: {},
+  computed: {
+    containerClass() {
+      return this.gridMode ? "row q-gutter-md" : "container"
+    },
+    computedItems() {
+      return this.items.map((item) => {
+        let cssClass = item.cssClass
+        if (this.imageSize) {
+          cssClass = this.imageSize
+        }
+        return {
+          ...item,
+          cssClass,
+        }
+      })
+    },
+  },
   methods: {
+    getItemClass(item: BrowserItem) {
+      if (this.gridMode) {
+        return "col-6 col-sm-4 col-md-3" // Adjust column sizes as needed
+      } else {
+        return item.cssClass
+      }
+    },
+    getImageSize(item: BrowserItem) {
+      if (this.imageSize) return "md"
+      // return this.imageSize === "small" ? "sm" : this.imageSize === "medium" ? "md" : "lg"
+      else {
+        return item.cssClass === "small" ? "sm" : "md"
+      }
+    },
     getRandImg(imageIds: string[]) {
       return pickRand(imageIds) as string
     },
@@ -45,10 +89,10 @@ export default {
       const target = val.target as HTMLImageElement
       const id = extractImageId(target.src)
       if (!id) return
-      const index = (id: string) => item.imageIds.findIndex((el) => el === id)
+      const index = item.imageIds.findIndex((el) => el === id)
       const creatorName = (await this.$api.user.getUsername.query(item.creatorId).catch(console.error)) || ""
       const creatorMeta = { id: item.creatorId, username: creatorName }
-      void imageGallery.show(item.imageIds, index(id), item.id, creatorMeta)
+      void imageGallery.show(item.imageIds, index, item.id, creatorMeta)
     },
   },
 }
@@ -61,8 +105,8 @@ export default {
   grid-auto-rows: 100px;
   gap: 16px;
   grid-auto-flow: dense;
-  /* background-color: red; */
 }
+
 @media (max-width: 600px) {
   .container {
     grid-template-columns: repeat(2, 1fr);
@@ -72,8 +116,6 @@ export default {
 .container > div {
   position: relative;
   overflow: hidden;
-  justify-content: center;
-  align-items: center;
   min-width: 50px;
 }
 
@@ -83,7 +125,7 @@ export default {
   object-fit: cover !important;
 }
 
-/* Create classes for varying grid item sizes */
+/* Restored the classes for varying grid item sizes */
 .small {
   grid-column: span 1;
   grid-row: span 1;
@@ -103,6 +145,7 @@ export default {
   grid-column: span 2;
   grid-row: span 1;
 }
+
 .wide-lg {
   grid-column: span 4;
   grid-row: span 2;
@@ -112,6 +155,7 @@ export default {
   grid-column: span 1;
   grid-row: span 2;
 }
+
 .tall-lg {
   grid-column: span 2;
   grid-row: span 4;
@@ -126,6 +170,7 @@ export default {
   grid-column: span 2;
   grid-row: span 4;
 }
+
 .square {
   grid-column: span 1;
   grid-row: span 1;

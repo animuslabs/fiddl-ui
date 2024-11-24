@@ -4,7 +4,9 @@ q-page.full-height.full-width.realtive-position
     .search-bar
       .centered
         q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:95vw;")
-          .row
+          .row.no-wrap
+            div
+              q-btn-toggle(v-model="viewMode.imageSize" flat :options="gridModeOptions")
             q-btn-dropdown(:label="browserStore.filter.aspectRatio ||'Aspect Ratio'" flat)
               q-list
                 q-item(clickable @click="browserStore.filter.aspectRatio = undefined" v-close-popup) Any
@@ -13,8 +15,8 @@ q-page.full-height.full-width.realtive-position
               q-list
                 q-item(clickable @click="browserStore.filter.model = undefined" v-close-popup) Any
                 q-item(clickable @click="browserStore.filter.model = model" v-for="model of imageModels" v-close-popup) {{ model }}
-            q-btn(size="sm" icon="clear" flat @click="browserStore.resetFilters()" :disable="!browserStore.filterActive")
-          .row.full-width.no-wrap
+            q-btn(size="sm" icon="clear" flat @click="browserStore.resetFilters()" v-if="browserStore.filterActive")
+          .row.full-width.no-wrap.q-mt-sm
               q-input.full-width( @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square)
               q-btn(icon="search" type="submit" flat square )
         //- q-input(v-model="browserStore.search" filled placeholder="search" style="width:50%;")
@@ -22,7 +24,7 @@ q-page.full-height.full-width.realtive-position
     //- q-spinner(size="10px" :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}")
     q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
   .q-ma-md
-    ImageMosaic(:items="browserStore.items")
+    ImageMosaic(:items="browserStore.items"  :imageSize="viewMode.imageSize" )
   //- .centered.q-ma-md
     q-btn(label="Load More" @click="browserStore.loadCreations()" :disable="browserStore.items.length < 1" :loading="browserStore.loading")
   q-scroll-observer(@scroll="handleScroll")
@@ -47,10 +49,10 @@ import { useBrowserStore } from "stores/browserStore"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { AspectRatioGrade, aspectRatios, imageModels, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
-import { throttle } from "quasar"
+import Quasar, { LocalStorage, throttle, useQuasar } from "quasar"
 import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 let interval: any = null
-
+// const gridModeOptions =
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -63,6 +65,14 @@ export default defineComponent({
       onScrollUp: null as any,
       aspectRatios,
       imageModels,
+      viewMode: {
+        gridMode: null,
+        imageSize: null as "small" | "medium" | "large" | null,
+      },
+      gridModeOptions: [
+        { icon: "grid_view", value: useQuasar().screen.lt.md ? "small" : "medium" },
+        { icon: "dashboard", value: null },
+      ],
     }
   },
   computed: {
@@ -82,11 +92,22 @@ export default defineComponent({
         // void this.browserStore.loadCreations()
       },
     },
+    "viewMode.imageSize": {
+      handler(val) {
+        console.log(val)
+        LocalStorage.set("browserImageSize", val)
+      },
+    },
   },
   unmounted() {
     if (interval) clearInterval(interval)
+    console.log(this.viewMode.imageSize)
   },
   async mounted() {
+    const savedImageSize = LocalStorage.getItem("browserImageSize")
+    console.log("savedSize", typeof savedImageSize)
+    if (savedImageSize == "null" || !savedImageSize) this.viewMode.imageSize = null
+    else this.viewMode.imageSize = useQuasar().screen.lt.md ? "small" : "medium"
     // Create a throttled scroll handler
     this.onScroll = throttle(() => {
       void this.browserStore.loadCreations()

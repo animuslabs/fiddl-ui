@@ -6,6 +6,56 @@ import type { AppRouter } from "lib/server"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 
+/**
+ * Shares an image via the native share feature, with a fallback for unsupported devices.
+ * @param title - The title of the content being shared.
+ * @param text - The text description of the content being shared.
+ * @param imageUrl - The URL of the image to be shared.
+ * @param filename - The desired filename for the shared or downloaded image.
+ */
+export async function shareImage(title: string, text: string, imageUrl: string, filename: string): Promise<void> {
+  if (navigator.share && navigator.canShare) {
+    try {
+      // Fetch the image and convert it into a File object
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const file = new File([blob], filename, { type: blob.type })
+
+      // Check if the file can be shared
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title,
+          text,
+          files: [file],
+        })
+        console.log("Image shared successfully!")
+      } else {
+        console.error("This device cannot share the provided image.")
+        fallbackShare(imageUrl, filename)
+      }
+    } catch (error) {
+      console.error("Error sharing the image:", error)
+      fallbackShare(imageUrl, filename)
+    }
+  } else {
+    console.warn("Web Share API is not supported or file sharing is unavailable on this device.")
+    fallbackShare(imageUrl, filename)
+  }
+}
+
+/**
+ * Fallback for sharing: Downloads or opens the image in a new tab.
+ * @param imageUrl - The URL of the image to be shared.
+ * @param filename - The desired filename for the downloaded image.
+ */
+function fallbackShare(imageUrl: string, filename: string): void {
+  const a = document.createElement("a")
+  a.href = imageUrl
+  a.download = filename
+  a.target = "_blank"
+  a.click()
+}
+
 export function extractImageId(url: string): string | null {
   const regex = /\/images\/([a-f0-9-]+)-/
   const match = url.match(regex)

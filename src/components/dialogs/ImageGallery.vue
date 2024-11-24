@@ -4,9 +4,32 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
     .full-width(style="height:5vh").gt-sm
     .relative-position
       //- q-spinner.absolute-center(size="100px")
-      .centered.q-mb-md.q-mt-lg.relative-position(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
-        div
-          q-btn(icon="share"  flat @click.native.stop="share()" round color="grey-5")
+      .centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+        div.relative-position
+          q-btn(
+            icon="share"
+            round
+            flat
+            color="grey-5"
+            @click.stop="shareMenu = true"
+          )
+            q-menu(
+              v-if="menu"
+              anchor="bottom left"
+              self="top left"
+              @click.native.stop="shareMenu = false"
+            )
+              q-list
+                q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="image" size="20px").q-mr-md
+                      div Share Image
+                q-item(clickable @click="share()" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="content_copy" size="20px").q-mr-md
+                      div Copy Link
         q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
         div
           q-btn(icon="download"  flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
@@ -81,7 +104,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
 <script lang="ts">
 import { log } from "console"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
-import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort, updateQueryParams } from "lib/util"
+import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort, shareImage, updateQueryParams } from "lib/util"
 import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType } from "vue"
 import DownloadImage from "./DownloadImage.vue"
@@ -113,6 +136,7 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      shareMenu: false,
       localImageIds: [] as string[],
       avatarImg,
       imageDeleted: false,
@@ -322,6 +346,9 @@ export default defineComponent({
       // downloadImage(currentImage, "fiddl.art-" + extractImageId(currentImage) + ".webp")
       // Dialog.create({ component: DownloadImage })
     },
+    async mobileShare() {
+      await shareImage("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentImageUrl, this.currentImageId + "-fiddl-art.webp")
+    },
     async share() {
       let params: any = { requestShortId: "" }
       let query: any = { index: this.currentIndex }
@@ -434,7 +461,7 @@ export default defineComponent({
     },
     hide() {
       const dialog = this.$refs.dialog as QDialog
-      if (this.imageDeleted) window.location.reload()
+      // if (this.imageDeleted) window.location.reload()
       dialog.hide()
     },
 
