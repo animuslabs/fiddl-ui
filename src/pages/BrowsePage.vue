@@ -14,9 +14,9 @@ q-page.full-height.full-width.realtive-position
                 q-item(clickable @click="browserStore.filter.model = undefined" v-close-popup) Any
                 q-item(clickable @click="browserStore.filter.model = model" v-for="model of imageModels" v-close-popup) {{ model }}
             q-btn(size="sm" icon="clear" flat @click="browserStore.resetFilters()" :disable="!browserStore.filterActive")
-          .row
-            q-input( @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" style="width:80%;")
-            q-btn(icon="search" type="submit" flat )
+          .row.full-width.no-wrap
+              q-input.full-width( @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square)
+              q-btn(icon="search" type="submit" flat square )
         //- q-input(v-model="browserStore.search" filled placeholder="search" style="width:50%;")
   .centered
     //- q-spinner(size="10px" :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}")
