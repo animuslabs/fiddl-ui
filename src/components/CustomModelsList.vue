@@ -1,6 +1,6 @@
 <template lang="pug">
-  QList(v-if="models?.length").full-width
-    QItem(v-for="model in models" :key="model.id")
+  q-list(v-if="models?.length").full-width
+    q-item(v-for="model in models" :key="model.id")
       .row.q-gutter-xs.items-center
         .col-auto
           .row
@@ -9,22 +9,19 @@
             q-btn(icon="edit" flat color="white" @click="editModelName(model)" round)
           .row
             q-btn(:icon="privacyIcon(model)" flat color="white" @click="toggleModelPrivacy(model)" round)
-        .col.cursor-pointer(@click="handleModelClick(model)" v-if="$q.screen.width > 500")
+        .col.cursor-pointer(@click.native="handleModelClick(model)" v-if="$q.screen.width > 500")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ model.name }}
           .row.q-gutter-md.full-width
             .col-auto(style="width:100px;")
-              QItemLabel
-                p Status
-                h4 {{ model.status }}
+              p Status
+              h4 {{ model.status }}
             .col-auto(style="width:200px;")
-              QItemLabel
-                p Created
-                h5 {{ timeSince(new Date(model.createdAt)) }}
+              p Created
+              h5 {{ timeSince(new Date(model.createdAt)) }}
             .col-auto(style="width:120px;")
-              QItemLabel
-                p Preset
-                h4(style="text-transform:capitalize") {{ model.trainingPreset }}
+              p Preset
+              h4(style="text-transform:capitalize") {{ model.trainingPreset }}
           .row.q-ml-md
             .col-auto(v-if="model.imageRequests.length")
               .full-width.q-mt-md
@@ -34,7 +31,7 @@
                   .relative-position(style="width:60px; height:90px;")
                     img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:100px; height:100px; object-fit:cover; border-radius:25px; position:absolute; bottom:-5px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
               .lt-md.full-width.q-mt-md
-        .col.cursor-pointer(v-else)
+        .col.cursor-pointer(@click.native="handleModelClick(model)" v-else)
           .row.q-ml-sm
             .col-auto
               h4(style="width:250px; overflow:hidden").ellipsis {{ model.name }}
@@ -42,13 +39,11 @@
                 small Status
                 p {{ model.status }}
             .col-auto.q-mr-md
-              QItemLabel
-                small Created
-                p {{ timeSince(new Date(model.createdAt)) }}
+              small Created
+              p {{ timeSince(new Date(model.createdAt)) }}
             .col-auto
-              QItemLabel
-                small Preset
-                h6(style="text-transform:capitalize") {{ model.trainingPreset }}
+              small Preset
+              h6(style="text-transform:capitalize") {{ model.trainingPreset }}
           .row
             .col-auto(v-if="model.imageRequests.length").q-mt-sm
               .lt-md.full-width
@@ -58,7 +53,6 @@
                   .relative-position(style="width:30px; height:20px;")
                     img(:src="img((imageRequest.images[0]?.id||''),'md')" style="width:50px; height:50px; object-fit:cover; border-radius:5px; position:absolute; bottom:-25px; box-shadow: 0px 1px 15px rgba(0,0,0,.5) !important")
               .lt-md.full-width.q-mt-md
-
         .full-width
           q-separator(color="grey-9" spaced="20px")
 

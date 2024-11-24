@@ -11,7 +11,7 @@ div.q-mt-md
       color="primary"
     )
   .centered.q-ma-md
-    CustomModelsList(style="width:600px; max-width:90vw;" @modelClicked="handleModelClicked")
+    CustomModelsList(@modelClicked="handleModelClicked")
   .centered.q-mb-xl
     q-btn(
       label="Create Face Forge"
