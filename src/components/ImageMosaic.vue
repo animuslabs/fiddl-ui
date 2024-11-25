@@ -52,7 +52,8 @@ export default {
   },
   computed: {
     containerClass() {
-      return this.gridMode ? "row q-gutter-md" : "container"
+      return this.imageSize ? "row q-gutter-lg justify-center" : "container"
+      // return "container"
     },
     computedItems() {
       return this.items.map((item) => {
@@ -69,12 +70,17 @@ export default {
   },
   methods: {
     getItemClass(item: BrowserItem) {
-      if (this.gridMode) {
-        return "col-6 col-sm-4 col-md-3" // Adjust column sizes as needed
+      if (this.imageSize) {
+        if (this.imageSize === "small") {
+          return "col-3" // Adjust for 3 columns
+        }
+        return "col-6 col-sm-2 col-md-2" // Default for grid mode
       } else {
+        console.log("gridmode not enabled", item.cssClass)
         return item.cssClass
       }
     },
+
     getImageSize(item: BrowserItem) {
       if (this.imageSize) return "md"
       // return this.imageSize === "small" ? "sm" : this.imageSize === "medium" ? "md" : "lg"
@@ -101,15 +107,27 @@ export default {
 <style scoped>
 .container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  grid-auto-rows: 100px;
+  /* grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); */
+  /* grid-auto-rows: 120px; */
   gap: 16px;
   grid-auto-flow: dense;
 }
 
 @media (max-width: 600px) {
   .container {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 columns for smaller screens */
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .container {
+    grid-template-columns: repeat(3, 1fr) !important; /* 3 columns for medium screens */
+  }
+}
+
+@media (min-width: 901px) {
+  .container {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important; /* Default for larger screens */
   }
 }
 
