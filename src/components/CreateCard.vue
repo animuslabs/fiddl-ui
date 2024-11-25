@@ -112,6 +112,8 @@ import { LocalStorage, Notify } from "quasar"
 import { toObject } from "lib/util"
 import CustomModelsList from "./CustomModelsList.vue"
 import FaceForgeTab from "./FaceForgeTab.vue"
+import { useCreations } from "src/stores/creationsStore"
+import { ImageModel } from "lib/imageModels"
 
 export default defineComponent({
   components: { Turnstile, CustomModelsList },
@@ -125,6 +127,7 @@ export default defineComponent({
   emits: ["created"],
   data() {
     return {
+      creationsStore: useCreations(),
       showModelPicker: false,
       createStore: useCreateCardStore(),
       showCreateFaceForge: false,
@@ -168,7 +171,7 @@ export default defineComponent({
       immediate: true,
     },
     "createStore.req.model": {
-      handler(val: string) {
+      handler(val: ImageModel) {
         console.log("model changed", val, this.createStore.req)
         if (val == "custom" && !this.createStore.req.customModelId) {
           console.log(this.createStore.req.customModelId)
@@ -182,6 +185,11 @@ export default defineComponent({
             if (!this.showModelPicker) this.showModelPicker = true
           }
         }
+        if (this.creationsStore.dynamicModel) {
+          this.creationsStore.filter.model = val
+          this.creationsStore.filter.customModelId = this.createStore.req.customModelId
+          this.creationsStore.searchCreations()
+        }
       },
       immediate: false,
     },
@@ -194,7 +202,6 @@ export default defineComponent({
         if (!validRatios.includes(val.aspectRatio)) {
           val.aspectRatio = validRatios[0] as any
         }
-        LocalStorage.set("req", val)
 
         if (val.model != "custom") {
           val.customModelName = undefined
@@ -205,9 +212,10 @@ export default defineComponent({
           //   if (!this.showModelPicker) this.showModelPicker = true
           // }
         }
+        LocalStorage.set("req", val)
       },
       deep: true,
-      immediate: true,
+      immediate: false,
     },
   },
   mounted() {
@@ -220,6 +228,7 @@ export default defineComponent({
       this.showModelPicker = false
       this.createStore.req.customModelId = customModel.id
       this.createStore.req.customModelName = customModel.name
+      LocalStorage.set("req", this.createStore.req)
     },
     pickModel() {
       this.createStore.pickModel()

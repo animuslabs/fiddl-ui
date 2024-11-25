@@ -46,7 +46,6 @@ export default defineComponent({
   watch: {
     "$route.query": {
       async handler(val) {
-        console.log(val)
         const targetImageId = this.$route.query?.imageId
         const encodedRequestData = this.$route.query?.requestData
         if (targetImageId && typeof targetImageId == "string") {
@@ -100,13 +99,13 @@ export default defineComponent({
       },
       immediate: true,
     },
-    "$userAuth.loggedIn": {
-      immediate: true,
-      handler(val) {
-        if (val) void this.loadCreations()
-        else this.createSession.reset()
-      },
-    },
+    // "$userAuth.loggedIn": {
+    //   immediate: true,
+    //   handler(val) {
+    //     if (val) void this.loadCreations()
+    //     else this.createSession.reset()
+    //   },
+    // },
   },
   mounted() {
     console.log()

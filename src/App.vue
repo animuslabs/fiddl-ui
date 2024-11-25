@@ -32,7 +32,7 @@ export default defineComponent({
     "$route.query": {
       immediate: false,
       handler(newQuery) {
-        console.log(newQuery)
+        // console.log(newQuery)
         const referredBy = this.$route.query?.referredBy as string | undefined
         // console.log(this.$route.query)
         if (!referredBy) return

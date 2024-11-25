@@ -20,27 +20,13 @@
             q-input(  style="min-width:200px;" @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
           .col-auto
             q-btn(icon="search" type="submit" flat square )
-      .row.full-width.q-pb-sm.q-pt-sm.search-bar2.no-wrap( v-if="$q.screen.width < 600 && expandSearch" style="  backdrop-filter: blur(30px); background-color: rgba(0, 0, 0, 0.1);")
+      .row.full-width.q-pb-sm.q-pt-sm.no-wrap( v-if="$q.screen.width < 600 && expandSearch")
         .col-grow
           q-input(@clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
         .col-auto
           q-btn(icon="search" type="submit" flat square )
           q-btn(icon="keyboard_arrow_up" @click="exitTextSearch()" flat square v-if="expandSearch" size="sm" round )
 </template>
-<style scoped>
-.search-bar {
-  width: 100vw;
-  backdrop-filter: blur(30px);
-  background-color: rgba(0, 0, 0, 0.1);
-  position: fixed;
-  z-index: 100;
-  height: auto;
-}
-.search-bar2 {
-  backdrop-filter: blur(30px);
-  background-color: rgba(0, 0, 0, 0.1);
-}
-</style>
 
 <script lang="ts">
 import { defineComponent } from "vue"

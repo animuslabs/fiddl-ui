@@ -12,12 +12,18 @@
           )
       .col-grow.q-mr-sm
         q-scroll-area.full-width(style="max-width:90vw; height:calc(100vh - 60px);")
-          .centered.q-ma-md
+          .full-width.q-pa-md.relative-position
+            .full-width(style="height:55px;")
+              q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
+                .row.q-gutter-md.items-center
+                  q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
+                  small Model Filter:
+                  q-btn-toggle(v-model="creationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
+
             ImageRequestCard.full-width(
               v-for="creation in creationsStore.creations"
               :creation="creation"
-              :key="creation.id"
-            )
+              :key="creation.id" :ref="creation.id")
           .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
             q-btn(
               label="Load More"
@@ -67,7 +73,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue"
+import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "components/ImageRequestCard.vue"
 import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
@@ -75,6 +81,7 @@ import { Dialog } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateCardStore } from "src/stores/createCardStore"
+import { toObject } from "lib/util"
 
 export default defineComponent({
   name: "PromptTab",
@@ -94,9 +101,43 @@ export default defineComponent({
       creationsStore: useCreations(),
       createStore: useCreateCardStore(),
       createMode: false,
+      gridMode: false,
+      gridModeOptions: [
+        { icon: "grid_view", value: true },
+        { icon: "list", value: false },
+      ],
     }
   },
+  computed: {
+    dynamicModelOptions() {
+      let modelName = this.createStore.req.model
+      if (modelName == "custom") modelName = "custom: " + this.createStore.req.customModelName
+      return [
+        { label: "All", value: false },
+        { label: modelName, value: true },
+      ]
+    },
+  },
   watch: {
+    "creationsStore.dynamicModel": {
+      handler(val: boolean) {
+        if (val) {
+          this.creationsStore.filter.model = this.createStore.req.model
+          this.creationsStore.filter.customModelId = this.createStore.req.customModelId
+        } else {
+          this.creationsStore.filter.model = undefined
+          this.creationsStore.filter.customModelId = undefined
+        }
+        this.creationsStore.searchCreations()
+      },
+      immediate: true,
+    },
+    gridMode(val) {
+      for (const creation of this.creationsStore.creations) {
+        const card = this.$refs[creation.id] as InstanceType<typeof ImageRequestCard>[] | undefined
+        if (card && card[0]) card[0].minimized.value = val
+      }
+    },
     customModel: {
       immediate: true,
       handler(val) {
@@ -106,7 +147,7 @@ export default defineComponent({
       },
     },
     "$userAuth.loggedIn": {
-      immediate: true,
+      immediate: false,
       handler(val) {
         if (val) void this.creationsStore.loadCreations()
         else this.creationsStore.reset()

@@ -18,9 +18,12 @@ export const useCreations = defineStore("creationsStore", {
     activeUserId: null as string | null,
     customModelId: null as string | null,
     search: null as string | null,
+    loadingCreations: false,
+    dynamicModel: true,
     filter: {
       aspectRatio: undefined as AspectRatio | undefined,
       model: undefined as ImageModel | undefined,
+      customModelId: undefined as string | undefined,
     },
   }),
   getters: {
@@ -30,9 +33,11 @@ export const useCreations = defineStore("creationsStore", {
   },
   actions: {
     resetFilters() {
+      this.search = null
       this.filter = {
         aspectRatio: undefined,
         model: undefined,
+        customModelId: undefined,
       }
     },
     searchCreations() {
@@ -64,6 +69,8 @@ export const useCreations = defineStore("creationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
       this.customModelId = null
+      this.resetFilters()
+
       void this.loadCreations()
     },
     async setCustomModelId(customModelId: string) {
@@ -80,28 +87,39 @@ export const useCreations = defineStore("creationsStore", {
     async loadCreations(userId?: string) {
       if (!userId) userId = useUserAuth().userId || undefined
       if (!userId) return
-      this.activeUserId = userId
-      const lastItem = this.creations[this.creations.length - 1]
-      console.log("lastItem", lastItem)
-
-      const creations = await api.creations.createRequests.query({
-        userId,
-        includeMetadata: true,
-        order: "desc",
-        endDateTime: lastItem?.createdAt || undefined,
-        limit: 100,
-        customModelId: this.customModelId || undefined,
-        promptIncludes: this.search?.length ? this.search : undefined,
-        aspectRatio: this.filter.aspectRatio || undefined,
-        model: this.filter.model || undefined,
-      })
-      console.log("creations", creations)
-
-      for (const creation of creations) {
-        this.addItem({
-          ...creation,
-          createdAt: new Date(creation.createdAt),
+      if (this.loadingCreations) {
+        console.log("loadingCreations already in progress")
+        return
+      }
+      this.loadingCreations = true
+      try {
+        this.activeUserId = userId
+        const lastItem = this.creations[this.creations.length - 1]
+        console.log("lastItem", lastItem)
+        console.log("customModelId", this.customModelId || this.filter.customModelId)
+        const creations = await api.creations.createRequests.query({
+          userId,
+          includeMetadata: true,
+          order: "desc",
+          endDateTime: lastItem?.createdAt || undefined,
+          limit: 100,
+          customModelId: this.filter.model == "custom" ? this.customModelId || this.filter.customModelId || undefined : undefined,
+          promptIncludes: this.search?.length ? this.search : undefined,
+          aspectRatio: this.filter.aspectRatio || undefined,
+          model: this.filter.model || undefined,
         })
+        console.log("creations", creations)
+
+        for (const creation of creations) {
+          this.addItem({
+            ...creation,
+            createdAt: new Date(creation.createdAt),
+          })
+        }
+        this.loadingCreations = false
+      } catch (err: any) {
+        this.loadingCreations = false
+        throw err
       }
     },
     async loadPurchases(userId?: string) {

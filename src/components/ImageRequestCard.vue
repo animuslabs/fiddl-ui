@@ -2,7 +2,7 @@
 q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   //- div custom model id: {{ creation.customModelId }}
   //- div custom model name: {{ creation.customModelName }}
-  .row.full-width.q-pt-md.q-pb-md
+  .centered.full-width.q-pt-md
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent No images in this creation
@@ -10,54 +10,59 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
     .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:100px; ").lt-md.q-pa-sm
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
-  q-separator(color="grey-9" spaced="20px")
-  .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
-    .col-grow(style="min-width:150px;")
-      .row(style="max-width:600px;")
-        .col-auto
-          .row
-            q-btn(icon="edit" flat round @click="setRequest()" size="sm")
-              q-tooltip
-                p Create using the creation details
-          .row
-            q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
-              q-tooltip
-                p Go to creation
-          .row
-            q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
-              q-tooltip
-                p Delete
-        .col.q-ml-md.relative-position
-          small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
-          p.text-italic.text-positive(v-if="!creation") Purchase any image to unlock the prompt
-          .absolute-bottom-right
-            q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
-              q-tooltip
-                p Copy Prompt
-    .col-grow.gt-sm
-    .col-auto
-      .row.q-gutter-md.full-width
-        .col-auto
-          small Created: #[p {{ printCreated }}]
-          q-tooltip
-            p {{ creation.createdAt.toString() }}
-        .col-auto(v-if="!creation.customModelName")
-          small Model: #[p {{ creation.model }}]
-        .col-auto(v-else)
-          small Custom Model: #[p {{ creation.customModelName }}]
-        .col-auto
-          small Aspect Ratio: #[p {{ creation.aspectRatio }}]
-        //- .col-auto
-        //-   small Quantity: #[p {{ creation.quantity }}]
-        .col-grow
-        .col-auto(v-if="creation.creatorId == $userAuth.userId")
-          p {{ printPrivacy }}
-          q-toggle(v-model="creation.public" @click="updatePrivacy()")
+  div(v-if="!minimized.value")
+    q-separator(color="grey-9" spaced="20px")
+    .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
+      .col-grow(style="min-width:150px;")
+        .row(style="max-width:600px;")
+          .col-auto
+            .row
+              q-btn(icon="edit" flat round @click="setRequest()" size="sm")
+                q-tooltip
+                  p Create using the creation details
+            .row
+              q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
+                q-tooltip
+                  p Go to creation
+            .row
+              q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
+                q-tooltip
+                  p Delete
+          .col.q-ml-md.relative-position
+            small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
+            p.text-italic.text-positive(v-if="!creation") Purchase any image to unlock the prompt
+            .absolute-bottom-right
+              q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
+                q-tooltip
+                  p Copy Prompt
+      .col-grow.gt-sm
+      .col-auto
+        .row.q-gutter-md.full-width
+          .col-auto
+            small Created: #[p {{ printCreated }}]
+            q-tooltip
+              p {{ creation.createdAt.toString() }}
+          .col-auto(v-if="!creation.customModelName")
+            small Model: #[p {{ creation.model }}]
+          .col-auto(v-else)
+            small Custom Model: #[p {{ creation.customModelName }}]
+          .col-auto
+            small Aspect Ratio: #[p {{ creation.aspectRatio }}]
+          //- .col-auto
+          //-   small Quantity: #[p {{ creation.quantity }}]
+          .col-grow
+          .col-auto(v-if="creation.creatorId == $userAuth.userId")
+            p {{ printPrivacy }}
+            q-toggle(v-model="creation.public" @click="updatePrivacy()")
+  div(v-else).relative-position
+    div.full-width(style="position:absolute; bottom:4px;")
+      .centered(style="height:-30px;")
+        q-btn(icon="keyboard_arrow_down" flat @click="toggleMinimized()" color="grey" size="sm")
 
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
+import { defineComponent, ref, Ref } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { catchErr, longIdToShort, timeSince, toObject } from "lib/util"
 import { PropType } from "vue"
@@ -76,6 +81,11 @@ export default defineComponent({
     ImageGallery,
   },
   props: {
+    minimized: {
+      type: Object as PropType<Ref<boolean>>,
+      required: false,
+      default: () => ref(false),
+    },
     creation: {
       type: Object as PropType<CreateImageRequestData>,
       required: true,
@@ -104,6 +114,11 @@ export default defineComponent({
     },
   },
   methods: {
+    toggleMinimized() {
+      console.log("toggle minimized", this.minimized.value)
+      this.minimized.value = !this.minimized.value
+      console.log("toggle minimized", this.minimized.value)
+    },
     copyPrompt() {
       if (!this.creation.prompt) return
       void copyToClipboard(this.creation.prompt)

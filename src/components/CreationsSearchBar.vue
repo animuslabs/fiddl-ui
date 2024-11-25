@@ -1,7 +1,7 @@
 <template lang="pug">
 .search-bar
   .centered
-    q-form(@submit="creationsStore.searchCreations()" inline style="width:500px; max-width:95vw;")
+    q-form(@submit="creationsStore.searchCreations()" inline style="width:500px; max-width:100vw;")
       .row.no-wrap.items-center
         div
           q-btn-toggle(v-model="gridMode" flat :options="gridModeOptions")
@@ -27,21 +27,6 @@
           q-btn(icon="search" type="submit" flat square )
           q-btn(icon="keyboard_arrow_up" @click="exitTextSearch()" flat square v-if="expandSearch" size="sm" round )
 </template>
-<style scoped>
-.search-bar {
-  position: relative;
-  width: 100vw;
-  backdrop-filter: blur(30px);
-  background-color: rgba(0, 0, 0, 0.1);
-  position: fixed;
-  z-index: 100;
-  height: auto;
-}
-.search-bar2 {
-  backdrop-filter: blur(30px);
-  background-color: rgba(0, 0, 0, 0.1);
-}
-</style>
 
 <script lang="ts">
 import { defineComponent } from "vue"
