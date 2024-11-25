@@ -29,7 +29,6 @@
 </template>
 <style scoped>
 .search-bar {
-  position: relative;
   width: 100vw;
   backdrop-filter: blur(30px);
   background-color: rgba(0, 0, 0, 0.1);
