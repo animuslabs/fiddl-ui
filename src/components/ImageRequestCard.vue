@@ -54,10 +54,10 @@ q-card(style="overflow:auto").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
           .col-auto(v-if="creation.creatorId == $userAuth.userId")
             p {{ printPrivacy }}
             q-toggle(v-model="creation.public" @click="updatePrivacy()")
-  div(v-else).relative-position
-    div.full-width(style="position:absolute; bottom:4px;")
-      .centered(style="height:-30px;")
-        q-btn(icon="keyboard_arrow_down" flat @click="toggleMinimized()" color="grey" size="sm")
+  div(v-else).relative-position(style="height:30px;")
+    div.full-width(style="position:absolute; bottom:-6px;")
+      .centered(style="height:30px;")
+        q-btn(icon="keyboard_arrow_down" @click="toggleMinimized()" color="white" flat size="md")
 
 </template>
 

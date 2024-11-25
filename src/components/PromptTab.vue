@@ -17,7 +17,7 @@
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
                 .row.q-gutter-md.items-center
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
-                  small Model Filter:
+                  //- small Model Filter:
                   q-btn-toggle(v-model="creationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
 
             ImageRequestCard.full-width(
@@ -113,7 +113,7 @@ export default defineComponent({
       let modelName = this.createStore.req.model
       if (modelName == "custom") modelName = "custom: " + this.createStore.req.customModelName
       return [
-        { label: "All", value: false },
+        { label: "All Models", value: false },
         { label: modelName, value: true },
       ]
     },
