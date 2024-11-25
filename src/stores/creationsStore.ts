@@ -69,7 +69,7 @@ export const useCreations = defineStore("creationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
       this.customModelId = null
-      this.resetFilters()
+      // this.resetFilters()
 
       void this.loadCreations()
     },

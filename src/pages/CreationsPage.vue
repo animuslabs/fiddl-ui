@@ -94,7 +94,7 @@ export default defineComponent({
 
   mounted() {
     this.creationsStore.reset()
-    void this.load()
+    // void this.load()
   },
   methods: {
     showDetails(creation: CreateImageRequestData) {
