@@ -3,7 +3,7 @@ q-page.full-height.full-width
   //- .centered.q-mt-sm
   //-   h4 Creations
   div
-    .centered.q-pb-md
+    .centered
       q-tabs(v-model="tab" class="full-width"  active-color="white" indicator-color="secondary" inline-label active-class="accent" )
         q-tab(v-for="tab in tabs" :key="tab.name" :name="tab.name"  )
           .row.items-center.full-width
@@ -12,11 +12,21 @@ q-page.full-height.full-width
             .q-ml-sm.gt-sm {{ tab.label }}
 
     //- q-separator(color="primary")
+  //- .centered.relative-position(style="height:40px;")
+  .relative-position
+    CreationsSearchBar(v-if="tab === 'creations'" @setGridMode="gridMode = $event")
   .centered
-    q-scroll-area(style="width:1800px; height:calc(100vh - 135px); max-width:95vw; overflow:auto")
+    q-scroll-area(style="width:1800px; height:calc(100vh - 155px); max-width:95vw; overflow:auto")
+      .full-width(style='height:60px;')
       .centered(v-if="tab === 'creations'")
-        div(v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
-          ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted")
+        div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
+          ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted" )
+        .centered.q-gutter-md(v-else v-for="creation in creationsStore.creations"  :key="creation.id+'1'")
+          //- div(v-for="imageId in creation.imageIds" :key="imageId")
+          //-   CreatedImageCard(:imageId="imageId" style="width:300px; height:300px;" @click="showDetails(creation)").cursor-pointer
+          CreatedImageCard.q-ma-md.relative-position(:imageId="creation.imageIds[0]|| ''" style="width:300px; height:300px;" @click="showDetails(creation)").cursor-pointer
+            .absolute-bottom.z-top
+              div {{ creation.imageIds.length }}
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id")
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
@@ -25,16 +35,23 @@ q-page.full-height.full-width
           CreatedImageCard(:imageId="favoriteImage.id" style="width:300px; height:300px;" @click="showGallery(favoriteImage.id)").cursor-pointer
       .centered.q-ma-md
         q-btn(label="Load More" @click="load()")
+  q-dialog(v-model="showRequest" maximized)
+    q-card
+      ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="editOnCreatePage" @deleted="handleDeleted" style="max-height:80vh;")
+      .centered.q-ma-md
+        q-btn(label="Back" @click="showRequest = false" color="accent" flat)
+
 
 
 </template>
 
 <script lang="ts">
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
 import { extractImageId, toObject } from "lib/util"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
+import CreationsSearchBar from "src/components/CreationsSearchBar.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
 import { useCreations } from "src/stores/creationsStore"
@@ -44,11 +61,15 @@ export default defineComponent({
   components: {
     ImageRequestCard,
     CreatedImageCard,
+    CreationsSearchBar,
   },
   data() {
     return {
       creationsStore: useCreations(),
       tab: "creations",
+      gridMode: false,
+      showRequest: false,
+      selectedRequest: null as CreateImageRequestData | null,
       tabs: [
         { label: "My Creations", name: "creations", icon: "sym_o_create" },
         { label: "unlocked Images", name: "purchased", icon: "sym_o_lock_open" },
@@ -76,6 +97,11 @@ export default defineComponent({
     void this.load()
   },
   methods: {
+    showDetails(creation: CreateImageRequestData) {
+      console.log("showDetails", creation)
+      this.selectedRequest = creation
+      this.showRequest = true
+    },
     handleDeleted(requestId: string) {
       this.creationsStore.creations = this.creationsStore.creations.filter((el) => el.id !== requestId)
     },

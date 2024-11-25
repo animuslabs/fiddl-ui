@@ -1,10 +1,11 @@
 <template lang="pug">
 q-page.full-height.full-width.realtive-position
-  .centered.relative-position(style="height:30px;")
+  .centered.relative-position
     SearchBar(@setImageSize="imageSize = $event" fixed )
   .centered
     q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
   .q-ma-md
+    //- .full-width(style="height:40px;")
     ImageMosaic(:items="browserStore.items"  :imageSize="imageSize" )
   q-scroll-observer(@scroll="handleScroll")
 
@@ -18,7 +19,7 @@ import { AspectRatioGrade, aspectRatios, imageModels, ratioRatings } from "lib/i
 import ImageMosaic from "components/ImageMosaic.vue"
 import Quasar, { LocalStorage, throttle, useQuasar } from "quasar"
 import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
-import SearchBar from "src/components/SearchBar.vue"
+import SearchBar from "src/components/BrowserSearchBar.vue"
 let interval: any = null
 // const gridModeOptions =
 export default defineComponent({

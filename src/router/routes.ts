@@ -32,21 +32,21 @@ routeData.forEach((el: any) =>
     component: () => import(`../pages/${el[2] as string}.vue`),
   }),
 )
-setTimeout(() => {
-  //@ts-ignore
-  console.log("start routes preload", routes[0]?.children.length)
-  const allRoutes = routes[0]?.children
-  if (!allRoutes) return
-  allRoutes.forEach((route) => {
-    const component = route.component as any
-    if (typeof component === "function") {
-      component().catch((err: any) => {
-        console.warn(`Failed to preload route: ${route.path}`, err)
-      })
-    } else {
-      console.warn(`Failed to preload route: ${route.path}`)
-    }
-  })
-}, 5000)
+// setTimeout(() => {
+//   //@ts-ignore
+//   console.log("start routes preload", routes[0]?.children.length)
+//   const allRoutes = routes[0]?.children
+//   if (!allRoutes) return
+//   allRoutes.forEach((route) => {
+//     const component = route.component as any
+//     if (typeof component === "function") {
+//       component().catch((err: any) => {
+//         console.warn(`Failed to preload route: ${route.path}`, err)
+//       })
+//     } else {
+//       console.warn(`Failed to preload route: ${route.path}`)
+//     }
+//   })
+// }, 5000)
 
 export default routes

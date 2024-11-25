@@ -1,7 +1,7 @@
 <template lang="pug">
 .search-bar
   .centered
-    q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:95vw;")
+    q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:100vw;")
       .row.no-wrap.items-center
         div
           q-btn-toggle(v-model="viewMode.imageSize" flat :options="gridModeOptions")
@@ -20,22 +20,26 @@
             q-input(  style="min-width:200px;" @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
           .col-auto
             q-btn(icon="search" type="submit" flat square )
-      .row.full-width.q-mb-sm.q-mt-sm( v-if="$q.screen.width < 600 && expandSearch")
+      .row.full-width.q-pb-sm.q-pt-sm.search-bar2( v-if="$q.screen.width < 600 && expandSearch" style="  backdrop-filter: blur(30px); background-color: rgba(0, 0, 0, 0.1);")
         .col-grow
           q-input( style="min-width:200px;" @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
         .col-auto
           q-btn(icon="search" type="submit" flat square )
           q-btn(icon="keyboard_arrow_up" @click="expandSearch = false" flat square v-if="expandSearch" size="sm" round )
 </template>
-<style>
+<style scoped>
 .search-bar {
   position: relative;
   width: 100vw;
   backdrop-filter: blur(30px);
-  /* background-color: rbga(255, 255, 255, 1); */
   background-color: rgba(0, 0, 0, 0.1);
   position: fixed;
   z-index: 100;
+  height: auto;
+}
+.search-bar2 {
+  backdrop-filter: blur(30px);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 </style>
 

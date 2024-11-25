@@ -7,6 +7,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import { catchErr, toObject } from "lib/util"
 import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"
+import type { AspectRatio, ImageModel } from "lib/imageModels"
 
 export const useCreations = defineStore("creationsStore", {
   state: () => ({
@@ -16,8 +17,28 @@ export const useCreations = defineStore("creationsStore", {
     favoritesCollectionId: null as string | null,
     activeUserId: null as string | null,
     customModelId: null as string | null,
+    search: null as string | null,
+    filter: {
+      aspectRatio: undefined as AspectRatio | undefined,
+      model: undefined as ImageModel | undefined,
+    },
   }),
+  getters: {
+    filterActive(): boolean {
+      return !!this.filter.aspectRatio || !!this.filter.model
+    },
+  },
   actions: {
+    resetFilters() {
+      this.filter = {
+        aspectRatio: undefined,
+        model: undefined,
+      }
+    },
+    searchCreations() {
+      this.creations = []
+      void this.loadCreations()
+    },
     deleteItem(id: string) {
       const index = this.creations.findIndex((i) => i.id === id)
       if (index < 0) return
@@ -35,6 +56,7 @@ export const useCreations = defineStore("creationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
       this.customModelId = null
+      void this.loadCreations()
     },
     async setCustomModelId(customModelId: string) {
       if (customModelId === this.customModelId) return
@@ -59,8 +81,11 @@ export const useCreations = defineStore("creationsStore", {
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt || undefined,
-        limit: 25,
+        limit: 100,
         customModelId: this.customModelId || undefined,
+        promptIncludes: this.search?.length ? this.search : undefined,
+        aspectRatio: this.filter.aspectRatio || undefined,
+        model: this.filter.model || undefined,
       })
       console.log("creations", creations)
 
@@ -82,7 +107,7 @@ export const useCreations = defineStore("creationsStore", {
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt ? new Date(lastItem.createdAt) : undefined,
-        limit: 25,
+        limit: 100,
       })
       console.log("purchases", purchases)
       for (const purchase of purchases) {
