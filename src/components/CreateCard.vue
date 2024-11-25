@@ -224,10 +224,14 @@ export default defineComponent({
     if (savedReq) this.createStore.setReq(savedReq as any)
   },
   methods: {
-    setCustomModel(customModel: CustomModel) {
+    async setCustomModel(customModel: CustomModel) {
       this.showModelPicker = false
       this.createStore.req.customModelId = customModel.id
       this.createStore.req.customModelName = customModel.name
+      await this.creationsStore.setCustomModelId(customModel.id)
+      this.creationsStore.filter.model = "custom"
+      this.creationsStore.filter.customModelId = customModel.id
+      // this.creationsStore.searchCreations()
       LocalStorage.set("req", this.createStore.req)
     },
     pickModel() {
