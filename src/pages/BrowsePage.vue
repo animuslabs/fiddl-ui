@@ -2,10 +2,10 @@
 q-page.full-height.full-width.realtive-position
   .centered.relative-position
     SearchBar(@setImageSize="imageSize = $event" fixed )
-  .centered
-    q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
   .q-ma-md
-    //- .full-width(style="height:40px;")
+    .full-width(style="height:40px;")
+      .centered
+        q-linear-progress(indeterminate :style="{visibility: browserStore.loading ? 'visible' : 'hidden'}").q-mr-md.q-ml-md
     ImageMosaic(:items="browserStore.items"  :imageSize="imageSize" )
   q-scroll-observer(@scroll="handleScroll")
 
