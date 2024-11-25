@@ -37,7 +37,7 @@ q-page.full-height.full-width
         q-btn(label="Load More" @click="load()")
   q-dialog(v-model="showRequest" maximized)
     q-card
-      ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="editOnCreatePage" @deleted="handleDeleted" style="max-height:80vh;")
+      ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="editOnCreatePage" @deleted="handleDeleted" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
 
@@ -103,7 +103,12 @@ export default defineComponent({
       this.showRequest = true
     },
     handleDeleted(requestId: string) {
+      console.log("handleDeleted", requestId)
       this.creationsStore.creations = this.creationsStore.creations.filter((el) => el.id !== requestId)
+      if (this.showRequest && this.selectedRequest?.id === requestId) {
+        this.showRequest = false
+        this.selectedRequest = null
+      }
     },
     load() {
       if (this.tab === "creations") {

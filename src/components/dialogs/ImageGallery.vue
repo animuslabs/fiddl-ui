@@ -112,6 +112,7 @@ import { avatarImg, img } from "lib/netlifyImg"
 import EditImage from "./EditImage.vue"
 import LikeImage from "./LikeImage.vue"
 import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
+import { useCreations } from "src/stores/creationsStore"
 export default defineComponent({
   props: {
     imageIds: {
@@ -235,7 +236,7 @@ export default defineComponent({
           label: "Cancel",
           color: "primary",
         },
-      }).onOk(() => {
+      }).onOk(async () => {
         this.loading = true
         this.imageDeleted = true
         void this.$api.creations.deleteImage.mutate(this.currentImageId).catch(catchErr)
@@ -245,6 +246,9 @@ export default defineComponent({
         setTimeout(() => {
           this.loading = false
         }, 500)
+        await this.loadRequestId()
+        if (!this.loadedRequestId) return
+        useCreations().deleteImage(this.currentImageId, this.loadedRequestId)
       })
     },
     async loadRequestId() {

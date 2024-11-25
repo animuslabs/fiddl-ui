@@ -134,7 +134,7 @@ export default defineComponent({
               message: "Creation Deleted",
               color: "negative",
             })
-            useCreations().deleteItem(this.creation.id)
+            useCreations().deleteCreation(this.creation.id)
             if (this.$route.name == "imageRequest") void this.$router.push({ name: "browse" })
           })
       })

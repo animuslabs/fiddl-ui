@@ -39,10 +39,18 @@ export const useCreations = defineStore("creationsStore", {
       this.creations = []
       void this.loadCreations()
     },
-    deleteItem(id: string) {
-      const index = this.creations.findIndex((i) => i.id === id)
-      if (index < 0) return
+    deleteCreation(creationId: string) {
+      const index = this.creations.findIndex((i) => i.id === creationId)
+      if (index === -1) return
       this.creations.splice(index, 1)
+    },
+    deleteImage(imageId: string, creationId: string) {
+      const creation = this.creations.find((i) => i.id === creationId)
+      if (!creation) return
+      const index = creation.imageIds.findIndex((id) => id === imageId)
+      console.log("deleted image index", index)
+      if (index === -1) return
+      creation.imageIds.splice(index, 1)
     },
     addItem(item: CreateImageRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
