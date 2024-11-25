@@ -1,30 +1,30 @@
 <template lang="pug">
 .centered.full-height.full-width
-  div(v-if="$q.screen.width > 1440")
+  .full-width(v-if="$q.screen.gt.sm")
     .row.full-height.full-width.no-wrap
-      .centered(style="width:450px; padding:0px;")
-        CreateCard.q-mt-md.full-width(
-          @created="addImage"
-          style="padding-top:0px; min-width:300px; max-width:600px;"
-          ref="createCard"
-          :customModel="customModel"
-        )
-      q-scroll-area(
-        style="width:1140px; max-width:90vw; height:calc(100vh - 60px);"
-      )
-        .centered.q-ma-md
-          ImageRequestCard.full-width(
-            v-for="creation in creationsStore.creations"
-            :creation="creation"
-            :key="creation.id"
+      .col-auto.q-ml-md
+        .centered(style="width:450px; padding:0px;")
+          CreateCard.q-mt-md.full-width(
+            @created="addImage"
+            style="padding-top:0px; min-width:300px; max-width:600px;"
+            ref="createCard"
+            :customModel="customModel"
           )
-        .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
-          q-btn(
-            label="Load More"
-            @click="creationsStore.loadCreations()"
-            :disable="creationsStore.creations.length < 1"
-          )
-  div(v-if="$q.screen.width <= 1440")
+      .col-grow.q-mr-sm
+        q-scroll-area.full-width(style="max-width:90vw; height:calc(100vh - 60px);")
+          .centered.q-ma-md
+            ImageRequestCard.full-width(
+              v-for="creation in creationsStore.creations"
+              :creation="creation"
+              :key="creation.id"
+            )
+          .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
+            q-btn(
+              label="Load More"
+              @click="creationsStore.loadCreations()"
+              :disable="creationsStore.creations.length < 1"
+            )
+  div(v-if="$q.screen.lt.md ")
     .full-width
       .centered.q-ma-md
         q-btn(
