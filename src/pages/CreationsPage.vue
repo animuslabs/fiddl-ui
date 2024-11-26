@@ -14,12 +14,12 @@ q-page.full-height.full-width
     //- q-separator(color="primary")
   //- .centered.relative-position(style="height:40px;")
   .relative-position
-    CreationsSearchBar(v-if="tab === 'creations'" @setGridMode="gridMode = $event")
+    CreationsSearchBar(v-if="tab === 'creations'")
   .centered
     q-scroll-area(style="width:1800px; height:calc(100vh - 155px); max-width:95vw; overflow:auto")
       .full-width(style='height:60px;')
       .centered(v-if="tab === 'creations'")
-        div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
+        div(v-if="!creationsStore.gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
           ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted" )
         .centered.q-gutter-md(v-else v-for="image in creationsStore.allCreationImages"  :key="image.imageId+'1'")
           CreatedImageCard.q-ma-md.relative-position(:imageId="image.imageId" style="width:160px; height:160px;" @click="showDetails(image.creationId)").cursor-pointer
@@ -63,7 +63,6 @@ export default defineComponent({
     return {
       creationsStore: useCreations(),
       tab: "creations",
-      gridMode: true,
       showRequest: false,
       selectedRequest: null as CreateImageRequestData | null,
       tabs: [
@@ -93,8 +92,6 @@ export default defineComponent({
 
   mounted() {
     this.creationsStore.reset()
-    this.creationsStore.customModelId = null
-    this.creationsStore.filter.customModelId = undefined
     this.creationsStore.resetFilters()
     // void this.load()
   },

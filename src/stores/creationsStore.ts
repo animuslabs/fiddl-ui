@@ -25,6 +25,7 @@ export const useCreations = defineStore("creationsStore", {
     search: null as string | null,
     loadingCreations: false,
     dynamicModel: true,
+    gridMode: false,
     filter: {
       aspectRatio: undefined as AspectRatio | undefined,
       model: undefined as ImageModel | undefined,
@@ -83,6 +84,7 @@ export const useCreations = defineStore("creationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
       this.customModelId = null
+
       // this.resetFilters()
 
       // void this.loadCreations()

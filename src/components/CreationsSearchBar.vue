@@ -4,7 +4,7 @@
     q-form(@submit="creationsStore.searchCreations()" inline style="width:500px; max-width:100vw;")
       .row.no-wrap.items-center
         div
-          q-btn-toggle(v-model="gridMode" flat :options="gridModeOptions")
+          q-btn-toggle(v-model="creationsStore.gridMode" flat :options="gridModeOptions")
         q-btn-dropdown(:label="creationsStore.filter.aspectRatio ||'Aspect'" flat :color="creationsStore.filter.aspectRatio ? 'primary' : 'white'")
           q-list
             q-item(clickable @click="creationsStore.filter.aspectRatio = undefined" v-close-popup) Any
@@ -17,7 +17,7 @@
         q-btn(size="sm" icon="search" flat @click="expandSearch = true" v-if="!expandSearch && $q.screen.width < 600")
         .row(v-if="$q.screen.width >= 600").no-wrap
           .col-grow
-            q-input(  style="min-width:200px;" @clear="creationsStore.reset()" clearable v-model="creationsStore.search" filled placeholder="search" square dense)
+            q-input(  style="min-width:200px;" @clear="creationsStore.reset() && creationsStore.resetFilters()" clearable v-model="creationsStore.search" filled placeholder="search" square dense)
           .col-auto
             q-btn(icon="search" type="submit" flat square )
       .row.full-width.q-mb-sm.q-mt-sm.search-bar2( v-if="$q.screen.width < 600 && expandSearch")
@@ -29,53 +29,53 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { useBrowserStore } from "stores/browserStore"
-import CreatedImageCard from "components/CreatedImageCard.vue"
-import { AspectRatioGrade, aspectRatios, imageModels, ratioRatings } from "lib/imageModels"
-import ImageMosaic from "components/ImageMosaic.vue"
-import Quasar, { LocalStorage, throttle, useQuasar } from "quasar"
-import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { aspectRatios, imageModels } from "lib/imageModels"
+import { LocalStorage } from "quasar"
 import { useCreations } from "src/stores/creationsStore"
-let interval: any = null
+import { defineComponent } from "vue"
 
 export default defineComponent({
-  emits: {
-    setGridMode: (va: boolean) => true,
-  },
   data() {
     return {
       creationsStore: useCreations(),
       aspectRatios,
       imageModels,
-      expandSearch: false,
-      gridMode: false,
       gridModeOptions: [
         { icon: "grid_view", value: true },
         { icon: "list", value: false },
       ],
     }
   },
+  computed: {
+    expandSearch: {
+      get() {
+        return !!this.creationsStore.search
+      },
+      set(value: boolean) {
+        if (value) this.creationsStore.search = ""
+        else this.exitTextSearch()
+      },
+    },
+  },
   watch: {
     "creationsStore.filter": {
       deep: true,
       handler() {
         this.creationsStore.reset()
+        void this.creationsStore.loadCreations()
       },
     },
-    gridMode: {
-      handler(val: boolean) {
-        console.log("emit creations gridMode event", val)
-        LocalStorage.set("creationsGridMode", val)
-        this.$emit("setGridMode", val)
-      },
+    "creationsStore.gridMode": {
       immediate: false,
+      handler() {
+        LocalStorage.set("creationsGridMode", this.creationsStore.gridMode)
+      },
     },
   },
   mounted() {
     const savedGridMode = LocalStorage.getItem<boolean>("creationsGridMode")
     if (savedGridMode !== null) {
-      this.gridMode = savedGridMode
+      this.creationsStore.gridMode = savedGridMode
     }
   },
   methods: {

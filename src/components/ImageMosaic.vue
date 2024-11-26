@@ -52,7 +52,7 @@ export default {
   },
   computed: {
     containerClass() {
-      return this.imageSize ? "row q-gutter-lg justify-center" : "container"
+      return this.imageSize ? "row q-gutter-md justify-center" : "container"
       // return "container"
     },
     computedItems() {
