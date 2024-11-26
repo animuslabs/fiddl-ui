@@ -38,7 +38,6 @@ export default defineComponent({
     return {
       timeSince,
       createStore: useCreateCardStore(),
-      createSession: useCreateSession(),
       images: [] as string[],
       createMode: false,
     }
@@ -115,30 +114,6 @@ export default defineComponent({
     // async setImageMeta(){
 
     // },
-    async loadCreations() {
-      if (!this.$userAuth.userId) return
-      const lastItem = this.createSession.sessionItems[this.createSession.sessionItems.length - 1]
-      console.log("lastItem", lastItem)
-
-      const creations = await this.$api.creations.createRequests.query({
-        userId: this.$userAuth.userId,
-        includeMetadata: true,
-        order: "desc",
-        endDateTime: lastItem?.createdAt || undefined,
-        limit: 15,
-      })
-      console.log("creations", creations)
-
-      for (const creation of creations) {
-        this.createSession.addItem({
-          ...creation,
-          id: creation.id,
-          imageIds: creation.imageIds,
-          createdAt: new Date(creation.createdAt),
-          creatorId: creation.creatorId,
-        })
-      }
-    },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
       console.log("setReq", toggleCreateMode)
       if (toggleCreateMode) {

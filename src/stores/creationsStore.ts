@@ -71,7 +71,7 @@ export const useCreations = defineStore("creationsStore", {
       this.customModelId = null
       // this.resetFilters()
 
-      void this.loadCreations()
+      // void this.loadCreations()
     },
     async setCustomModelId(customModelId: string) {
       if (customModelId === this.customModelId) return
@@ -102,7 +102,7 @@ export const useCreations = defineStore("creationsStore", {
           includeMetadata: true,
           order: "desc",
           endDateTime: lastItem?.createdAt || undefined,
-          limit: 100,
+          limit: 20,
           customModelId: this.filter.model == "custom" ? this.customModelId || this.filter.customModelId || undefined : undefined,
           promptIncludes: this.search?.length ? this.search : undefined,
           aspectRatio: this.filter.aspectRatio || undefined,
@@ -133,7 +133,7 @@ export const useCreations = defineStore("creationsStore", {
         includeMetadata: true,
         order: "desc",
         endDateTime: lastItem?.createdAt ? new Date(lastItem.createdAt) : undefined,
-        limit: 100,
+        limit: 20,
       })
       console.log("purchases", purchases)
       for (const purchase of purchases) {

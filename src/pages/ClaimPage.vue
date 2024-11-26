@@ -17,6 +17,7 @@ q-page.full-height.full-width
         .centered.q-ma-md
           q-btn(label="Claim" @click="claimCode()" color="accent" size="lg" :disabled="!$userAuth.loggedIn")
         .centered.q-ma-md(v-if="!$userAuth.loggedIn")
+
           q-btn(label="You must Login First" @click="$router.push({name:'login'})" color="primary" )
       div(v-else).q-mt-md
         .q-ma-md
