@@ -10,8 +10,8 @@
             ref="createCard"
             :customModel="customModel"
           )
-      .col-grow.q-mr-sm
-        q-scroll-area.full-width(style="max-width:100vw; height:calc(100vh - 60px);")
+      .col-grow.q-mr-sm.full-height
+        q-scroll-area.full-width(:style="$q.screen.gt.sm?'height:calc(100vh - 60px);':'height:calc(100vh - 110px);'")
           .full-width(style="height:15px;")
           .full-width.relative-position
             .full-width(style="height:55px;")
@@ -41,7 +41,7 @@
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
   q-dialog(v-model="createMode" maximized)
-    q-card
+    q-card(style="width:100vw; max-width:600px;")
       .centered.full-width
         CreateCard(
           @created="addImage"
@@ -49,7 +49,7 @@
           ref="createCard"
           :customModel="customModel"
         ).full-width
-      .centered
+      .centered.q-mb-md
         q-btn(label="Back" @click="createMode = false" color="accent" flat)
 
 </template>
@@ -59,7 +59,7 @@ import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "components/ImageRequestCard.vue"
 import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
-import { Dialog } from "quasar"
+import { Dialog, LocalStorage } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateCardStore } from "src/stores/createCardStore"
@@ -121,10 +121,11 @@ export default defineComponent({
       immediate: true,
     },
     gridMode(val) {
-      for (const creation of this.creationsStore.creations) {
-        const card = this.$refs[creation.id] as InstanceType<typeof ImageRequestCard>[] | undefined
-        if (card && card[0]) card[0].minimized.value = val
-      }
+      // for (const creation of this.creationsStore.creations) {
+      //   const card = this.$refs[creation.id] as InstanceType<typeof ImageRequestCard>[] | undefined
+      //   if (card && card[0]) card[0].minimized.value = val
+      // }
+      LocalStorage.set("creatPageGridMode", this.gridMode)
     },
     customModel: {
       immediate: true,
@@ -145,6 +146,7 @@ export default defineComponent({
   mounted() {
     console.log("mounted promptTab, customModel", this.customModel)
     if (this.$q.screen.lt.md) this.createMode = true
+    // this.gridMode = LocalStorage.getItem("creatPageGridMode") ||
   },
   methods: {
     showDetails(creationId: string) {
