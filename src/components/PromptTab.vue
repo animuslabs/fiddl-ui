@@ -12,6 +12,7 @@
           )
       .col-grow.q-mr-sm
         q-scroll-area.full-width(style="max-width:100vw; height:calc(100vh - 60px);")
+          .full-width(style="height:15px;")
           .full-width.relative-position
             .full-width(style="height:55px;")
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
@@ -41,12 +42,13 @@
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
   q-dialog(v-model="createMode" maximized)
     q-card
-      CreateCard(
-        @created="addImage"
-        style="padding-top:0px; min-width:300px; max-width:600px;"
-        ref="createCard"
-        :customModel="customModel"
-      )
+      .centered.full-width
+        CreateCard(
+          @created="addImage"
+          style="padding-top:0px; min-width:300px; max-width:600px;"
+          ref="createCard"
+          :customModel="customModel"
+        ).full-width
       .centered
         q-btn(label="Back" @click="createMode = false" color="accent" flat)
 
@@ -102,6 +104,9 @@ export default defineComponent({
     },
   },
   watch: {
+    "$q.screen.lt.md"(val) {
+      this.createMode = val
+    },
     "creationsStore.dynamicModel": {
       handler(val: boolean) {
         if (val) {
@@ -139,7 +144,7 @@ export default defineComponent({
   },
   mounted() {
     console.log("mounted promptTab, customModel", this.customModel)
-    if (this.$q.screen.width < 1440) this.createMode = true
+    if (this.$q.screen.lt.md) this.createMode = true
   },
   methods: {
     showDetails(creationId: string) {
