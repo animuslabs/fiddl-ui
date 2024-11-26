@@ -42,7 +42,7 @@ export const useCreations = defineStore("creationsStore", {
           images.push({ imageId, creationId: creation.id })
         }
       }
-      return images.reverse()
+      return images
     },
   },
   actions: {

@@ -58,12 +58,14 @@
     q-scroll-area(
       style="height:calc(100vh - 175px); width:100vw;"
       v-if="!createMode")
+
       ImageRequestCard(
         v-for="creation in creationsStore.creations"
         :creation="creation"
         :key="creation.id"
         @setRequest="setReq($event, true)"
       )
+
       .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
         q-btn(
           label="Load More"
