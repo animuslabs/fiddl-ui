@@ -70,11 +70,13 @@ div
         //- .full-width(style="height:20px;")
         q-separator(color="grey-9" spaced="20px" inset)
         .centered(v-if="$userAuth.userData").relative-position.q-mb-md
+          div(style="position:absolute; left:15px; top:0px; ")
+            q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
           div
             q-btn( type="submit" label="Create" color="primary" :loading="createStore.loading.create" :disable="anyLoading || totalCost > $userAuth.userData.availablePoints || req.prompt.length < 5" )
               .badge
                 p {{ totalCost }}
-          div(style="position:absolute; right:0px; top:0px; ")
+          div(style="position:absolute; right:15px; top:0px; ")
             q-toggle( size="sm" v-model="createStore.req.public" color="primary" :disable="anyLoading" :label="printPrivacy")
       div(v-if="$userAuth.userData && totalCost > $userAuth?.userData?.availablePoints|| 0").q-pt-md
         .centered
@@ -118,13 +120,18 @@ import { ImageModel } from "lib/imageModels"
 export default defineComponent({
   components: { Turnstile, CustomModelsList },
   props: {
+    showBackBtn: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     customModel: {
       type: Object as PropType<CustomModel> | null,
       default: null,
       required: false,
     },
   },
-  emits: ["created"],
+  emits: ["created", "back"],
   data() {
     return {
       creationsStore: useCreations(),

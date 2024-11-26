@@ -44,13 +44,13 @@
     q-card(style="width:100vw; max-width:600px;")
       .centered.full-width
         CreateCard(
+          show-back-btn
+          @back="createMode = false"
           @created="addImage"
           style="padding-top:0px; min-width:300px; max-width:600px;"
           ref="createCard"
           :customModel="customModel"
         ).full-width
-      .centered.q-mb-md
-        q-btn(label="Back" @click="createMode = false" color="accent" flat)
 
 </template>
 
