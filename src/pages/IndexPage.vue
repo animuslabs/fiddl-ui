@@ -26,14 +26,18 @@ q-page.full-width.full-height
             h5 Have fun exploring the site
     .centered.q-mt-lg
       h5 Join the mailing list to be updated on new features and events.
-    .centered
-      iframe(data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="/mailchimp.html" style="height: 300px; width:500px; max-width:100vw;").bg-dark-page
-
+    .centered.q-mt-md
+      q-btn(label="Join Mailing List" @click="showMailForm = true" color="primary" size="lg")
     .centered.q-mt-xl
       q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
       q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
     .full-width(style="height: 15px")
-  //- Landing
+q-dialog(v-model="showMailForm" maximized)
+  q-card
+    .centered
+      iframe(src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7" style="width:600px; max-width:90vw; height:500px; max-height:90vh; border:none;")
+    .centered
+      q-btn(label="Close" @click="showMailForm = false" color="accent" flat)
 
 
 </template>
@@ -73,6 +77,7 @@ export default defineComponent({
   data() {
     return {
       passKeyAuth,
+      showMailForm: false,
       userFiles: [] as UserFile[],
       userId: null as null | string,
     }
