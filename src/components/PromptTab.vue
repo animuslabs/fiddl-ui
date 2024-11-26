@@ -20,10 +20,11 @@
                   //- small Model Filter:
                   q-btn-toggle(v-model="creationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
 
-            ImageRequestCard.full-width(
-              v-for="creation in creationsStore.creations"
-              :creation="creation"
-              :key="creation.id" :ref="creation.id")
+            .centered
+              div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
+                ImageRequestCard(:creation="creation")
+              div(v-else v-for="image in creationsStore.allCreationImages"  :key="image.creationId+'1'")
+                CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="image.imageId" style="width:150px; height:150px;" @click="showDetails(image.creationId)")
           .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
             q-btn(
               label="Load More"
@@ -70,24 +71,30 @@
           icon="arrow_downward"
           v-if="creationsStore.creations.length > 0"
         )
+  q-dialog(v-model="showRequest")
+    q-card
+      ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
+      .centered.q-ma-md
+        q-btn(label="Back" @click="showRequest = false" color="accent" flat)
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "components/ImageRequestCard.vue"
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { Dialog } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { toObject } from "lib/util"
-
+import CreatedImageCard from "components/CreatedImageCard.vue"
 export default defineComponent({
   name: "PromptTab",
   components: {
     CreateCard,
     ImageRequestCard,
+    CreatedImageCard,
   },
   props: {
     customModel: {
@@ -101,6 +108,8 @@ export default defineComponent({
       creationsStore: useCreations(),
       createStore: useCreateCardStore(),
       createMode: false,
+      selectedRequest: null as CreateImageRequestData | null,
+      showRequest: false,
       gridMode: false,
       gridModeOptions: [
         { icon: "grid_view", value: true },
@@ -159,6 +168,12 @@ export default defineComponent({
     if (this.$q.screen.width < 1440) this.createMode = true
   },
   methods: {
+    showDetails(creationId: string) {
+      const creation = this.creationsStore.creations.find((el) => el.id === creationId)
+      if (!creation) return
+      this.selectedRequest = creation
+      this.showRequest = true
+    },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
       void this.$nextTick(() => {

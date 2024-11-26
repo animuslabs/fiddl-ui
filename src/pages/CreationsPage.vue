@@ -22,11 +22,7 @@ q-page.full-height.full-width
         div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
           ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted" )
         .centered.q-gutter-md(v-else v-for="creation in creationsStore.creations"  :key="creation.id+'1'")
-          //- div(v-for="imageId in creation.imageIds" :key="imageId")
-          //-   CreatedImageCard(:imageId="imageId" style="width:300px; height:300px;" @click="showDetails(creation)").cursor-pointer
           CreatedImageCard.q-ma-md.relative-position(:imageId="creation.imageIds[0]|| ''" style="width:300px; height:300px;" @click="showDetails(creation)").cursor-pointer
-            .absolute-bottom.z-top
-              div {{ creation.imageIds.length }}
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id")
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer

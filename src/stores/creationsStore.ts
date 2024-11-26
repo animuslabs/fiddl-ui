@@ -9,6 +9,11 @@ import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 
+interface CreationImage {
+  imageId: string
+  creationId: string
+}
+
 export const useCreations = defineStore("creationsStore", {
   state: () => ({
     creations: [] as CreateImageRequestData[],
@@ -29,6 +34,15 @@ export const useCreations = defineStore("creationsStore", {
   getters: {
     filterActive(): boolean {
       return !!this.filter.aspectRatio || !!this.filter.model
+    },
+    allCreationImages(): CreationImage[] {
+      const images: CreationImage[] = []
+      for (const creation of this.creations) {
+        for (const imageId of creation.imageIds) {
+          images.push({ imageId, creationId: creation.id })
+        }
+      }
+      return images.reverse()
     },
   },
   actions: {
