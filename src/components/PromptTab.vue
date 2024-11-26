@@ -146,7 +146,7 @@ export default defineComponent({
   mounted() {
     console.log("mounted promptTab, customModel", this.customModel)
     if (this.$q.screen.lt.md) this.createMode = true
-    // this.gridMode = LocalStorage.getItem("creatPageGridMode") ||
+    this.gridMode = LocalStorage.getItem("creatPageGridMode") || false
   },
   methods: {
     showDetails(creationId: string) {
