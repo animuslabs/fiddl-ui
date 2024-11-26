@@ -1,8 +1,8 @@
 <template lang="pug">
 .centered.full-height.full-width
-  .full-width(v-if="$q.screen.gt.sm")
+  .full-width
     .row.full-height.full-width.no-wrap
-      .col-auto.q-ml-md
+      .col-auto.q-ml-md( v-if="$q.screen.gt.sm")
         .centered(style="width:450px; padding:0px;")
           CreateCard.q-mt-md.full-width(
             @created="addImage"
@@ -11,14 +11,16 @@
             :customModel="customModel"
           )
       .col-grow.q-mr-sm
-        q-scroll-area.full-width(style="max-width:90vw; height:calc(100vh - 60px);")
-          .full-width.q-pa-md.relative-position
+        q-scroll-area.full-width(style="max-width:100vw; height:calc(100vh - 60px);")
+          .full-width.relative-position
             .full-width(style="height:55px;")
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
-                .row.q-gutter-md.items-center
+                .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   //- small Model Filter:
                   q-btn-toggle(v-model="creationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
+                  .col-grow
+                  q-btn(label="create" size="sm" color="primary" rounded v-if="$q.screen.lt.md" @click="createMode = true")
 
             .centered
               div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
@@ -31,53 +33,23 @@
               @click="creationsStore.loadCreations()"
               :disable="creationsStore.creations.length < 1"
             )
-  div(v-if="$q.screen.lt.md ")
-    .full-width
-      .centered.q-ma-md
-        q-btn(
-          label="Create"
-          color="primary"
-          @click="createMode = true"
-          v-if="!createMode"
-        )
-      div(v-if="createMode")
-        .row
-          q-btn(
-            label="Back"
-            color="primary"
-            flat
-            @click="createMode = false"
-          )
-        .row
-          CreateCard(
-            @created="addImage"
-            style="width:100vw;"
-            ref="createCard"
-            :customModel="customModel"
-          )
-    q-scroll-area(
-      style="height:calc(100vh - 175px); width:100vw;"
-      v-if="!createMode")
 
-      ImageRequestCard(
-        v-for="creation in creationsStore.creations"
-        :creation="creation"
-        :key="creation.id"
-        @setRequest="setReq($event, true)"
-      )
-
-      .centered.q-ma-md(v-if="creationsStore.creations.length > 9")
-        q-btn(
-          label="Load More"
-          @click="creationsStore.loadCreations()"
-          icon="arrow_downward"
-          v-if="creationsStore.creations.length > 0"
-        )
   q-dialog(v-model="showRequest")
     q-card
       ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
+  q-dialog(v-model="createMode" maximized)
+    q-card
+      CreateCard(
+        @created="addImage"
+        style="padding-top:0px; min-width:300px; max-width:600px;"
+        ref="createCard"
+        :customModel="customModel"
+      )
+      .centered
+        q-btn(label="Back" @click="createMode = false" color="accent" flat)
+
 </template>
 
 <script lang="ts">
@@ -124,7 +96,7 @@ export default defineComponent({
       let modelName = this.createStore.req.model
       if (modelName == "custom") modelName = "custom: " + this.createStore.req.customModelName
       return [
-        { label: "All Models", value: false },
+        { label: "All", value: false },
         { label: modelName, value: true },
       ]
     },
