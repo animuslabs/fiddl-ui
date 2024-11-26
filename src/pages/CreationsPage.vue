@@ -21,8 +21,8 @@ q-page.full-height.full-width
       .centered(v-if="tab === 'creations'")
         div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
           ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted" )
-        .centered.q-gutter-md(v-else v-for="creation in creationsStore.creations"  :key="creation.id+'1'")
-          CreatedImageCard.q-ma-md.relative-position(:imageId="creation.imageIds[0]|| ''" style="width:300px; height:300px;" @click="showDetails(creation)").cursor-pointer
+        .centered.q-gutter-md(v-else v-for="image in creationsStore.allCreationImages"  :key="image.imageId+'1'")
+          CreatedImageCard.q-ma-md.relative-position(:imageId="image.imageId" style="width:160px; height:160px;" @click="showDetails(image.creationId)").cursor-pointer
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id")
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
@@ -31,7 +31,7 @@ q-page.full-height.full-width
           CreatedImageCard(:imageId="favoriteImage.id" style="width:300px; height:300px;" @click="showGallery(favoriteImage.id)").cursor-pointer
       .centered.q-ma-md
         q-btn(label="Load More" @click="load()")
-  q-dialog(v-model="showRequest" maximized)
+  q-dialog(v-model="showRequest")
     q-card
       ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="editOnCreatePage" @deleted="handleDeleted" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
@@ -63,7 +63,7 @@ export default defineComponent({
     return {
       creationsStore: useCreations(),
       tab: "creations",
-      gridMode: false,
+      gridMode: true,
       showRequest: false,
       selectedRequest: null as CreateImageRequestData | null,
       tabs: [
@@ -74,15 +74,18 @@ export default defineComponent({
     }
   },
   watch: {
+    tab() {
+      this.load()
+    },
     "$userAuth.loggedIn": {
       immediate: true,
       handler(val) {
+        console.log("userAuth triggered", val)
         if (!val) {
           this.creationsStore.reset()
         } else {
-          void this.creationsStore.loadCreations()
-          void this.creationsStore.loadPurchases()
-          void this.creationsStore.loadFavorites()
+          this.creationsStore.reset()
+          this.load()
         }
       },
     },
@@ -90,11 +93,15 @@ export default defineComponent({
 
   mounted() {
     this.creationsStore.reset()
-    void this.load()
+    this.creationsStore.customModelId = null
+    this.creationsStore.filter.customModelId = undefined
+    this.creationsStore.resetFilters()
+    // void this.load()
   },
   methods: {
-    showDetails(creation: CreateImageRequestData) {
-      console.log("showDetails", creation)
+    showDetails(creationId: string) {
+      const creation = this.creationsStore.creations.find((el) => el.id === creationId)
+      if (!creation) return
       this.selectedRequest = creation
       this.showRequest = true
     },
