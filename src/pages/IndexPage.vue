@@ -25,7 +25,8 @@ q-page.full-width.full-height
           .centered.q-mt-md
             h5 Have fun exploring the site
     .centered.q-mt-lg
-      h5 Join the mailing list to be updated on new features and events.
+      .q-ma-lg
+        h5 Join the mailing list to be updated on new features and events.
     .centered.q-mt-md
       q-btn(label="Join Mailing List" @click="showMailForm = true" color="primary" size="lg")
     .centered.q-mt-xl
