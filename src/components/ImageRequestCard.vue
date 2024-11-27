@@ -30,7 +30,7 @@ q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
                   p Delete
           .col.q-ml-md.relative-position
             small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
-            p.text-italic.text-positive(v-if="!creation") Purchase any image to unlock the prompt
+            p.text-italic.text-positive(v-if="!creation.prompt || creation.prompt?.length == 0 ") Purchase any image to unlock the prompt
             .absolute-bottom-right
               q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
                 q-tooltip
@@ -182,7 +182,7 @@ export default defineComponent({
       this.$emit("reload")
     },
     async setRequest() {
-      if (this.creation.prompt == undefined) {
+      if (this.creation.prompt == undefined || this.creation.prompt?.length == 0) {
         if (!this.$userAuth.loggedIn) {
           Dialog.create({
             title: "Login Required",
