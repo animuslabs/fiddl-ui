@@ -169,6 +169,8 @@ export default defineComponent({
       handler(newModel) {
         if (!newModel) {
           this.createStore.req.customModelId = undefined
+          this.createStore.req.customModelName = undefined
+          this.createStore.customModel = null
           // this.createStore.req.model = "flux"
         } else {
           this.createStore.req.customModelId = newModel.id
@@ -191,6 +193,11 @@ export default defineComponent({
             console.log("trigger popup")
             if (!this.showModelPicker) this.showModelPicker = true
           }
+        }
+        if (val != "custom") {
+          this.createStore.req.customModelId = undefined
+          this.createStore.req.customModelName = undefined
+          this.createStore.customModel = null
         }
         if (this.creationsStore.dynamicModel) {
           this.creationsStore.filter.model = val
