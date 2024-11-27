@@ -2,7 +2,7 @@
 q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   //- div custom model id: {{ creation.customModelId }}
   //- div custom model name: {{ creation.customModelName }}
-  .centered.full-width.q-pt-md(:style="$q.screen.lt.md? `max-height:35vh; overflow:auto;`:'' ")
+  .centered.full-width.q-pt-md(:style="$q.screen.lt.md? `overflow:auto;`:'' ")
     div(v-if="creation.imageIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent No images in this creation

@@ -76,7 +76,7 @@ export default {
         }
         return "col-6 col-sm-2 col-md-2" // Default for grid mode
       } else {
-        console.log("gridmode not enabled", item.cssClass)
+        // console.log("gridmode not enabled", item.cssClass)
         return item.cssClass
       }
     },
