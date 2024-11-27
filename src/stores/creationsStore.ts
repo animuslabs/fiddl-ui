@@ -84,10 +84,6 @@ export const useCreations = defineStore("creationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
       this.customModelId = null
-
-      // this.resetFilters()
-
-      // void this.loadCreations()
     },
     async setCustomModelId(customModelId: string) {
       if (customModelId === this.customModelId) return

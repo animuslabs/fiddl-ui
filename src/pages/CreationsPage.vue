@@ -83,19 +83,17 @@ export default defineComponent({
         console.log("userAuth triggered", val)
         if (!val) {
           this.creationsStore.reset()
+          this.creationsStore.resetFilters()
         } else {
           this.creationsStore.reset()
+          this.creationsStore.resetFilters()
           this.load()
         }
       },
     },
   },
 
-  mounted() {
-    this.creationsStore.reset()
-    this.creationsStore.resetFilters()
-    // void this.load()
-  },
+  mounted() {},
   methods: {
     showDetails(creationId: string) {
       const creation = this.creationsStore.creations.find((el) => el.id === creationId)

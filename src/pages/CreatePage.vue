@@ -76,7 +76,7 @@ export default defineComponent({
               })
             }
           }
-          this.setReq(req, this.$q.screen.width < 1440)
+          this.setReq(req, this.$q.screen.lt.md)
 
           Dialog.create({
             title: "Image Parameters Applied",
@@ -86,7 +86,7 @@ export default defineComponent({
           })
         } else if (encodedRequestData && typeof encodedRequestData == "string") {
           const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
-          this.setReq(decoded, this.$q.screen.width < 1440)
+          this.setReq(decoded, this.$q.screen.lt.md)
           Dialog.create({
             title: "Image Parameters Applied",
             message: "The create panel has been updated with the details of the image request.",
@@ -108,12 +108,8 @@ export default defineComponent({
   },
   mounted() {
     console.log()
-    if (this.$q.screen.width < 1440) this.createMode = true
   },
   methods: {
-    // async setImageMeta(){
-
-    // },
     setReq(request: CreateImageRequest, toggleCreateMode = false) {
       console.log("setReq", toggleCreateMode)
       if (toggleCreateMode) {
