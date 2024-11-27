@@ -14,7 +14,8 @@ q-page.full-height.full-width
     //- q-separator(color="primary")
   //- .centered.relative-position(style="height:40px;")
   .relative-position
-    CreationsSearchBar(v-if="tab === 'creations'")
+    .centered
+      CreationsSearchBar(v-if="tab === 'creations'")
   .centered
     q-scroll-area(style="width:1800px; height:calc(100vh - 155px); max-width:95vw; overflow:auto")
       .full-width(style='height:60px;')
