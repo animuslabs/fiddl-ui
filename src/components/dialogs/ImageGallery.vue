@@ -480,6 +480,7 @@ export default defineComponent({
     onTouchMove(e: TouchEvent) {
       if (!e.changedTouches[0]) return
       if (!this.isSwiping) return
+      if (this.imageIds.length === 1) return (this.touchMoveX = 0)
       const currentX = e.changedTouches[0].clientX
       const deltaX = currentX - this.touchStartX
       this.touchMoveX = deltaX
