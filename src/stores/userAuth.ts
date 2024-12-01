@@ -66,6 +66,13 @@ export const useUserAuth = defineStore("userAuth", {
       jwt.save({ userId: userAuth.userId, token: userAuth.token })
       this.loggedIn = true
     },
+    async adminLoginAsUser(userId: string) {
+      const token = await api.admin.loginAsUser.mutate(userId)
+      this.logout()
+      this.setUserId(userId)
+      jwt.save({ userId, token })
+      this.loggedIn = true
+    },
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
       if (!savedLogin) return false
