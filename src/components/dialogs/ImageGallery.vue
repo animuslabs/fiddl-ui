@@ -1,89 +1,108 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" )
+q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
+    .full-width(style="height:5vh")
     .full-width(style="height:5vh").gt-sm
-    .relative-position
-      //- q-spinner.absolute-center(size="100px")
-      .centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
-        div.relative-position
-          q-btn(
-            icon="share"
-            round
-            flat
-            color="grey-5"
-            @click.stop="shareMenu = true"
-          )
-            q-menu(
-              v-if="menu"
-              anchor="bottom left"
-              self="top left"
-              @click.native.stop="shareMenu = false"
+      .relative-position
+        .centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+          div.relative-position
+            q-btn(
+              icon="share"
+              round
+              flat
+              color="grey-5"
+              @click.stop="shareMenu = true"
             )
-              q-list
-                q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
-                  q-item-section
-                    .row.items-center
-                      q-icon(name="image" size="20px").q-mr-md
-                      div Share Image
-                q-item(clickable @click="share()" v-close-popup)
-                  q-item-section
-                    .row.items-center
-                      q-icon(name="content_copy" size="20px").q-mr-md
-                      div Copy Link
-        q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
-        div
-          q-btn(icon="download"  flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
-            q-tooltip
-              p(v-if="userOwnsImage") You own the 4k download
-              p(v-else) Download Image
-        q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
-        q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
-        //- q-btn(icon="more_vert" flat round @click.native.stop="likeImage()" color="grey-5")
-        div.relative-position
-          //- div {{menu}}
-          q-btn(
-            icon="more_vert"
-            round
-            flat
-            color="grey-5"
-            @click.stop="menu = true"
-          )
-            q-menu(
-              v-if="menu"
-              anchor="bottom right"
-              self="top right"
-              @click.native.stop="menu = false"
+              q-menu(
+                v-if="shareMenu"
+                anchor="bottom left"
+                self="top left"
+                @click.native.stop="shareMenu = false"
+              )
+                q-list
+                  q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
+                    q-item-section
+                      .row.items-center
+                        q-icon(name="image" size="20px").q-mr-md
+                        div Share Image
+                  q-item(clickable @click="share()" v-close-popup)
+                    q-item-section
+                      .row.items-center
+                        q-icon(name="content_copy" size="20px").q-mr-md
+                        div Copy Link
+          q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
+          div
+            q-btn(icon="download" flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
+              q-tooltip
+                p(v-if="userOwnsImage") You own the 4k download
+                p(v-else) Download Image
+          q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
+          q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
+          div.relative-position
+            q-btn(
+              icon="more_vert"
+              round
+              flat
+              color="grey-5"
+              @click.stop="moreOptionsMenu = true"
             )
-              q-list
-                q-item(clickable @click="setProfileImage()" v-close-popup)
-                  q-item-section
-                    .row.items-center
-                      q-icon(name="account_circle" size="20px").q-mr-md
-                      div Use as Profile Image
-                q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
-                  q-item-section
-                    .row.items-center
-                      q-icon(name="delete" size="20px").q-mr-md
-                      div Delete
-        div
-          q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
+              q-menu(
+                v-if="moreOptionsMenu"
+                anchor="bottom right"
+                self="top right"
+                @click.native.stop="moreOptionsMenu = false"
+              )
+                q-list
+                  q-item(clickable @click="setProfileImage()" v-close-popup)
+                    q-item-section
+                      .row.items-center
+                        q-icon(name="account_circle" size="20px").q-mr-md
+                        div Use as Profile Image
+                  q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
+                    q-item-section
+                      .row.items-center
+                        q-icon(name="delete" size="20px").q-mr-md
+                        div Delete
+          div
+            q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
     .centered
-      div.relative-position
+      div.relative-position(
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+      )
         transition(name="fade")
-          q-linear-progress.absolute-top.full-width( style="top:-2px;" indeterminate v-if="imgLoading || loading" color="teal-9" track-color="transparent" )
-        img.image-darken(:src="currentImageUrl" @click.native.stop="onImageClick" ref="overlayImage" @load="imgLoaded" alt="user created image" style="width:100%; max-height: 75vh; object-fit: contain;" :class="imgClass")
+          q-linear-progress.absolute-top.full-width(
+            style="top:-2px;"
+            indeterminate
+            v-if="imgLoading || loading"
+            color="teal-9"
+            track-color="transparent"
+          )
+        // Image with transform binding
+        img.image-darken(
+          :src="currentImageUrl"
+          @click.native.stop="onImageClick"
+          ref="overlayImage"
+          @load="imgLoaded"
+          alt="user created image"
+          style="width:100%; max-height: 75vh; object-fit: contain;"
+          :class="imgClass"
+          :style="{ transform: 'translateX(' + touchMoveX + 'px)' }"
+        )
         .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
             .row.items-center.q-mb-xs
-              q-img( placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
+              q-img(placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
               h6.q-mr-sm @{{creatorMeta.username}}
     .centered
-        div.q-mt-md(v-if="localImageIds.length > 1 && !downloadMode && localImageIds.length < 11")
-          span.indicator( v-for="(image, index) in localImageIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
+      div.q-mt-md(v-if="localImageIds.length > 1 && !downloadMode && localImageIds.length < 11")
+        span.indicator(v-for="(image, index) in localImageIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
 </template>
-<style>
+
+<style scoped>
 .fade-enter-active {
-  transition: opacity 0.5s ease 0.5s; /* 0.5s delay before the 0.5s transition */
+  transition: opacity 0.5s ease 0.5s;
 }
 .fade-enter {
   opacity: 0;
@@ -94,25 +113,40 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent" 
 .image-darken {
   background-color: transparent;
   color: transparent;
-  transition: filter 0.5s ease;
+  transition:
+    filter 0.5s ease,
+    transform 0.3s ease;
 }
 .image-darken.active {
   filter: brightness(50%);
 }
+.indicator {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  margin: 0 5px 0px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.active {
+  background-color: rgba(255, 255, 255, 1);
+}
 </style>
 
 <script lang="ts">
-import { log } from "console"
-import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
-import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash, longIdToShort, shareImage, updateQueryParams } from "lib/util"
-import { Dialog, Loading, QDialog, SessionStorage } from "quasar"
+import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType } from "vue"
-import DownloadImage from "./DownloadImage.vue"
 import { avatarImg, img } from "lib/netlifyImg"
+import { catchErr, copyToClipboard, longIdToShort, shareImage, updateQueryParams } from "lib/util"
+import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
+import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
 import LikeImage from "./LikeImage.vue"
 import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
 import { useCreations } from "src/stores/creationsStore"
+import { useBrowserStore } from "src/stores/browserStore"
+
 export default defineComponent({
   props: {
     imageIds: {
@@ -137,11 +171,12 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      creationStore: useCreations(),
       shareMenu: false,
+      moreOptionsMenu: false,
       localImageIds: [] as string[],
       avatarImg,
       imageDeleted: false,
-      menu: true,
       isPersistent: false,
       preloaded: false,
       downloadMode: false,
@@ -151,10 +186,11 @@ export default defineComponent({
       currentIndex: 0,
       isFullScreen: false,
       touchStartX: 0,
+      touchMoveX: 0, // Added to track horizontal movement
+      isSwiping: false, // Indicates if a swipe is in progress
+      threshold: 50, // Minimum swipe distance to trigger navigation
       firstImageLoaded: false,
-      touchEndX: 0,
       upscaling: false,
-      threshold: 50, // Minimum swipe distance
       userLikedImage: false,
       loadingLike: false,
       loadedRequestId: null as string | null,
@@ -187,6 +223,12 @@ export default defineComponent({
     },
   },
   watch: {
+    currentIndex: {
+      handler() {
+        this.preloadImages()
+      },
+      immediate: false,
+    },
     imageRequestId: {
       handler(val: string) {
         if (!val) return
@@ -197,12 +239,10 @@ export default defineComponent({
     currentImageId: {
       async handler(val: string) {
         if (!this.$userAuth.loggedIn) return
-        console.log("current id triggered")
         this.userLikedImage = false
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
         this.loadingLike = false
-        // dialog.persistent = true
         if (this.$route.name == "imageRequest") {
           const query = { index: this.currentIndex }
           const newQuery = { ...this.$route.query, ...query }
@@ -249,6 +289,7 @@ export default defineComponent({
         await this.loadRequestId()
         if (!this.loadedRequestId) return
         useCreations().deleteImage(this.currentImageId, this.loadedRequestId)
+        useBrowserStore().deleteImage(this.currentImageId, this.loadedRequestId)
       })
     },
     async loadRequestId() {
@@ -262,7 +303,6 @@ export default defineComponent({
       void this.$router.push({ name: "profile", params: { username: this.creatorMeta.username } })
     },
     setProfileImage() {
-      console.log("setProfileImage")
       Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } })
     },
     goToRequestPage() {
@@ -271,11 +311,10 @@ export default defineComponent({
       void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.loadedRequestId) } })
     },
     likeImage() {
-      // if (!this.$userAuth.loggedIn) return
       if (!this.userOwnsImage) {
         Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } })
           .onOk(async () => {
-            await this.loadHdImage() // this will set userOwnsImage to true
+            await this.loadHdImage()
             this.likeImage()
           })
           .onCancel(() => {
@@ -327,28 +366,26 @@ export default defineComponent({
       })
     },
     preloadImages() {
-      if (this.localImageIds.length > 9) return
-      // this.localImageIds.forEach((src, index) => {
-      //   if (index !== this.currentIndex) {
-      //     const img = new Image()
-      //     img.src = src
-      //   }
-      // })
+      const preloadIndices = [this.currentIndex - 1, this.currentIndex + 1]
+      preloadIndices.forEach((index) => {
+        if (index >= 0 && index < this.localImageIds.length) {
+          const imageId = this.localImageIds[index]
+          if (!imageId) return
+          const imgSrc = img(imageId, "lg")
+          const imgElement = new Image()
+          imgElement.src = imgSrc
+        }
+      })
     },
     async imgLoaded(event: Event) {
       await this.loadHdImage()
       this.firstImageLoaded = true
       this.imgLoading = false
-      if (this.preloaded) return
-      this.preloaded = true
-      this.preloadImages()
-      await this.loadRequestId()
-    },
-    downloadImage() {
-      // const currentImage = this.images[this.currentIndex as number]
-      // if (!currentImage) return
-      // downloadImage(currentImage, "fiddl.art-" + extractImageId(currentImage) + ".webp")
-      // Dialog.create({ component: DownloadImage })
+      if (!this.preloaded) {
+        this.preloaded = true
+        this.preloadImages()
+        await this.loadRequestId()
+      }
     },
     async mobileShare() {
       await shareImage("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentImageUrl, this.currentImageId + "-fiddl-art.webp")
@@ -366,7 +403,6 @@ export default defineComponent({
         params.requestShortId = longIdToShort(imageRequestId)
       }
       const request = await this.$api.creations.createRequest.query(imageRequestId)
-      // find the index of this image in the request
       const imageIndex = request.imageIds.findIndex((el) => el == this.currentImageId) || 0
       query.index = imageIndex
       await this.$userAuth.loadUserProfile()
@@ -374,11 +410,10 @@ export default defineComponent({
       if (hasUsername) query.referredBy = this.$userAuth.userProfile?.username
       const url = this.$router.resolve({ name: "imageRequest", params, query }).href
       const fullUrl = window.location.origin + url
-      console.log("share", fullUrl)
       copyToClipboard(fullUrl)
       Dialog.create({
         title: "Image URL Copied",
-        message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your refferal link is also included in the url.",
+        message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your referral link is also included in the URL.",
         position: "top",
       })
     },
@@ -387,17 +422,18 @@ export default defineComponent({
       this.isFullScreen = true
     },
     next() {
-      if (this.localImageIds.length == 1) return
-      // console.log("next", this.loading, this.imgLoading)
+      if (this.localImageIds.length === 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
       this.currentIndex = (this.currentIndex + 1) % this.localImageIds.length
+      this.touchMoveX = 0 // Reset movement
     },
     prev() {
-      if (this.localImageIds.length == 1) return
+      if (this.localImageIds.length === 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
       this.currentIndex = (this.currentIndex - 1 + this.localImageIds.length) % this.localImageIds.length
+      this.touchMoveX = 0 // Reset movement
     },
     goTo(index: number) {
       this.currentIndex = index
@@ -409,14 +445,11 @@ export default defineComponent({
       this.isFullScreen = false
       this.downloadMode = false
     },
-
     onImageClick(event: MouseEvent) {
-      console.log("click")
       const target = event.target as HTMLElement
       const rect = target.getBoundingClientRect()
       const clickX = event.clientX - rect.left
       const width = rect.width
-      console.log(clickX)
       if (clickX < width / 2) {
         this.prev()
       } else {
@@ -440,24 +473,32 @@ export default defineComponent({
     },
     onTouchStart(e: TouchEvent) {
       if (!e.changedTouches[0]) return
-      this.touchStartX = e.changedTouches[0].screenX
+      this.touchStartX = e.changedTouches[0].clientX
+      this.isSwiping = true
+      this.touchMoveX = 0 // Reset any previous movement
     },
     onTouchMove(e: TouchEvent) {
       if (!e.changedTouches[0]) return
-      this.touchEndX = e.changedTouches[0].screenX
+      if (!this.isSwiping) return
+      const currentX = e.changedTouches[0].clientX
+      const deltaX = currentX - this.touchStartX
+      this.touchMoveX = deltaX
     },
-    onTouchEnd() {
-      // console.log("touchEnd")
-      // const distance = this.touchEndX - this.touchStartX
-      // if (Math.abs(distance) > this.threshold) {
-      //   if (distance > 0) {
-      //     this.prev()
-      //   } else {
-      //     this.next()
-      //   }
-      // }
-      // this.touchStartX = 0
-      // this.touchEndX = 0
+    onTouchEnd(e: TouchEvent) {
+      if (!e.changedTouches[0]) return
+      if (!this.isSwiping) return
+      this.isSwiping = false
+      const deltaX = this.touchMoveX
+      if (Math.abs(deltaX) > this.threshold) {
+        if (deltaX > 0) {
+          this.prev()
+        } else {
+          this.next()
+        }
+      } else {
+        // Not enough swipe distance, reset position
+        this.touchMoveX = 0
+      }
     },
     show() {
       const dialog = this.$refs.dialog as QDialog
@@ -465,120 +506,18 @@ export default defineComponent({
     },
     hide() {
       const dialog = this.$refs.dialog as QDialog
-      // if (this.imageDeleted) window.location.reload()
       dialog.hide()
     },
-
     onDialogHide() {
       this.$emit("hide")
     },
-
     onOKClick() {
       this.$emit("ok")
-
       this.hide()
     },
-
     onCancelClick() {
       this.hide()
     },
   },
 })
 </script>
-
-<style lang="sass" scoped>
-.hover-areas
-  position: absolute
-  top: 0
-  left: 0
-  width: 100%
-  height: 100%
-  display: flex
-
-.left-area
-  cursor: w-resize
-
-.right-area
-  cursor: e-resize
-
-.indicators
-  display: flex
-  justify-content: center
-
-.carousel
-  position: relative
-  width: 100%
-  max-width: 600px
-  margin: auto
-  overflow: hidden
-
-.carousel-container
-  position: relative
-  user-select: none
-
-.overlay-image
-  // width: 1000px
-  // height:2000px
-  object-fit: contain
-  max-width: 90vw
-  max-height: calc(85vh - 50px)
-
-.prev-button, .next-button
-  position: absolute
-  top: 50%
-  transform: translateY(-50%)
-  background-color: rgba(0, 0, 0, 0.5)
-  border: none
-  color: white
-  padding: 10px
-  cursor: pointer
-  font-size: 24px
-  border-radius: 50%
-
-.prev-button
-  left: 10px
-
-.next-button
-  right: 10px
-
-.indicators
-  text-align: center
-  position: absolute
-  bottom: -20px
-  width: 100%
-
-.indicator
-  display: inline-block
-  height: 10px
-  width: 10px
-  margin: 0 5px 0px
-  background-color: rgba(255, 255, 255, 0.5)
-  border-radius: 50%
-  cursor: pointer
-
-.active
-  background-color: rgba(255, 255, 255, 1)
-
-.overlay
-  position: fixed
-  top: 0
-  left: 0
-  width: 100%
-  height: 100%
-  background-color: rgba(0, 0, 0, 0.9)
-  display: flex
-  justify-content: center
-  align-items: center
-
-.overlay-content
-  position: relative
-  // width: 95%
-  max-width: 1900px
-  max-height: 95%
-
-
-@media (max-width: 600px)
-  .prev-button, .next-button
-    padding: 8px
-    font-size: 20px
-</style>

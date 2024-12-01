@@ -7,6 +7,8 @@ import { jwt } from "lib/jwt"
 import umami from "lib/umami"
 import { catchErr } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
+import { useCreateCardStore } from "src/stores/createCardStore"
+import { useCreations } from "src/stores/creationsStore"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -103,6 +105,8 @@ export const useUserAuth = defineStore("userAuth", {
       this.userProfile = null
       umami.identify({ userId: "logged-out" })
       clearImageCache()
+      useCreateCardStore().$reset()
+      useCreations().$reset()
     },
   },
 })

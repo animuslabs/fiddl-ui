@@ -44,6 +44,13 @@ export const useBrowserStore = defineStore("browserStore", {
     },
   },
   actions: {
+    deleteImage(imageId: string, requestId: string) {
+      const item = this.items.find((item) => item.id === requestId)
+      if (!item) return
+      const index = item.imageIds.indexOf(imageId)
+      if (index === -1) return
+      item.imageIds.splice(index, 1)
+    },
     resetFilters() {
       this.filter = {
         aspectRatio: undefined,
