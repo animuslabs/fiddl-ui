@@ -133,7 +133,6 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
   background-color: rgba(255, 255, 255, 1);
 }
 </style>
-
 <script lang="ts">
 import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType } from "vue"
@@ -194,6 +193,7 @@ export default defineComponent({
       userLikedImage: false,
       loadingLike: false,
       loadedRequestId: null as string | null,
+      hdImageLoaded: false, // Added flag
     }
   },
   computed: {
@@ -239,6 +239,7 @@ export default defineComponent({
     currentImageId: {
       async handler(val: string) {
         if (!this.$userAuth.loggedIn) return
+        this.hdImageLoaded = false // Reset HD image loaded flag
         this.userLikedImage = false
         this.loadingLike = true
         this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
@@ -339,6 +340,9 @@ export default defineComponent({
     },
     showDownloadWindow() {
       Dialog.create({ component: DownloadImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } }).onDismiss(() => {
+        // After purchase or download
+        this.hdImageLoaded = false // Reset HD image loaded flag
+        this.imgLoading = true
         void this.loadHdImage()
       })
     },
@@ -346,25 +350,48 @@ export default defineComponent({
       if (!val) val = this.currentImageId
       if (!this.$userAuth.loggedIn) return
       this.userOwnsImage = false
-      let imageData = getImageFromCache(val)
-      if (!imageData) {
-        if (SessionStorage.getItem("noHdImage-" + val)) return
-        this.loading = true
-        imageData =
-          (await this.$api.creations.hdImage.query(val).catch(() => {
-            SessionStorage.setItem("noHdImage-" + val, true)
-          })) || undefined
-        this.loading = false
-        if (!imageData) return
-        storeImageInCache(val, imageData)
-      }
-      this.userOwnsImage = true
-      const imageDataUrl = `data:image/webp;base64,${imageData}`
-      void this.$nextTick(() => {
-        const img = this.$refs.overlayImage as HTMLImageElement
-        if (img) img.src = imageDataUrl
+
+      let timer: any | null = null
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error("Image loading timed out"))
+          this.loading = false
+          this.imgLoading = false
+        }, 6000) // Set timeout duration (e.g., 6 seconds)
       })
+
+      try {
+        let imageData = await getImageFromCache(val)
+        console.log("hd image cached:", !!imageData)
+        if (!imageData) {
+          if (SessionStorage.getItem("noHdImage-" + val)) return
+          this.loading = true
+          imageData =
+            (await Promise.race([
+              this.$api.creations.hdImage.query(val).catch(() => {
+                SessionStorage.setItem("noHdImage-" + val, true)
+              }),
+              timeoutPromise,
+            ])) || undefined
+          if (!imageData) return
+          await storeImageInCache(val, imageData)
+        }
+        this.userOwnsImage = true
+        const imageDataUrl = `data:image/webp;base64,${imageData}`
+        void this.$nextTick(() => {
+          console.log("Loaded hd image")
+          const img = this.$refs.overlayImage as HTMLImageElement
+          if (img) img.src = imageDataUrl
+          // Do not set hdImageLoaded here
+        })
+      } catch (err) {
+        console.error("Failed to load image:", err)
+      } finally {
+        if (timer) clearTimeout(timer) // Clear the timer on success or failure
+        this.loading = false
+      }
     },
+
     preloadImages() {
       const preloadIndices = [this.currentIndex - 1, this.currentIndex + 1]
       preloadIndices.forEach((index) => {
@@ -378,9 +405,20 @@ export default defineComponent({
       })
     },
     async imgLoaded(event: Event) {
-      await this.loadHdImage()
+      const imgElement = event.target as HTMLImageElement
+      if (imgElement.src.startsWith("data:image/")) {
+        // HD image has loaded
+        this.hdImageLoaded = true
+        this.imgLoading = false
+      } else {
+        // Low-res image has loaded
+        if (!this.hdImageLoaded) {
+          await this.loadHdImage()
+        }
+        this.imgLoading = false
+      }
+
       this.firstImageLoaded = true
-      this.imgLoading = false
       if (!this.preloaded) {
         this.preloaded = true
         this.preloadImages()
