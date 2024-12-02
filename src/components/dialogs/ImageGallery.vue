@@ -91,6 +91,14 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
           :class="imgClass"
           :style="{ transform: 'translateX(' + touchMoveX + 'px)' }"
         )
+        img.image-darken.absolute-center(
+          :src="nextImageUrl"
+          @click.native.stop="onImageClick"
+          ref="overlayImage"
+          @load="imgLoaded"
+          alt="user created image"
+          style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
+        ).lt-md
         .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
             .row.items-center.q-mb-xs
@@ -114,9 +122,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 .image-darken {
   background-color: transparent;
   color: transparent;
-  transition:
-    filter 0.5s ease,
-    transform 0.3s ease;
+  transition: filter 0.5s ease;
 }
 .image-darken.active {
   filter: brightness(50%);
@@ -198,6 +204,14 @@ export default defineComponent({
     }
   },
   computed: {
+    nextImageUrl() {
+      if (this.localImageIds.length === 1) return this.currentImageUrl
+      if (!this.touchMoveX) return this.currentImageUrl
+      // if touchMoveX is positive, show previous image
+      // if touchMoveX is negative, show next image
+      const nextIndex = this.touchMoveX > 0 ? (this.currentIndex - 1 + this.localImageIds.length) % this.localImageIds.length : (this.currentIndex + 1) % this.localImageIds.length
+      return img(this.localImageIds[nextIndex], "lg")
+    },
     currentImageUrl() {
       return img(this.currentImageId, "lg")
     },
