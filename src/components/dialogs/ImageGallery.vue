@@ -1,70 +1,71 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
   q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
-    .full-width(style="height:5vh")
-    .full-width(style="height:5vh").gt-sm
-      .relative-position
-        .centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
-          div.relative-position
-            q-btn(
-              icon="share"
-              round
-              flat
-              color="grey-5"
-              @click.stop="shareMenu = true"
-            )
-              q-menu(
-                v-if="shareMenu"
-                anchor="bottom left"
-                self="top left"
-                @click.native.stop="shareMenu = false"
-              )
-                q-list
-                  q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
-                    q-item-section
-                      .row.items-center
-                        q-icon(name="image" size="20px").q-mr-md
-                        div Share Image
-                  q-item(clickable @click="share()" v-close-popup)
-                    q-item-section
-                      .row.items-center
-                        q-icon(name="content_copy" size="20px").q-mr-md
-                        div Copy Link
-          q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
-          div
-            q-btn(icon="download" flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
-              q-tooltip
-                p(v-if="userOwnsImage") You own the 4k download
-                p(v-else) Download Image
-          q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
-          q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
-          div.relative-position
-            q-btn(
-              icon="more_vert"
-              round
-              flat
-              color="grey-5"
-              @click.stop="moreOptionsMenu = true"
-            )
-              q-menu(
-                v-if="moreOptionsMenu"
-                anchor="bottom right"
-                self="top right"
-                @click.native.stop="moreOptionsMenu = false"
-              )
-                q-list
-                  q-item(clickable @click="setProfileImage()" v-close-popup)
-                    q-item-section
-                      .row.items-center
-                        q-icon(name="account_circle" size="20px").q-mr-md
-                        div Use as Profile Image
-                  q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
-                    q-item-section
-                      .row.items-center
-                        q-icon(name="delete" size="20px").q-mr-md
-                        div Delete
-          div
-            q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
+    .centered
+      .col-auto
+        .full-width
+          .relative-position
+            .centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+              div.relative-position
+                q-btn(
+                  icon="share"
+                  round
+                  flat
+                  color="grey-5"
+                  @click.stop="shareMenu = true"
+                )
+                  q-menu(
+                    v-if="shareMenu"
+                    anchor="bottom left"
+                    self="top left"
+                    @click.native.stop="shareMenu = false"
+                  )
+                    q-list
+                      q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
+                        q-item-section
+                          .row.items-center
+                            q-icon(name="image" size="20px").q-mr-md
+                            div Share Image
+                      q-item(clickable @click="share()" v-close-popup)
+                        q-item-section
+                          .row.items-center
+                            q-icon(name="content_copy" size="20px").q-mr-md
+                            div Copy Link
+              q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
+              div
+                q-btn(icon="download" flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
+                  q-tooltip
+                    p(v-if="userOwnsImage") You own the 4k download
+                    p(v-else) Download Image
+              q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
+              q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
+              div.relative-position
+                q-btn(
+                  icon="more_vert"
+                  round
+                  flat
+                  color="grey-5"
+                  @click.stop="moreOptionsMenu = true"
+                )
+                  q-menu(
+                    v-if="moreOptionsMenu"
+                    anchor="bottom right"
+                    self="top right"
+                    @click.native.stop="moreOptionsMenu = false"
+                  )
+                    q-list
+                      q-item(clickable @click="setProfileImage()" v-close-popup)
+                        q-item-section
+                          .row.items-center
+                            q-icon(name="account_circle" size="20px").q-mr-md
+                            div Use as Profile Image
+                      q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
+                        q-item-section
+                          .row.items-center
+                            q-icon(name="delete" size="20px").q-mr-md
+                            div Delete
+              div
+                q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
     .centered
       div.relative-position(
         @touchstart="onTouchStart"
