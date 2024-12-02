@@ -61,9 +61,22 @@ export default {
     async downloadOriginal() {
       if (!this.userOwnsImage && !this.imageUnlocked) return
       if (!this.currentImageId) return
-      const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+      try {
+        Loading.show({
+          message: "Downloading Image",
+        })
+        const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
+        const imageDataUrl = `data:image/png;base64,${imageData}`
+        Loading.hide()
+        downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+      } catch (error: any) {
+        console.error(error)
+        Loading.hide()
+        Notify.create({
+          message: "error downloading image",
+          color: "negative",
+        })
+      }
     },
     async downloadUpscaled() {
       if (!this.userOwnsImage && !this.imageUnlocked) return
