@@ -10,20 +10,14 @@
 [functions]
   included_files = ["netlify/edge-functions/lib/**"]
 
-# [[redirects]]
-#   from = "/r/*"
-#   to = "/.netlify/functions/renderMetadata"
-#   status = 200
-#   force = true
+[[redirects]]
+  from = "/blog/*"
+  to = "https://fiddl-blog.netlify.app/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/blog/*"
-  to = "https://fiddl-blog.netlify.app/:splat"
   status = 200
 
 [images]
