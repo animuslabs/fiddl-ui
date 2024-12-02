@@ -21,6 +21,11 @@
   to = "/index.html"
   status = 200
 
+[[redirects]]
+  from = "/blog/*"
+  to = "https://fiddl-blog.netlify.app/:splat"
+  status = 200
+
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
 
