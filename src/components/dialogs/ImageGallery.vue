@@ -94,7 +94,6 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
         img.image-darken.absolute-center(
           :src="nextImageUrl"
           @click.native.stop="onImageClick"
-          ref="overlayImage"
           @load="imgLoaded"
           alt="user created image"
           style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
