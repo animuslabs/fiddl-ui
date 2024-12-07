@@ -16,7 +16,7 @@ q-layout(view="lHh Lpr lFf" )
             | browse
           q-route-tab(:to="{ name: 'faceForge' }").gt-xs.text-white
             | Face Forge
-          q-route-tab(to="https://fiddl.art/blog").gt-xs.text-white
+          q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
@@ -76,7 +76,7 @@ q-layout(view="lHh Lpr lFf" )
         | browse
       q-route-tab(:to="{ name: 'faceForge' }").text-white
         | Face Forge
-      q-route-tab(to="https://fiddl.art/blog").text-white
+      q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog
 </template>
 
