@@ -16,7 +16,7 @@ const routeData = require("./src/router/routeData.json") // Adjust path as neede
 const viteCompression = require("vite-plugin-compression")
 
 function generateSitemap() {
-  const baseUrl = "https://alpha.fiddl.art"
+  const baseUrl = "https://fiddl.art"
   const currentDate = new Date().toISOString() // Get current date in ISO format
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`
   sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
@@ -29,11 +29,27 @@ function generateSitemap() {
     sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
     sitemap += `  </url>\n`
   })
+  // add /blog endpoint
+  sitemap += `  <url>\n`
+  sitemap += `    <loc>${baseUrl}/blog</loc>\n`
+  sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
+  sitemap += `  </url>\n`
 
   sitemap += `</urlset>`
 
   // Write the sitemap to a file
-  fs.writeFileSync(path.resolve(__dirname, "public", "sitemap.xml"), sitemap)
+  fs.writeFileSync(path.join(__dirname, "public", "sitemap-root.xml"), sitemap)
+
+  const rootSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${baseUrl}/sitemap-root.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${baseUrl}/blog/sitemap.xml</loc>
+  </sitemap>
+</sitemapindex>`
+  fs.writeFileSync(path.join(__dirname, "public", "sitemap.xml"), rootSitemap)
   console.log("Sitemap generated successfully")
 }
 module.exports = configure(function (/* ctx */) {

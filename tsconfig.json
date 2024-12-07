@@ -46,6 +46,7 @@
   "include": [
     "src/**/*.ts",
     "src/quasar.d.ts", // Explicitly include your custom type definitions
+    "src/shims.d.ts", // Explicitly include your custom type definitions
     "src/**/*.vue"
   ]
 }

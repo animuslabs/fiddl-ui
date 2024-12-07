@@ -15,11 +15,6 @@
     "StatsPage"
   ],
   [
-    "search",
-    "/search",
-    "SearchPage"
-  ],
-  [
     "create",
     "/create",
     "CreatePage"
@@ -28,16 +23,6 @@
     "faceForge",
     "/faceForge/:mode?",
     "FaceForgePage"
-  ],
-  [
-    "vote",
-    "/vote",
-    "VotePage"
-  ],
-  [
-    "mint",
-    "/mint",
-    "MintPage"
   ],
   [
     "browse",
