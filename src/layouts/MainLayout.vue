@@ -16,6 +16,8 @@ q-layout(view="lHh Lpr lFf" )
             | browse
           q-route-tab(:to="{ name: 'faceForge' }").gt-xs.text-white
             | Face Forge
+          q-route-tab(to="https://fiddl.art/blog").gt-xs.text-white
+            | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
           //- q-route-tab(:to="{ name: 'mint' }")
@@ -74,6 +76,8 @@ q-layout(view="lHh Lpr lFf" )
         | browse
       q-route-tab(:to="{ name: 'faceForge' }").text-white
         | Face Forge
+      q-route-tab(to="https://fiddl.art/blog").text-white
+        | Blog
 </template>
 
 <script lang="ts">
