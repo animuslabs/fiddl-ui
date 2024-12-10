@@ -1,12 +1,12 @@
 <template lang="pug">
-div.parallax(style="min-height: 100vh; position: relative; background-image: url('/homeBg.png'); background-position: center 53px;")
-  div
+div.parallax(style="min-height: 100vh; position: relative; background-position: center 53px;")
+  div.fadeIn
     .centered.q-pt-xl
-      q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 90vw;")
-        .gt-xs.absolute(style="bottom:-10px; left:200px; background-color: transparent;")
+      q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 90vw; opacity:0.9;" alt="fiddl logo")
+        .gt-xs.absolute(style="bottom:-10px; left:200px; background-color: transparent; text-wrap: nowrap; overflow: visible;")
           h3 Create and Earn with AI Art
-        .lt-sm.absolute(style="bottom:-20px; left:100px; background-color: transparent; width:100%;")
-          h6 Create and Earn with AI Art
+        .lt-sm.absolute(style="bottom:-20px; left:30%; background-color: transparent; width:100%;")
+          h5 Create and Earn with AI Art
     .centered.q-mt-lg
       q-btn(size="lg" label="Get Started" color="primary" to="/create" rounded)
     .centered
@@ -28,11 +28,32 @@ div.parallax(style="min-height: 100vh; position: relative; background-image: url
 </template>
 
 <style lang="scss">
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    filter: blur(10px); // Start with more blur
+  }
+  to {
+    opacity: 1;
+    filter: blur(0); // End with no blur
+  }
+}
+.fadeIn {
+  opacity: 0;
+  animation: fadeIn 1s 0.5s forwards;
+}
 .parallax {
   background-attachment: fixed;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  background-image: url("/homeBg-lg.webp");
+}
+@media (max-width: 768px) {
+  // Adjust breakpoint as necessary
+  .parallax {
+    background-image: url("/homeBg-sm.webp"); // Smaller, optimized image for mobile
+  }
 }
 /* // dark mode a */
 a {
