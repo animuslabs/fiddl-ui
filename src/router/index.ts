@@ -15,9 +15,11 @@ const Router = createRouter({
   history: createHistory(process.env.VUE_ROUTER_BASE),
 })
 Router.afterEach((to) => {
-  const canonicalLink = document.getElementById("canonical-link")
-  const baseUrl = window.location.origin
-  if (canonicalLink) canonicalLink.setAttribute("href", `${baseUrl}${to.path}`)
+  if (process.env.CLIENT) {
+    const canonicalLink = document.getElementById("canonical-link")
+    const baseUrl = window.location.origin
+    if (canonicalLink) canonicalLink.setAttribute("href", `${baseUrl}${to.path}`)
+  }
 })
 
 export default Router

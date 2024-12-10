@@ -10,11 +10,14 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "build": "quasar build",
+    "build:ssg": "quasar ssg generate",
+    "serve:ssg": "quasar ssg serve dist/ssg",
     "build:func": "tsc -p netlify/functions/tsconfig.json",
     "dev:func": "tsc -p netlify/functions/tsconfig.json --watch",
     "lint": "eslint --fix ./src",
     "tsc": "npx vue-tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{js,ts,css,html,vue}\""
+    "format": "prettier --write \"src/**/*.{js,ts,css,html,vue}\"",
+    "dev:ssg": "quasar ssg dev"
   },
   "dependencies": {
     "@netlify/edge-functions": "^2.11.0",
@@ -55,6 +58,7 @@
     "eslint-plugin-vue": "^9.28.0",
     "prettier": "^3.3.3",
     "pug": "3.0.3",
+    "quasar-app-extension-ssg": "^5.2.0",
     "ts-node": "^10.9.2",
     "typescript": "5.6.2",
     "typescript-eslint": "^8.5.0",

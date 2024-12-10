@@ -218,12 +218,16 @@ module.exports = configure(function (/* ctx */) {
 
       prodPort: 3000, // The default port that the production server should use
       // (gets superseded if process.env.PORT is specified at runtime)
-
+      extendSSRWebserverConf(config) {
+        config.external = ["@simplewebauthn/browser"]
+      },
       middlewares: [
         "render", // keep this as last one
       ],
     },
-
+    ssg: {
+      routes: ["/", "/tos"],
+    },
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
       workboxMode: "generateSW", // or 'injectManifest'
