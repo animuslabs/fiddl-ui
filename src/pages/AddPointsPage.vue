@@ -5,14 +5,14 @@ q-page.full-height.full-width
       .shimmer
         q-img(src="/fiddlPointsLogo-sm.svg" style="width:200px;")
     .col-auto
-      .row.q-mt-md
+      .row.q-ma-md
         h2 Add Fiddl Points
       .row.q-ma-md(v-if="!userAuth.loggedIn")
         h4 Please login to add Fiddl Points
       .row.items-center.q-gutter-md(v-if="userAuth.userData")
         h5 Your Fiddl Points:
         h3 {{ userAuth.userData.availablePoints }}
-      .row
+      .row.q-ma-md
         div
           p Fiddl Points are needed to use Fiddl.art
   .centered.q-mt-md(v-if="userAuth.loggedIn")
@@ -119,8 +119,9 @@ export default defineComponent({
       this.payPal = res
       this.initPPButton()
     })
-    void this.$api.points.packagesAvailble.query().then((res) => {
-      this.packages = res.map((el) => {
+
+    void this.$api.points.packagesAvailble.query().then((res: any) => {
+      this.packages = res.map((el: any) => {
         return {
           ...el,
           bgColor: el.discountPct > 0 ? "bg-positive" : "",

@@ -58,7 +58,7 @@
 import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "components/ImageRequestCard.vue"
-import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { Dialog, LocalStorage } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"

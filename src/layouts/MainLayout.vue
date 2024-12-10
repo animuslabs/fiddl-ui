@@ -68,6 +68,16 @@ q-layout(view="lHh Lpr lFf" )
   q-page-container.centered.bg-grey-10
     .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
       router-view
+      .full-width.q-pa-md.bg-grey-10
+        .centered.items-center.q-gutter-md
+          q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
+          q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
+          q-btn(type="a" href="https://www.facebook.com/fiddlart" icon="fa-brands fa-facebook" color="primary" flat)
+          q-btn(type="a" href="https://www.linkedin.com/company/fiddl-art" icon="fa-brands fa-linkedin" color="primary" flat)
+
+
+
+
   q-footer.lt-lg(color="black").bg-grey-10
     q-tabs(color="black").lt-sm
       q-route-tab(:to="{ name: 'create' }").text-white
