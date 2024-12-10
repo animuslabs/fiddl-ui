@@ -1,5 +1,5 @@
 <template lang="pug">
-q-card.q-pa-md.blurbg.full-height(style="min-height:200px;")
+q-card.q-pa-md.blurbg.full-height.fadeIn(style="min-height:200px;")
   .centered
     q-icon(:name="icon" size="50px" color="primary")
   .centered
@@ -16,7 +16,7 @@ q-card.q-pa-md.blurbg.full-height(style="min-height:200px;")
 </template>
 <style lang="scss">
 .blurbg {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(15px);
 }
 .flex-end {

@@ -1,13 +1,13 @@
 <template lang="pug">
 div.parallax(style="min-height: 100vh; position: relative; background-position: center 53px;")
-  div.fadeIn
-    .centered.q-pt-xl
+  div
+    .centered.q-pt-xl.fadeIn
       q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 90vw; opacity:0.9;" alt="fiddl logo")
         .gt-xs.absolute(style="bottom:-10px; left:200px; background-color: transparent; text-wrap: nowrap; overflow: visible;")
           h3 Create and Earn with AI Art
         .lt-sm.absolute(style="bottom:-20px; left:30%; background-color: transparent; width:100%;")
           h5 Create and Earn with AI Art
-    .centered.q-mt-lg
+    .centered.q-mt-lg.fadeIn
       q-btn(size="lg" label="Get Started" color="primary" to="/create" rounded)
     .centered
       .row.q-mt-lg.q-gutter-md.q-pa-md(style="max-width: 600px;")
@@ -40,7 +40,8 @@ div.parallax(style="min-height: 100vh; position: relative; background-position: 
 }
 .fadeIn {
   opacity: 0;
-  animation: fadeIn 1s 0.5s forwards;
+  animation: fadeIn 1s 0.3s forwards;
+  animation-fill-mode: forwards;
 }
 .parallax {
   background-attachment: fixed;
