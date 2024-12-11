@@ -1,5 +1,6 @@
 <template lang="pug">
 q-page.full-height.full-width
+
   .centered.q-mt-md.q-gutter-md
     .col-auto
       .shimmer
@@ -32,8 +33,13 @@ q-page.full-height.full-width
   .centered.q-ma-md(v-if="selectedPkg").q-pt-lg
     h4 Adding {{ selectedPkg.points.toLocaleString() }} Points with a {{ selectedPkg.discountPct * 100 }}% discount will cost ${{ selectedPkg?.usd }}
   div.q-mt-lg(:class="!selectedPkg ? 'faded-out' : ''").q-mb-xl
-    .centered
+    .centered.q-gutter-md.q-mb-lg
+      q-btn(label="Pay with PayPal" color="primary" @click="paymentMethod = 'paypal'" :disable="!selectedPkg || paymentMethod == 'paypal'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
+      q-btn(label="Pay with Crypto" color="primary" @click="paymentMethod = 'crypto'" :disable="!selectedPkg || paymentMethod == 'crypto'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
+    .centered(v-if="paymentMethod == 'paypal'")
       div(ref="paypal" style="border-radius: 14px; width:400px; max-width:90vw").bg-grey-2.q-pa-md.rounded-box
+    .centered(v-if="paymentMethod == 'crypto'")
+      CryptoPayment.full-width(style="max-width:400px;" :selectedPackageId="selectedPkgIndex||undefined" @paymentComplete="paymentCompleted")
   .centered
     div(style="max-width:900px;")
       q-card.q-ma-md.q-pa-md
@@ -70,9 +76,10 @@ import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { catchErr, throwErr } from "lib/util"
 import type { PointsPackageWithUsd } from "fiddl-server/src/lib/pointsPackages"
-import { Dialog } from "quasar"
+import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 import PointsTransfer from "src/components/PointsTransfer.vue"
+import CryptoPayment from "components/CryptoPayment.vue"
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string
 }
@@ -80,6 +87,7 @@ interface PointsPackageRender extends PointsPackageWithUsd {
 export default defineComponent({
   components: {
     PointsTransfer,
+    CryptoPayment,
   },
   data() {
     return {
@@ -89,12 +97,14 @@ export default defineComponent({
       packages: [] as PointsPackageRender[],
       selectedPkgIndex: null as null | number,
       payPal: null as null | PayPalNamespace,
+      paymentMethod: null as "paypal" | "crypto" | null,
     }
   },
   computed: {},
   watch: {
     selectedPkg() {
       if (!this.selectedPkg) return
+      LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
       console.log("selected pkg", this.selectedPkg)
       const fundingEligibility = this.payPal?.getFundingSources ? this.payPal?.getFundingSources() : null
       console.log(fundingEligibility)
@@ -112,15 +122,22 @@ export default defineComponent({
         // this.userAuth.loadUserData()
       },
     },
+    paymentMethod(val) {
+      LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
+      if (val == "paypal") {
+        void this.$nextTick(() => {
+          void loadPayPal().then((res) => {
+            this.payPal = res
+            this.initPPButton()
+          })
+        })
+      }
+    },
   },
-  async created() {},
-  mounted() {
-    void loadPayPal().then((res) => {
-      this.payPal = res
-      this.initPPButton()
-    })
 
-    void this.$api.points.packagesAvailble.query().then((res: any) => {
+  async created() {},
+  async mounted() {
+    await this.$api.points.packagesAvailable.query().then((res: any) => {
       this.packages = res.map((el: any) => {
         return {
           ...el,
@@ -131,6 +148,12 @@ export default defineComponent({
     if (this.userAuth.loggedIn) {
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
+    }
+    const orderDetails = LocalStorage.getItem("orderDetails") as { packageId: number; paymentMethod: "paypal" | "crypto" }
+    console.log("orderDetails", orderDetails)
+    if (orderDetails) {
+      this.setAddPoints(orderDetails.packageId)
+      this.paymentMethod = orderDetails.paymentMethod
     }
   },
   methods: {
@@ -173,16 +196,7 @@ export default defineComponent({
             umami.track("buyPointsPkgFailure", errorDetail)
             throwErr("Failed to capture order: ", errorDetail)
           }
-          void this.userAuth.loadUserData()
-          umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
-          Dialog.create({
-            title: "Success",
-            message: "Points added successfully",
-
-            ok: true,
-            color: "positive",
-          })
-          // return actions.order?.authorize()
+          this.paymentCompleted()
         },
       })
       const payPalDiv = this.$refs.paypal as HTMLDivElement
@@ -193,6 +207,20 @@ export default defineComponent({
       console.log("set add points", pkgIndex)
       this.selectedPkgIndex = pkgIndex
       this.selectedPkg = this.packages[pkgIndex]!
+    },
+    paymentCompleted() {
+      void this.userAuth.loadUserData()
+      this.paymentMethod = null
+      umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
+      LocalStorage.remove("orderDetails")
+      this.selectedPkg = null
+      Dialog.create({
+        title: "Success",
+        message: "Points added successfully",
+
+        ok: true,
+        color: "positive",
+      })
     },
   },
 })
