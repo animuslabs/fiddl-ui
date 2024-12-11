@@ -1,5 +1,5 @@
 <template lang="pug">
-div.parallax(style="min-height: 100vh; position: relative; background-position: center 53px;" )
+div.parallax.full-width(style="min-height: 100vh; position: relative; background-position: center 53px;" )
   .full-width(style="height:250px;")
   div
     .centered.q-pt-xl.fadeIn

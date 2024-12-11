@@ -66,7 +66,7 @@ q-layout(view="lHh Lpr lFf" )
                   div  Logout
 
   q-page-container.centered.bg-grey-10
-    .centered.bg-dark(style="width:1800px; max-width:100%; height:100%" )
+    .centered.bg-dark(style="width:100vw; height:100%" )
       router-view
       .full-width.q-pa-md.bg-grey-10
         .centered.items-center.q-gutter-md
