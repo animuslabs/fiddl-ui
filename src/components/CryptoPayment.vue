@@ -117,6 +117,7 @@ export default defineComponent({
       const result = await this.$api.points.finishBuyPackage.mutate({ method: this.selectedMethod, orderId: this.cryptoOrder?.id }).catch((err) => {
         console.log(err.message)
         if (err.message.includes("Order already confirmed")) {
+          LocalStorage.remove("cryptoOrder")
           this.$emit("paymentComplete")
           return true
         }
