@@ -38,7 +38,8 @@ div
           q-btn(label="Telos EVM" @click="initBuy(selectedPackageId || 0, 'telosEVM')" )
           q-btn(label="Telos native" @click="initBuy(selectedPackageId || 0, 'telosNative')" )
         .centered.q-mt-lg
-          a(href="/blog/guide/telos") What is telos?
+          a(href="/blog/guides/telos")
+            h4 What is Telos?
       div(v-if="cryptoOrder")
         div
           .centered
@@ -48,6 +49,8 @@ div
 
         div.q-mt-md
           q-btn(label="cancel" @click="cancelOrder" color="accent")
+    .centered
+      h6 Crypto payments include a 20% fee
 
 
 </template>
