@@ -1,5 +1,6 @@
 <template lang="pug">
-div.parallax(style="min-height: 100vh; position: relative; background-position: center 53px;")
+div.parallax(style="min-height: 100vh; position: relative; background-position: center 53px;" )
+  .full-width(style="height:250px;")
   div
     .centered.q-pt-xl.fadeIn
       q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 90vw; opacity:0.9;" alt="fiddl logo")
@@ -9,13 +10,13 @@ div.parallax(style="min-height: 100vh; position: relative; background-position: 
           h5 Create and Earn with AI Art
     .centered.q-mt-lg.fadeIn
       q-btn(size="lg" label="Get Started" color="primary" to="/create" rounded)
-    .centered
+    .centered()
       .row.q-mt-lg.q-gutter-md.q-pa-md(style="max-width: 600px;")
         .col(style="min-width: 200px;" v-for="infoCard in infoCards")
           InfoCard(v-bind="infoCard")
 
     .centered.q-mt-lg
-      q-btn(size="lg" label="Join the email list" color="accent" @click="showMailForm = true" rounded icon="email")
+      q-btn(size="lg" label="Join the email list" color="accent" @click="showMailForm = true" rounded icon="email" v-scroll-fire="onscroll")
     .centered.q-mt-sm
       p Receive special offers and updates
   q-dialog(v-model="showMailForm" :maximized="$q.screen.lt.sm")
@@ -41,6 +42,11 @@ div.parallax(style="min-height: 100vh; position: relative; background-position: 
 .fadeIn {
   opacity: 0;
   animation: fadeIn 1s 0.3s forwards;
+  animation-fill-mode: forwards;
+}
+.fadeInFast {
+  opacity: 0;
+  animation: fadeIn 0.3s 0s forwards;
   animation-fill-mode: forwards;
 }
 .parallax {
@@ -136,11 +142,17 @@ export default defineComponent({
   components: { InfoCard },
   data() {
     return {
+      moved: false,
       topButtons,
       showMailForm: false,
       infoCards,
     }
   },
-  methods: {},
+  watch: {},
+  methods: {
+    onscroll() {
+      this.moved = true
+    },
+  },
 })
 </script>
