@@ -34,9 +34,9 @@ div
         .centered
           p Select Payment Method
       div(v-if="selectedMethod == null").q-ma-md
-        .centered.q-gutter-md(v-if=selectedPackageId)
-          q-btn(label="Telos EVM" @click="initBuy(selectedPackageId, 'telosEVM')" )
-          q-btn(label="Telos native" @click="initBuy(selectedPackageId, 'telosNative')" )
+        .centered.q-gutter-md(v-if="selectedPackageId !== null" )
+          q-btn(label="Telos EVM" @click="initBuy(selectedPackageId || 0, 'telosEVM')" )
+          q-btn(label="Telos native" @click="initBuy(selectedPackageId || 0, 'telosNative')" )
         .centered.q-mt-lg
           a(href="/blog/guide/telos") What is telos?
       div(v-if="cryptoOrder")
@@ -84,7 +84,7 @@ export default defineComponent({
     },
     selectedPackageId(val: number | undefined) {
       if (!this.selectedMethod) return
-      if (val) void this.initBuy(val, this.selectedMethod)
+      if (val != undefined) void this.initBuy(val, this.selectedMethod)
     },
   },
   mounted() {

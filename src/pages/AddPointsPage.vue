@@ -39,7 +39,7 @@ q-page.full-height.full-width
     .centered(v-if="paymentMethod == 'paypal'")
       div(ref="paypal" style="border-radius: 14px; width:400px; max-width:90vw").bg-grey-2.q-pa-md.rounded-box
     .centered(v-if="paymentMethod == 'crypto'")
-      CryptoPayment.full-width(style="max-width:400px;" :selectedPackageId="selectedPkgIndex||undefined" @paymentComplete="paymentCompleted")
+      CryptoPayment.full-width(style="max-width:400px;" :selectedPackageId="selectedPkgIndex === null?undefined:selectedPkgIndex" @paymentComplete="paymentCompleted")
   .centered
     div(style="max-width:900px;")
       q-card.q-ma-md.q-pa-md
@@ -210,6 +210,7 @@ export default defineComponent({
     },
     paymentCompleted() {
       void this.userAuth.loadUserData()
+      void this.userAuth.loadPointsHistory()
       this.paymentMethod = null
       umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
       LocalStorage.remove("orderDetails")
