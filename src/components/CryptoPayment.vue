@@ -136,7 +136,7 @@ export default defineComponent({
       this.cryptoOrder = order
       setTimeout(() => {
         interval = setInterval(this.finishOrder, 5000)
-      }, ms("1m"))
+      }, ms("1s"))
       this.loading = false
     },
     copyAmount() {
