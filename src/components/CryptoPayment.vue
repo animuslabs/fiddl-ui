@@ -7,25 +7,25 @@ div
       q-spinner(size="100px;")
     div(v-if="!loading")
       div(v-if="selectedMethod == 'telosEVM'").q-ma-md
-        p Quantity
-        .row.q-gutter-md.full-width.no-wrap
-          h3 {{ cryptoOrder?.tokenAmount }}
-          .col-grow
-          q-btn(icon="content_copy" @click="copyAmount" )
         p Send TLOS to the following address
         .row.q-gutter-md.no-wrap.full-width
           h3(style="overflow: auto;") {{ cryptoOrder?.destWallet }}
           .col-grow
           q-btn(icon="content_copy" @click="copyAddress" )
-      div(v-else-if="selectedMethod == 'telosNative'").q-ma-md
         p Quantity
-        .row.q-gutter-md
+        .row.q-gutter-md.full-width.no-wrap
           h3 {{ cryptoOrder?.tokenAmount }}
+          .col-grow
           q-btn(icon="content_copy" @click="copyAmount" )
+      div(v-else-if="selectedMethod == 'telosNative'").q-ma-md
         p Send TLOS to the following address
         .row.q-gutter-md
           h3.ellipsis {{ cryptoOrder?.destWallet }}
           q-btn(icon="content_copy" @click="copyAddress" )
+        p Quantity
+        .row.q-gutter-md
+          h3 {{ cryptoOrder?.tokenAmount }}
+          q-btn(icon="content_copy" @click="copyAmount" )
         p use the following memo
         .row.q-gutter-md
           h3 {{ cryptoOrder?.memo }}
