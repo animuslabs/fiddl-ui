@@ -37,11 +37,11 @@ export default defineComponent({
   props: {
     maxFiles: {
       type: Number,
-      default: 30,
+      default: 200,
     },
     maxFileSize: {
       type: Number,
-      default: 10 * 1024 * 1024, // 10MB
+      default: 8 * 1024 * 1024, // 10MB
     },
   },
   emits: {

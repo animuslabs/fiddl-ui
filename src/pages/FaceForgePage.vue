@@ -167,7 +167,10 @@ export default defineComponent({
           })
           .catch(() => null)
         if (!modelId) return Loading.hide()
-        await uploadTrainingImages(modelId, formData)
+        await uploadTrainingImages(modelId, formData, (progress) => {
+          console.log(`Upload progress: ${progress.toFixed(2)}%`)
+          Loading.show({ message: `Uploading files: ${progress.toFixed(2)}%` })
+        })
         this.targetModelId = modelId
         this.mode = "train"
         void this.loadTrainingData()

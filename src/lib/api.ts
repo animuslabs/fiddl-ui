@@ -2,6 +2,7 @@ import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import { ref, Ref } from "vue"
 import { jwt } from "lib/jwt"
 import { AppRouter } from "fiddl-server/dist/server"
+import ax from "axios"
 import superjson from "superjson"
 // import { AppRouter } from "./server"
 // Set up the API URL
@@ -36,32 +37,27 @@ const api = createTRPCProxyClient<AppRouter>({
   ],
 })
 
-export async function uploadTrainingImages(modelid: string, form: FormData) {
+export async function uploadTrainingImages(modelid: string, form: FormData, onProgress: (progress: number) => void) {
   const headers = {
     Authorization: `Bearer ${jwt.read()?.token}`,
     modelid,
   }
 
   try {
-    const response = await fetch(`${apiUrl}/uploadTrainingImages`, {
-      method: "POST",
+    const response = await ax.post(`${apiUrl}/uploadTrainingImages`, form, {
       headers,
-      body: form,
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = (progressEvent.loaded / progressEvent.total) * 100
+          onProgress(progress) // Call progress callback
+        }
+      },
     })
 
-    if (!response.ok) {
-      // Handle HTTP errors
-      const errorData = await response.json()
-      throw new Error(errorData.error || "File upload failed")
-    }
-
-    // Parse and return the JSON response
-    const result = await response.json()
-    return result
+    return response.data // Parse and return the JSON response
   } catch (error) {
-    // Handle errors (network issues, server errors, etc.)
     console.error("Upload failed:", error)
-    throw error // Rethrow to handle errors where this function is called
+    throw error
   }
 }
 
