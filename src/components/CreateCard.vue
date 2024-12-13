@@ -36,11 +36,11 @@ div
           div.q-ma-md
             p Quantity
             .row
-              q-input(v-model.number="createStore.req.quantity" type="number" :min="1" :max="10" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading ||req.seed != undefined" )
+              q-input(v-model.number="createStore.req.quantity" type="number" :min="1" :max="100" style="width:45px; max-width:20vw;" no-error-icon :disable="anyLoading ||req.seed != undefined" )
               q-tooltip(v-if="createStore.req.seed")
                 p Can't adjust quantity when using custom seed
               .column
-                q-btn(size="sm" icon="add" flat round @click="createStore.req.quantity++" :disable="req.quantity >=10 || createStore.req.seed != undefined" )
+                q-btn(size="sm" icon="add" flat round @click="createStore.req.quantity++" :disable="req.quantity >=100 || createStore.req.seed != undefined" )
                 q-btn(size="sm" icon="remove" flat round @click="createStore.req.quantity--" :disable="req.quantity <=1 || createStore.req.seed != undefined" )
           div.q-ma-md
             p Aspect Ratio
