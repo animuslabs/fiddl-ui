@@ -1,9 +1,10 @@
 <template lang="pug">
 q-card.q-pa-md.blurbg.full-height.fadeIn(style="min-height:200px;")
   .centered
-    q-icon(:name="icon" size="50px" color="primary")
-  .centered
-    h4 {{title}}
+    .row.q-gutter-md.items-center
+      q-icon(:name="icon" size="50px" color="primary")
+      h4 {{title}}
+  .q-mt-lg
   q-separator(color="grey" spaced inset)
   div.q-ma-md
     p {{description}}

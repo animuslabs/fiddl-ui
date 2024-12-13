@@ -11,7 +11,7 @@ div.parallax.full-width(style="min-height: 100vh; position: relative; background
     .centered.q-mt-lg.fadeIn
       q-btn(size="lg" label="Get Started" color="primary" to="/create" rounded)
     .centered()
-      .row.q-mt-lg.q-gutter-md.q-pa-md(style="max-width: 600px;")
+      .row.q-mt-lg.q-gutter-lg.q-pa-md(style="max-width: 700px;")
         .col(style="min-width: 200px;" v-for="infoCard in infoCards")
           InfoCard(v-bind="infoCard")
 
@@ -21,14 +21,20 @@ div.parallax.full-width(style="min-height: 100vh; position: relative; background
       p Receive special offers and updates
   q-dialog(v-model="showMailForm" :maximized="$q.screen.lt.sm")
     q-card
-      .centered
-        iframe(src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7" style="width:600px; max-width:90vw; height:500px; max-height:90vh; border:none;")
+      .centered.relative-position
+        .absolute-center
+          q-spinner(v-if="showMailSpinner" color="primary" size="150px")
+        iframe(src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7" :class="showMailSpinner?'invisible':''" style="width:600px; max-width:90vw; height:500px; max-height:90vh; border:none;" @load="hideMailSpinner")
       .centered.q-ma-md
         q-btn(label="Close" @click="showMailForm = false" color="accent" icon="close" rounded)
   .full-width(style="height:50px;")
 </template>
 
 <style lang="scss">
+.invisible {
+  visibility: hidden;
+  height: 0px;
+}
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -56,10 +62,25 @@ div.parallax.full-width(style="min-height: 100vh; position: relative; background
   background-size: cover;
   background-image: url("/homeBg-lg.webp");
 }
+
+@keyframes fadeIn2 {
+  to {
+    background-color: rgba(0, 0, 0, 0.2); /* Dim overlay */
+  }
+}
+.parallax::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  animation: fadeIn2 2s linear forwards; /* Trigger fade-in on page load */
+}
 @media (max-width: 768px) {
-  // Adjust breakpoint as necessary
   .parallax {
-    background-image: url("/homeBg-sm.webp"); // Smaller, optimized image for mobile
+    background-image: url("/homeBg-sm.webp");
   }
 }
 /* // dark mode a */
@@ -142,6 +163,7 @@ export default defineComponent({
   components: { InfoCard },
   data() {
     return {
+      showMailSpinner: true,
       moved: false,
       topButtons,
       showMailForm: false,
@@ -150,6 +172,9 @@ export default defineComponent({
   },
   watch: {},
   methods: {
+    hideMailSpinner() {
+      this.showMailSpinner = false
+    },
     onscroll() {
       this.moved = true
     },
