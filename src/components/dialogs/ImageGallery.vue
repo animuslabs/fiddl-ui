@@ -12,7 +12,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                   round
                   flat
                   color="grey-5"
-                  @click.stop="shareMenu = true"
+                  @click.native.stop="shareMenu = true"
                 )
                   q-menu(
                     v-if="shareMenu"
@@ -98,11 +98,11 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
           alt="user created image"
           style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
         ).lt-md
-        .row(v-if="creatorMeta && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
+        .row(v-if="creatorMeta.value && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
             .row.items-center.q-mb-xs
-              q-img(placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id)" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
-              h6.q-mr-sm @{{creatorMeta.username}}
+              q-img(placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.value?.id||'')" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
+              h6.q-mr-sm @{{creatorMeta.value?.username}}
     .centered
       div.q-mt-md(v-if="localImageIds.length > 1 && !downloadMode && localImageIds.length < 11")
         span.indicator(v-for="(image, index) in localImageIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
@@ -141,7 +141,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 </style>
 <script lang="ts">
 import { Dialog, QDialog, SessionStorage } from "quasar"
-import { defineComponent, PropType } from "vue"
+import { defineComponent, PropType, Ref, ref } from "vue"
 import { avatarImg, img } from "lib/netlifyImg"
 import { catchErr, copyToClipboard, longIdToShort, shareImage, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
@@ -169,16 +169,17 @@ export default defineComponent({
       required: false,
     },
     creatorMeta: {
-      type: Object as PropType<{ id: string; username: string } | null>,
-      default: null,
+      type: Object as PropType<Ref<{ id: string; username: string } | null>>,
+      default: ref(null),
     },
   },
   emits: ["ok", "hide"],
   data() {
     return {
+      dynamic: false,
       creationStore: useCreations(),
-      shareMenu: false,
-      moreOptionsMenu: false,
+      shareMenu: true,
+      moreOptionsMenu: true,
       localImageIds: [] as string[],
       avatarImg,
       imageDeleted: false,
@@ -209,14 +210,16 @@ export default defineComponent({
       // if touchMoveX is positive, show previous image
       // if touchMoveX is negative, show next image
       const nextIndex = this.touchMoveX > 0 ? (this.currentIndex - 1 + this.localImageIds.length) % this.localImageIds.length : (this.currentIndex + 1) % this.localImageIds.length
-      return img(this.localImageIds[nextIndex], "lg")
+      const nextImage = this.localImageIds[nextIndex]
+      if (!nextImage) return this.currentImageUrl
+      return img(nextImage, "lg")
     },
     currentImageUrl() {
       return img(this.currentImageId, "lg")
     },
     userCreatedImage() {
-      if (!this.creatorMeta) return false
-      return this.creatorMeta.id == this.$userAuth.userId
+      if (!this.creatorMeta.value) return false
+      return this.creatorMeta.value.id == this.$userAuth.userId
     },
     imgClass() {
       if (!this.firstImageLoaded) return ""
@@ -277,6 +280,9 @@ export default defineComponent({
     this.currentIndex = this.startIndex
     this.preloadImages()
     window.addEventListener("keydown", this.handleKeyDown)
+    if (!this.creatorMeta.value || !this.imageRequestId) {
+      this.dynamic = true
+    }
   },
   methods: {
     deleteImage() {
@@ -308,14 +314,16 @@ export default defineComponent({
       })
     },
     async loadRequestId() {
-      if (this.imageRequestId) return
+      if (!this.dynamic && this.imageRequestId && this.creatorMeta.value) return
       const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
       if (!imageMeta) return
       this.loadedRequestId = imageMeta.imageRequestId
+      const creatorName = (await this.$api.user.getUsername.query(imageMeta.creatorId).catch(catchErr)) || ""
+      this.creatorMeta.value = { id: imageMeta.creatorId, username: creatorName }
     },
     goToCreator() {
-      if (!this.creatorMeta) return
-      void this.$router.push({ name: "profile", params: { username: this.creatorMeta.username } })
+      if (!this.creatorMeta.value) return
+      void this.$router.push({ name: "profile", params: { username: this.creatorMeta.value?.username } })
     },
     setProfileImage() {
       Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentImageId } })

@@ -83,7 +83,7 @@ export default defineComponent({
     },
   },
   async mounted() {
-    this.creationsStore.reset()
+    this.creationsStore.$reset()
     const username = this.$route.params?.username
     if (!username || typeof username != "string") return
     const userId = await this.$api.user.findByUsername.query(username as string).catch(console.error)
@@ -104,6 +104,7 @@ export default defineComponent({
     },
     load() {
       if (!this.userId) return
+      this.creationsStore.resetFilters()
       if (this.tab === "creations") {
         void this.creationsStore.loadCreations(this.userId)
       } else if (this.tab === "purchased") {

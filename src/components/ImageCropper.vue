@@ -78,7 +78,7 @@ export default {
     async loadHdImage(val?: string) {
       if (!val) val = this.imageId
       if (!this.$userAuth.loggedIn) return
-      let imageData = getImageFromCache(val)
+      let imageData = await getImageFromCache(val)
       if (!imageData) {
         if (SessionStorage.getItem("noHdImage-" + val)) return
         this.loading = true
@@ -88,7 +88,7 @@ export default {
           })) || undefined
         this.loading = false
         if (!imageData) return
-        storeImageInCache(val, imageData)
+        await storeImageInCache(val, imageData)
       }
       const imageDataUrl = `data:image/webp;base64,${imageData}`
       void this.$nextTick(() => {
@@ -152,12 +152,7 @@ export default {
       if (this.scale < 0.1) this.scale = 0.1
       if (this.scale > 3) this.scale = 3
     },
-    async acceptCrop() {
-      // const result = await html2canvas(this.$refs.stage as HTMLElement, { foreignObjectRendering: false, useCORS: true, allowTaint: true })
-      // const link = document.createElement("a")
-      // link.href = result.toDataURL("image/png")
-      // link.download = "cropped-image.png"
-      // link.click()
+    acceptCrop() {
       this.$emit("cropAccepted", {
         scale: this.scale,
         position: this.position,

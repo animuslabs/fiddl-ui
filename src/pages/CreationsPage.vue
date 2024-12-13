@@ -93,7 +93,9 @@ export default defineComponent({
     },
   },
 
-  mounted() {},
+  mounted() {
+    this.creationsStore.$reset()
+  },
   methods: {
     showDetails(creationId: string) {
       const creation = this.creationsStore.creations.find((el) => el.id === creationId)
@@ -113,8 +115,10 @@ export default defineComponent({
       if (this.tab === "creations") {
         void this.creationsStore.loadCreations()
       } else if (this.tab === "purchased") {
+        this.creationsStore.resetFilters()
         void this.creationsStore.loadPurchases()
       } else if (this.tab === "favorites") {
+        this.creationsStore.resetFilters()
         void this.creationsStore.loadFavorites()
       }
     },

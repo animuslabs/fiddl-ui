@@ -1,13 +1,13 @@
 <template lang="pug">
 div.parallax.full-width(style="min-height: 100vh; position: relative; background-position: center 53px;" )
-  .full-width(style="height:250px;")
+  .full-width(style="height:50px;")
   div
     .centered.q-pt-xl.fadeIn
-      q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 90vw; opacity:0.9;" alt="fiddl logo")
+      q-img.q-ma-md.relative-position(src="/fiddlLogoWithText-hor.svg" fit="contain" style="width: 600px; max-width: 80vw; opacity:0.9;" alt="fiddl logo")
         .gt-xs.absolute(style="bottom:-10px; left:200px; background-color: transparent; text-wrap: nowrap; overflow: visible;")
           h3 Create and Earn with AI Art
         .lt-sm.absolute(style="bottom:-20px; left:30%; background-color: transparent; width:100%;")
-          h5 Create and Earn with AI Art
+          h6 Create and Earn with AI Art
     .centered.q-mt-lg.fadeIn
       q-btn(size="lg" label="Get Started" color="primary" to="/create" rounded)
     .centered()
