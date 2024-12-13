@@ -19,5 +19,9 @@
   "deno.enablePaths": ["netlify/edge-functions"],
   "deno.unstable": true,
   "deno.importMap": ".netlify/edge-functions-import-map.json",
-  "deno.path": "/Users/boidcom/Library/Preferences/netlify/deno-cli/deno"
+  "deno.path": "/Users/boidcom/Library/Preferences/netlify/deno-cli/deno",
+  "lldb.displayFormat": "auto",
+  "lldb.showDisassembly": "auto",
+  "lldb.dereferencePointers": true,
+  "lldb.consoleMode": "evaluate"
 }
