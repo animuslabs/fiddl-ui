@@ -283,6 +283,7 @@ export default defineComponent({
     if (!this.creatorMeta.value || !this.imageRequestId) {
       this.dynamic = true
     }
+    void this.loadRequestId()
   },
   methods: {
     deleteImage() {

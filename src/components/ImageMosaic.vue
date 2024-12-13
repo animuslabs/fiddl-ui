@@ -98,6 +98,8 @@ export default {
       const index = item.imageIds.findIndex((el) => el === id)
       const creatorName = (await this.$api.user.getUsername.query(item.creatorId).catch(console.error)) || ""
       const creatorMeta = { id: item.creatorId, username: creatorName }
+      console.log("creatorMeta", creatorMeta)
+      console.log("reqId", item.id)
       void imageGallery.show(item.imageIds, index, item.id, creatorMeta)
     },
   },
