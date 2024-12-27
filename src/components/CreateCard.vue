@@ -28,9 +28,6 @@ div
               p 2
             q-tooltip
               p Improve the prompt
-          q-btn( icon="accessibility" flat @click="showPresets = true" :loading="loading.improve" :disable="anyLoading" )
-            q-tooltip
-              p Presets
         q-separator(color="grey-9" spaced="20px" inset)
         .centered
           div.q-ma-md
