@@ -74,6 +74,7 @@ q-layout(view="lHh Lpr lFf" )
           q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
           q-btn(type="a" href="https://www.facebook.com/fiddlart" icon="fa-brands fa-facebook" color="primary" flat)
           q-btn(type="a" href="https://www.linkedin.com/company/fiddl-art" icon="fa-brands fa-linkedin" color="primary" flat)
+          q-btn(type="a" href="https://t.me/fiddlart" icon="fa-brands fa-telegram" color="primary" flat)
 
 
 
