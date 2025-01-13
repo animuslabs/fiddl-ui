@@ -5,7 +5,8 @@ q-page.full-height.full-width
   div(v-if="!loggingIn").full-width
     .centered.q-gutter-md.q-mt-md
       q-btn(label="Send Link" flat size="xl" icon="email" color="primary" @click="sendLink")
-      //- q-btn(label="Send Text" flat size="xl" icon="sms" color="secondary" @click="sendText")
+      q-btn(label="Pangea Login" flat size="xl" icon="lock" color="primary" @click="pangeaLogin")
+
     .centered.q-mt-xl
       div.q-ma-md
         q-btn(label="passKey Login (experimental)" flat small color="grey-8" @click="login")
@@ -21,6 +22,7 @@ import { Dialog, Loading, Notify } from "quasar"
 import SendLink from "src/components/dialogs/SendLink.vue"
 import umami from "lib/umami"
 import SendText from "src/components/dialogs/SendText.vue"
+import { pangeaLogin } from "lib/pangea"
 
 export default defineComponent({
   components: {
@@ -29,6 +31,7 @@ export default defineComponent({
   data() {
     return {
       loggingIn: false,
+      pangeaLogin,
     }
   },
   watch: {
