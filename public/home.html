@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang=en-US dir=ltr>
+
+<head>
+  <script>window.__INITIAL_STATE__ = { "userAuth": { "loggedIn": false, "userId": null, "userData": null, "userProfile": null, "notificationConfig": null, "pointsHistory": [] } }; document.currentScript.remove()</script>
+  <script src=https://analytics.ahrefs.com/analytics.js data-key=VAxZjOClE6MbeM9/nEp5OA async></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FRDTDV33Z6"></script>
+  <script>function gtag() { dataLayer.push(arguments) } window.dataLayer = window.dataLayer || [], gtag("js", new Date), gtag("config", "G-FRDTDV33Z6")</script>
+  <meta charset=utf-8>
+  <link rel=preconnect href=https://umami.fiddl.animus.is>
+  <script defer src=https://umami.fiddl.animus.is/script.js
+    data-website-id=a6295092-8b12-42b8-ab4c-de684673248d></script>
+  <link rel=canonical href=https://fiddl.art id=canonical-link>
+  <title>FiddlArt</title>
+  <meta name=description content="Create and earn with generative art.">
+  <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
+  <meta name=format-detection content="telephone=no">
+  <meta name=robots content="index, follow">
+  <meta name=keywords content="generative art, create art, earn with art, FiddlArt">
+  <script type=application/ld+json>{
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "FiddlArt",
+      "url": "https://fiddl.art",
+      "logo": "https://fiddl.art/fiddlLogo.svg",
+      "sameAs": [
+        "https://www.facebook.com/fiddlart",
+        "https://twitter.com/fiddlart",
+        "https://www.instagram.com/fiddlart",
+        "https://www.linkedin.com/company/fiddl-art",
+        "https://t.me/fiddlart"
+      ]
+    }</script>
+  <meta property=og:type content=website>
+  <meta property=og:title content=Fiddl.art>
+  <meta property=og:description content="Create and earn with generative art.">
+  <meta property=og:image content=https://fiddl.art/fiddlSocialCard.jpg>
+  <meta property=twitter:card content=summary>
+  <meta property=twitter:title content=Fiddl.art>
+  <meta property=twitter:description content="Create and earn with generative art.">
+  <meta property=twitter:image content=https://fiddl.art/fiddlSocialCard.jpg>
+  <meta name=twitter:site content=@fiddlart>
+  <link rel=icon type=image/png sizes=128x128 href=/icons/favicon-128x128.png>
+  <link rel=icon type=image/png sizes=96x96 href=/icons/favicon-96x96.png>
+  <link rel=icon type=image/png sizes=32x32 href=/icons/favicon-32x32.png>
+  <link rel=icon type=image/png sizes=16x16 href=/icons/favicon-16x16.png>
+  <link rel=icon type=image/ico href=/favicon.ico>
+  <script type=module crossorigin src=/assets/index.5664abe4.js></script>
+  <style>
+    @charset "UTF-8";
+
+    .fa-brands {
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-font-smoothing: antialiased;
+      display: var(--fa-display, inline-block);
+      font-style: normal;
+      font-variant: normal;
+      line-height: 1;
+      text-rendering: auto
+    }
+
+    .fa-brands {
+      font-family: "Font Awesome 6 Brands"
+    }
+
+    .fa-brands {
+      font-weight: 400
+    }
+
+    .fa-x-twitter:before {
+      content: "\e61b"
+    }
+
+    .fa-linkedin:before {
+      content: "\f08c"
+    }
+
+    .fa-instagram:before {
+      content: "\f16d"
+    }
+
+    .fa-facebook:before {
+      content: "\f09a"
+    }
+
+    .fa-telegram:before {
+      content: "\f2c6"
+    }
+
+    .material-symbols-outlined {
+      font-family: Material Symbols Outlined;
+      font-weight: 400;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "liga"
+    }
+
+    .material-icons {
+      font-family: Material Icons;
+      font-weight: 400;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "liga"
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+      -webkit-tap-highlight-color: transparent;
+      -moz-tap-highlight-color: transparent
+    }
+
+    html,
+    body,
+    #q-app {
+      width: 100%;
+      direction: ltr
+    }
+
+    html,
+    body {
+      margin: 0;
+      box-sizing: border-box
+    }
+
+    footer,
+    header,
+    main {
+      display: block
+    }
+
+    img {
+      border-style: none
+    }
+
+    hr {
+      box-sizing: content-box;
+      height: 0;
+      overflow: visible
+    }
+
+    button {
+      font: inherit;
+      font-family: inherit;
+      margin: 0
+    }
+
+    button {
+      overflow: visible;
+      text-transform: none
+    }
+
+    button::-moz-focus-inner {
+      border: 0;
+      padding: 0
+    }
+
+    button:-moz-focusring {
+      outline: 1px dotted ButtonText
+    }
+
+    .q-icon {
+      line-height: 1;
+      width: 1em;
+      height: 1em;
+      flex-shrink: 0;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      text-align: center;
+      position: relative;
+      box-sizing: content-box;
+      fill: currentColor
+    }
+
+    .q-icon:before,
+    .q-icon:after {
+      width: 100%;
+      height: 100%;
+      display: flex !important;
+      align-items: center;
+      justify-content: center
+    }
+
+    .q-icon>img {
+      width: 100%;
+      height: 100%
+    }
+
+    .q-icon,
+    .material-icons,
+    .material-symbols-outlined {
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: inherit;
+      font-size: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle
+    }
+
+    .q-btn {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: stretch;
+      position: relative;
+      outline: 0;
+      border: 0;
+      vertical-align: middle;
+      font-size: 14px;
+      line-height: 1.715em;
+      text-decoration: none;
+      color: inherit;
+      background: transparent;
+      font-weight: 500;
+      text-transform: uppercase;
+      text-align: center;
+      width: auto;
+      height: auto;
+      cursor: default;
+      padding: 4px 16px;
+      min-height: 2.572em
+    }
+
+    .q-btn .q-icon {
+      font-size: 1.715em
+    }
+
+    .q-btn:before {
+      content: "";
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      border-radius: inherit;
+      box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f
+    }
+
+    .q-btn--actionable {
+      cursor: pointer
+    }
+
+    .q-btn--actionable.q-btn--standard:before {
+      transition: box-shadow .3s cubic-bezier(.25, .8, .5, 1)
+    }
+
+    .q-btn--actionable.q-btn--standard:active:before {
+      box-shadow: 0 3px 5px -1px #0003, 0 5px 8px #00000024, 0 1px 14px #0000001f
+    }
+
+    .q-btn--rectangle {
+      border-radius: 3px
+    }
+
+    .q-btn--outline {
+      background: transparent !important
+    }
+
+    .q-btn--outline:before {
+      border: 1px solid currentColor
+    }
+
+    .q-btn--rounded {
+      border-radius: 28px
+    }
+
+    .q-btn--flat:before,
+    .q-btn--outline:before {
+      box-shadow: none
+    }
+
+    .q-btn__content {
+      transition: opacity .3s;
+      z-index: 0
+    }
+
+    .q-card {
+      box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
+      border-radius: 4px;
+      vertical-align: top;
+      background: #fff;
+      position: relative
+    }
+
+    .q-card>div:not(.q--avoid-card-border) {
+      border-radius: 0
+    }
+
+    .q-card>div:not(.q--avoid-card-border) {
+      border-left: 0;
+      border-right: 0;
+      box-shadow: none
+    }
+
+    .q-card--dark {
+      border-color: #ffffff47;
+      box-shadow: 0 1px 5px #fff3, 0 2px 2px #ffffff24, 0 3px 1px -2px #ffffff1f
+    }
+
+    .q-img {
+      position: relative;
+      width: 100%;
+      display: inline-block;
+      vertical-align: middle;
+      overflow: hidden
+    }
+
+    .q-img__content {
+      border-radius: inherit;
+      pointer-events: none
+    }
+
+    .q-img__content>div {
+      pointer-events: all;
+      position: absolute;
+      padding: 16px;
+      color: #fff;
+      background: rgba(0, 0, 0, .47)
+    }
+
+    .q-layout {
+      width: 100%;
+      outline: 0
+    }
+
+    .q-layout__section--marginal {
+      background-color: var(--q-primary);
+      color: #fff
+    }
+
+    .q-header,
+    .q-footer {
+      z-index: 2000
+    }
+
+    .q-layout,
+    .q-header,
+    .q-footer,
+    .q-page {
+      position: relative
+    }
+
+    body.body--dark .q-header,
+    body.body--dark .q-footer {
+      border-color: #ffffff47
+    }
+
+    .q-separator {
+      border: 0;
+      background: rgba(0, 0, 0, .12);
+      margin: 0;
+      transition: background .3s, opacity .3s;
+      flex-shrink: 0
+    }
+
+    .q-separator--dark {
+      background: rgba(255, 255, 255, .28)
+    }
+
+    .q-separator--horizontal {
+      display: block;
+      height: 1px
+    }
+
+    .q-separator--horizontal-inset {
+      margin-left: 16px;
+      margin-right: 16px
+    }
+
+    .q-tab {
+      padding: 0 16px;
+      min-height: 48px;
+      transition: color .3s, background-color .3s;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: inherit;
+      text-decoration: none
+    }
+
+    .q-tab--no-caps {
+      text-transform: none
+    }
+
+    .q-tab__content {
+      height: inherit;
+      padding: 4px 0;
+      min-width: 40px
+    }
+
+    .q-tab__icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px
+    }
+
+    .q-tab__indicator {
+      opacity: 0;
+      height: 2px;
+      background: currentColor
+    }
+
+    .q-tab--inactive {
+      opacity: .85
+    }
+
+    .q-tabs {
+      position: relative;
+      transition: color .3s, background-color .3s
+    }
+
+    .q-tabs--not-scrollable .q-tabs__arrow {
+      display: none
+    }
+
+    .q-tabs--not-scrollable .q-tabs__content {
+      border-radius: inherit
+    }
+
+    .q-tabs__arrow {
+      cursor: pointer;
+      font-size: 32px;
+      min-width: 36px;
+      text-shadow: 0 0 3px #fff, 0 0 1px #fff, 0 0 1px #000;
+      transition: opacity .3s
+    }
+
+    .q-tabs__content {
+      overflow: hidden;
+      flex: 1 1 auto
+    }
+
+    .q-tabs__content--align-center {
+      justify-content: center
+    }
+
+    .q-tabs--horizontal .q-tabs__arrow {
+      height: 100%
+    }
+
+    .q-tabs--horizontal .q-tabs__arrow--left {
+      top: 0;
+      left: 0;
+      bottom: 0
+    }
+
+    .q-tabs--horizontal .q-tabs__arrow--right {
+      top: 0;
+      right: 0;
+      bottom: 0
+    }
+
+    .q-toolbar {
+      position: relative;
+      padding: 0 12px;
+      min-height: 50px;
+      width: 100%
+    }
+
+    :root {
+      --q-primary: #01bbb2;
+      --q-secondary: #ff6368;
+      --q-accent: #cb5a5e;
+      --q-positive: #238f7b;
+      --q-dark: #2c2f33;
+      --q-dark-page: #2C2F33
+    }
+
+    .bg-dark {
+      background: var(--q-dark) !important
+    }
+
+    .text-primary {
+      color: var(--q-primary) !important
+    }
+
+    .bg-primary {
+      background: var(--q-primary) !important
+    }
+
+    .bg-accent {
+      background: var(--q-accent) !important
+    }
+
+    .text-white {
+      color: #fff !important
+    }
+
+    .bg-black {
+      background: #000 !important
+    }
+
+    .bg-grey {
+      background: #9e9e9e !important
+    }
+
+    .bg-grey-10 {
+      background: #212121 !important
+    }
+
+    .no-shadow {
+      box-shadow: none !important
+    }
+
+    .row,
+    .column,
+    .flex {
+      display: flex;
+      flex-wrap: wrap
+    }
+
+    .column {
+      flex-direction: column
+    }
+
+    .no-wrap {
+      flex-wrap: nowrap
+    }
+
+    .justify-end {
+      justify-content: flex-end
+    }
+
+    .justify-center,
+    .flex-center {
+      justify-content: center
+    }
+
+    .items-center,
+    .flex-center {
+      align-items: center
+    }
+
+    .self-stretch {
+      align-self: stretch
+    }
+
+    .q-gutter-md {
+      margin-left: -16px
+    }
+
+    .q-gutter-md>* {
+      margin-left: 16px
+    }
+
+    .q-gutter-md {
+      margin-top: -16px
+    }
+
+    .q-gutter-md>* {
+      margin-top: 16px
+    }
+
+    .q-gutter-lg {
+      margin-left: -24px
+    }
+
+    .q-gutter-lg>* {
+      margin-left: 24px
+    }
+
+    .q-gutter-lg {
+      margin-top: -24px
+    }
+
+    .q-gutter-lg>* {
+      margin-top: 24px
+    }
+
+    @media (min-width: 0) {
+      .row>.col {
+        width: auto;
+        min-width: 0;
+        max-width: 100%
+      }
+
+      .col {
+        flex: 10000 1 0%
+      }
+
+      .col-grow {
+        flex: 1 0 auto
+      }
+    }
+
+    .non-selectable {
+      -webkit-user-select: none !important;
+      user-select: none !important
+    }
+
+    .cursor-pointer {
+      cursor: pointer !important
+    }
+
+    .relative-position {
+      position: relative
+    }
+
+    .fixed-bottom,
+    .fixed-top {
+      position: fixed
+    }
+
+    .absolute,
+    .absolute-full,
+    .absolute-bottom {
+      position: absolute
+    }
+
+    .fixed-top {
+      top: 0;
+      left: 0;
+      right: 0
+    }
+
+    .fixed-bottom,
+    .absolute-bottom {
+      right: 0;
+      bottom: 0;
+      left: 0
+    }
+
+    .absolute-full {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0
+    }
+
+    .on-left {
+      margin-right: 12px
+    }
+
+    .full-height {
+      height: 100% !important
+    }
+
+    .full-width {
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important
+    }
+
+    .block {
+      display: block !important
+    }
+
+    .q-mr-sm {
+      margin-right: 8px
+    }
+
+    .q-mt-sm {
+      margin-top: 8px
+    }
+
+    .q-pa-md {
+      padding: 16px
+    }
+
+    .q-ma-md {
+      margin: 16px
+    }
+
+    .q-mr-lg {
+      margin-right: 24px
+    }
+
+    .q-mt-lg {
+      margin-top: 24px
+    }
+
+    .q-pt-xl {
+      padding-top: 48px
+    }
+
+    body {
+      min-width: 100px;
+      min-height: 100%;
+      font-family: Roboto, -apple-system, Helvetica Neue, Helvetica, Arial, sans-serif;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-smoothing: antialiased;
+      line-height: 1.5;
+      font-size: 14px
+    }
+
+    h1 {
+      font-size: 6rem;
+      font-weight: 300;
+      line-height: 6rem;
+      letter-spacing: -.01562em
+    }
+
+    h2 {
+      font-size: 3.75rem;
+      font-weight: 300;
+      line-height: 3.75rem;
+      letter-spacing: -.00833em
+    }
+
+    h3 {
+      font-size: 3rem;
+      font-weight: 400;
+      line-height: 3.125rem;
+      letter-spacing: normal
+    }
+
+    h4 {
+      font-size: 2.125rem;
+      font-weight: 400;
+      line-height: 2.5rem;
+      letter-spacing: .00735em
+    }
+
+    h6 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      line-height: 2rem;
+      letter-spacing: .0125em
+    }
+
+    p {
+      margin: 0 0 16px
+    }
+
+    .text-center {
+      text-align: center
+    }
+
+    .no-outline {
+      outline: 0 !important
+    }
+
+    .hide-scrollbar {
+      scrollbar-width: none;
+      -ms-overflow-style: none
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none
+    }
+
+    @media (max-width: 599.98px) {
+      .gt-xs {
+        display: none !important
+      }
+    }
+
+    @media (min-width: 600px) and (max-width: 1023.98px) {
+      .lt-sm {
+        display: none !important
+      }
+    }
+
+    @media (min-width: 1024px) and (max-width: 1439.98px) {
+      .lt-sm {
+        display: none !important
+      }
+    }
+
+    @media (min-width: 1440px) and (max-width: 1919.98px) {
+
+      .lt-sm,
+      .lt-lg {
+        display: none !important
+      }
+    }
+
+    @media (min-width: 1920px) {
+
+      .lt-sm,
+      .lt-lg {
+        display: none !important
+      }
+    }
+
+    .q-focus-helper,
+    .q-focusable,
+    .q-hoverable {
+      outline: 0
+    }
+
+    body.desktop .q-focus-helper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      border-radius: inherit;
+      opacity: 0;
+      transition: background-color .3s cubic-bezier(.25, .8, .5, 1), opacity .4s cubic-bezier(.25, .8, .5, 1)
+    }
+
+    body.desktop .q-focus-helper:before,
+    body.desktop .q-focus-helper:after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      border-radius: inherit;
+      transition: background-color .3s cubic-bezier(.25, .8, .5, 1), opacity .6s cubic-bezier(.25, .8, .5, 1)
+    }
+
+    body.desktop .q-focus-helper:before {
+      background: #000
+    }
+
+    body.desktop .q-focus-helper:after {
+      background: #fff
+    }
+
+    body.desktop .q-focusable:focus>.q-focus-helper,
+    body.desktop .q-hoverable:hover>.q-focus-helper {
+      background: currentColor;
+      opacity: .15
+    }
+
+    body.desktop .q-focusable:focus>.q-focus-helper:before,
+    body.desktop .q-hoverable:hover>.q-focus-helper:before {
+      opacity: .1
+    }
+
+    body.desktop .q-focusable:focus>.q-focus-helper:after,
+    body.desktop .q-hoverable:hover>.q-focus-helper:after {
+      opacity: .4
+    }
+
+    body.desktop .q-focusable:focus>.q-focus-helper {
+      opacity: .22
+    }
+
+    body.body--dark {
+      color: #fff;
+      background: var(--q-dark-page)
+    }
+
+    .q-dark {
+      color: #fff;
+      background: var(--q-dark)
+    }
+
+    body.body--dark,
+    .body--dark {
+      background-color: #212121 !important
+    }
+
+    p {
+      font-size: 15px;
+      margin-bottom: 0;
+      color: #fff;
+      text-align: left
+    }
+
+    h1 {
+      font-size: 75px;
+      margin: 0;
+      font-family: Poppins;
+      color: #fff
+    }
+
+    h2 {
+      font-size: 30px;
+      margin: 0;
+      font-family: Poppins;
+      color: #fff
+    }
+
+    h3 {
+      font-size: 25px;
+      margin: 0;
+      font-family: Poppins;
+      line-height: thin;
+      color: #fff
+    }
+
+    h4 {
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 22px;
+      font-family: Poppins;
+      color: #fff
+    }
+
+    h6 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 200;
+      font-family: Poppins;
+      color: #fff
+    }
+
+    .q-separator--horizontal {
+      height: 2px;
+      background-color: #0000001f
+    }
+
+    .q-card {
+      border-radius: 14px;
+      background-color: #212121
+    }
+
+    .centered {
+      justify-content: center;
+      display: flex;
+      flex-wrap: wrap
+    }
+
+    body.body--dark {
+      background: #1a3d67
+    }
+
+    .q-btn {
+      font-size: 13px
+    }
+
+    a {
+      color: #1a73e8
+    }
+
+    a:hover {
+      color: tomato
+    }
+
+    a:visited {
+      color: #6a5acd
+    }
+
+    .blurbg {
+      background-color: #0000004d;
+      -webkit-backdrop-filter: blur(15px);
+      backdrop-filter: blur(15px)
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        filter: blur(10px)
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0)
+      }
+    }
+
+    .fadeIn {
+      opacity: 0;
+      animation: fadeIn 1s .3s forwards;
+      animation-fill-mode: forwards
+    }
+
+    .parallax {
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-image: url(/homeBg-lg.webp)
+    }
+
+    @keyframes fadeIn2 {
+      to {
+        background-color: #0003
+      }
+    }
+
+    .parallax:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0000;
+      animation: fadeIn2 2s linear forwards
+    }
+
+    @media (max-width: 768px) {
+      .parallax {
+        background-image: url(/homeBg-sm.webp)
+      }
+    }
+
+    a {
+      color: #01bbb2
+    }
+
+    a:hover {
+      color: #f0f0f0
+    }
+
+    a:visited {
+      color: #01bbb2
+    }
+  </style>
+  <link rel="stylesheet" href="/assets/index.7a2a8675.css" media="print" data-media="all"
+    onload="this.media=this.dataset.media,delete this.dataset.media,this.onload=null;">
+  <link rel="modulepreload" as="script" href="/assets/MainLayout.d3ad696d.js" crossorigin>
+  <link rel="modulepreload" as="script" href="/assets/IndexPage.76851bac.js" crossorigin>
+  <link rel="stylesheet" href="/assets/IndexPage.a133c09d.css" media="print" data-media="all"
+    onload="this.media=this.dataset.media,delete this.dataset.media,this.onload=null;">
+  <link rel="modulepreload" as="script" href="/assets/Landing.7852ab9c.js" crossorigin>
+  <link rel="stylesheet" href="/assets/Landing.c15e2d8e.css" media="print" data-media="all"
+    onload="this.media=this.dataset.media,delete this.dataset.media,this.onload=null;">
+</head>
+
+<body class="desktop no-touch body--dark" data-server-rendered>
+  <script>function clearDOMAndStylesBasedOnRoute() { "/" !== window.location.pathname && (document.body.innerHTML = "") } clearDOMAndStylesBasedOnRoute()</script>
+  <h1 style=display:none>Welcome to FiddlArt - Create and Earn with Generative Art</h1>
+  <h2 style=display:none>Explore generative art with FiddlArt, where creativity meets opportunity. Join our community to
+    create, share, and earn from your unique art pieces.</h2>
+  <p style=display:none>Fiddl.Art is about turning your imagination into creative works without the need for complicated
+    techniques or tools. By simply describing what you envision, you can bring fresh ideas to life in a fun, accessible
+    environment. Our goal is to lower the barriers to creative expression, so anyone can explore their own artistic
+    potential and share it with the world.</p>
+  <div style=display:none><a href=/create>Turn your ideas into beautiful creations</a> <a href=/faceForge>Face Forge:
+      Train an AI model using your own images</a> <a href=/browse>Browse and search public creations</a> <a
+      href=/addPoints>Purchase Fiddl Points</a> <a href=/login>Login to your account</a> <a href=/tos>Terms of
+      Service</a> <a href=/blog>Blog</a></div>
+  <div id=q-app>
+    <div class="q-layout q-layout--standard" style="min-height:0px;" tabindex="-1"><!----><!---->
+      <header class="q-header q-layout__section--marginal fixed-top" style="">
+        <div class="q-toolbar row no-wrap items-center bg-grey-10" role="toolbar">
+          <div class="row q-mr-lg no-wrap items-center">
+            <div
+              class="q-tabs row no-wrap items-center q-tabs--not-scrollable q-tabs--horizontal q-tabs__arrows--inside q-tabs--mobile-without-arrows"
+              role="tablist"><!---->
+              <div
+                class="q-tabs__content scroll--mobile row no-wrap items-center self-stretch hide-scrollbar relative-position q-tabs__content--align-center">
+                <a class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-tab--no-caps q-focusable q-hoverable cursor-pointer q-router-link--exact-active q-router-link--active text-white"
+                  tabindex="0" role="tab" aria-selected="false" href="/">
+                  <div class="q-focus-helper" tabindex="-1"></div>
+                  <div
+                    class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                    <div class="row no-wrap cursor-pointer" style="padding-top:5px;padding-bottom:5px;"><i
+                        class="q-icon q-mr-sm" style="font-size:35px;padding-left:5px;" aria-hidden="true"
+                        role="presentation"><img src="/fiddlLogo.svg"></i></div>
+                  </div>
+                  <div class="q-tab__indicator absolute-bottom"></div>
+                </a><a
+                  class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer gt-xs text-white"
+                  tabindex="0" role="tab" aria-selected="false" href="/create">
+                  <div class="q-focus-helper" tabindex="-1"></div>
+                  <div
+                    class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                    create</div>
+                  <div class="q-tab__indicator absolute-bottom"></div>
+                </a><a
+                  class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer gt-xs text-white"
+                  tabindex="0" role="tab" aria-selected="false" href="/browse">
+                  <div class="q-focus-helper" tabindex="-1"></div>
+                  <div
+                    class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                    browse</div>
+                  <div class="q-tab__indicator absolute-bottom"></div>
+                </a><a
+                  class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer gt-xs text-white"
+                  tabindex="0" role="tab" aria-selected="false" href="/faceForge">
+                  <div class="q-focus-helper" tabindex="-1"></div>
+                  <div
+                    class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                    Face Forge</div>
+                  <div class="q-tab__indicator absolute-bottom"></div>
+                </a><a
+                  class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer gt-xs text-white"
+                  tabindex="0" role="tab" aria-selected="false" href="https://fiddl.art/blog">
+                  <div class="q-focus-helper" tabindex="-1"></div>
+                  <div
+                    class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                    Blog</div>
+                  <div class="q-tab__indicator absolute-bottom"></div>
+                </a>
+              </div><i class="q-icon notranslate material-icons q-tabs__arrow q-tabs__arrow--left absolute q-tab__icon"
+                style="" aria-hidden="true" role="presentation">chevron_left</i><i
+                class="q-icon notranslate material-icons q-tabs__arrow q-tabs__arrow--right absolute q-tab__icon q-tabs__arrow--faded"
+                style="" aria-hidden="true" role="presentation">chevron_right</i>
+            </div>
+          </div>
+          <div class="row justify-end full-width"><button
+              class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle q-btn--actionable q-focusable q-hoverable"
+              style="font-size:10px;" tabindex="0" type="button"><span class="q-focus-helper"></span><span
+                class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><span
+                  class="block">login / Register</span></span></button></div>
+        </div><!---->
+      </header>
+      <div class="q-page-container centered bg-grey-10" style="padding-top:50px;">
+        <div class="centered bg-dark" style="width:100vw;height:100%;">
+          <main class="q-page full-width full-height relative-position bg-black" style="min-height:calc(100vh - 50px);"
+            data-v-7cec0675>
+            <div data-v-7cec0675>
+              <div class="parallax full-width"
+                style="min-height:100vh;position:relative;background-position:center 53px;" data-v-7cec0675>
+                <div class="full-width" style="height:50px;"></div>
+                <div>
+                  <div class="centered q-pt-xl fadeIn">
+                    <div class="q-img q-img--menu q-ma-md relative-position"
+                      style="width:600px;max-width:80vw;opacity:0.9;" role="img" aria-label="fiddl logo">
+                      <div style="padding-bottom:56.24929688378895%;"></div>
+                      <div class="q-img__content absolute-full q-anchor--skip">
+                        <div class="gt-xs absolute"
+                          style="bottom:-10px;left:200px;background-color:transparent;text-wrap:nowrap;overflow:visible;">
+                          <h3>Create and Earn with AI Art</h3>
+                        </div>
+                        <div class="lt-sm absolute"
+                          style="bottom:-20px;left:30%;background-color:transparent;width:100%;">
+                          <h6>Create and Earn with AI Art</h6>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="centered q-mt-lg fadeIn"><a
+                      class="q-btn q-btn-item non-selectable no-outline q-btn--standard q-btn--rectangle q-btn--rounded bg-primary text-white q-btn--actionable q-focusable q-hoverable"
+                      style="font-size:20px;" tabindex="0" href="/create"><span class="q-focus-helper"></span><span
+                        class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><span
+                          class="block">Get Started</span></span></a></div>
+                  <div class="centered">
+                    <div class="row q-mt-lg q-gutter-lg q-pa-md" style="max-width:700px;"><!--[-->
+                      <div class="col" style="min-width:200px;">
+                        <div class="q-card q-card--dark q-dark q-card--flat no-shadow q-pa-md blurbg full-height fadeIn"
+                          style="min-height:200px;">
+                          <div class="centered">
+                            <div class="row q-gutter-md items-center"><i
+                                class="q-icon text-primary notranslate material-symbols-outlined"
+                                style="font-size:50px;" aria-hidden="true" role="presentation">stylus_note</i>
+                              <h4>Create</h4>
+                            </div>
+                          </div>
+                          <div class="q-mt-lg"></div>
+                          <hr
+                            class="q-separator q-separator--horizontal q-separator--horizontal-inset bg-grey q-separator--dark"
+                            style="margin-bottom:8px;margin-top:8px;" aria-orientation="horizontal">
+                          <div class="q-ma-md">
+                            <p>Create AI art with Fiddl&#39;s easy-to-use tools and the latest models.</p>
+                          </div>
+                          <div class="centered q-mt-lg">
+                            <div class="centered">
+                              <div class="col-grow"></div><a
+                                class="q-btn q-btn-item non-selectable no-outline q-btn--outline q-btn--rectangle q-btn--rounded text-primary q-btn--actionable q-focusable q-hoverable"
+                                style="font-size:14px;" tabindex="0" href="/blog/intro"><span
+                                  class="q-focus-helper"></span><span
+                                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                                    class="q-icon on-left notranslate material-icons" style="" aria-hidden="true"
+                                    role="img">question_mark</i><span class="block">What is Fiddl.art</span></span></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col" style="min-width:200px;">
+                        <div class="q-card q-card--dark q-dark q-card--flat no-shadow q-pa-md blurbg full-height fadeIn"
+                          style="min-height:200px;">
+                          <div class="centered">
+                            <div class="row q-gutter-md items-center"><i
+                                class="q-icon text-primary notranslate material-icons" style="font-size:50px;"
+                                aria-hidden="true" role="presentation">explore</i>
+                              <h4>Discover</h4>
+                            </div>
+                          </div>
+                          <div class="q-mt-lg"></div>
+                          <hr
+                            class="q-separator q-separator--horizontal q-separator--horizontal-inset bg-grey q-separator--dark"
+                            style="margin-bottom:8px;margin-top:8px;" aria-orientation="horizontal">
+                          <div class="q-ma-md">
+                            <p>Search, filter, and collect AI art created by the Fiddl community</p>
+                          </div>
+                          <div class="centered q-mt-lg">
+                            <div class="centered">
+                              <div class="col-grow"></div><a
+                                class="q-btn q-btn-item non-selectable no-outline q-btn--outline q-btn--rectangle q-btn--rounded text-primary q-btn--actionable q-focusable q-hoverable"
+                                style="font-size:14px;" tabindex="0" href="/blog/guides/imageModels"><span
+                                  class="q-focus-helper"></span><span
+                                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                                    class="q-icon on-left notranslate material-icons" style="" aria-hidden="true"
+                                    role="img">question_mark</i><span class="block">Image Models</span></span></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col" style="min-width:200px;">
+                        <div class="q-card q-card--dark q-dark q-card--flat no-shadow q-pa-md blurbg full-height fadeIn"
+                          style="min-height:200px;">
+                          <div class="centered">
+                            <div class="row q-gutter-md items-center"><i
+                                class="q-icon text-primary notranslate material-icons" style="font-size:50px;"
+                                aria-hidden="true" role="presentation">paid</i>
+                              <h4>Earn</h4>
+                            </div>
+                          </div>
+                          <div class="q-mt-lg"></div>
+                          <hr
+                            class="q-separator q-separator--horizontal q-separator--horizontal-inset bg-grey q-separator--dark"
+                            style="margin-bottom:8px;margin-top:8px;" aria-orientation="horizontal">
+                          <div class="q-ma-md">
+                            <p>Earn money by selling your creations on Fiddl.</p>
+                          </div>
+                          <div class="centered q-mt-lg">
+                            <div class="centered">
+                              <div class="col-grow"></div><a
+                                class="q-btn q-btn-item non-selectable no-outline q-btn--outline q-btn--rectangle q-btn--rounded text-primary q-btn--actionable q-focusable q-hoverable"
+                                style="font-size:14px;" tabindex="0" href="/blog/guides/fiddlPoints"><span
+                                  class="q-focus-helper"></span><span
+                                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                                    class="q-icon on-left notranslate material-icons" style="" aria-hidden="true"
+                                    role="img">question_mark</i><span class="block">Fiddl Points</span></span></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col" style="min-width:200px;">
+                        <div class="q-card q-card--dark q-dark q-card--flat no-shadow q-pa-md blurbg full-height fadeIn"
+                          style="min-height:200px;">
+                          <div class="centered">
+                            <div class="row q-gutter-md items-center"><i
+                                class="q-icon text-primary notranslate material-symbols-outlined"
+                                style="font-size:50px;" aria-hidden="true" role="presentation">instant_mix</i>
+                              <h4>Customize</h4>
+                            </div>
+                          </div>
+                          <div class="q-mt-lg"></div>
+                          <hr
+                            class="q-separator q-separator--horizontal q-separator--horizontal-inset bg-grey q-separator--dark"
+                            style="margin-bottom:8px;margin-top:8px;" aria-orientation="horizontal">
+                          <div class="q-ma-md">
+                            <p>Put yourself inside the artwork by uploading your photos.</p>
+                          </div>
+                          <div class="centered q-mt-lg">
+                            <div class="centered">
+                              <div class="col-grow"></div><a
+                                class="q-btn q-btn-item non-selectable no-outline q-btn--outline q-btn--rectangle q-btn--rounded text-primary q-btn--actionable q-focusable q-hoverable"
+                                style="font-size:14px;" tabindex="0" href="/blog/guides/faceForge"><span
+                                  class="q-focus-helper"></span><span
+                                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                                    class="q-icon on-left notranslate material-icons" style="" aria-hidden="true"
+                                    role="img">question_mark</i><span class="block">Face Forge</span></span></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div><!--]-->
+                    </div>
+                  </div>
+                  <div class="centered q-mt-lg"><button
+                      class="q-btn q-btn-item non-selectable no-outline q-btn--standard q-btn--rectangle q-btn--rounded bg-accent text-white q-btn--actionable q-focusable q-hoverable"
+                      style="font-size:20px;" tabindex="0" type="button"><span class="q-focus-helper"></span><span
+                        class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                          class="q-icon on-left notranslate material-icons" style="" aria-hidden="true"
+                          role="img">email</i><span class="block">Join the email list</span></span></button></div>
+                  <div class="centered q-mt-sm">
+                    <p>Receive special offers and updates</p>
+                  </div>
+                </div><!---->
+                <div class="full-width" style="height:50px;"></div>
+              </div>
+            </div>
+          </main>
+          <div class="full-width q-pa-md bg-grey-10">
+            <div class="centered items-center q-gutter-md"><a
+                class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle text-primary q-btn--actionable q-focusable q-hoverable"
+                style="" tabindex="0" href="https://twitter.com/fiddlart"><span class="q-focus-helper"></span><span
+                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                    class="q-icon fa-brands fa-x-twitter" style="" aria-hidden="true" role="img"> </i></span></a><a
+                class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle text-primary q-btn--actionable q-focusable q-hoverable"
+                style="" tabindex="0" href="https://www.instagram.com/fiddl.art"><span
+                  class="q-focus-helper"></span><span
+                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                    class="q-icon fa-brands fa-instagram" style="" aria-hidden="true" role="img"> </i></span></a><a
+                class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle text-primary q-btn--actionable q-focusable q-hoverable"
+                style="" tabindex="0" href="https://www.facebook.com/fiddlart"><span class="q-focus-helper"></span><span
+                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                    class="q-icon fa-brands fa-facebook" style="" aria-hidden="true" role="img"> </i></span></a><a
+                class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle text-primary q-btn--actionable q-focusable q-hoverable"
+                style="" tabindex="0" href="https://www.linkedin.com/company/fiddl-art"><span
+                  class="q-focus-helper"></span><span
+                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                    class="q-icon fa-brands fa-linkedin" style="" aria-hidden="true" role="img"> </i></span></a><a
+                class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--rectangle text-primary q-btn--actionable q-focusable q-hoverable"
+                style="" tabindex="0" href="https://t.me/fiddlart"><span class="q-focus-helper"></span><span
+                  class="q-btn__content text-center col items-center q-anchor--skip justify-center row"><i
+                    class="q-icon fa-brands fa-telegram" style="" aria-hidden="true" role="img"> </i></span></a></div>
+          </div>
+        </div>
+      </div>
+      <footer class="q-footer q-layout__section--marginal fixed-bottom lt-lg bg-grey-10" style="" color="black"><!---->
+        <div
+          class="q-tabs row no-wrap items-center q-tabs--not-scrollable q-tabs--horizontal q-tabs__arrows--inside q-tabs--mobile-without-arrows lt-sm"
+          role="tablist" color="black"><!---->
+          <div
+            class="q-tabs__content scroll--mobile row no-wrap items-center self-stretch hide-scrollbar relative-position q-tabs__content--align-center">
+            <a class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer text-white"
+              tabindex="0" role="tab" aria-selected="false" href="/create">
+              <div class="q-focus-helper" tabindex="-1"></div>
+              <div
+                class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                create</div>
+              <div class="q-tab__indicator absolute-bottom"></div>
+            </a><a
+              class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer text-white"
+              tabindex="0" role="tab" aria-selected="false" href="/browse">
+              <div class="q-focus-helper" tabindex="-1"></div>
+              <div
+                class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                browse</div>
+              <div class="q-tab__indicator absolute-bottom"></div>
+            </a><a
+              class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer text-white"
+              tabindex="0" role="tab" aria-selected="false" href="/faceForge">
+              <div class="q-focus-helper" tabindex="-1"></div>
+              <div
+                class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                Face Forge</div>
+              <div class="q-tab__indicator absolute-bottom"></div>
+            </a><a
+              class="q-tab relative-position self-stretch flex flex-center text-center q-tab--inactive q-focusable q-hoverable cursor-pointer text-white"
+              tabindex="0" role="tab" aria-selected="false" href="https://fiddl.art/blog">
+              <div class="q-focus-helper" tabindex="-1"></div>
+              <div
+                class="q-tab__content self-stretch flex-center relative-position q-anchor--skip non-selectable column">
+                Blog</div>
+              <div class="q-tab__indicator absolute-bottom"></div>
+            </a>
+          </div><i class="q-icon notranslate material-icons q-tabs__arrow q-tabs__arrow--left absolute q-tab__icon"
+            style="" aria-hidden="true" role="presentation">chevron_left</i><i
+            class="q-icon notranslate material-icons q-tabs__arrow q-tabs__arrow--right absolute q-tab__icon q-tabs__arrow--faded"
+            style="" aria-hidden="true" role="presentation">chevron_right</i>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+
+</html>
