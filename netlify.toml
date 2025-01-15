@@ -1,7 +1,7 @@
 [build]
   base = "."
-  publish = "dist/spa"
-  command = "yarn build"
+  publish = "dist/ssg"
+  command = "yarn build:ssg"
 
 [[edge_functions]]
   function = "handleRequestPage"

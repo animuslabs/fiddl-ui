@@ -55,7 +55,7 @@ function generateSitemap() {
 module.exports = configure(function (/* ctx */) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
-    // preFetch: true,
+    preFetch: true,
 
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
@@ -97,37 +97,42 @@ module.exports = configure(function (/* ctx */) {
         browsers: ["edge88", "firefox78", "chrome87", "safari13.1"], // Exclude IE by targeting only modern browsers
         // node: "node20",
       },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["vue", "vue-router", "pinia"],
+          },
+        },
+      },
+      minify: "terser",
+      terserOptions: {
+        compress: {
+          drop_console: true,
+        },
+      },
       vitePlugins: [
         viteCompression({
-          algorithm: "gzip", // Or 'brotliCompress'
-          ext: ".gz", // Or '.br' for Brotli
+          algorithm: "gzip",
+          ext: ".gz",
+          deleteOriginFile: false,
         }),
       ],
-      // vitePlugins: [
-      //   ["vite-tsconfig-paths", {
-      //     // projects: ['./tsconfig.json', '../../tsconfig.json'] // if you have multiple tsconfig files (e.g. in a monorepo)
-      //   }]
-      // ],
       extendViteConf(viteConf, { isServer, isClient }) {
-        // console.log(viteConf)
+        viteConf.resolve.alias = {
+          ...viteConf.resolve.alias,
+          "@": path.resolve(__dirname, "./src"),
+        }
+        // viteConf.plugins.push(
+        //   require('vite-plugin-rewrite-all')(),
+        //   require('vite-plugin-vue2')(),
+        //   require('vite-plugin-vue2-jsx')()
+        // )
         viteConf.logLevel = "error"
 
         Object.assign(viteConf.resolve.alias, {
           lib: path.join(__dirname, "./src/lib"),
         })
       },
-      // async extendViteConf(viteConf, { isClient, isServer }) {
-      //   // Dynamically import the required plugins
-      //   const vitePluginRewriteAll = (await import("vite-plugin-rewrite-all")).default
-      //   const viteTsconfigPaths = (await import("vite-tsconfig-paths")).default
-
-      //   // Push the plugins into the Vite configuration
-      //   viteConf.plugins.push(
-      //     vitePluginRewriteAll,
-      //     viteTsconfigPaths
-      //   )
-      // },
-
       vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
@@ -226,7 +231,9 @@ module.exports = configure(function (/* ctx */) {
       ],
     },
     ssg: {
+      includeStaticRoutes: false,
       routes: ["/", "/tos"],
+      exclude: ["/admin", "/faceForge"],
     },
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
