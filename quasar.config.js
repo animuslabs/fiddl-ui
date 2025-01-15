@@ -232,8 +232,8 @@ module.exports = configure(function (/* ctx */) {
     },
     ssg: {
       includeStaticRoutes: false,
-      routes: ["/", "/tos", "/browse"],
-      exclude: ["/admin", "/faceForge"],
+      routes: ["/", "/tos"],
+      exclude: ["/admin", "/faceForge", "/browse"],
     },
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
