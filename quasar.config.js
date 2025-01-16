@@ -94,8 +94,8 @@ module.exports = configure(function (/* ctx */) {
         PAYPAL_ID: process.env.PAYPAL_ID,
       },
       target: {
-        browsers: ["edge88", "firefox78", "chrome87", "safari13.1"], // Exclude IE by targeting only modern browsers
-        // node: "node20",
+        browser: ["es2022", "firefox115", "chrome115", "safari14"],
+        node: "node22",
       },
       vitePlugins: [
         viteCompression({
