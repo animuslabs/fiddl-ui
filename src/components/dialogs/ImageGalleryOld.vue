@@ -153,13 +153,13 @@ export default defineComponent({
     async loadHdImage(val: string) {
       if (!this.$userAuth.loggedIn) return
       this.userOwnsImage = false
-      let imageData = getImageFromCache(val)
+      let imageData = await getImageFromCache(val)
       if (!imageData) {
         this.loading = true
         imageData = (await this.$api.creations.hdImage.query(val).catch(() => {})) || undefined
         this.loading = false
         if (!imageData) return
-        storeImageInCache(val, imageData)
+        void storeImageInCache(val, imageData)
       }
       this.userOwnsImage = true
       const imageDataUrl = `data:image/webp;base64,${imageData}`

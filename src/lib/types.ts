@@ -1,5 +1,4 @@
-import { AuthenticationResponseJSON, AuthenticatorTransportFuture, Base64URLString, CredentialDeviceType, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from "@simplewebauthn/types"
-import type { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { Base64URLString, CredentialDeviceType } from "@simplewebauthn/types"
 
 export type OutputFormat = "jpeg" | "png" | "webp"
 export type StabilityAIContentResponse = {

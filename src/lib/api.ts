@@ -1,12 +1,12 @@
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import { ref, Ref } from "vue"
 import { jwt } from "lib/jwt"
-import { AppRouter } from "fiddl-server/dist/server"
+import type { AppRouter } from "../../../fiddl-server/dist/server"
 import ax from "axios"
 import superjson from "superjson"
 // import { AppRouter } from "./server"
 // Set up the API URL
-export let apiUrl = process.env.API_URL || "https://api.fiddl.art"
+export let apiUrl = import.meta.env.API_URL || "https://api.fiddl.art"
 if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl

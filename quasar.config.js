@@ -8,12 +8,12 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-const { configure } = require("quasar/wrappers")
-const path = require("node:path")
-require("dotenv").config()
-const fs = require("fs")
-const routeData = require("./src/router/routeData.json") // Adjust path as needed
-const viteCompression = require("vite-plugin-compression")
+import { configure } from "quasar/wrappers"
+import path from "node:path"
+import "dotenv/config"
+import fs from "fs"
+import routeData from "./src/router/routeData.json"
+import viteCompression from "vite-plugin-compression"
 
 function generateSitemap() {
   const baseUrl = "https://fiddl.art"
@@ -52,7 +52,7 @@ function generateSitemap() {
   fs.writeFileSync(path.join(__dirname, "public", "sitemap.xml"), rootSitemap)
   console.log("Sitemap generated successfully")
 }
-module.exports = configure(function (/* ctx */) {
+export default configure(function (/* ctx */) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -60,7 +60,7 @@ module.exports = configure(function (/* ctx */) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ["componentDefaults", "boot"],
+    boot: ["boot", "componentDefaults"],
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.sass"],
 
@@ -109,12 +109,34 @@ module.exports = configure(function (/* ctx */) {
       //   }]
       // ],
       extendViteConf(viteConf, { isServer, isClient }) {
-        // console.log(viteConf)
         viteConf.logLevel = "error"
 
         Object.assign(viteConf.resolve.alias, {
           lib: path.join(__dirname, "./src/lib"),
+          src: path.join(__dirname, "./src"),
         })
+
+        viteConf.define = {
+          global: "globalThis",
+          "process.env": {},
+        }
+
+        // Only keep essential polyfills that might be needed by other packages
+        viteConf.resolve = {
+          ...viteConf.resolve,
+          alias: {
+            ...viteConf.resolve.alias,
+            buffer: "buffer",
+          },
+        }
+
+        viteConf.optimizeDeps = {
+          ...viteConf.optimizeDeps,
+          include: [],
+          esbuildOptions: {
+            target: "esnext",
+          },
+        }
       },
       // async extendViteConf(viteConf, { isClient, isServer }) {
       //   // Dynamically import the required plugins
@@ -149,16 +171,16 @@ module.exports = configure(function (/* ctx */) {
         logLevel: "error", // Only display errors in the console
       },
 
-      vitePlugins: [
-        // ["vite-plugin-checker", {
-        //   vueTsc: {
-        //     tsconfigPath: "tsconfig.vue-tsc.json"
-        //   },
-        //   eslint: {
-        //     lintCommand: "eslint \"./**/*.{js,ts,mjs,cjs,vue}\""
-        //   }
-        // }, { server: false }]
-      ],
+      // vitePlugins: [
+      //   // ["vite-plugin-checker", {
+      //   //   vueTsc: {
+      //   //     tsconfigPath: "tsconfig.vue-tsc.json"
+      //   //   },
+      //   //   eslint: {
+      //   //     lintCommand: "eslint \"./**/*.{js,ts,mjs,cjs,vue}\""
+      //   //   }
+      //   // }, { server: false }]
+      // ],
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
@@ -219,7 +241,7 @@ module.exports = configure(function (/* ctx */) {
       prodPort: 3000, // The default port that the production server should use
       // (gets superseded if process.env.PORT is specified at runtime)
       extendSSRWebserverConf(config) {
-        config.external = ["@simplewebauthn/browser"]
+        // config.external = ["@simplewebauthn/browser"]
       },
       middlewares: [
         "render", // keep this as last one

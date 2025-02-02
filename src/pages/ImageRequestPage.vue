@@ -12,7 +12,7 @@ q-page
 
 </template>
 <script lang="ts">
-import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import imageGallery from "lib/imageGallery"
 import { avatarImg, img } from "lib/netlifyImg"
 

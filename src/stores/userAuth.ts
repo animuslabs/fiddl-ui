@@ -104,7 +104,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.notificationConfig = null
       this.userProfile = null
       umami.identify({ userId: "logged-out" })
-      clearImageCache()
+      void clearImageCache()
       useCreateCardStore().$reset()
       useCreations().$reset()
     },

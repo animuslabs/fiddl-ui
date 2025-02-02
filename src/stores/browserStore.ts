@@ -1,6 +1,5 @@
 import { defineStore } from "pinia"
 import api from "lib/api"
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { pickRand, toObject } from "lib/util"
 import { ratioRatings, type AspectRatio, type AspectRatioGrade, type ImageModel } from "lib/imageModels"
 
