@@ -46,7 +46,7 @@ function generateSitemap() {
     <loc>${baseUrl}/sitemap-root.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>${baseUrl}/blog/sitemap.xml</loc>
+    <loc>https://blog.fiddl.art/sitemap.xml</loc>
   </sitemap>
 </sitemapindex>`
   fs.writeFileSync(path.join(__dirname, "public", "sitemap.xml"), rootSitemap)
