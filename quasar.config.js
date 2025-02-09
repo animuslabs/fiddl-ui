@@ -34,7 +34,7 @@ function generateSitemap() {
   })
   // add /blog endpoint
   sitemap += `  <url>\n`
-  sitemap += `    <loc>${baseUrl}/blog</loc>\n`
+  sitemap += `    <loc>https://blog.fiddl.art</loc>\n`
   sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
   sitemap += `  </url>\n`
 
@@ -103,7 +103,6 @@ export default configure(function (/* ctx */) {
           },
         },
       },
-      minify: "terser",
       terserOptions: {
         compress: {
           drop_console: true,
