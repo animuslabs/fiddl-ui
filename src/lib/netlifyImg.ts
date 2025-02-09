@@ -1,7 +1,7 @@
-import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
+import type { ImageSize } from "../../../fiddl-server/dist/lib/types/serverTypes"
 
-const imageApiUrl = process.env.API_URL + "/images/" || "http://localhost:4444/images/"
-const avatarsApiUrl = process.env.API_URL + "/avatars/" || "http://localhost:4444/avatars/"
+const imageApiUrl = import.meta.env.API_URL + "/images/" || "http://localhost:4444/images/"
+const avatarsApiUrl = import.meta.env.API_URL + "/avatars/" || "http://localhost:4444/avatars/"
 const netlifyImgPath = "/.netlify/images?url=" + imageApiUrl
 const netlifyAvatarsPath = "/.netlify/images?url=" + avatarsApiUrl
 

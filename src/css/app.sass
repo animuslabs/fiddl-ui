@@ -1,4 +1,6 @@
 // app global css in Sass form
+@use "sass:color"
+
 body.body--dark
   background-color: $grey-10!important
 .body--dark
@@ -167,7 +169,7 @@ body.body--dark
 
 .selected-box
   outline: 4px solid rgba($secondary,1)
-  background: transparentize($secondary,.95 )
+  background: color.adjust($secondary, $alpha: -0.95)
 
   .q-field__input
     color: $pink

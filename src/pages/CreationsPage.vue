@@ -43,7 +43,7 @@ q-page.full-height.full-width
 </template>
 
 <script lang="ts">
-import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import imageGallery from "lib/imageGallery"
 import { img } from "lib/netlifyImg"
 import { extractImageId, toObject } from "lib/util"

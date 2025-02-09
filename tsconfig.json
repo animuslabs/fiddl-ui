@@ -1,6 +1,4 @@
 {
-  "extends": "@quasar/app-vite/tsconfig-preset",
-
   "vueCompilerOptions": {
     "plugins": ["@vue/language-plugin-pug"]
   },
@@ -8,11 +6,12 @@
     "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "types": ["vite/client", "node", "@types/node", "vue-router", "quasar"],
     "baseUrl": ".", // Needed to avoid TS error when using paths
     "allowJs": true,
     "noUnusedLocals": false,
+    "noImplicitAny": false,
     // `baseUrl` must be placed on the extending configuration in devland, or paths won't be recognized
     "esModuleInterop": true,
     "module": "esnext",
@@ -47,6 +46,7 @@
     "src/**/*.ts",
     "src/quasar.d.ts", // Explicitly include your custom type definitions
     "src/shims.d.ts", // Explicitly include your custom type definitions
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "quasar.config.js"
   ]
 }

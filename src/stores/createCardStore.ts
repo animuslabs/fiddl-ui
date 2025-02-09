@@ -1,6 +1,6 @@
 // stores/createCardStore.ts
 import { defineStore } from "pinia"
-import { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { aspectRatios, ImageModel, imageModelDatas } from "lib/imageModels"
 import { LocalStorage } from "quasar"
 import { toObject, catchErr } from "lib/util"

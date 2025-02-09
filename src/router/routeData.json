@@ -73,5 +73,10 @@
     "tos",
     "/tos",
     "TosPage"
+  ],
+  [
+    "pangeaLogin",
+    "/pangeaLogin",
+    "PangeaLoginPage"
   ]
 ]

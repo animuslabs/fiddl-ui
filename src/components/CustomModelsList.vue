@@ -115,7 +115,7 @@ export default defineComponent({
   },
   methods: {
     toggleModelPrivacy(model: CustomModel) {
-      this.$api.models.setModelPrivacy
+      void this.$api.models.setModelPrivacy
         .mutate({ id: model.id, public: !model.Public })
         .catch(catchErr)
         .then(() => {

@@ -18,7 +18,7 @@ import CreatedImageCard from "components/CreatedImageCard.vue"
 import { AspectRatioGrade, aspectRatios, imageModels, ratioRatings } from "lib/imageModels"
 import ImageMosaic from "components/ImageMosaic.vue"
 import Quasar, { LocalStorage, throttle, useQuasar } from "quasar"
-import { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import SearchBar from "src/components/BrowserSearchBar.vue"
 let interval: any = null
 // const gridModeOptions =
@@ -83,7 +83,7 @@ export default defineComponent({
       }
     },
     imgClass(index: number, ratio: AspectRatioGrade) {
-      let classes = []
+      let classes: string[] = []
       if (index === 0) classes.push("lg")
       else classes.push("sm")
       classes.push(ratio)

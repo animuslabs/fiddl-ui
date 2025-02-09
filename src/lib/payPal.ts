@@ -1,5 +1,5 @@
 import { loadScript, PayPalNamespace } from "@paypal/paypal-js"
-const payPalID = process.env.PAYPAL_ID
+const payPalID = import.meta.env.VITE_PAYPAL_ID
 
 export async function loadPayPal() {
   if (!payPalID) {

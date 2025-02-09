@@ -2,7 +2,7 @@
 
 import { defineStore } from "pinia"
 import api, { type ImagePurchase, type Image } from "lib/api"
-import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
 import { catchErr, toObject } from "lib/util"
 import { Dialog } from "quasar"

@@ -5,10 +5,11 @@ import api, { type NotificationConfig, type PointsTransfer, type UserData, type 
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
-import { catchErr } from "lib/util"
+import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { useCreations } from "src/stores/creationsStore"
+import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -68,6 +69,13 @@ export const useUserAuth = defineStore("userAuth", {
       jwt.save({ userId: userAuth.userId, token: userAuth.token })
       this.loggedIn = true
     },
+    async pangeaLogin(vcString: VerifiableCredential<{ accountName: string }>) {
+      const userAuth = await api.pangea.loginOrRegister.mutate({ vcString, referredBy: getReferredBy() })
+      this.logout()
+      this.setUserId(userAuth.userId)
+      jwt.save({ userId: userAuth.userId, token: userAuth.token })
+      this.loggedIn = true
+    },
     async adminLoginAsUser(userId: string) {
       const token = await api.admin.loginAsUser.mutate(userId)
       this.logout()
@@ -104,7 +112,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.notificationConfig = null
       this.userProfile = null
       umami.identify({ userId: "logged-out" })
-      clearImageCache()
+      void clearImageCache()
       useCreateCardStore().$reset()
       useCreations().$reset()
     },
