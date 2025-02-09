@@ -5,10 +5,11 @@ import api, { type NotificationConfig, type PointsTransfer, type UserData, type 
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
-import { catchErr } from "lib/util"
+import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { useCreations } from "src/stores/creationsStore"
+import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -63,6 +64,13 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async linkLogin(loginLinkId: string) {
       const userAuth = await api.loginLink.loginWithLink.mutate(loginLinkId)
+      this.logout()
+      this.setUserId(userAuth.userId)
+      jwt.save({ userId: userAuth.userId, token: userAuth.token })
+      this.loggedIn = true
+    },
+    async pangeaLogin(vcString: VerifiableCredential<{ accountName: string }>) {
+      const userAuth = await api.pangea.loginOrRegister.mutate({ vcString, referredBy: getReferredBy() })
       this.logout()
       this.setUserId(userAuth.userId)
       jwt.save({ userId: userAuth.userId, token: userAuth.token })

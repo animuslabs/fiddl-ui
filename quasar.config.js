@@ -1,3 +1,4 @@
+/* global process */
 /* eslint-env node */
 
 /*
@@ -14,6 +15,8 @@ import "dotenv/config"
 import fs from "fs"
 import routeData from "./src/router/routeData.json"
 import viteCompression from "vite-plugin-compression"
+
+const __dirname = path.resolve()
 
 function generateSitemap() {
   const baseUrl = "https://fiddl.art"
@@ -89,10 +92,6 @@ export default configure(function (/* ctx */) {
       beforeBuild: (params) => {
         generateSitemap()
       },
-      env: {
-        API_URL: process.env.API_URL,
-        PAYPAL_ID: process.env.PAYPAL_ID,
-      },
       target: {
         browser: ["es2022", "firefox115", "chrome115", "safari14"],
         node: "node22",
@@ -103,6 +102,7 @@ export default configure(function (/* ctx */) {
           ext: ".gz", // Or '.br' for Brotli
         }),
       ],
+      vueRouterMode: "history",
       // vitePlugins: [
       //   ["vite-tsconfig-paths", {
       //     // projects: ['./tsconfig.json', '../../tsconfig.json'] // if you have multiple tsconfig files (e.g. in a monorepo)
@@ -137,20 +137,12 @@ export default configure(function (/* ctx */) {
             target: "esnext",
           },
         }
+        if (process.env.NODE_ENV === "development") {
+          // fix for bug https://github.com/decentralized-identity/ethr-did-resolver/issues/186
+          console.log("Overriding ethr-did-resolver path")
+          viteConf.resolve.alias["ethr-did-resolver"] = path.resolve("./node_modules/ethr-did-resolver/src/index.ts")
+        }
       },
-      // async extendViteConf(viteConf, { isClient, isServer }) {
-      //   // Dynamically import the required plugins
-      //   const vitePluginRewriteAll = (await import("vite-plugin-rewrite-all")).default
-      //   const viteTsconfigPaths = (await import("vite-tsconfig-paths")).default
-
-      //   // Push the plugins into the Vite configuration
-      //   viteConf.plugins.push(
-      //     vitePluginRewriteAll,
-      //     viteTsconfigPaths
-      //   )
-      // },
-
-      vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -185,6 +177,7 @@ export default configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
+      history: true,
       // https: true
       open: false, // opens browser window automatically
     },

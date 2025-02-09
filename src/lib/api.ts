@@ -1,12 +1,9 @@
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import { ref, Ref } from "vue"
 import { jwt } from "lib/jwt"
-import type { AppRouter } from "../../../fiddl-server/dist/server"
+import type { RootRouter as AppRouter } from "../../../fiddl-server/src/lib/server/routers/rootRouter"
 import ax from "axios"
-import superjson from "superjson"
-// import { AppRouter } from "./server"
-// Set up the API URL
-export let apiUrl = import.meta.env.API_URL || "https://api.fiddl.art"
+export let apiUrl = import.meta.env.VITE_API_URL || "https://api.fiddl.art"
 if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl
@@ -35,8 +32,8 @@ const api = createTRPCProxyClient<AppRouter>({
       },
     }),
   ],
+  transformer: undefined, // explicitly set to undefined since we're not using superjson
 })
-
 export async function uploadTrainingImages(modelid: string, form: FormData, onProgress: (progress: number) => void) {
   const headers = {
     Authorization: `Bearer ${jwt.read()?.token}`,

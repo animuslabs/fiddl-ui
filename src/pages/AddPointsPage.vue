@@ -4,7 +4,7 @@ q-page.full-height.full-width
   .centered.q-mt-md.q-gutter-md
     .col-auto
       .shimmer
-        q-img(src="/fiddlPointsLogo-sm.svg" style="width:200px;")
+        q-img(src="/FiddlPointsLogo-sm.svg" style="width:200px;")
     .col-auto
       .row.q-ma-md
         h2 Add Fiddl Points
@@ -22,7 +22,7 @@ q-page.full-height.full-width
     q-card.q-pa-lg.cursor-pointer(v-if="packages.length>0" v-for="(pkg, index) in packages" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" :key="pkg.points")
       .centered.q-pb-md.items-center.q-gutter-sm
         h4 +{{ pkg.points.toLocaleString() }}
-        q-img(src="/fiddlPointsLogo-sm.svg" height="50px" width="50px")
+        q-img(src="/FiddlPointsLogo-sm.svg" height="50px" width="50px")
       .centered.q-pa-sm(style="border-radius: 15px;" :class="pkg.bgColor")
         h4(v-if="pkg.discountPct > 0") {{ pkg.discountPct * 100 }}% Discount
         h4(v-else) No Discount
@@ -48,7 +48,7 @@ q-page.full-height.full-width
           .col-auto
             .row.q-gutter-md.items-center
               .col
-                q-img(src="/fiddlPointsLogo-sm.svg" style="width:50px;")
+                q-img(src="/FiddlPointsLogo-sm.svg" style="width:50px;")
               .col-auto
                 .centered
                   h5 {{ $userAuth.userData?.availablePoints || 0 }}

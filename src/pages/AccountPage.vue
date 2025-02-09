@@ -31,7 +31,7 @@ q-page.full-height.full-width
         h6.q-pt-md Email
         .row.items-center
           div
-            h5 {{ userAuth.userProfile?.email?.toLowerCase() || "no email" }}
+            h5 {{ userAuth.userProfile?.email?.toLowerCase() || "No Email" }}
           div.q-ml-md
             q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
@@ -39,6 +39,20 @@ q-page.full-height.full-width
             q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
         .centered(v-if="!userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you verify your email
+        h6.q-pt-md Pangea Account
+        .row.items-center
+          div
+            h5 {{ userAuth.userProfile?.pangeaAccount?.toLowerCase() || "No Pangea Account" }}
+          div.q-ml-md
+            q-icon(v-if="userAuth.userProfile?.pangeaAccount" name="check" color="positive" size="sm")
+            q-icon(v-else name="close" color="negative" size="sm")
+          .q-ma-md(v-if="!userAuth.userProfile?.pangeaAccount")
+            q-btn( @click="pangeaLogin()" label="Link Pangea Account" flat color="positive" icon="sym_o_id_card" size="md")
+        .centered(v-if="!userAuth.userProfile?.pangeaAccount").q-mt-sm
+          small.text-positive Earn 100 Points when you link your Pangea Account
+        .centered(v-else).q-mt-sm
+          small.text-positive You Earned 100 Points for linking your Pangea Account
+        a(href="https://pangea.web4.world") Learn more about Pangea
     .centered.q-mt-md(v-else)
       h4 Please login to view your account
 </template>
@@ -49,6 +63,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
+import { pangeaLogin } from "lib/pangea"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -74,6 +89,7 @@ export default defineComponent({
   components: { PointsTransfer },
   data() {
     return {
+      pangeaLogin,
       userAuth: useUserAuth(),
       editingUsername: false,
       newUsername: "",

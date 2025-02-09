@@ -6,7 +6,7 @@
     "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "types": ["vite/client", "node", "@types/node", "vue-router", "quasar"],
     "baseUrl": ".", // Needed to avoid TS error when using paths
     "allowJs": true,
@@ -46,6 +46,7 @@
     "src/**/*.ts",
     "src/quasar.d.ts", // Explicitly include your custom type definitions
     "src/shims.d.ts", // Explicitly include your custom type definitions
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "quasar.config.js"
   ]
 }
