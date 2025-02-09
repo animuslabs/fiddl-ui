@@ -4,7 +4,7 @@ q-page.full-width.full-height.relative-position.bg-black
     ProfilePage(:userId="userId")
   div(v-else)
 
-    Landing
+    Landing(:triggerMailForm="showMailForm")
 
 </template>
 <style lang="sass" scoped>
@@ -48,7 +48,9 @@ export default defineComponent({
     }
   },
   watch: {},
-  async mounted() {},
+  mounted() {
+    if (this.$route.name == "newsletter") this.showMailForm = true
+  },
   methods: {},
 })
 </script>

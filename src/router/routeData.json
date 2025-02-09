@@ -5,6 +5,11 @@
     "IndexPage"
   ],
   [
+    "newsletter",
+    "/newsletter",
+    "IndexPage"
+  ],
+  [
     "profile",
     "@:username",
     "ProfilePage"

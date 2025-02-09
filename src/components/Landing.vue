@@ -161,6 +161,9 @@ const infoCards = [
 
 export default defineComponent({
   components: { InfoCard },
+  props: {
+    triggerMailForm: Boolean,
+  },
   data() {
     return {
       showMailSpinner: true,
@@ -170,7 +173,13 @@ export default defineComponent({
       infoCards,
     }
   },
-  watch: {},
+  watch: {
+    triggerMailForm(newVal) {
+      if (newVal) {
+        this.showMailForm = true
+      }
+    },
+  },
   methods: {
     hideMailSpinner() {
       this.showMailSpinner = false
