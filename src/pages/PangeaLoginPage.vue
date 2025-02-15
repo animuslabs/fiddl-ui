@@ -5,17 +5,12 @@ q-page.full-height.full-width
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import LoginDialog from "src/components/dialogs/LoginRegister.vue"
-import { Dialog, Loading, Notify } from "quasar"
-import SendLink from "src/components/dialogs/SendLink.vue"
-import umami from "lib/umami"
-import SendText from "src/components/dialogs/SendText.vue"
-import { pangeaLogin } from "lib/pangea"
 import { ExternalUser } from "@tonomy/tonomy-id-sdk"
-import api from "lib/api"
-import { getReferredBy } from "lib/util"
+import { pangeaLogin } from "lib/pangea"
+import { Dialog, Loading, Notify } from "quasar"
+import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 import { useUserAuth } from "src/stores/userAuth"
+import { defineComponent } from "vue"
 
 export default defineComponent({
   components: {

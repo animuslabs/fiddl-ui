@@ -7,7 +7,6 @@ import type { QuasarContext } from "@quasar/app-vite/types/configuration/context
 
 declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
-    $q: QuasarContext
     $router: Router
     $route: RouteLocationAsRelativeGeneric
     $api: APIType

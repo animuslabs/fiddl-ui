@@ -67,14 +67,12 @@ export default defineComponent({
         umami.track("linkLogin")
       } catch (e: any) {
         console.error(e)
-        this.$q
-          .dialog({
-            message: "Error logging in with link:" + e.message,
-            color: "negative",
-          })
-          .onDismiss(() => {
-            void this.$router.replace({ name: "login" })
-          })
+        Dialog.create({
+          message: "Error logging in with link:" + e.message,
+          color: "negative",
+        }).onDismiss(() => {
+          void this.$router.replace({ name: "login" })
+        })
         umami.track("linkLoginError", e.message)
       }
       Loading.hide()
