@@ -11,7 +11,7 @@ q-card.q-pa-md.blurbg.full-height.fadeIn(style="min-height:200px;")
   .centered.q-mt-lg
     .centered
       .col-grow
-      q-btn(:label="hrefLabel" rounded color="primary"  type="a" v-if="href" :href="href"  icon="question_mark" outline size="md")
+      //- q-btn(:label="hrefLabel" rounded color="primary"  type="a" v-if="href" :href="href"  icon="question_mark" outline size="md")
     //- h5.q-mt-sm(v-if="href") Learn about #[a(href="href") {{hrefLabel}}]
 
 </template>
