@@ -69,7 +69,7 @@ export default defineComponent({
   components: {},
   data() {
     return {
-      promoPoints: 100,
+      promoPoints: 100 as string | number | null,
       claimedPromoCodes: [] as PromoCode[],
       unclaimedPromoCodes: [] as PromoCode[],
       tab: "promo-codes",
@@ -101,7 +101,7 @@ export default defineComponent({
       void copyToClipboard(claimUrl)
     },
     async createPromoCode() {
-      const code = await this.$api.promo.createPromoCode.mutate({ points: this.promoPoints })
+      const code = await this.$api.promo.createPromoCode.mutate({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
 
       const claimUrl = `${window.location.origin}/claim/${longIdToShort(code.id)}`
       void copyToClipboard(claimUrl)
