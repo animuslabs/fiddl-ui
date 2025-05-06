@@ -83,5 +83,10 @@
     "pangeaLogin",
     "/pangeaLogin",
     "PangeaLoginPage"
+  ],
+  [
+    "authCallback",
+    "/auth/callback",
+    "AuthCallback"
   ]
 ]

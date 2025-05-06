@@ -76,6 +76,24 @@ export const useUserAuth = defineStore("userAuth", {
       jwt.save({ userId: userAuth.userId, token: userAuth.token })
       this.loggedIn = true
     },
+    async privyLogin(userId: string, token: string) {
+      // Register with backend if needed
+      try {
+        await api.user.findByPrivyId.query(userId)
+      } catch (e) {
+        // User doesn't exist, register them
+        await api.user.registerPrivy.mutate({
+          privyUserId: userId,
+          referredBy: getReferredBy(),
+        })
+      }
+
+      this.logout()
+      this.setUserId(userId)
+      jwt.save({ userId, token })
+      this.loggedIn = true
+      await this.loadUserData(userId)
+    },
     async adminLoginAsUser(userId: string) {
       const token = await api.admin.loginAsUser.mutate(userId)
       this.logout()
