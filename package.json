@@ -1,8 +1,8 @@
 {
   "name": "fiddl.art",
   "version": "0.0.1",
-  "description": "fiddl.art",
-  "productName": "fiddl.art",
+  "description": "app.fiddl.art",
+  "productName": "app.fiddl.art",
   "author": "john@boid.com",
   "type": "module",
   "private": true,

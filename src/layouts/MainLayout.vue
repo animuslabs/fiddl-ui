@@ -4,7 +4,7 @@ q-layout(view="lHh Lpr lFf" )
     q-toolbar.bg-grey-10
       .row.q-mr-lg.no-wrap.items-center
         q-tabs
-          q-route-tab(:to="{ name: 'index',params:{'username':''},force:true }" no-caps exact).text-white
+          q-route-tab(href="https://fiddl.art" no-caps exact).text-white
             .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
               q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
@@ -16,7 +16,7 @@ q-layout(view="lHh Lpr lFf" )
             | browse
           q-route-tab(:to="{ name: 'faceForge' }").gt-xs.text-white
             | Face Forge
-          q-route-tab(href="https://blog.fiddl.art").gt-xs.text-white
+          q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
           //-   | vote
