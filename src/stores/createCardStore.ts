@@ -10,6 +10,7 @@ import umami from "lib/umami"
 import { CustomModel } from "lib/api"
 import { useUserAuth } from "src/stores/userAuth"
 import api from "lib/api"
+import { createImprovePrompt, createRandomPrompt, modelsGetModel } from "lib/orval"
 
 const defaultImageRequest: CreateImageRequest = {
   prompt: "",
@@ -66,7 +67,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
   },
   actions: {
     async loadCustomModel(modelId: string) {
-      const customModel = await api.models.getModel.query(modelId)
+      const response = await modelsGetModel({ id: modelId })
+      const customModel = response.data
       this.customModel = customModel
       this.req.customModelName = customModel.name
       this.req.customModelId = customModel.id
@@ -90,7 +92,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
     async newPrompt() {
       this.loading.new = true
-      this.req.prompt = (await this.api.create.randomPrompt.mutate().catch(catchErr)) || this.req.prompt
+      const response = await createRandomPrompt({})
+      this.req.prompt = response.data || this.req.prompt
       if (this.req.seed) {
         this.req.seed = undefined
         this.req.quantity = 4
@@ -101,7 +104,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
     async improvePrompt() {
       this.loading.improve = true
-      this.req.prompt = (await this.api.create.improvePrompt.mutate(this.req.prompt).catch(catchErr)) || this.req.prompt
+      const response = await createImprovePrompt({ prompt: this.req.prompt })
+      this.req.prompt = response.data || this.req.prompt
       this.loading.improve = false
       await this.userAuth.loadUserData()
       umami.track("improvePrompt")
@@ -109,7 +113,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
     async randomizePrompt() {
       this.loading.randomize = true
       const existingPrompt = this.req.prompt.length > 0 ? this.req.prompt : undefined
-      this.req.prompt = (await this.api.create.randomPrompt.mutate(existingPrompt).catch(catchErr)) || this.req.prompt
+      const response = await createRandomPrompt({ theme: existingPrompt })
+      this.req.prompt = response.data || this.req.prompt
       this.loading.randomize = false
       await this.userAuth.loadUserData()
       umami.track("randomizePrompt")

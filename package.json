@@ -17,7 +17,8 @@
     "lint": "eslint --fix ./src",
     "tsc": "npx vue-tsc --noEmit",
     "format": "prettier --write \"src/**/*.{js,ts,css,html,vue}\"",
-    "dev:ssg": "quasar ssg dev"
+    "dev:ssg": "quasar ssg dev",
+    "orval": "orval --config ./orval.config.ts"
   },
   "dependencies": {
     "@netlify/edge-functions": "^2.11.0",
@@ -27,9 +28,9 @@
     "@quasar/extras": "1.16.16",
     "@simplewebauthn/browser": "^13.1.0",
     "@simplewebauthn/types": "^12.0.0",
-    "@tonomy/tonomy-id-sdk": "^0.28.0",
-    "@trpc/client": "^10.45.2",
-    "@trpc/server": "^10.45.2",
+    "@tanstack/vue-query": "^5.77.2",
+    "@trpc/client": "^11.1.2",
+    "@trpc/server": "^11.1.2",
     "@types/ms": "^0.7.34",
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
@@ -70,6 +71,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.28.0",
     "https-browserify": "^1.0.0",
+    "orval": "^7.9.0",
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "prettier": "^3.3.3",
@@ -91,6 +93,5 @@
   "resolutions": {
     "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
   },
-  "packageManager": "yarn@4.6.0",
   "browserslist": "last 4 Chrome versions"
 }

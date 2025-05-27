@@ -1,5 +1,5 @@
 import type { ImageCreateRequest } from "lib/api"
-import api from "lib/api"
+import { creationsCreateRequest } from "lib/orval"
 import { shortIdToLong } from "lib/util"
 import { defineStore } from "pinia"
 
@@ -13,7 +13,10 @@ export const useImageRequests = defineStore("imageRequests", {
     async loadRequest(shortId: string) {
       const longId = shortIdToLong(shortId)
       console.log("longId", longId)
-      const request = await api.creations.createRequest.query(longId)
+
+      const response = await creationsCreateRequest({ requestId: longId })
+      const request = response.data
+
       console.log("Loaded request", request)
       this.imageRequests[shortId] = request
       console.log(this.imageRequests)

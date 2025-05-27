@@ -6,7 +6,7 @@ q-page.full-height.full-width
   div(v-if="!loggingIn && !showPrivyLogin").full-width
     .centered.q-gutter-md.q-mt-md
       q-btn(label="Send Link" flat size="xl" icon="email" color="primary" @click="sendLink")
-      q-btn(label="Pangea Login" flat size="xl" icon="lock" color="primary" @click="pangeaLogin")
+      //- q-btn(label="Pangea Login" flat size="xl" icon="lock" color="primary" @click="pangeaLogin")
       q-btn(label="Privy Login" flat size="xl" icon="account_circle" color="primary" @click="showPrivyLogin = true")
 
     .centered.q-mt-xl
@@ -32,7 +32,7 @@ import { Dialog, Loading, Notify } from "quasar"
 import SendLink from "src/components/dialogs/SendLink.vue"
 import umami from "lib/umami"
 import SendText from "src/components/dialogs/SendText.vue"
-import { pangeaLogin } from "lib/pangea"
+// import { pangeaLogin } from "lib/pangea"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
 import { handleEmailLogin, handleOauthLogin } from "src/lib/privy"
 
@@ -44,7 +44,6 @@ export default defineComponent({
   data() {
     return {
       loggingIn: false,
-      pangeaLogin,
       showPrivyLogin: false,
     }
   },

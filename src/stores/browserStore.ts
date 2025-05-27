@@ -1,5 +1,6 @@
 import { defineStore } from "pinia"
-import api from "lib/api"
+// import api from "lib/api"
+import { creationsBrowseCreateRequests } from "src/lib/orval"
 import { pickRand, toObject } from "lib/util"
 import { ratioRatings, type AspectRatio, type AspectRatioGrade, type ImageModel } from "lib/imageModels"
 
@@ -78,29 +79,44 @@ export const useBrowserStore = defineStore("browserStore", {
       let endDateTime
       if (lastItem?.createdAt) {
         endDateTime = lastItem.createdAt
-        // endDateTime.setSeconds(endDateTime.getSeconds() + 1)
       }
-      const creations = await api.creations.browseCreateRequests.query({
-        order: "desc",
-        endDateTime: lastItem?.createdAt || undefined,
-        limit: 100,
-        promptIncludes: this.search?.length ? this.search : undefined,
-        aspectRatio: this.filter.aspectRatio || undefined,
-        model: this.filter.model || undefined,
-      })
-      console.log("creations", creations)
-      for (const creation of creations as any) {
-        this.addItem({
-          id: creation.id,
-          aspectRatio: creation.aspectRatio as AspectRatio,
-          ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
-          cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
-          imageIds: creation.images.map((el: any) => el.id),
-          createdAt: new Date(creation.createdAt),
-          creatorId: creation.user.id,
+
+      try {
+        // Replace tRPC call with direct call to creationsBrowseCreateRequests
+        const response = await creationsBrowseCreateRequests({
+          order: "desc",
+          endDateTime: lastItem?.createdAt ? lastItem.createdAt.toISOString() : undefined,
+          limit: 100,
+          promptIncludes: this.search?.length ? this.search : undefined,
+          aspectRatio: this.filter.aspectRatio || undefined,
+          model: this.filter.model || undefined,
         })
+
+        // Extract data from response
+        const creations = response.data
+        console.log("Full response:", response)
+        console.log("Response data type:", typeof response.data)
+        console.log("Is response.data an array?", Array.isArray(response.data))
+
+        // Process the data (same as before)
+        for (const creation of creations as any) {
+          // console.log("Single creation object:", creation)
+
+          this.addItem({
+            id: creation.id,
+            aspectRatio: creation.aspectRatio as AspectRatio,
+            ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
+            cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
+            imageIds: creation.images.map((el: any) => el.id),
+            createdAt: new Date(creation.createdAt),
+            creatorId: creation.user.id,
+          })
+        }
+      } catch (error) {
+        console.error("Error loading creations:", error)
+      } finally {
+        this.loading = false
       }
-      this.loading = false
     },
     async loadRecentCreations() {
       this.loading = true
@@ -109,35 +125,46 @@ export const useBrowserStore = defineStore("browserStore", {
       if (firstItem?.createdAt) {
         startDateTime = firstItem.createdAt
       }
-      const creations = await api.creations.browseCreateRequests.query({
-        order: "asc",
-        startDateTime: startDateTime || undefined,
-        limit: 100,
-        promptIncludes: this.search?.length ? this.search : undefined,
-        aspectRatio: this.filter.aspectRatio || undefined,
-        model: this.filter.model || undefined,
-      })
-      console.log("recent creations", creations)
 
-      for (const creation of creations as any) {
-        const newItem = {
-          id: creation.id,
-          aspectRatio: creation.aspectRatio as AspectRatio,
-          ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
-          cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
-          imageIds: creation.images.map((el: any) => el.id),
-          createdAt: new Date(creation.createdAt),
-          creatorId: creation.user.id,
-        }
+      try {
+        // Replace tRPC call with direct call to creationsBrowseCreateRequests
+        const response = await creationsBrowseCreateRequests({
+          order: "asc",
+          startDateTime: startDateTime ? startDateTime.toISOString() : undefined,
+          limit: 100,
+          promptIncludes: this.search?.length ? this.search : undefined,
+          aspectRatio: this.filter.aspectRatio || undefined,
+          model: this.filter.model || undefined,
+        })
 
-        // Check if the item already exists
-        const exists = this.items.some((item) => item.id === newItem.id)
-        if (!exists) {
-          // Add the new item at the beginning
-          this.items.unshift(newItem)
+        // Extract data from response
+        const creations = response.data
+        console.log("recent creations", creations)
+
+        // Process the data (same as before)
+        for (const creation of creations as any) {
+          const newItem = {
+            id: creation.id,
+            aspectRatio: creation.aspectRatio as AspectRatio,
+            ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
+            cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
+            imageIds: creation.images.map((el: any) => el.id),
+            createdAt: new Date(creation.createdAt),
+            creatorId: creation.user.id,
+          }
+
+          // Check if the item already exists
+          const exists = this.items.some((item) => item.id === newItem.id)
+          if (!exists) {
+            // Add the new item at the beginning
+            this.items.unshift(newItem)
+          }
         }
+      } catch (error) {
+        console.error("Error loading recent creations:", error)
+      } finally {
+        this.loading = false
       }
-      this.loading = false
     },
   },
   persist: false,

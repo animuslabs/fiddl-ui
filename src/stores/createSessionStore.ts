@@ -4,6 +4,7 @@ import { type CreateImageRequest, type CreateImageRequestData } from "../../../f
 import { catchErr, toObject } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
+import { createImage, type CreateImageBody } from "lib/orval"
 
 export const useCreateSession = defineStore("createSession", {
   state() {
@@ -34,9 +35,12 @@ export const useCreateSession = defineStore("createSession", {
     async generateImage(request: CreateImageRequest) {
       const creatorId = useUserAuth().userId
       if (!creatorId) throw new Error("User not authenticated")
-      const result = await api.create.image.mutate(request).catch(catchErr)
+
+      const response = await createImage(request as CreateImageBody)
+      const result = response.data
+
       if (!result) return
-      if (result.errors.length > 0) {
+      if (result.errors && result.errors.length > 0) {
         for (const err of result.errors) {
           Dialog.create({
             title: "Error",
@@ -46,6 +50,7 @@ export const useCreateSession = defineStore("createSession", {
           })
         }
       }
+
       const createdItem: CreateImageRequestData = {
         ...request,
         imageIds: result.ids.reverse(),
@@ -53,8 +58,8 @@ export const useCreateSession = defineStore("createSession", {
         createdAt: new Date(),
         creatorId,
       }
-      this.sessionItems.unshift(createdItem)
-      console.log(this.sessionItems)
+
+      this.addItem(createdItem)
     },
   },
   persist: false,

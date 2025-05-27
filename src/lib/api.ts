@@ -1,14 +1,18 @@
-import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
+import { createTRPCClient, httpBatchLink } from "@trpc/client"
 import { ref, Ref } from "vue"
 import { jwt } from "lib/jwt"
-import type { RootRouter as AppRouter } from "../../../fiddl-server/src/lib/server/routers/rootRouter"
+import { AppRouter } from "../../../fiddl-server/src/server"
 import ax from "axios"
+import superjson from "superjson"
+// import { AppRouter } from "./server"
+// Set up the API URL
 export let apiUrl = import.meta.env.VITE_API_URL || "https://api.fiddl.art"
 if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl
 }
 import { inferRouterOutputs, type inferRouterInputs } from "@trpc/server"
+import type { CollectionsGetCollectionImagesQueryResult, CreationsUserImagePurchasesQueryResult } from "lib/orval"
 
 console.log("API URL", apiUrl)
 
@@ -16,7 +20,7 @@ export const authToken: Ref<string | null> = ref(null)
 const jwtData = jwt.read()
 if (jwtData) authToken.value = jwtData.token
 
-const api = createTRPCProxyClient<AppRouter>({
+const api = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: `${apiUrl}/trpc`,
@@ -32,8 +36,8 @@ const api = createTRPCProxyClient<AppRouter>({
       },
     }),
   ],
-  transformer: undefined, // explicitly set to undefined since we're not using superjson
 })
+
 export async function uploadTrainingImages(modelid: string, form: FormData, onProgress: (progress: number) => void) {
   const headers = {
     Authorization: `Bearer ${jwt.read()?.token}`,
@@ -61,11 +65,13 @@ export async function uploadTrainingImages(modelid: string, form: FormData, onPr
 export type UserData = inferRouterOutputs<AppRouter>["user"]["get"]
 export type UserProfile = inferRouterOutputs<AppRouter>["user"]["profile"]
 export type PointsTransfer = inferRouterOutputs<AppRouter>["user"]["pointsHistory"][number]
-export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImagePurchases"][number]
+// export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImagePurchases"][number]
+export type ImagePurchase = CreationsUserImagePurchasesQueryResult["data"][number]
 export type ImageCreateRequest = inferRouterOutputs<AppRouter>["creations"]["createRequest"]
 export type ImageData = inferRouterOutputs<AppRouter>["creations"]["imageData"]
 export type PromoCode = inferRouterOutputs<AppRouter>["promo"]["getPromoCodeDetails"]
-export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
+// export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
+export type Image = CollectionsGetCollectionImagesQueryResult["data"][number]
 export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
 export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
 export type PublicProfile = inferRouterOutputs<AppRouter>["user"]["publicProfile"]
@@ -73,6 +79,8 @@ export type CustomModelWithRequests = inferRouterOutputs<AppRouter>["models"]["g
 export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getModel"]
 export type TrainingData = inferRouterOutputs<AppRouter>["models"]["getTrainingStatus"]
 export type User = inferRouterOutputs<AppRouter>["user"]["allUsers"][number]
+
+let purch
 
 export default api
 export type APIType = typeof api

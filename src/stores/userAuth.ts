@@ -1,6 +1,6 @@
 import { reactive } from "vue"
 import { passKeyAuth as pkAuth } from "lib/auth"
-import { createPinia, defineStore } from "pinia"
+import { defineStore } from "pinia"
 import api, { type NotificationConfig, type PointsTransfer, type UserData, type UserProfile } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
@@ -9,7 +9,8 @@ import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { useCreations } from "src/stores/creationsStore"
-import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
+import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile } from "lib/orval"
+// import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -27,26 +28,40 @@ export const useUserAuth = defineStore("userAuth", {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      this.notificationConfig = await api.user.getNotificationConfig.query()
+
+      const response = await userGetNotificationConfig()
+      this.notificationConfig = response.data
     },
     async loadUserData(userId?: string) {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      this.userData = await api.user.get.query(userId!)
+      if (!this.userId) return
+      if (!userId) userId = this.userId
+      const response = await userGet({ userId })
+      this.userData = response.data
     },
     async loadUserProfile(userId?: string) {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      this.userProfile = (await api.user.profile.query(userId!).catch(catchErr)) || null
-      if (this.userProfile) umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+
+      try {
+        const response = await userProfile({ userId: userId! })
+        this.userProfile = response.data
+
+        if (this.userProfile) umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+      } catch (error) {
+        this.userProfile = null
+      }
     },
     async loadPointsHistory(userId?: string) {
       if (!userId && !this.userId) return
       if (!userId && this.userId) userId = this.userId
       if (userId) this.userId = userId
-      this.pointsHistory = await api.user.pointsHistory.query({ userId, limit: 100 })
+
+      const response = await userPointsHistory({ userId, limit: 100 })
+      this.pointsHistory = response.data
     },
     setUserId(userId: string) {
       // clearImageCache()
@@ -63,29 +78,32 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
     },
     async linkLogin(loginLinkId: string) {
-      const userAuth = await api.loginLink.loginWithLink.mutate(loginLinkId)
+      const response = await loginLinkLoginWithLink({ linkId: loginLinkId })
+      const userAuth = response.data
+
       this.logout()
       this.setUserId(userAuth.userId)
       jwt.save({ userId: userAuth.userId, token: userAuth.token })
       this.loggedIn = true
     },
-    async pangeaLogin(vcString: VerifiableCredential<{ accountName: string }>) {
-      const userAuth = await api.pangea.loginOrRegister.mutate({ vcString, referredBy: getReferredBy() })
-      this.logout()
-      this.setUserId(userAuth.userId)
-      jwt.save({ userId: userAuth.userId, token: userAuth.token })
-      this.loggedIn = true
-    },
+    // async pangeaLogin(vcString: VerifiableCredential<{ accountName: string }>) {
+    //   const userAuth = await api.pangea.loginOrRegister.mutate({ vcString, referredBy: getReferredBy() })
+    //   this.logout()
+    //   this.setUserId(userAuth.userId)
+    //   jwt.save({ userId: userAuth.userId, token: userAuth.token })
+    //   this.loggedIn = true
+    // },
     async privyLogin(userId: string, token: string) {
-      // Register with backend if needed
       try {
-        await api.user.findByPrivyId.query(userId)
+        const result = await privyAuthenticate({ accessToken: token, referrerUsername: getReferredBy() })
+        const userAuth = result.data
+        this.logout()
+        this.setUserId(userAuth.userId)
+        jwt.save({ userId: userAuth.userId, token: userAuth.token })
+        this.loggedIn = true
       } catch (e) {
-        // User doesn't exist, register them
-        await api.user.registerPrivy.mutate({
-          privyUserId: userId,
-          referredBy: getReferredBy(),
-        })
+        console.log(e)
+        throw e
       }
 
       this.logout()
@@ -95,7 +113,9 @@ export const useUserAuth = defineStore("userAuth", {
       await this.loadUserData(userId)
     },
     async adminLoginAsUser(userId: string) {
-      const token = await api.admin.loginAsUser.mutate(userId)
+      const response = await adminLoginAsUser({ id: userId })
+      const token = response.data
+
       this.logout()
       this.setUserId(userId)
       jwt.save({ userId, token })
@@ -110,11 +130,11 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
     },
     async emailLogin(email: string) {
-      const userId = await api.user.findByEmail.query(email)
+      const { data: userId } = await userFindByEmail({ email })
       await this.pkLogin(userId)
     },
     async phoneLogin(phoneNumber: string) {
-      const userId = await api.user.findByPhone.query(phoneNumber)
+      const { data: userId } = await userFindByPhone({ phone: phoneNumber })
       await this.pkLogin(userId)
     },
     async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {

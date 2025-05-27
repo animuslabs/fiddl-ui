@@ -4,7 +4,8 @@ div.column.items-center.q-gutter-md.q-pa-md
 
   // Email login
   q-input(
-    v-model="email"
+    :model-value="email"
+    @update:model-value="val => email = String(val)"
     label="Email"
     type="email"
     class="full-width"
@@ -75,7 +76,7 @@ div.column.items-center.q-gutter-md.q-pa-md
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import { handleEmailLogin, handleOauthLogin, verifyEmailCode } from "src/lib/privy"
+import { handleEmailLogin, handleOauthLogin, privy, verifyEmailCode } from "src/lib/privy"
 import { useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
@@ -90,7 +91,7 @@ export default defineComponent({
     const loading = ref(false)
 
     const sendEmailCode = async () => {
-      if (!email.value) {
+      if (!email.value || email.value.trim() === "") {
         $q.notify({
           color: "negative",
           message: "Please enter your email address",
@@ -101,6 +102,7 @@ export default defineComponent({
       loading.value = true
       try {
         await handleEmailLogin(email.value)
+        // await privy.auth.email.send
         $q.notify({
           color: "positive",
           message: "Check your email for a verification code",

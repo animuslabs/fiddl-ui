@@ -93,7 +93,7 @@ export default defineComponent({
         emit("close")
 
         // Redirect to account page
-        router.push({ name: "account" })
+        void router.push({ name: "account" })
       } catch (error) {
         $q.notify({
           color: "negative",

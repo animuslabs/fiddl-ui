@@ -1,13 +1,12 @@
-// src/stores/creationsStore.ts
-
 import { defineStore } from "pinia"
-import api, { type ImagePurchase, type Image } from "lib/api"
+
+import { creationsCreateRequests, creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody } from "lib/orval"
 import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
-import { catchErr, toObject } from "lib/util"
 import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"
 import type { AspectRatio, ImageModel } from "lib/imageModels"
+import type { ImagePurchase, Image } from "lib/api"
 
 interface CreationImage {
   imageId: string
@@ -107,20 +106,21 @@ export const useCreations = defineStore("creationsStore", {
       try {
         this.activeUserId = userId
         const lastItem = this.creations[this.creations.length - 1]
-        console.log("lastItem", lastItem)
-        console.log("customModelId", this.customModelId || this.filter.customModelId)
-        const creations = await api.creations.createRequests.query({
+
+        const response = await creationsCreateRequests({
           userId,
           includeMetadata: true,
           order: "desc",
-          endDateTime: lastItem?.createdAt || undefined,
+          endDateTime: lastItem?.createdAt?.toISOString(),
           limit: 20,
-          customModelId: this.filter.model == "custom" ? this.customModelId || this.filter.customModelId || undefined : undefined,
-          promptIncludes: this.search?.length ? this.search : undefined,
-          aspectRatio: this.filter.aspectRatio || undefined,
-          model: this.filter.model || undefined,
+          customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
+          promptIncludes: this.search || undefined,
+          aspectRatio: this.filter.aspectRatio,
+          model: this.filter.model,
         })
-        console.log("creations", creations)
+
+        const creations = response.data
+        if (!creations) return
 
         for (const creation of creations) {
           this.addItem({
@@ -128,10 +128,11 @@ export const useCreations = defineStore("creationsStore", {
             createdAt: new Date(creation.createdAt),
           })
         }
-        this.loadingCreations = false
       } catch (err: any) {
-        this.loadingCreations = false
+        console.error("Error loading creations:", err)
         throw err
+      } finally {
+        this.loadingCreations = false
       }
     },
     async loadPurchases(userId?: string) {
@@ -140,17 +141,26 @@ export const useCreations = defineStore("creationsStore", {
       this.activeUserId = userId
       const lastItem = this.imagePurchases[this.imagePurchases.length - 1]
       console.log("lastItem", lastItem)
-      const purchases = await api.creations.userImagePurchases.query({
-        userId,
-        includeMetadata: true,
-        order: "desc",
-        endDateTime: lastItem?.createdAt ? new Date(lastItem.createdAt) : undefined,
-        limit: 20,
-      })
-      console.log("purchases", purchases)
-      for (const purchase of purchases) {
-        const idExists = this.imagePurchases.some((i) => i.id === purchase.id)
-        if (!idExists) this.imagePurchases.push(purchase)
+
+      try {
+        const response = await creationsUserImagePurchases({
+          userId,
+          includeMetadata: true,
+          order: "desc",
+          endDateTime: lastItem?.createdAt ? lastItem.createdAt : undefined,
+          limit: 20,
+        })
+
+        const purchases = response.data
+        console.log("purchases", purchases)
+
+        for (const purchase of purchases) {
+          const idExists = this.imagePurchases.some((i) => i.id === purchase.id)
+          if (!idExists) this.imagePurchases.push(purchase)
+        }
+      } catch (error) {
+        console.error("Error loading purchases:", error)
+        throw error
       }
     },
     async loadFavorites(userId?: string) {
@@ -158,24 +168,40 @@ export const useCreations = defineStore("creationsStore", {
       if (!userId) return
       if (this.activeUserId !== userId) this.favoritesCollectionId = null
       this.activeUserId = userId
-      if (!this.favoritesCollectionId) {
-        const collection = await api.collections.findCollectionByName.query({
-          collectionName: "likes",
-          ownerId: userId,
+
+      try {
+        if (!this.favoritesCollectionId) {
+          const response = await collectionsFindCollectionByName({
+            collectionName: "likes",
+            ownerId: userId,
+          })
+          this.favoritesCollectionId = response.data?.id || null
+        }
+
+        if (!this.favoritesCollectionId) return
+
+        const response = await collectionsGetCollectionImages({
+          id: this.favoritesCollectionId,
         })
-        this.favoritesCollectionId = collection?.id || null
+        const data = response.data
+        // data[0].
+        this.favorites = response.data.reverse()
+      } catch (error) {
+        console.error("Error loading favorites:", error)
+        throw error
       }
-      if (!this.favoritesCollectionId) return
-      this.favorites = (await api.collections.getCollectionImages.query(this.favoritesCollectionId)).reverse()
     },
     async generateImage(request: CreateImageRequestWithCustomModel) {
       const creatorId = useUserAuth().userId
       if (!creatorId) throw new Error("User not authenticated")
       if (!request.prompt) throw new Error("Prompt is required")
       if (typeof request.prompt !== "string") throw new Error("Prompt must be a string")
-      const result = await api.create.image.mutate(request as any).catch(catchErr)
+
+      const response = await createImage(request as CreateImageBody)
+      const result = response.data
+
       if (!result) return
-      if (result.errors.length > 0) {
+      if (result.errors && result.errors.length > 0) {
         for (const err of result.errors) {
           Dialog.create({
             title: "Error",
@@ -185,6 +211,7 @@ export const useCreations = defineStore("creationsStore", {
           })
         }
       }
+
       const createdItem: CreateImageRequestData = {
         ...request,
         imageIds: result.ids.reverse(),
@@ -194,6 +221,7 @@ export const useCreations = defineStore("creationsStore", {
         customModelId: request.customModelId,
         customModelName: request.customModelName,
       }
+
       this.creations.unshift(createdItem)
     },
   },
