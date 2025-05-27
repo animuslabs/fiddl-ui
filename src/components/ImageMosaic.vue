@@ -18,6 +18,7 @@ div(:class="containerClass")
 </template>
 
 <script lang="ts">
+import { userGetUsername } from "lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
 import { extractImageId, pickRand } from "lib/util"
 import { BrowserItem } from "src/stores/browserStore"
@@ -96,7 +97,13 @@ export default {
       const id = extractImageId(target.src)
       if (!id) return
       const index = item.imageIds.findIndex((el) => el === id)
-      const creatorName = (await this.$api.user.getUsername.query(item.creatorId).catch(console.error)) || ""
+      let creatorName = ""
+      try {
+        const response = await userGetUsername({ userId: item.creatorId })
+        creatorName = response.data || ""
+      } catch (error) {
+        console.error(error)
+      }
       const creatorMeta = { id: item.creatorId, username: creatorName }
       console.log("creatorMeta", creatorMeta)
       console.log("reqId", item.id)

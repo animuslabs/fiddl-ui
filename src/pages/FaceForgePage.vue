@@ -22,6 +22,8 @@ q-page
 
 <script lang="ts">
 import { defineComponent } from "vue"
+import { modelsGetModel, modelsGetTrainingStatus, modelsCreateModel } from "src/lib/orval"
+import { useQuasar } from "quasar"
 import { Loading } from "quasar"
 import { CustomModel, uploadTrainingImages, type TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
@@ -33,6 +35,10 @@ import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/store
 import { catchErr } from "lib/util"
 type FaceForgeMode = "pick" | "create" | "train"
 export default defineComponent({
+  setup() {
+    const $q = useQuasar()
+    return { $q }
+  },
   components: {
     PickModelComponent,
     CreateModelComponent,
@@ -69,7 +75,8 @@ export default defineComponent({
         const targetfaceForgeId = this.$route.query?.faceForgeId
         if (this.mode == "pick") return
         if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
-          const faceForgeModel = await this.$api.models.getModel.query(targetfaceForgeId).catch(catchErr)
+          const modelResponse = await modelsGetModel({ id: targetfaceForgeId }).catch(catchErr)
+          const faceForgeModel = modelResponse?.data
           if (!faceForgeModel) {
             this.mode = "pick"
           } else {
@@ -151,7 +158,8 @@ export default defineComponent({
     },
     async loadTrainingData() {
       if (!this.targetModelId) return
-      this.trainingData = (await this.$api.models.getTrainingStatus.query(this.targetModelId).catch(() => undefined)) || undefined
+      const trainingResponse = await modelsGetTrainingStatus({ id: this.targetModelId }).catch(() => undefined)
+      this.trainingData = trainingResponse?.data || undefined
     },
     async loadUserModels() {
       // Load user models if needed
@@ -159,13 +167,13 @@ export default defineComponent({
     async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: string; formData: FormData }) {
       try {
         Loading.show({ message: "Uploading files" })
-        const modelId = await this.$api.models.createModel
-          .mutate({
-            name: modelName,
-            type: "faceForge",
-            trainingPreset: trainingMode as any,
-          })
-          .catch(() => null)
+        const modelResponse = await modelsCreateModel({
+          name: modelName,
+          type: "faceForge",
+          trainingPreset: trainingMode as any,
+        }).catch(() => null)
+        
+        const modelId = modelResponse?.data
         if (!modelId) return Loading.hide()
         await uploadTrainingImages(modelId, formData, (progress) => {
           console.log(`Upload progress: ${progress.toFixed(2)}%`)
@@ -175,10 +183,10 @@ export default defineComponent({
         this.mode = "train"
         void this.loadTrainingData()
         Loading.hide()
-        this.$q.notify({ color: "positive", message: "Files uploaded!" })
+        this.$q?.notify({ color: "positive", message: "Files uploaded!" })
       } catch (err: any) {
         Loading.hide()
-        this.$q.dialog({
+        this.$q?.dialog({
           color: "negative",
           message: "Error uploading files: " + err.message,
         })

@@ -15,6 +15,7 @@ q-page
 import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import imageGallery from "lib/imageGallery"
 import { avatarImg, img } from "lib/netlifyImg"
+import { userGetUsername } from "src/lib/orval"
 
 import { getReferredBy, longIdToShort, setReferredBy, shortIdToLong, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
@@ -64,7 +65,8 @@ export default defineComponent({
           customModelId: req.customModelId,
           customModelName: req.customModelName,
         }
-        this.creatorUsername = (await this.$api.user.getUsername.query(req.creatorId).catch(console.error)) || ""
+        const userResponse = await userGetUsername({ userId: req.creatorId }).catch(console.error)
+        this.creatorUsername = userResponse?.data || ""
         const targetIndex = this.$route.query?.index
         console.log("targetIndex", targetIndex)
         if (targetIndex != undefined && typeof targetIndex == "string") {
@@ -74,7 +76,7 @@ export default defineComponent({
         }
         const referrerAlreadySet = getReferredBy()
         if (referrerAlreadySet) return
-        const creatorUsername = await this.$api.user.getUsername.query(req.creatorId)
+        const creatorUsername = this.creatorUsername
         if (creatorUsername) setReferredBy(creatorUsername)
       }
     },

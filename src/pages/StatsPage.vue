@@ -39,6 +39,7 @@ q-page.full-height.full-width
 import { jwt } from "lib/jwt"
 import { copyToClipboard, Dialog } from "quasar"
 import { defineComponent } from "vue"
+import { statsUsers, statsImages, statsCollections, statsPayments, statsApiMetrics } from "src/lib/orval"
 
 export default defineComponent({
   components: {},
@@ -70,11 +71,20 @@ export default defineComponent({
       }
     },
     async load() {
-      this.stats.users = await this.$api.stats.users.query()
-      this.stats.images = await this.$api.stats.images.query()
-      this.stats.collections = await this.$api.stats.collections.query()
-      this.stats.payments = await this.$api.stats.payments.query()
-      this.stats.apiMetrics = await this.$api.stats.apiMetrics.query()
+      const usersResponse = await statsUsers()
+      this.stats.users = usersResponse.data
+
+      const imagesResponse = await statsImages()
+      this.stats.images = imagesResponse.data
+
+      const collectionsResponse = await statsCollections()
+      this.stats.collections = collectionsResponse.data
+
+      const paymentsResponse = await statsPayments()
+      this.stats.payments = paymentsResponse.data
+
+      const apiMetricsResponse = await statsApiMetrics()
+      this.stats.apiMetrics = apiMetricsResponse.data
     },
   },
 })

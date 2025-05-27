@@ -431,6 +431,12 @@ export type CreationsSetRequestPrivacyBody = {
   public: boolean;
 };
 
+export type PointsPackagesAvailable200Item = {
+  points: number;
+  discountPct: number;
+  usd: number;
+};
+
 export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
 
 
@@ -448,6 +454,64 @@ export type PointsInitBuyPackageBody = {
   packageId: number;
   method: PointsInitBuyPackageBodyMethod;
 };
+
+export type PointsInitBuyPackage200AnyOfLinksItem = {
+  href: string;
+  rel: string;
+  method: string;
+};
+
+export type PointsInitBuyPackage200AnyOf = {
+  id: string;
+  status: string;
+  links: PointsInitBuyPackage200AnyOfLinksItem[];
+};
+
+export type PointsInitBuyPackage200AnyOfThreeChainName = typeof PointsInitBuyPackage200AnyOfThreeChainName[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsInitBuyPackage200AnyOfThreeChainName = {
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
+
+export type PointsInitBuyPackage200AnyOfThreeTokenType = typeof PointsInitBuyPackage200AnyOfThreeTokenType[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsInitBuyPackage200AnyOfThreeTokenType = {
+  TLOS: 'TLOS',
+} as const;
+
+export type PointsInitBuyPackage200AnyOfThree = {
+  chainName: PointsInitBuyPackage200AnyOfThreeChainName;
+  tokenType: PointsInitBuyPackage200AnyOfThreeTokenType;
+  id: string;
+  userId: string;
+  tokenAmount: number;
+  usdValue: number;
+  fee: number;
+  /** @nullable */
+  transactionId: string | null;
+  /** @nullable */
+  transactionTime: string | null;
+  /** @nullable */
+  blockNumber: number | null;
+  /** @nullable */
+  memo: string | null;
+  /** @nullable */
+  senderWallet: string | null;
+  destWallet: string;
+  confirmed: boolean;
+  /** @nullable */
+  pointsGranted: number | null;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
+};
+
+export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
 
 export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
 
@@ -467,6 +531,70 @@ export type PointsFinishBuyPackageBody = {
   method: PointsFinishBuyPackageBodyMethod;
 };
 
+export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
+  currency_code: string;
+  value: string;
+};
+
+export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItem = {
+  reference_id: string;
+  amount: PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount;
+};
+
+export type PointsFinishBuyPackage200AnyOf = {
+  id: string;
+  status: string;
+  purchase_units: PointsFinishBuyPackage200AnyOfPurchaseUnitsItem[];
+};
+
+export type PointsFinishBuyPackage200AnyOfFour = {
+  status: string;
+};
+
+export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour;
+
+export type PointsGetOrders200PayPalOrdersItem = {
+  id: string;
+  orderID: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PointsGetOrders200CryptoOrdersItemChainName = typeof PointsGetOrders200CryptoOrdersItemChainName[keyof typeof PointsGetOrders200CryptoOrdersItemChainName];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsGetOrders200CryptoOrdersItemChainName = {
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
+
+export type PointsGetOrders200CryptoOrdersItem = {
+  id: string;
+  chainName: PointsGetOrders200CryptoOrdersItemChainName;
+  tokenAmount: number;
+  usdValue: number;
+  confirmed: boolean;
+  /** @nullable */
+  transactionId: string | null;
+  /** @nullable */
+  memo: string | null;
+  /** @nullable */
+  senderWallet: string | null;
+  destWallet: string;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
+};
+
+export type PointsGetOrders200 = {
+  payPalOrders: PointsGetOrders200PayPalOrdersItem[];
+  cryptoOrders: PointsGetOrders200CryptoOrdersItem[];
+};
+
 export type PointsGetOrderParams = {
 id: string;
 method: PointsGetOrderMethod;
@@ -484,6 +612,66 @@ export const PointsGetOrderMethod = {
   telosNative: 'telosNative',
   telosEVM: 'telosEVM',
 } as const;
+
+export type PointsGetOrder200AnyOf = {
+  id: string;
+  userId: string;
+  orderID: string;
+  amount: number;
+  currency: string;
+  status: string;
+  packageDetailsJSON: string;
+  /** @nullable */
+  orderDataJSON: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsGetOrder200AnyOfTwoChainName = {
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
+
+export type PointsGetOrder200AnyOfTwoTokenType = typeof PointsGetOrder200AnyOfTwoTokenType[keyof typeof PointsGetOrder200AnyOfTwoTokenType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsGetOrder200AnyOfTwoTokenType = {
+  TLOS: 'TLOS',
+} as const;
+
+export type PointsGetOrder200AnyOfTwo = {
+  chainName: PointsGetOrder200AnyOfTwoChainName;
+  tokenType: PointsGetOrder200AnyOfTwoTokenType;
+  id: string;
+  userId: string;
+  tokenAmount: number;
+  usdValue: number;
+  fee: number;
+  /** @nullable */
+  transactionId: string | null;
+  /** @nullable */
+  transactionTime: string | null;
+  /** @nullable */
+  blockNumber: number | null;
+  /** @nullable */
+  memo: string | null;
+  /** @nullable */
+  senderWallet: string | null;
+  destWallet: string;
+  confirmed: boolean;
+  /** @nullable */
+  pointsGranted: number | null;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
+};
+
+export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
 
 export type UserGetParams = {
 userId: string;
@@ -830,6 +1018,67 @@ export type LoginLinkLoginWithLinkBody = {
   linkId: string;
 };
 
+export type LoginLinkLoginWithLink200 = {
+  token: string;
+  userId: string;
+};
+
+export type StatsUsers200 = {
+  spentPoints: number;
+  spentOver100Points: number;
+  spentOver1000Points: number;
+  spentOver10000Points: number;
+  spentOver20000Points: number;
+  purchasedImage: number;
+  createdImage: number;
+  emailVerified: number;
+  phoneVerified: number;
+  instagramVerified: number;
+  twitterVerified: number;
+  setUsername: number;
+};
+
+export type _StatsImages200AverageImageQuantityPerCreateRequestAvg = {
+  /** @nullable */
+  quantity: number | null;
+};
+
+export type StatsImages200AverageImageQuantityPerCreateRequest = {
+  _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg;
+};
+
+export type StatsImages200 = {
+  totalCreated: number;
+  totalUpscaled: number;
+  totalImageCreateRequests: number;
+  averageImageQuantityPerCreateRequest: StatsImages200AverageImageQuantityPerCreateRequest;
+  purchasedImages: number;
+  totalPurchases: number;
+  privateImages: number;
+  imagesInAtLeastOneCollection: number;
+  imageCreationFailed: number;
+};
+
+export type StatsCollections200 = {
+  collectionsCreated: number;
+  emptyCollections: number;
+};
+
+export type _StatsPayments200PaypalOrdersTotalPaidSum = {
+  /** @nullable */
+  amount: number | null;
+};
+
+export type StatsPayments200PaypalOrdersTotalPaid = {
+  _sum: _StatsPayments200PaypalOrdersTotalPaidSum;
+};
+
+export type StatsPayments200 = {
+  incompletePayPayPalOrders: number;
+  completePayPayPalOrders: number;
+  paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
+};
+
 export type CollectionsImageInUsersCollectionParams = {
 name: string;
 imageId: string;
@@ -894,12 +1143,42 @@ export type PromoCreatePromoCodeBody = {
   points: number;
 };
 
+export type PromoCreatePromoCode200 = {
+  id: string;
+  points: number;
+  /** @nullable */
+  claimedByUserId: string | null;
+  /** @nullable */
+  claimedAt: string | null;
+  createdAt: string;
+};
+
 export type PromoDeletePromoCodeBody = {
   id: string;
 };
 
+export type PromoGetPromoCodes200Item = {
+  id: string;
+  points: number;
+  /** @nullable */
+  claimedByUserId: string | null;
+  /** @nullable */
+  claimedAt: string | null;
+  createdAt: string;
+};
+
 export type PromoGetPromoCodeDetailsParams = {
 id: string;
+};
+
+export type PromoGetPromoCodeDetails200 = {
+  id: string;
+  points: number;
+  /** @nullable */
+  claimedByUserId: string | null;
+  /** @nullable */
+  claimedAt: string | null;
+  createdAt: string;
 };
 
 export type PromoClaimPromoCodeBody = {
@@ -1096,6 +1375,11 @@ export type AdminLoginAsUserBody = {
 export type PrivyAuthenticateBody = {
   accessToken: string;
   referrerUsername?: string;
+};
+
+export type PrivyAuthenticate200 = {
+  token: string;
+  userId: string;
 };
 
 export const pkAuthRegisterStart = (
@@ -2180,7 +2464,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const pointsPackagesAvailable = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PointsPackagesAvailable200Item[]>> => {
     
     
     return axios.get(
@@ -2236,7 +2520,7 @@ export function usePointsPackagesAvailable<TData = Awaited<ReturnType<typeof poi
 
 export const pointsInitBuyPackage = (
     pointsInitBuyPackageBody: MaybeRef<PointsInitBuyPackageBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PointsInitBuyPackage200>> => {
     pointsInitBuyPackageBody = unref(pointsInitBuyPackageBody);
     
     return axios.post(
@@ -2292,7 +2576,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const pointsFinishBuyPackage = (
     pointsFinishBuyPackageBody: MaybeRef<PointsFinishBuyPackageBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PointsFinishBuyPackage200>> => {
     pointsFinishBuyPackageBody = unref(pointsFinishBuyPackageBody);
     
     return axios.post(
@@ -2348,7 +2632,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const pointsGetOrders = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PointsGetOrders200>> => {
     
     
     return axios.get(
@@ -2404,7 +2688,7 @@ export function usePointsGetOrders<TData = Awaited<ReturnType<typeof pointsGetOr
 
 export const pointsGetOrder = (
     params: MaybeRef<PointsGetOrderParams>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PointsGetOrder200>> => {
     params = unref(params);
     
     return axios.get(
@@ -3432,7 +3716,7 @@ export function useUserAllUsers<TData = Awaited<ReturnType<typeof userAllUsers>>
 
 export const loginLinkInitLoginLink = (
     loginLinkInitLoginLinkBody: MaybeRef<LoginLinkInitLoginLinkBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<string>> => {
     loginLinkInitLoginLinkBody = unref(loginLinkInitLoginLinkBody);
     
     return axios.post(
@@ -3488,7 +3772,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const loginLinkLoginWithLink = (
     loginLinkLoginWithLinkBody: MaybeRef<LoginLinkLoginWithLinkBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<LoginLinkLoginWithLink200>> => {
     loginLinkLoginWithLinkBody = unref(loginLinkLoginWithLinkBody);
     
     return axios.post(
@@ -3544,7 +3828,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const statsUsers = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<StatsUsers200>> => {
     
     
     return axios.get(
@@ -3600,7 +3884,7 @@ export function useStatsUsers<TData = Awaited<ReturnType<typeof statsUsers>>, TE
 
 export const statsImages = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<StatsImages200>> => {
     
     
     return axios.get(
@@ -3656,7 +3940,7 @@ export function useStatsImages<TData = Awaited<ReturnType<typeof statsImages>>, 
 
 export const statsCollections = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<StatsCollections200>> => {
     
     
     return axios.get(
@@ -3712,7 +3996,7 @@ export function useStatsCollections<TData = Awaited<ReturnType<typeof statsColle
 
 export const statsPayments = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<StatsPayments200>> => {
     
     
     return axios.get(
@@ -4168,7 +4452,7 @@ export function useCollectionsGetCollectionImages<TData = Awaited<ReturnType<typ
 
 export const promoCreatePromoCode = (
     promoCreatePromoCodeBody: MaybeRef<PromoCreatePromoCodeBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PromoCreatePromoCode200>> => {
     promoCreatePromoCodeBody = unref(promoCreatePromoCodeBody);
     
     return axios.post(
@@ -4280,7 +4564,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const promoGetPromoCodes = (
      options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PromoGetPromoCodes200Item[]>> => {
     
     
     return axios.get(
@@ -4336,7 +4620,7 @@ export function usePromoGetPromoCodes<TData = Awaited<ReturnType<typeof promoGet
 
 export const promoGetPromoCodeDetails = (
     params: MaybeRef<PromoGetPromoCodeDetailsParams>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PromoGetPromoCodeDetails200>> => {
     params = unref(params);
     
     return axios.get(
@@ -4846,7 +5130,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const adminLoginAsUser = (
     adminLoginAsUserBody: MaybeRef<AdminLoginAsUserBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<string>> => {
     adminLoginAsUserBody = unref(adminLoginAsUserBody);
     
     return axios.post(
@@ -4902,7 +5186,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const privyAuthenticate = (
     privyAuthenticateBody: MaybeRef<PrivyAuthenticateBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
+ ): Promise<AxiosResponse<PrivyAuthenticate200>> => {
     privyAuthenticateBody = unref(privyAuthenticateBody);
     
     return axios.post(

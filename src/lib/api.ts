@@ -80,7 +80,5 @@ export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getModel"]
 export type TrainingData = inferRouterOutputs<AppRouter>["models"]["getTrainingStatus"]
 export type User = inferRouterOutputs<AppRouter>["user"]["allUsers"][number]
 
-let purch
-
-export default api
-export type APIType = typeof api
+// export default api
+// export type APIType = typeof api

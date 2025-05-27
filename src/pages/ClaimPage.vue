@@ -36,6 +36,7 @@ q-page.full-height.full-width
 </template>
 
 <script lang="ts">
+import { promoGetPromoCodeDetails, promoClaimPromoCode } from "lib/orval"
 import { PromoCode } from "lib/api"
 import { jwt } from "lib/jwt"
 import { catchErr, longIdToShort, shortIdToLong } from "lib/util"
@@ -68,22 +69,31 @@ export default defineComponent({
   methods: {
     async loadPromoDetails() {
       const claimCode = shortIdToLong(this.promoCode)
-      this.promoDetails = (await this.$api.promo.getPromoCodeDetails.query(claimCode).catch(catchErr)) || undefined
+      try {
+        const response = await promoGetPromoCodeDetails({ id: claimCode })
+        this.promoDetails = response.data
+      } catch (error) {
+        catchErr(error)
+        this.promoDetails = undefined
+      }
     },
-    claimCode() {
+    async claimCode() {
       const claimCode = shortIdToLong(this.promoCode)
-      void this.$api.promo.claimPromoCode
-        .mutate(claimCode)
-        .catch(catchErr)
-        .then(() => {
-          Dialog.create({
-            title: "Success",
-            message: "Promo code claimed successfully",
-          }).onDismiss(() => {
-            void this.$userAuth.loadUserData()
-            void this.$router.push({ name: "browse" })
-          })
+      try {
+        await promoClaimPromoCode({ id: claimCode })
+        
+        Dialog.create({
+          title: "Success",
+          message: "Promo code claimed successfully",
+          ok: true,
+          color: "positive",
+        }).onDismiss(() => {
+          void this.$userAuth.loadUserData()
+          void this.$router.push({ name: "browse" })
         })
+      } catch (error) {
+        catchErr(error)
+      }
     },
   },
 })

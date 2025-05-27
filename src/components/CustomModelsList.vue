@@ -75,6 +75,7 @@ import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
+import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel } from "src/lib/orval"
 import { timeSince } from "lib/util"
 import { img } from "lib/netlifyImg"
 
@@ -114,24 +115,28 @@ export default defineComponent({
     console.log("mounted customModelsList")
   },
   methods: {
-    toggleModelPrivacy(model: CustomModel) {
-      void this.$api.models.setModelPrivacy
-        .mutate({ id: model.id, public: !model.Public })
-        .catch(catchErr)
-        .then(() => {
-          Notify.create(`${model.name} privacy updated to: ${!model.Public ? "Public" : "Private"}`)
-          model.Public = !model.Public
-        })
+    async toggleModelPrivacy(model: CustomModel) {
+      try {
+        await modelsSetModelPrivacy({ id: model.id, public: !model.Public })
+        Notify.create(`${model.name} privacy updated to: ${!model.Public ? "Public" : "Private"}`)
+        model.Public = !model.Public
+      } catch (error) {
+        catchErr(error)
+      }
     },
     privacyIcon(model: CustomModel) {
       return model.Public ? "visibility" : "visibility_off"
     },
     async setModelName() {
       if (!this.editingModelNameId) return
-      await this.$api.models.setModelName.mutate({ id: this.editingModelNameId, name: this.newModelName }).catch(catchErr)
-      this.showEditNameDialog = false
-      Notify.create("Model name updated")
-      await this.loadData()
+      try {
+        await modelsSetModelName({ id: this.editingModelNameId, name: this.newModelName })
+        this.showEditNameDialog = false
+        Notify.create("Model name updated")
+        await this.loadData()
+      } catch (error) {
+        catchErr(error)
+      }
     },
     editModelName(model: CustomModel) {
       this.editingModelNameId = model.id
@@ -140,11 +145,18 @@ export default defineComponent({
     },
     async loadData() {
       console.log("loadData")
-      const models = (await this.$api.models.getUserModels.query().catch(catchErr)) || []
-      if (!this.trainedOnly) {
-        this.models = models
-      } else {
-        this.models = models?.filter((m) => m.status === "trained")
+      try {
+        const response = await modelsGetUserModels()
+        const models = response?.data || []
+        
+        if (!this.trainedOnly) {
+          this.models = models
+        } else {
+          this.models = models?.filter((m) => m.status === "trained")
+        }
+      } catch (error) {
+        catchErr(error)
+        this.models = []
       }
     },
     handleModelClick(model: CustomModel) {
@@ -153,7 +165,7 @@ export default defineComponent({
       console.log("handleModelClick")
       this.$emit("modelClicked", model)
     },
-    deleteModel(model: CustomModel) {
+    async deleteModel(model: CustomModel) {
       console.log(model)
       Dialog.create({
         title: "Delete Model: " + model.name,
@@ -167,9 +179,13 @@ export default defineComponent({
           color: "primary",
         },
       }).onOk(async () => {
-        await this.$api.models.deleteModel.mutate(model.id).catch(catchErr)
-        Notify.create("Model deleted")
-        await this.loadData()
+        try {
+          await modelsDeleteModel({ id: model.id })
+          Notify.create(`${model.name} deleted`)
+          await this.loadData()
+        } catch (error) {
+          catchErr(error)
+        }
       })
     },
   },

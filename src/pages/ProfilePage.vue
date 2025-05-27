@@ -43,6 +43,7 @@ import ProfileCard from "src/components/ProfileCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
 import { useCreations } from "src/stores/creationsStore"
 import { defineComponent } from "vue"
+import { userPublicProfile, userFindByUsername } from "src/lib/orval"
 
 export default defineComponent({
   components: {
@@ -71,7 +72,8 @@ export default defineComponent({
         if (!val || oldVal != val) this.creationsStore.reset()
         if (!val) return
         this.creationsStore.activeUserId = val
-        this.publicProfile = (await this.$api.user.publicProfile.query(val).catch(catchErr)) || null
+        const profileResponse = await userPublicProfile({ userId: val }).catch(catchErr)
+        this.publicProfile = profileResponse?.data || null
         void this.load()
       },
     },
@@ -86,7 +88,8 @@ export default defineComponent({
     this.creationsStore.$reset()
     const username = this.$route.params?.username
     if (!username || typeof username != "string") return
-    const userId = await this.$api.user.findByUsername.query(username as string).catch(console.error)
+    const userIdResponse = await userFindByUsername({ username }).catch(console.error)
+    const userId = userIdResponse?.data
     if (!userId) {
       this.userId = null
       Notify.create({ message: "User not found", color: "negative" })

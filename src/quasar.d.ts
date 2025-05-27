@@ -9,7 +9,6 @@ declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
     $router: Router
     $route: RouteLocationAsRelativeGeneric
-    $api: APIType
     $userAuth: UserAuthStore
   }
 }

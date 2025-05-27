@@ -74,6 +74,7 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
+import { userSetBio, userSetNotificationConfig, userSetUsername, userSendVerificationEmail } from "src/lib/orval"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
@@ -139,37 +140,37 @@ export default defineComponent({
   },
   mounted() {},
   methods: {
-    updateBio() {
-      this.$api.user.setBio.mutate(this.userBio || "").catch(catchErr)
+    async updateBio() {
+      await userSetBio({ bio: this.userBio || "" }).catch(catchErr)
       this.bioEditMode = false
     },
-    updateNotificationConfig() {
+    async updateNotificationConfig() {
       if (!this.$userAuth.notificationConfig) return
-      this.$api.user.setNotificationConfig.mutate(this.$userAuth.notificationConfig as any).catch(catchErr)
+      await userSetNotificationConfig(this.$userAuth.notificationConfig as any).catch(catchErr)
     },
     copyRefLink() {
       const refLink = window.location.origin + "/?referredBy=" + this.$userAuth.userProfile?.username
       void copyToClipboard(refLink)
       Notify.create({ message: "Referral link copied to clipboard", color: "positive", icon: "check" })
     },
-    setNewUsername() {
-      this.$api.user.setUsername
-        .mutate(this.newUsername)
-        .then(() => {
-          this.editingUsername = false
-          void this.$userAuth.loadUserProfile()
-          Notify.create({ message: "Username updated", color: "positive", icon: "check" })
-        })
-        .catch((err: any) => {
-          console.error(err)
-          Dialog.create({ title: "Error Updating Username", message: err.message, color: "negative" })
-        })
+    async setNewUsername() {
+      try {
+        await userSetUsername({ username: this.newUsername })
+        this.editingUsername = false
+        void this.$userAuth.loadUserProfile()
+        Notify.create({ message: "Username updated", color: "positive", icon: "check" })
+      } catch (err) {
+        console.error(err)
+        Notify.create({ message: "Failed to update username", color: "negative", icon: "error" })
+      }
     },
     async verifyEmail() {
       if (!this.$userAuth.userProfile?.email) return
-      Loading.show({ message: "Sending verification email..." })
-      await this.$api.user.sendVerificationEmail.mutate().catch(catchErr)
+      
+      Loading.show()
+      await userSendVerificationEmail({ email: this.$userAuth.userProfile.email }).catch(catchErr)
       Loading.hide()
+      
       Dialog.create({
         message: "Verification email sent to " + this.$userAuth.userProfile?.email + " Click the link in the email to verify your account and earn 100 Fiddl Points.",
       })

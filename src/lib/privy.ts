@@ -1,5 +1,6 @@
 import Privy, { type OAuthProviderType } from "@privy-io/js-sdk-core"
 import api from "lib/api"
+import { privyAuthenticate } from "lib/orval"
 import { throwErr } from "lib/util"
 console.log("privy client", import.meta.env.VITE_PRIVY_APP_ID)
 if (!import.meta.env.VITE_PRIVY_APP_ID) throwErr("VITE_PRIVY_APP_ID is not defined in .env file")
@@ -67,9 +68,10 @@ export async function privyLogout() {
 
 export async function authenticateWithServer(accessToken: string, referrerUsername?: string) {
   // Call the server's authenticate endpoint
-  const result = await api.privy.authenticate.mutate({
+  const response = await privyAuthenticate({
     accessToken,
     referrerUsername,
   })
+  const result = response.data
   return result
 }

@@ -71,6 +71,7 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
+import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage } from "src/lib/orval"
 import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
@@ -137,14 +138,15 @@ export default defineComponent({
 
   async created() {},
   async mounted() {
-    await this.$api.points.packagesAvailable.query().then((res: any) => {
-      this.packages = res.map((el: any) => {
+    const packagesResponse = await pointsPackagesAvailable()
+    if (packagesResponse?.data) {
+      this.packages = packagesResponse.data.map((el: any) => {
         return {
           ...el,
           bgColor: el.discountPct > 0 ? "bg-positive" : "",
         }
       })
-    })
+    }
     if (this.userAuth.loggedIn) {
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
@@ -175,28 +177,49 @@ export default defineComponent({
         },
         createOrder: async () => {
           if (this.selectedPkgIndex === null) throwErr("Failed to create order")
-          const res = await this.$api.points.initBuyPackage.mutate({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
+          const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
+          if (!res?.data) return ""
           if (!res) return ""
-          return res.id
+          return res.data.id
         },
         onApprove: async (data, actions) => {
-          const res = await this.$api.points.finishBuyPackage.mutate({ method: "payPal", orderId: data.orderID })
-          if (!res) throwErr("Failed to capture order")
-          const errorDetail = res?.details?.[0]
-          if (errorDetail?.issue === "INSTRUMENT_DECLINED") {
-            return actions.restart()
-          }
-          if (errorDetail) {
+          try {
+            const res = await pointsFinishBuyPackage({ method: "payPal", orderId: data.orderID })
+            if (!res?.data) {
+              throwErr("Failed to capture order")
+              return
+            }
+            
+            // Handle success case
+            void this.userAuth.loadUserData()
+            void this.userAuth.loadPointsHistory()
+            Dialog.create({
+              title: "Success",
+              message: "Thank you for your purchase!",
+              ok: true,
+              color: "positive",
+            })
+            this.paymentCompleted()
+          } catch (error: any) {
+            // Check for declined instrument in error response
+            if (error?.response?.data?.details?.[0]?.issue === "INSTRUMENT_DECLINED") {
+              return actions.restart()
+            }
+            
+            const errorDetail = error?.response?.data?.details?.[0] || { description: 'Unknown error occurred' }
             console.error(errorDetail)
             Dialog.create({
               title: "Error",
               message: errorDetail.description,
               ok: true,
             })
-            umami.track("buyPointsPkgFailure", errorDetail)
-            throwErr("Failed to capture order: ", errorDetail)
+            // @ts-ignore
+            if (typeof umami !== 'undefined') {
+              // @ts-ignore
+              umami.track("buyPointsPkgFailure", errorDetail)
+            }
+            throwErr("Failed to capture order: " + errorDetail.description)
           }
-          this.paymentCompleted()
         },
       })
       const payPalDiv = this.$refs.paypal as HTMLDivElement
