@@ -9,8 +9,9 @@ import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { useCreations } from "src/stores/creationsStore"
-import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile } from "lib/orval"
+import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
+import { getAccessToken } from "@privy-io/react-auth"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -94,23 +95,21 @@ export const useUserAuth = defineStore("userAuth", {
     //   this.loggedIn = true
     // },
     async privyLogin(userId: string, token: string) {
+      let userAuth: PrivyAuthenticate200
       try {
         const result = await privyAuthenticate({ accessToken: token, referrerUsername: getReferredBy() })
-        const userAuth = result.data
+        userAuth = result.data
         this.logout()
+        console.log("userAuth", userAuth)
         this.setUserId(userAuth.userId)
         jwt.save({ userId: userAuth.userId, token: userAuth.token })
         this.loggedIn = true
+        await this.loadUserData(userAuth.userId)
       } catch (e) {
+        this.logout()
         console.log(e)
         throw e
       }
-
-      this.logout()
-      this.setUserId(userId)
-      jwt.save({ userId, token })
-      this.loggedIn = true
-      await this.loadUserData(userId)
     },
     async adminLoginAsUser(userId: string) {
       const response = await adminLoginAsUser({ id: userId })

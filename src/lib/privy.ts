@@ -1,4 +1,5 @@
 import Privy, { type OAuthProviderType } from "@privy-io/js-sdk-core"
+import { getAccessToken } from "@privy-io/react-auth"
 import { privyAuthenticate } from "lib/orval"
 import { throwErr } from "lib/util"
 console.log("privy client", import.meta.env.VITE_PRIVY_APP_ID)
@@ -20,8 +21,25 @@ export async function handleEmailLogin(email: string) {
 }
 
 export async function verifyEmailCode(email: string, code: string) {
-  const { user, is_new_user } = await privy.auth.email.loginWithCode(email, code)
-  return { user, isNewUser: is_new_user }
+  try {
+    // Perform login with code
+    const { user, is_new_user, privy_access_token, token } = await privy.auth.email.loginWithCode(email, code)
+    console.log(privy_access_token)
+    console.log(token)
+
+    // For debugging, log all keys that might contain the Privy token
+    console.log(
+      "Privy related localStorage keys:",
+      Object.keys(localStorage).filter((k) => k.toLowerCase().includes("privy")),
+    )
+    // const token = getAccessToken()
+    console.log("token", token)
+
+    return { user, isNewUser: is_new_user, token: privy_access_token }
+  } catch (error) {
+    console.error("Privy email verification error:", error)
+    throw error
+  }
 }
 
 // SMS login
@@ -30,8 +48,22 @@ export async function handleSmsLogin(phone: string) {
 }
 
 export async function verifySmsCode(phone: string, code: string) {
-  const { user, is_new_user } = await privy.auth.phone.loginWithCode(phone, code)
-  return { user, isNewUser: is_new_user }
+  try {
+    // Perform login with code
+    const { user, is_new_user } = await privy.auth.phone.loginWithCode(phone, code)
+
+    // For debugging, log all keys that might contain the Privy token
+    console.log(
+      "Privy related localStorage keys:",
+      Object.keys(localStorage).filter((k) => k.toLowerCase().includes("privy")),
+    )
+
+    // Use the user ID as the token
+    return { user, isNewUser: is_new_user, token: user.id }
+  } catch (error) {
+    console.error("Privy phone verification error:", error)
+    throw error
+  }
 }
 
 // OAuth login (Google, Discord, etc.)

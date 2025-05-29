@@ -79,8 +79,8 @@ export default defineComponent({
           result = await verifySmsCode(props.value, code.value)
         }
 
-        // Save the token to localStorage
-        const token = localStorage.getItem("privy:token")
+        // Use the token directly from the verification result
+        const token = result.token
 
         $q.notify({
           color: "positive",

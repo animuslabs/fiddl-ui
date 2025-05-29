@@ -59,15 +59,15 @@ div.column.items-center.q-gutter-md.q-pa-md
           q-icon(name="img:https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" size="24px" class="q-mr-sm")
           span Login with GitHub
 
-  // Passkey login
-  q-btn(
-    label="Login with Passkey"
-    color="teal"
-    icon="vpn_key"
-    @click="loginWithPasskey"
-    :loading="loading"
-    class="full-width"
-  )
+  //- // Passkey login
+  //- q-btn(
+  //-   label="Login with Passkey"
+  //-   color="teal"
+  //-   icon="vpn_key"
+  //-   @click="loginWithPasskey"
+  //-   :loading="loading"
+  //-   class="full-width"
+  //- )
 
   // Close button
   div.q-mt-lg
@@ -121,7 +121,6 @@ export default defineComponent({
         }).onOk(async (code) => {
           try {
             const result = await verifyEmailCode(email.value, code)
-            const token = localStorage.getItem("privy:token")
 
             $q.notify({
               color: "positive",
@@ -129,6 +128,10 @@ export default defineComponent({
             })
 
             const userAuth = useUserAuth()
+            const token = localStorage.getItem("privy:token")
+            console.log("privy:token", token)
+            const reactToken = result.token
+            console.log("reactToken", reactToken)
             await userAuth.privyLogin(result.user.id, token || "")
 
             // Redirect to account page
