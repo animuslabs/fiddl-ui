@@ -1,5 +1,4 @@
 import Privy, { type OAuthProviderType } from "@privy-io/js-sdk-core"
-import api from "lib/api"
 import { privyAuthenticate } from "lib/orval"
 import { throwErr } from "lib/util"
 console.log("privy client", import.meta.env.VITE_PRIVY_APP_ID)

@@ -10,5 +10,6 @@ declare module "@vue/runtime-core" {
     $router: Router
     $route: RouteLocationAsRelativeGeneric
     $userAuth: UserAuthStore
+    $q: QuasarContext
   }
 }

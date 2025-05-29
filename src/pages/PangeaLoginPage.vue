@@ -5,8 +5,8 @@ q-page.full-height.full-width
 </template>
 
 <script lang="ts">
-import { ExternalUser } from "@tonomy/tonomy-id-sdk"
-import { pangeaLogin } from "lib/pangea"
+// import { ExternalUser } from "@tonomy/tonomy-id-sdk"
+// import { pangeaLogin } from "lib/pangea"
 import { Dialog, Loading, Notify } from "quasar"
 import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 import { useUserAuth } from "src/stores/userAuth"
@@ -19,7 +19,7 @@ export default defineComponent({
   data() {
     return {
       loggingIn: false,
-      pangeaLogin,
+      // pangeaLogin,
     }
   },
   watch: {
@@ -50,17 +50,17 @@ export default defineComponent({
           message: "Logging you in...",
         })
         try {
-          const user = await ExternalUser.verifyLoginRequest()
-          console.log("pangea user:", user)
-          console.log("username:", await user.getUsername())
-          const vc = await user.signVc("https://example.com/user-authorization/1234", "UserAuth", {
-            accountName: (await user.getAccountName()).toString(),
-          })
-          await useUserAuth().pangeaLogin(vc)
-          await this.$userAuth.loadUserData()
-          Loading.hide()
-          const redirect = this.$route.query?.redirect as string
-          await this.$router.push({ name: redirect || "account" })
+          // // const user = await ExternalUser.verifyLoginRequest()
+          // console.log("pangea user:", user)
+          // console.log("username:", await user.getUsername())
+          // const vc = await user.signVc("https://example.com/user-authorization/1234", "UserAuth", {
+          //   accountName: (await user.getAccountName()).toString(),
+          // })
+          // // await useUserAuth().pangeaLogin(vc)
+          // await this.$userAuth.loadUserData()
+          // Loading.hide()
+          // const redirect = this.$route.query?.redirect as string
+          // await this.$router.push({ name: redirect || "account" })
         } catch (e: any) {
           Loading.hide()
           Dialog.create({

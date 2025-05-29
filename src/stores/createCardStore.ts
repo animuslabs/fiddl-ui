@@ -9,7 +9,6 @@ import { useCreations } from "src/stores/creationsStore"
 import umami from "lib/umami"
 import { CustomModel } from "lib/api"
 import { useUserAuth } from "src/stores/userAuth"
-import api from "lib/api"
 import { createImprovePrompt, createRandomPrompt, modelsGetModel } from "lib/orval"
 
 const defaultImageRequest: CreateImageRequest = {
@@ -34,7 +33,6 @@ export const useCreateCardStore = defineStore("createCardStore", {
       req: loadedRequest ? loadedRequest : { ...defaultImageRequest },
       availableModels,
       userAuth: useUserAuth(),
-      api,
       privateMode: false,
       turnstileValidated: true,
       loading: {

@@ -35,15 +35,15 @@ import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/store
 import { catchErr } from "lib/util"
 type FaceForgeMode = "pick" | "create" | "train"
 export default defineComponent({
-  setup() {
-    const $q = useQuasar()
-    return { $q }
-  },
   components: {
     PickModelComponent,
     CreateModelComponent,
     WatchTrainingComponent,
     UseModelComponent,
+  },
+  setup() {
+    const $q = useQuasar()
+    return { $q }
   },
   data() {
     return {

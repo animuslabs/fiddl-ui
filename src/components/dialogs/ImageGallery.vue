@@ -38,7 +38,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                     p(v-if="userOwnsImage") You own the 4k download
                     p(v-else) Download Image
               q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
-              q-btn(icon="sym_o_favorite" flat round @click.native.stop="likeImage()" :color="favoriteBtnColor" :loading="loadingLike")
+              q-btn(icon="sym_o_favorite" flat round @click.native.stop="toggleLike()" :color="favoriteBtnColor" :loading="loadingLike")
               div.relative-position
                 q-btn(
                   icon="more_vert"
@@ -141,6 +141,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 <script lang="ts">
 import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
+import { collectionsImageInUsersCollection, collectionsLikeImage, collectionsUnlikeImage, creationsDeleteImage, creationsImageData, userGetUsername, creationsHdImage, creationsCreateRequest } from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
 import { catchErr, copyToClipboard, longIdToShort, shareImage, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
@@ -258,7 +259,8 @@ export default defineComponent({
         this.hdImageLoaded = false // Reset HD image loaded flag
         this.userLikedImage = false
         this.loadingLike = true
-        this.userLikedImage = await this.$api.collections.imageInUsersCollection.query({ imageId: val, name: "likes" })
+        const response = await collectionsImageInUsersCollection({ imageId: val, name: "likes" })
+        this.userLikedImage = response?.data
         this.loadingLike = false
         if (this.$route.name == "imageRequest") {
           const query = { index: this.currentIndex }
@@ -300,7 +302,11 @@ export default defineComponent({
       }).onOk(async () => {
         this.loading = true
         this.imageDeleted = true
-        void this.$api.creations.deleteImage.mutate(this.currentImageId).catch(catchErr)
+        try {
+          await creationsDeleteImage({ imageId: this.currentImageId })
+        } catch (error) {
+          catchErr(error)
+        }
         if (this.localImageIds.length == 1) this.hide()
         this.localImageIds = this.localImageIds.filter((el) => el !== this.currentImageId)
         if (this.currentIndex >= this.localImageIds.length - 2) this.currentIndex--
@@ -315,10 +321,12 @@ export default defineComponent({
     },
     async loadRequestId() {
       if (!this.dynamic && this.imageRequestId && this.creatorMeta.value) return
-      const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
+      const imageResponse = await creationsImageData({ imageId: this.currentImageId }).catch(catchErr)
+      const imageMeta = imageResponse?.data
       if (!imageMeta) return
       this.loadedRequestId = imageMeta.imageRequestId
-      const creatorName = (await this.$api.user.getUsername.query(imageMeta.creatorId).catch(catchErr)) || ""
+      const usernameResponse = await userGetUsername({ userId: imageMeta.creatorId }).catch(catchErr)
+      const creatorName = usernameResponse?.data || ""
       this.creatorMeta.value = { id: imageMeta.creatorId, username: creatorName }
     },
     goToCreator() {
@@ -333,20 +341,31 @@ export default defineComponent({
       this.hide()
       void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.loadedRequestId) } })
     },
-    likeImage() {
-      if (!this.userOwnsImage) {
-        Dialog.create({ component: LikeImage, componentProps: { currentImageId: this.currentImageId } })
-          .onOk(async () => {
-            await this.loadHdImage()
-            this.likeImage()
-          })
-          .onCancel(() => {
-            this.hide()
-          })
+    async toggleLike() {
+      if (!this.$userAuth.loggedIn) {
+        Dialog.create({
+          title: "Login required",
+          message: "You need to login to like images",
+          cancel: true,
+          persistent: true,
+        }).onOk(() => {
+          void this.$router.push({ name: "login" })
+        })
       } else {
         this.userLikedImage = !this.userLikedImage
-        if (this.userLikedImage) void this.$api.collections.likeImage.mutate(this.currentImageId)
-        else void this.$api.collections.unlikeImage.mutate(this.currentImageId)
+        if (this.userLikedImage) {
+          try {
+            await collectionsLikeImage({ imageId: this.currentImageId })
+          } catch (error) {
+            catchErr(error)
+          }
+        } else {
+          try {
+            await collectionsUnlikeImage({ imageId: this.currentImageId })
+          } catch (error) {
+            catchErr(error)
+          }
+        }
       }
     },
     editImage() {
@@ -388,13 +407,14 @@ export default defineComponent({
         if (!imageData) {
           if (SessionStorage.getItem("noHdImage-" + val)) return
           this.loading = true
-          imageData =
-            (await Promise.race([
-              this.$api.creations.hdImage.query(val).catch(() => {
-                SessionStorage.setItem("noHdImage-" + val, true)
-              }),
-              timeoutPromise,
-            ])) || undefined
+          const hdResponse = await Promise.race([
+            creationsHdImage({ imageId: val }).catch(() => {
+              SessionStorage.setItem("noHdImage-" + val, true)
+              return undefined
+            }),
+            timeoutPromise,
+          ])
+          imageData = hdResponse?.data || undefined
           if (!imageData) return
           await storeImageInCache(val, imageData)
         }
@@ -455,15 +475,18 @@ export default defineComponent({
       let query: any = { index: this.currentIndex }
       let imageRequestId = this.imageRequestId
       if (!imageRequestId) {
-        const imageMeta = await this.$api.creations.imageData.query(this.currentImageId).catch(catchErr)
+        const imageResponse = await creationsImageData({ imageId: this.currentImageId }).catch(catchErr)
+        const imageMeta = imageResponse?.data
         if (!imageMeta) return
         imageRequestId = imageMeta.imageRequestId
         params.requestShortId = longIdToShort(imageRequestId)
       } else {
         params.requestShortId = longIdToShort(imageRequestId)
       }
-      const request = await this.$api.creations.createRequest.query(imageRequestId)
-      const imageIndex = request.imageIds.findIndex((el) => el == this.currentImageId) || 0
+      const requestResponse = await creationsCreateRequest({ requestId: imageRequestId })
+      const request = requestResponse?.data as any
+      if (!request) return
+      const imageIndex = request.imageIds?.findIndex((el: string) => el == this.currentImageId) || 0
       query.index = imageIndex
       await this.$userAuth.loadUserProfile()
       const hasUsername = !!(this.$userAuth.loggedIn && this.$userAuth.userProfile?.username)

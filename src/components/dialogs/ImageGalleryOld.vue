@@ -67,6 +67,7 @@ import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import { catchErr, copyToClipboard, downloadFile, downloadImage, extractImageId, generateShortHash } from "lib/util"
 import { Dialog, Loading } from "quasar"
 import { defineComponent } from "vue"
+import { creationsOriginalImage, creationsUpscaledImage, creationsHdImage, creationsPurchaseImage } from "src/lib/orval"
 import DownloadImage from "./DownloadImage.vue"
 
 export default defineComponent({
@@ -131,9 +132,16 @@ export default defineComponent({
     async downloadOriginal() {
       if (!this.userOwnsImage) return
       if (!this.currentImageId) return
-      const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+      try {
+        const response = await creationsOriginalImage({ imageId: this.currentImageId })
+        const imageData = response?.data
+        if (!imageData) return
+        const imageDataUrl = `data:image/png;base64,${imageData}`
+        downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+      } catch (error) {
+        catchErr(error)
+      }
+      // Moved to try/catch block above
     },
     async downloadUpscaled() {
       if (!this.userOwnsImage) return
@@ -143,12 +151,24 @@ export default defineComponent({
         message: "Upscaling Image",
       })
 
-      const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
-      if (!imageData) return console.error("No image data")
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
-      Loading.hide()
-      this.upscaling = false
+      try {
+        const response = await creationsUpscaledImage({ imageId: this.currentImageId })
+        const imageData = response?.data
+        if (!imageData) {
+          console.error("No image data")
+          Loading.hide()
+          this.upscaling = false
+          return
+        }
+        const imageDataUrl = `data:image/png;base64,${imageData}`
+        downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
+        Loading.hide()
+        this.upscaling = false
+      } catch (error) {
+        Loading.hide()
+        this.upscaling = false
+        catchErr(error)
+      }
     },
     async loadHdImage(val: string) {
       if (!this.$userAuth.loggedIn) return
@@ -156,7 +176,13 @@ export default defineComponent({
       let imageData = await getImageFromCache(val)
       if (!imageData) {
         this.loading = true
-        imageData = (await this.$api.creations.hdImage.query(val).catch(() => {})) || undefined
+        try {
+          const response = await creationsHdImage({ imageId: val })
+          imageData = response?.data
+        } catch (error) {
+          console.error(error)
+          imageData = undefined
+        }
         this.loading = false
         if (!imageData) return
         void storeImageInCache(val, imageData)
@@ -170,10 +196,16 @@ export default defineComponent({
     },
     async purchaseImage() {
       if (!this.currentImageId) return
-      const result = await this.$api.creations.purchaseImage.mutate(this.currentImageId).catch(catchErr)
-      if (!result) return
-      this.userOwnsImage = true
-      void this.loadHdImage(this.currentImageId)
+      try {
+        const response = await creationsPurchaseImage({ imageId: this.currentImageId })
+        const result = response?.data
+        if (!result) return
+        this.userOwnsImage = true
+        void this.loadHdImage(this.currentImageId)
+      } catch (error) {
+        catchErr(error)
+      }
+      // Moved to try/catch block above
     },
     preloadImages() {
       this.images.forEach((src, index) => {

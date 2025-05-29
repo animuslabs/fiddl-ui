@@ -1,5 +1,4 @@
 import { defineStore } from "pinia"
-import api from "lib/api"
 import { type CreateImageRequest, type CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { catchErr, toObject } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"

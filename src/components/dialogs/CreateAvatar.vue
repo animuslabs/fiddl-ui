@@ -33,7 +33,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { img } from "lib/netlifyImg"
 import { catchErr, downloadFile } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
-import { PropType } from "vue"
+import { defineComponent, PropType } from "vue"
+import { userSetAvatar, creationsPurchaseImage } from "src/lib/orval"
 import ImageCropper, { CropData } from "components/ImageCropper.vue"
 import reloadAvatar from "lib/reloadAvatar"
 export default {
@@ -63,28 +64,26 @@ export default {
   },
 
   methods: {
-    setAvatar(cropData: CropData) {
+    async setAvatar(cropData: CropData) {
       console.log("setAvatar", cropData)
       if (!this.currentImageId) return
       const { position, scale } = cropData
       Loading.show({ message: "Updating avatar" })
-      this.$api.user.setAvatar
-        .mutate({ imageId: this.currentImageId, position, scale })
-        .then(() => {
-          reloadAvatar.value = Date.now()
-          this.$root?.$forceUpdate()
-          Notify.create({
-            message: "Avatar updated",
-            color: "positive",
-          })
-          Loading.hide()
-          this.hide()
-          window.location.reload()
+      try {
+        await userSetAvatar({ imageId: this.currentImageId, position, scale })
+        reloadAvatar.value = Date.now()
+        this.$root?.$forceUpdate()
+        Notify.create({
+          message: "Avatar updated",
+          color: "positive",
         })
-        .catch((err) => {
-          Loading.hide()
-          catchErr(err)
-        })
+        Loading.hide()
+        this.hide()
+        window.location.reload()
+      } catch (err) {
+        Loading.hide()
+        catchErr(err)
+      }
     },
     goToLogin() {
       void this.$router.push({ name: "login" })
@@ -92,14 +91,14 @@ export default {
     },
     async unlock() {
       if (!this.currentImageId) return
-      const result = await this.$api.creations.purchaseImage.mutate(this.currentImageId).catch(catchErr)
-      if (!result) return
       try {
+        const response = await creationsPurchaseImage({ imageId: this.currentImageId })
+        if (!response?.data) return
         SessionStorage.removeItem("noHdImage-" + this.currentImageId)
-      } catch (err: any) {
+        this.imageUnlocked = true
+      } catch (err) {
         catchErr(err)
       }
-      this.imageUnlocked = true
       this.$emit("unlocked")
     },
     show() {

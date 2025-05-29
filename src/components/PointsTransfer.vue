@@ -2,7 +2,7 @@
 q-card
   .row.items-center
     .col-auto.q-ma-sm
-      h5(:class="class") {{ isPositive?'+':'-' }} {{ Math.abs(transferData.quantity) }}
+      h5(:class="cssClass") {{ isPositive?'+':'-' }} {{ Math.abs(transferData.quantity) }}
       .col-auto
         small {{ timeSince(new Date(transferData.createdAt)) }}
         q-tooltip
@@ -40,7 +40,7 @@ export default defineComponent({
     }
   },
   computed: {
-    class() {
+    cssClass() {
       return this.isPositive ? "text-positive" : "text-negative"
     },
     isPositive() {

@@ -47,7 +47,7 @@ q-page.full-height.full-width
             q-icon(v-if="userAuth.userProfile?.pangeaAccount" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
           .q-ma-md(v-if="!userAuth.userProfile?.pangeaAccount")
-            q-btn( @click="pangeaLogin()" label="Link Pangea Account" flat color="positive" icon="sym_o_id_card" size="md")
+            //- q-btn( @click="pangeaLogin()" label="Link Pangea Account" flat color="positive" icon="sym_o_id_card" size="md")
         .centered(v-if="!userAuth.userProfile?.pangeaAccount").q-mt-sm
           small.text-positive Earn 100 Points when you link your Pangea Account
         .centered(v-else).q-mt-sm
@@ -63,7 +63,8 @@ import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
-import { pangeaLogin } from "lib/pangea"
+import { userSetUsername, userSendVerificationEmail } from "src/lib/orval"
+// import { pangeaLogin } from "lib/pangea"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -89,7 +90,7 @@ export default defineComponent({
   components: { PointsTransfer },
   data() {
     return {
-      pangeaLogin,
+      // pangeaLogin,
       userAuth: useUserAuth(),
       editingUsername: false,
       newUsername: "",
@@ -114,9 +115,8 @@ export default defineComponent({
       Notify.create({ message: "Referral link copied to clipboard", color: "positive", icon: "check" })
     },
     setNewUsername() {
-      this.$api.user.setUsername
-        .mutate(this.newUsername)
-        .then(() => {
+      void userSetUsername({ username: this.newUsername })
+        .then((response) => {
           this.editingUsername = false
           void this.userAuth.loadUserProfile()
           Notify.create({ message: "Username updated", color: "positive", icon: "check" })
@@ -129,11 +129,16 @@ export default defineComponent({
     async verifyEmail() {
       if (!this.$userAuth.userProfile?.email) return
       Loading.show({ message: "Sending verification email..." })
-      await this.$api.user.sendVerificationEmail.mutate().catch(catchErr)
-      Loading.hide()
-      Dialog.create({
-        message: "Verification email sent to " + this.$userAuth.userProfile?.email + " Click the link in the email to verify your account and earn 100 Fiddl Points.",
-      })
+      try {
+        await userSendVerificationEmail({ email: this.$userAuth.userProfile?.email || "" })
+        Loading.hide()
+        Dialog.create({
+          message: "Verification email sent to " + this.$userAuth.userProfile?.email + " Click the link in the email to verify your account and earn 100 Fiddl Points.",
+        })
+      } catch (error) {
+        Loading.hide()
+        catchErr(error)
+      }
     },
     loadData() {
       void this.userAuth.loadUserData()

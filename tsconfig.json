@@ -6,7 +6,7 @@
     "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "types": ["vite/client", "node", "@types/node", "vue-router", "quasar"],
     "baseUrl": ".", // Needed to avoid TS error when using paths
     "allowJs": true,
@@ -41,7 +41,7 @@
       "stores/*": ["src/stores/*"]
     }
   },
-  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", "dist", ".quasar", "node_modules"],
+  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", "dist", ".quasar", "node_modules", "../fiddl-server/**/*"],
   "include": [
     "src/**/*.ts",
     "src/quasar.d.ts", // Explicitly include your custom type definitions

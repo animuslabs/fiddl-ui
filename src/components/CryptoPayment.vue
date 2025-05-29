@@ -57,6 +57,7 @@ div
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
+import { pointsFinishBuyPackage, pointsInitBuyPackage } from "src/lib/orval"
 import { CryptoOrder } from "lib/prisma"
 type CryptoMethod = "telosNative" | "telosEVM"
 import { copyToClipboard, LocalStorage, Notify } from "quasar"
@@ -117,26 +118,39 @@ export default defineComponent({
     async finishOrder() {
       console.log("startFinishOrder", this.cryptoOrder, this.selectedMethod)
       if (!this.cryptoOrder || !this.selectedMethod) return
-      const result = await this.$api.points.finishBuyPackage.mutate({ method: this.selectedMethod, orderId: this.cryptoOrder?.id }).catch((err) => {
+      try {
+        const response = await pointsFinishBuyPackage({ 
+          method: this.selectedMethod, 
+          orderId: this.cryptoOrder?.id 
+        })
+        if (response?.data) {
+          this.$emit("paymentComplete")
+          console.log(response.data)
+        }
+      } catch (err: any) {
         console.log(err.message)
         if (err.message.includes("Order already confirmed")) {
           LocalStorage.remove("cryptoOrder")
           this.$emit("paymentComplete")
-          return true
         }
-      })
-      if (result) this.$emit("paymentComplete")
-      console.log(result)
+      }
     },
     async initBuy(packageId: number, method: CryptoMethod) {
       this.loading = true
       this.selectedMethod = method
-      const order = (await this.$api.points.initBuyPackage.mutate({
-        method,
-        packageId,
-      })) as unknown as CryptoOrder
-      LocalStorage.set("cryptoOrder", order)
-      this.cryptoOrder = order
+      try {
+        const response = await pointsInitBuyPackage({
+          method,
+          packageId,
+        })
+        const order = response?.data as unknown as CryptoOrder
+        if (order) {
+          LocalStorage.set("cryptoOrder", order)
+          this.cryptoOrder = order
+        }
+      } catch (error) {
+        console.error("Failed to initialize package purchase:", error)
+      }
       setTimeout(() => {
         interval = setInterval(this.finishOrder, 5000)
       }, ms("1s"))

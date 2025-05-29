@@ -1,42 +1,35 @@
-import { createTRPCClient, httpBatchLink } from "@trpc/client"
-import { ref, Ref } from "vue"
-import { jwt } from "lib/jwt"
-import { AppRouter } from "../../../fiddl-server/src/server"
 import ax from "axios"
-import superjson from "superjson"
-// import { AppRouter } from "./server"
-// Set up the API URL
+import { jwt } from "lib/jwt"
+import type {
+  CollectionsGetCollectionImagesQueryResult,
+  CreationsCreateRequestQueryResult,
+  CreationsImageDataQueryResult,
+  CreationsUserImagePurchasesQueryResult,
+  ModelsGetModelQueryResult,
+  ModelsGetTrainingStatusQueryResult,
+  ModelsGetUserModelsQueryResult,
+  PromoGetPromoCodeDetailsQueryResult,
+  UserAllUsersQueryResult,
+  UserGetNotificationConfigQueryResult,
+  UserGetQueryResult,
+  UserPointsHistoryQueryResult,
+  UserProfileQueryResult,
+  UserPublicProfileQueryResult,
+  UserSetNotificationConfigMutationResult,
+} from "lib/orval"
+import { ref, Ref } from "vue"
+
 export let apiUrl = import.meta.env.VITE_API_URL || "https://api.fiddl.art"
 if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
   if (apiUrl.startsWith("localhost")) apiUrl = "http://" + apiUrl
   else apiUrl = "https://" + apiUrl
 }
-import { inferRouterOutputs, type inferRouterInputs } from "@trpc/server"
-import type { CollectionsGetCollectionImagesQueryResult, CreationsUserImagePurchasesQueryResult } from "lib/orval"
 
 console.log("API URL", apiUrl)
 
 export const authToken: Ref<string | null> = ref(null)
 const jwtData = jwt.read()
 if (jwtData) authToken.value = jwtData.token
-
-const api = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: `${apiUrl}/trpc`,
-      headers() {
-        const jwtData = jwt.read()
-        if (jwtData) {
-          authToken.value = jwtData.token
-          return {
-            Authorization: `Bearer ${jwtData.token}`,
-          }
-        }
-        return {}
-      },
-    }),
-  ],
-})
 
 export async function uploadTrainingImages(modelid: string, form: FormData, onProgress: (progress: number) => void) {
   const headers = {
@@ -62,23 +55,18 @@ export async function uploadTrainingImages(modelid: string, form: FormData, onPr
   }
 }
 
-export type UserData = inferRouterOutputs<AppRouter>["user"]["get"]
-export type UserProfile = inferRouterOutputs<AppRouter>["user"]["profile"]
-export type PointsTransfer = inferRouterOutputs<AppRouter>["user"]["pointsHistory"][number]
-// export type ImagePurchase = inferRouterOutputs<AppRouter>["creations"]["userImagePurchases"][number]
+export type UserData = UserGetQueryResult["data"]
+export type UserProfile = UserProfileQueryResult["data"]
+export type PointsTransfer = UserPointsHistoryQueryResult["data"][number]
 export type ImagePurchase = CreationsUserImagePurchasesQueryResult["data"][number]
-export type ImageCreateRequest = inferRouterOutputs<AppRouter>["creations"]["createRequest"]
-export type ImageData = inferRouterOutputs<AppRouter>["creations"]["imageData"]
-export type PromoCode = inferRouterOutputs<AppRouter>["promo"]["getPromoCodeDetails"]
-// export type Image = inferRouterOutputs<AppRouter>["collections"]["getCollectionImages"][number]
+export type ImageCreateRequest = CreationsCreateRequestQueryResult["data"]
+export type ImageData = CreationsImageDataQueryResult["data"]
+export type PromoCode = PromoGetPromoCodeDetailsQueryResult["data"]
 export type Image = CollectionsGetCollectionImagesQueryResult["data"][number]
-export type NotificationConfig = inferRouterOutputs<AppRouter>["user"]["getNotificationConfig"]
-export type NotificationConfigSet = inferRouterInputs<AppRouter>["user"]["setNotificationConfig"]
-export type PublicProfile = inferRouterOutputs<AppRouter>["user"]["publicProfile"]
-export type CustomModelWithRequests = inferRouterOutputs<AppRouter>["models"]["getUserModels"][number]
-export type CustomModel = inferRouterOutputs<AppRouter>["models"]["getModel"]
-export type TrainingData = inferRouterOutputs<AppRouter>["models"]["getTrainingStatus"]
-export type User = inferRouterOutputs<AppRouter>["user"]["allUsers"][number]
-
-// export default api
-// export type APIType = typeof api
+export type NotificationConfig = UserGetNotificationConfigQueryResult["data"]
+export type NotificationConfigSet = UserSetNotificationConfigMutationResult["data"]
+export type PublicProfile = UserPublicProfileQueryResult["data"]
+export type CustomModelWithRequests = ModelsGetUserModelsQueryResult["data"][number]
+export type CustomModel = ModelsGetModelQueryResult["data"]
+export type TrainingData = ModelsGetTrainingStatusQueryResult["data"]
+export type User = UserAllUsersQueryResult["data"][number]

@@ -1,7 +1,7 @@
 import { reactive } from "vue"
 import { passKeyAuth as pkAuth } from "lib/auth"
 import { defineStore } from "pinia"
-import api, { type NotificationConfig, type PointsTransfer, type UserData, type UserProfile } from "lib/api"
+import { type NotificationConfig, type PointsTransfer, type UserData, type UserProfile } from "lib/api"
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
@@ -69,7 +69,7 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async pkLogin(userId: string) {
       // this.logout()
-      const userData = await pkAuth.login(userId)
+      const userData = (await pkAuth.login(userId)) as any
       if (userData.authResult.verified) {
         jwt.save({ userId: userData.userId, token: userData.token })
       }

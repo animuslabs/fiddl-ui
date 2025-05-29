@@ -61,9 +61,10 @@ q-page.full-height.full-width
 import { PromoCode, User } from "lib/api"
 import { jwt } from "lib/jwt"
 import { avatarImg } from "lib/netlifyImg"
-import { longIdToShort } from "lib/util"
+import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
+import { promoCreatePromoCode, promoGetPromoCodes, userAllUsers } from "src/lib/orval"
 
 export default defineComponent({
   components: {},
@@ -101,32 +102,45 @@ export default defineComponent({
       void copyToClipboard(claimUrl)
     },
     async createPromoCode() {
-      const code = await this.$api.promo.createPromoCode.mutate({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
-
-      const claimUrl = `${window.location.origin}/claim/${longIdToShort(code.id)}`
-      void copyToClipboard(claimUrl)
-      void this.load()
-      Notify.create({
-        message: `Promo code with ${this.promoPoints} points created, copied URL to clipboard`,
-        type: "success",
-        color: "positive",
-      })
+      try {
+        const response = await promoCreatePromoCode({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
+        const code = response?.data
+        if (!code) return
+        
+        const claimUrl = `${window.location.origin}/claim/${longIdToShort(code.id)}`
+        void copyToClipboard(claimUrl)
+        void this.load()
+        Notify.create({
+          message: `Promo code with ${this.promoPoints} points created, copied URL to clipboard`,
+          type: "success",
+          color: "positive",
+        })
+      } catch (error) {
+        catchErr(error)
+      }
     },
     async load() {
-      if (this.tab == "promo-codes") {
-        const allPromoCodes = await this.$api.promo.getPromoCodes.query()
-        this.claimedPromoCodes = allPromoCodes
-          .filter((code) => code.claimedAt)
-          .sort((a, b) => new Date(a.claimedAt as string).getTime() - new Date(b.claimedAt as string).getTime())
-          .reverse()
-        this.unclaimedPromoCodes = allPromoCodes
-          .filter((code) => !code.claimedAt)
-          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-          .reverse()
-      } else if (this.tab == "users") {
-        const users = await this.$api.user.allUsers.query()
-        console.log(users)
-        this.users = users
+      try {
+        if (this.tab == "promo-codes") {
+          const response = await promoGetPromoCodes()
+          const allPromoCodes = response?.data || []
+          
+          this.claimedPromoCodes = allPromoCodes
+            .filter((code) => code.claimedAt)
+            .sort((a, b) => new Date(a.claimedAt as string).getTime() - new Date(b.claimedAt as string).getTime())
+            .reverse()
+          this.unclaimedPromoCodes = allPromoCodes
+            .filter((code) => !code.claimedAt)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+            .reverse()
+        } else if (this.tab == "users") {
+          const response = await userAllUsers()
+          const users = response?.data || []
+          console.log(users)
+          this.users = users
+        }
+      } catch (error) {
+        catchErr(error)
       }
     },
   },

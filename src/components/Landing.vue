@@ -100,6 +100,7 @@ a:visited {
 <script lang="ts">
 import { defineComponent } from "vue"
 import InfoCard from "./InfoCard.vue"
+import { useQuasar } from "quasar"
 
 const topButtons = [
   {
@@ -166,6 +167,7 @@ export default defineComponent({
   },
   data() {
     return {
+      $q: useQuasar(),
       showMailSpinner: true,
       moved: false,
       topButtons,

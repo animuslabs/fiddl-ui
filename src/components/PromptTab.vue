@@ -65,6 +65,7 @@ import { CustomModel } from "lib/api"
 import { useCreateCardStore } from "src/stores/createCardStore"
 import { toObject } from "lib/util"
 import CreatedImageCard from "components/CreatedImageCard.vue"
+import { useQuasar } from "quasar"
 export default defineComponent({
   name: "PromptTab",
   components: {
@@ -81,6 +82,7 @@ export default defineComponent({
   },
   data() {
     return {
+      $q: useQuasar(),
       creationsStore: useCreations(),
       createStore: useCreateCardStore(),
       createMode: false,

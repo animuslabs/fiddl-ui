@@ -20,6 +20,8 @@ q-dialog(ref="dialog" @hide="onDialogHide")
 </template>
 
 <script lang="ts">
+import { defineComponent } from "vue"
+import { loginLinkInitLoginLink } from "src/lib/orval"
 import { getReferredBy } from "lib/util"
 import { QDialog, Notify, Dialog, LocalStorage } from "quasar"
 import { useUserAuth } from "src/stores/userAuth"
@@ -66,11 +68,12 @@ export default {
       if (!phone && !email) return
       this.loading = true
       try {
-        const result = await this.$api.loginLink.initLoginLink.mutate({
+        const response = await loginLinkInitLoginLink({
           phoneNumber: phone,
           email,
           referredBy: getReferredBy(),
         })
+        const result = response?.data
         Dialog.create({
           message: result,
           color: "primary",

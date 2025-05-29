@@ -32,6 +32,8 @@
 import html2canvas from "html2canvas"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import { QBtn, SessionStorage } from "quasar"
+import { defineComponent } from "vue"
+import { creationsHdImage } from "src/lib/orval"
 
 export interface CropData {
   scale: number
@@ -82,10 +84,14 @@ export default {
       if (!imageData) {
         if (SessionStorage.getItem("noHdImage-" + val)) return
         this.loading = true
-        imageData =
-          (await this.$api.creations.hdImage.query(val).catch(() => {
-            SessionStorage.setItem("noHdImage-" + val, true)
-          })) || undefined
+        try {
+          const response = await creationsHdImage({ imageId: val })
+          imageData = response?.data
+        } catch (error) {
+          console.error(error)
+          SessionStorage.setItem("noHdImage-" + val, true)
+          imageData = undefined
+        }
         this.loading = false
         if (!imageData) return
         await storeImageInCache(val, imageData)

@@ -27,9 +27,10 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 <script lang="ts">
 import { catchErr, downloadFile } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
-import { PropType } from "vue"
+import { defineComponent, PropType } from "vue"
+import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseImage } from "src/lib/orval"
 
-export default {
+export default defineComponent({
   props: {
     userOwnsImage: Boolean,
     currentImageId: {
@@ -50,7 +51,8 @@ export default {
     async downloadOriginal() {
       if (!this.userOwnsImage && !this.imageUnlocked) return
       if (!this.currentImageId) return
-      const imageData = (await this.$api.creations.originalImage.query(this.currentImageId).catch(catchErr)) || undefined
+      const response = await creationsOriginalImage({ imageId: this.currentImageId }).catch(catchErr)
+      const imageData = response?.data
       const imageDataUrl = `data:image/png;base64,${imageData}`
       downloadFile(imageDataUrl, this.currentImageId + "-original.png")
     },
@@ -60,7 +62,8 @@ export default {
       Loading.show({
         message: "Upscaling Image",
       })
-      const imageData = (await this.$api.creations.upscaledImage.query(this.currentImageId).catch(catchErr)) || undefined
+      const response = await creationsUpscaledImage({ imageId: this.currentImageId }).catch(catchErr)
+      const imageData = response?.data
       if (!imageData) return console.error("No image data")
       const imageDataUrl = `data:image/png;base64,${imageData}`
       downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
@@ -72,7 +75,8 @@ export default {
     },
     async unlock() {
       if (!this.currentImageId) return
-      const result = await this.$api.creations.purchaseImage.mutate(this.currentImageId).catch(catchErr)
+      const response = await creationsPurchaseImage({ imageId: this.currentImageId }).catch(catchErr)
+      const result = response?.data
       if (!result) return
       try {
         SessionStorage.removeItem("noHdImage-" + this.currentImageId)
@@ -108,5 +112,5 @@ export default {
       this.hide()
     },
   },
-}
+})
 </script>

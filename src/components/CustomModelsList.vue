@@ -73,7 +73,7 @@
 <script lang="ts">
 import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
-import { Dialog, Notify } from "quasar"
+import { Dialog, Notify, useQuasar } from "quasar"
 import { defineComponent } from "vue"
 import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel } from "src/lib/orval"
 import { timeSince } from "lib/util"
@@ -93,6 +93,7 @@ export default defineComponent({
   },
   data: function () {
     return {
+      $q: useQuasar(),
       models: [] as CustomModelWithRequests[] | null,
       timeSince,
       img,
@@ -148,7 +149,7 @@ export default defineComponent({
       try {
         const response = await modelsGetUserModels()
         const models = response?.data || []
-        
+
         if (!this.trainedOnly) {
           this.models = models
         } else {

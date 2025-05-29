@@ -64,17 +64,18 @@ q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
 <script lang="ts">
 import { defineComponent, ref, Ref } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { catchErr, longIdToShort, timeSince, toObject } from "lib/util"
+import { catchErr, longIdToShort, timeSince } from "lib/util"
+import { creationsDeleteRequest, creationsSetRequestPrivacy, userGetUsername, modelsGetModel } from "src/lib/orval"
 import { PropType } from "vue"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
 import { copyToClipboard, Dialog, Notify } from "quasar"
-import { CreateImageRequest, CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
-import api from "lib/api"
 import { useCreateSession } from "src/stores/createSessionStore"
 import { useCreations } from "src/stores/creationsStore"
+import { useQuasar } from "quasar"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -98,6 +99,10 @@ export default defineComponent({
     hideLinkBtn: Boolean,
   },
   emits: ["setRequest", "reload", "deleted"],
+  setup() {
+    const $q = useQuasar()
+    return { $q }
+  },
   data() {
     return {
       timeSince,
@@ -140,10 +145,9 @@ export default defineComponent({
           color: "primary",
         },
       }).onOk(() => {
-        void this.$api.creations.deleteRequest
-          .mutate(this.creation.id)
+        void creationsDeleteRequest({ requestId: this.creation.id })
           .catch(catchErr)
-          .then(() => {
+          .then((response) => {
             this.$emit("deleted", this.creation.id)
             Notify.create({
               message: "Creation Deleted",
@@ -156,10 +160,9 @@ export default defineComponent({
     },
     updatePrivacy() {
       console.log("update privacy", this.creation.public)
-      void this.$api.creations.setRequestPrivacy
-        .mutate({ requestId: this.creation.id, public: this.creation.public })
+      void creationsSetRequestPrivacy({ requestId: this.creation.id, public: this.creation.public })
         .catch(catchErr)
-        .then(() => {
+        .then((response) => {
           // Notify.create({
           //   message: "Privacy Updated",
           //   color: "positive",
@@ -175,7 +178,16 @@ export default defineComponent({
       if (!root) return
       const images = this.creation.imageIds
       let creatorName = this.creatorUsername
-      if (creatorName.length == 0) creatorName = (await this.$api.user.getUsername.query(this.creation.creatorId).catch(console.error)) || ""
+      if (creatorName.length == 0) {
+        try {
+          const response = await userGetUsername({ userId: this.creation.creatorId })
+          creatorName = response?.data || ""
+        } catch (error) {
+          console.error(error)
+          creatorName = ""
+        }
+      }
+
       const creatorMeta = { id: this.creation.creatorId, username: creatorName }
       await imageGallery.show(images, startIndex, this.creation.id, creatorMeta)
       console.log("gallery closed,trigger reload event")
@@ -209,7 +221,13 @@ export default defineComponent({
           negativePrompt: this.creation.negativePrompt,
         }
         if (this.creation.model == "custom" && this.creation.customModelId) {
-          const customModel = await api.models.getModel.query(this.creation.customModelId).catch(console.error)
+          let customModel: any = null
+          try {
+            const response = await modelsGetModel({ id: this.creation.customModelId })
+            customModel = response?.data
+          } catch (error) {
+            console.error(error)
+          }
           if (!customModel) {
             req.customModelId = undefined
             req.customModelName = undefined

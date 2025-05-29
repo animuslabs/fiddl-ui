@@ -1,7 +1,5 @@
 import { Dialog } from "quasar"
 import ImageGallery from "src/components/dialogs/ImageGallery.vue"
-import router from "src/router"
-import globalRouter from "src/router/globalRouter"
 
 const imageGallery = {
   show(imageIds: string[], startIndex = 0, imageRequestId?: string, creatorMeta?: { id: string; username: string }) {

@@ -12,6 +12,8 @@ q-page.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
+import { creationsImageData, creationsCreateRequest, modelsGetModel } from "src/lib/orval"
+import { useQuasar } from "quasar"
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useCreateSession } from "stores/createSessionStore"
@@ -34,6 +36,10 @@ export default defineComponent({
     FaceForgeTab,
     PromptTab,
   },
+  setup() {
+    const $q = useQuasar()
+    return { $q }
+  },
   data() {
     return {
       timeSince,
@@ -48,9 +54,14 @@ export default defineComponent({
         const targetImageId = this.$route.query?.imageId
         const encodedRequestData = this.$route.query?.requestData
         if (targetImageId && typeof targetImageId == "string") {
-          const imageMeta = await this.$api.creations.imageData.query(targetImageId)
+          const imageResponse = await creationsImageData({ imageId: targetImageId })
+          const imageMeta = imageResponse?.data
           console.log("imageMeta", imageMeta)
-          const requestMeta = await this.$api.creations.createRequest.query(imageMeta.imageRequestId)
+          if (!imageMeta) return
+          
+          const requestResponse = await creationsCreateRequest({ requestId: imageMeta.imageRequestId })
+          const requestMeta = requestResponse?.data as any
+          if (!requestMeta) return
           // console.log(imageMeta, requestMeta)
           console.log("width:", this.$q.screen.width)
           const req = {
@@ -64,7 +75,8 @@ export default defineComponent({
             seed: imageMeta.seed,
           }
           if (req.model == "custom" && req.customModelId) {
-            const customModel = await this.$api.models.getModel.query(req.customModelId).catch(console.error)
+            const modelResponse = await modelsGetModel({ id: req.customModelId }).catch(console.error)
+            const customModel = modelResponse?.data
             if (!customModel) {
               req.customModelId = undefined
               // req.customModelName = undefined

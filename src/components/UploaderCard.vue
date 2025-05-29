@@ -31,6 +31,7 @@ q-card.q-pa-md
 <script lang="ts">
 import { QRejectedEntry, QUploader } from "quasar"
 import { defineComponent, ref } from "vue"
+import { useQuasar } from "quasar"
 
 export default defineComponent({
   name: "ImageUploader",
@@ -49,6 +50,7 @@ export default defineComponent({
   },
   data() {
     return {
+      $q: useQuasar(),
       previewFiles: [] as { file: File; src: string }[],
     }
   },

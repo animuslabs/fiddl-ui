@@ -23,10 +23,11 @@ div
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { Loading } from "quasar"
+import { defineComponent, ref } from "vue"
+import { Loading, useQuasar } from "quasar"
 import { CustomModel, uploadTrainingImages, type TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
+import { modelsGetTrainingStatus, modelsCreateModel } from "src/lib/orval"
 import PickModelComponent from "./PickModel.vue"
 import CreateModelComponent from "./CreateModel.vue"
 import WatchTrainingComponent from "./WatchTraining.vue"
@@ -40,13 +41,17 @@ export default defineComponent({
     WatchTrainingComponent,
     UseModelComponent,
   },
+  setup() {
+    const $q = useQuasar()
+    return { $q }
+  },
   data() {
     return {
       mode: "pickModel",
       targetModelId: null as string | null,
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
-      loadTrainingInterval: null as any,
+      loadTrainingInterval: null as ReturnType<typeof setInterval> | null,
       createStore: useCreateCardStore(),
     }
   },
@@ -80,7 +85,7 @@ export default defineComponent({
         }
         if (val === "watchTraining") {
           void this.loadTrainingData()
-          this.loadTrainingInterval = setInterval(() => void this.loadTrainingData(), 5000)
+          this.loadTrainingInterval = setInterval(() => void this.loadTrainingData(), 5000) as ReturnType<typeof setInterval>
         } else {
           if (this.loadTrainingInterval) clearInterval(this.loadTrainingInterval)
         }
@@ -109,7 +114,13 @@ export default defineComponent({
     },
     async loadTrainingData() {
       if (!this.targetModelId) return
-      this.trainingData = (await this.$api.models.getTrainingStatus.query(this.targetModelId).catch(() => undefined)) || undefined
+      try {
+        const response = await modelsGetTrainingStatus({ id: this.targetModelId })
+        this.trainingData = response?.data
+      } catch (error) {
+        console.error(error)
+        this.trainingData = undefined
+      }
     },
     async loadUserModels() {
       // Load user models if needed
@@ -117,16 +128,25 @@ export default defineComponent({
     async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: string; formData: FormData }) {
       try {
         Loading.show({ message: "Uploading files" })
-        const modelId = await this.$api.models.createModel
-          .mutate({
+        let modelId: string | null = null
+        try {
+          const response = await modelsCreateModel({
             name: modelName,
             type: "faceForge",
             trainingPreset: trainingMode as any,
           })
-          .catch(() => null)
+          modelId = response?.data || null
+        } catch (error) {
+          console.error(error)
+          modelId = null
+        }
         if (!modelId) return Loading.hide()
-        await uploadTrainingImages(modelId, formData)
-        this.targetModelId = modelId
+        await uploadTrainingImages(modelId, formData, (progress) => {
+          // Handle progress updates if needed
+        })
+        if (typeof modelId === 'string') {
+          this.targetModelId = modelId
+        }
         this.mode = "watchTraining"
         void this.loadTrainingData()
         Loading.hide()
