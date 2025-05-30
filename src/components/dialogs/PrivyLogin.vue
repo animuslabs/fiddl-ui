@@ -1,67 +1,24 @@
 <template lang="pug">
 div.column.items-center.q-gutter-md.q-pa-md
-  h5.text-center Privy Login
-
-  // Email login
-  q-input(
-    :model-value="email"
-    @update:model-value="val => email = String(val)"
-    label="Email"
-    type="email"
-    class="full-width"
-    @keyup.enter="sendEmailCode"
-    autocomplete="email"
-  )
-  q-btn(
-    label="Login with Email"
-    color="primary"
-    @click="sendEmailCode"
-    :loading="loading"
-    class="full-width"
-    icon="mail"
-  )
-
-  // OAuth providers
-  div.q-gutter-md.q-ma-sm
-    q-btn(
-      color="white"
-      text-color="black"
-      class="full-width"
-      @click="loginWithOAuth('google')"
-      :loading="loading"
-      style="border: 1px solid #ddd"
-    )
+  .centered
+    h5 Email Login
+  .row.full-width.items-center
+    .col-grow
+      q-input( filled :model-value="email" @update:model-value="val => email = String(val)" type="email" @keyup.enter="sendEmailCode" autocomplete="email" placeholder="Email")
+    .col-auto
+      q-btn( color="primary" flat @click="sendEmailCode" :loading="loading" icon="send")
+  q-separator.full-width.q-mt-lg(color="grey-7")
+  .centered
+    h5 Social Login
+  .row
+    q-btn.q-mr-md( color="white" @click="loginWithOAuth('google')" :loading="loading" round padding="12px" )
       template(v-slot:default)
-        div.row.items-center.no-wrap.full-width
-          q-icon(name="img:https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" size="24px" class="q-mr-sm")
-          span Login with Google
-
-    q-btn(
-      class="full-width"
-      @click="loginWithOAuth('twitter')"
-      :loading="loading"
-      flat
-      style="background-color: #000; color: white; border: 1px solid #000"
-    )
+        .centered
+          q-icon(name="img:https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg")
+    q-btn( @click="loginWithOAuth('twitter')" :loading="loading" color="black" round padding="12px" )
       template(v-slot:default)
-        div.row.items-center.no-wrap.full-width
-          q-icon(name="img:/x-logo.svg" size="24px" class="q-mr-sm")
-          span Login with X
-
-    q-btn(
-      class="full-width"
-      @click="loginWithOAuth('github')"
-      :loading="loading"
-      style="background-color: #24292e; color: white"
-    )
-      template(v-slot:default)
-        div.row.items-center.no-wrap.full-width
-          q-icon(name="img:https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" size="24px" class="q-mr-sm")
-          span Login with GitHub
-
-  // Close button
-  div.q-mt-lg
-    q-btn(label="Cancel" color="grey" @click="$emit('close')" flat)
+        .centered
+          q-icon(name="img:/x-logo.svg" size="24px")
 </template>
 
 <script lang="ts">

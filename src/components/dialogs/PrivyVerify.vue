@@ -1,5 +1,5 @@
 <template lang="pug">
-div.column.items-center.q-gutter-md.q-pa-md
+.column.items-center.q-gutter-md.q-pa-md
   h5.text-center Verification
   p.text-center(v-if="method === 'email'") Enter the code sent to your email: {{ value }}
   p.text-center(v-else) Enter the code sent to your phone: {{ value }}

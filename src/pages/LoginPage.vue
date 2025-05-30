@@ -14,8 +14,8 @@ q-page.full-height.full-width
         q-btn(label="passKey Login (experimental)" flat small color="grey-8" @click="login")
 
   div(v-else-if="showPrivyLogin").full-width
-    .centered.q-my-md
-      h3 Privy Login
+    //- .centered.q-my-md
+    //-   h3 Privy Login
     .row.justify-center
       .col-12.col-sm-6(style="max-width: 350px")
         PrivyLogin(@close="showPrivyLogin = false")
@@ -44,7 +44,7 @@ export default defineComponent({
   data() {
     return {
       loggingIn: false,
-      showPrivyLogin: false,
+      showPrivyLogin: true,
     }
   },
   watch: {

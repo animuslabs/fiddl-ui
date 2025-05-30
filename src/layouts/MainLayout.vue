@@ -87,7 +87,7 @@ q-layout(view="lHh Lpr lFf" )
         | browse
       q-route-tab(:to="{ name: 'faceForge' }").text-white
         | Face Forge
-      q-route-tab(href="https://blog.fiddl.art").text-white
+      q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog
 </template>
 
