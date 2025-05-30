@@ -24,7 +24,7 @@ div.column.items-center.q-gutter-md.q-pa-md
 <script lang="ts">
 import { defineComponent, ref } from "vue"
 import { handleEmailLogin, handleOauthLogin, privy, verifyEmailCode } from "src/lib/privy"
-import { useQuasar } from "quasar"
+import { Loading, useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
 import type { OAuthProviderType } from "@privy-io/js-sdk-core"
@@ -68,18 +68,21 @@ export default defineComponent({
           persistent: true,
         }).onOk(async (code) => {
           try {
+            Loading.show({
+              message: "Logging you in...",
+            })
             const result = await verifyEmailCode(email.value, code)
             if (!result.token) throwErr("No token")
+            const userAuth = useUserAuth()
+            await userAuth.privyLogin(result.token)
+            void router.push({ name: "account" })
+            Loading.hide()
             $q.notify({
               color: "positive",
               message: "Successfully verified",
             })
-            const userAuth = useUserAuth()
-            await userAuth.privyLogin(result.token)
-
-            // Redirect to account page
-            void router.push({ name: "account" })
           } catch (error: any) {
+            Loading.hide()
             $q.notify({
               color: "negative",
               message: "Failed to verify code: " + error.message,

@@ -18,7 +18,7 @@ q-page.full-height.full-width
     //-   h3 Privy Login
     .row.justify-center
       .col-12.col-sm-6(style="max-width: 350px")
-        PrivyLogin(@close="showPrivyLogin = false")
+        PrivyLogin
 
   div(v-else).full-width
     .centered.q-mt-md
