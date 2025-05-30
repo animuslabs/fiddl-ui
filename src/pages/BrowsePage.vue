@@ -1,5 +1,5 @@
 <template lang="pug">
-q-page.full-height.full-width.realtive-position
+q-page.full-height.full-width.realtive-position.bg-black
   .centered.relative-position
     SearchBar(@setImageSize="imageSize = $event" fixed )
   .q-ma-md

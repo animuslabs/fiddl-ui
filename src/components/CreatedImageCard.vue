@@ -1,6 +1,6 @@
 <template lang="pug">
 .relative-position
-  q-img.full-height.full-width(:src="imageUrl" style="border-radius: 14px;" alt="user created image")
+  q-img.full-height.full-width(:src="imageUrl" style="border-radius: 0px;" alt="user created image")
 //- q-img(:src="creatorAvatarUrl")
 
 </template>
