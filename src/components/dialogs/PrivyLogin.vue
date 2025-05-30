@@ -59,16 +59,6 @@ div.column.items-center.q-gutter-md.q-pa-md
           q-icon(name="img:https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" size="24px" class="q-mr-sm")
           span Login with GitHub
 
-  //- // Passkey login
-  //- q-btn(
-  //-   label="Login with Passkey"
-  //-   color="teal"
-  //-   icon="vpn_key"
-  //-   @click="loginWithPasskey"
-  //-   :loading="loading"
-  //-   class="full-width"
-  //- )
-
   // Close button
   div.q-mt-lg
     q-btn(label="Cancel" color="grey" @click="$emit('close')" flat)
@@ -81,6 +71,7 @@ import { useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
 import type { OAuthProviderType } from "@privy-io/js-sdk-core"
+import { throwErr } from "lib/util"
 
 export default defineComponent({
   emits: ["close"],
@@ -121,25 +112,20 @@ export default defineComponent({
         }).onOk(async (code) => {
           try {
             const result = await verifyEmailCode(email.value, code)
-
+            if (!result.token) throwErr("No token")
             $q.notify({
               color: "positive",
               message: "Successfully verified",
             })
-
             const userAuth = useUserAuth()
-            const token = localStorage.getItem("privy:token")
-            console.log("privy:token", token)
-            const reactToken = result.token
-            console.log("reactToken", reactToken)
-            await userAuth.privyLogin(result.user.id, token || "")
+            await userAuth.privyLogin(result.token)
 
             // Redirect to account page
             void router.push({ name: "account" })
-          } catch (error) {
+          } catch (error: any) {
             $q.notify({
               color: "negative",
-              message: "Failed to verify code",
+              message: "Failed to verify code: " + error.message,
             })
             console.error(error)
           }

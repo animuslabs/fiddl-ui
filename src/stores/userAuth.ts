@@ -12,6 +12,8 @@ import { useCreations } from "src/stores/creationsStore"
 import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
+import { Dialog } from "quasar"
+import { privy } from "lib/privy"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -94,20 +96,35 @@ export const useUserAuth = defineStore("userAuth", {
     //   jwt.save({ userId: userAuth.userId, token: userAuth.token })
     //   this.loggedIn = true
     // },
-    async privyLogin(userId: string, token: string) {
-      let userAuth: PrivyAuthenticate200
+    async privyLogin(privyToken: string) {
       try {
-        const result = await privyAuthenticate({ accessToken: token, referrerUsername: getReferredBy() })
-        userAuth = result.data
+        // Use the Privy token to authenticate with our server
+        // Our server will verify this token with Privy and return our own JWT
+        const { data: authResult } = await privyAuthenticate({
+          accessToken: privyToken,
+          referrerUsername: getReferredBy(),
+        })
+
+        // Clear previous login state
         this.logout()
-        console.log("userAuth", userAuth)
-        this.setUserId(userAuth.userId)
-        jwt.save({ userId: userAuth.userId, token: userAuth.token })
+
+        // Save our server's JWT token (not the Privy token)
+        this.setUserId(authResult.userId)
+        jwt.save({ userId: authResult.userId, token: authResult.token })
         this.loggedIn = true
-        await this.loadUserData(userAuth.userId)
-      } catch (e) {
+        await this.loadUserData(authResult.userId)
+      } catch (e: any) {
         this.logout()
         console.log(e)
+        Dialog.create({
+          title: "Error",
+          message: "Authentication failed: " + e.message,
+          ok: {
+            label: "OK",
+            flat: true,
+            color: "primary",
+          },
+        })
         throw e
       }
     },
@@ -142,6 +159,8 @@ export const useUserAuth = defineStore("userAuth", {
       console.log(result.registration)
     },
     logout() {
+      privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
+      // Clear our JWT and app state
       jwt.remove()
       this.loggedIn = false
       this.userId = null

@@ -48,7 +48,7 @@ export default defineComponent({
         }
 
         // Update authentication state in the userAuth store
-        await userAuth.privyLogin(result.user.id, token)
+        await userAuth.privyLogin(token)
 
         Notify.create({
           type: "positive",
