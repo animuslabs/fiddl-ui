@@ -351,21 +351,40 @@ export default defineComponent({
         }).onOk(() => {
           void this.$router.push({ name: "login" })
         })
-      } else {
-        this.userLikedImage = !this.userLikedImage
+        return
+      }
+
+      if (!this.userOwnsImage) {
+        // Show LikeImage dialog for users who don't own the image
+        Dialog.create({
+          component: LikeImage,
+          componentProps: {
+            userOwnsImage: this.userOwnsImage,
+            currentImageId: this.currentImageId,
+          },
+        }).onOk(() => {
+          // When the user completes the purchase in LikeImage dialog
+          // Refresh image ownership status and like the image
+          void this.loadHdImage(this.currentImageId)
+          this.userLikedImage = true
+          collectionsLikeImage({ imageId: this.currentImageId }).catch(catchErr)
+        })
+        return
+      }
+
+      // Toggle like status for owned images
+      this.userLikedImage = !this.userLikedImage
+
+      try {
         if (this.userLikedImage) {
-          try {
-            await collectionsLikeImage({ imageId: this.currentImageId })
-          } catch (error) {
-            catchErr(error)
-          }
+          await collectionsLikeImage({ imageId: this.currentImageId })
         } else {
-          try {
-            await collectionsUnlikeImage({ imageId: this.currentImageId })
-          } catch (error) {
-            catchErr(error)
-          }
+          await collectionsUnlikeImage({ imageId: this.currentImageId })
         }
+      } catch (error) {
+        // Revert UI state if API call fails
+        this.userLikedImage = !this.userLikedImage
+        catchErr(error)
       }
     },
     editImage() {
