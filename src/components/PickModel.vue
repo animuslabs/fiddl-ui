@@ -1,25 +1,17 @@
 <template lang="pug">
 div.q-mt-md
   .centered
-    h5 Face Forge Models
+    h5 Forge Models
   .centered.q-mt-md
     q-btn(
-      label="Create Face Forge"
+      label="Create Forge Model"
       @click="$emit('createModel')"
-      flat
+      size="lg"
       icon="add"
       color="primary"
     )
   .centered.q-ma-md
     CustomModelsList(@modelClicked="handleModelClicked")
-  .centered.q-mb-xl
-    q-btn(
-      label="Create Face Forge"
-      @click="$emit('createModel')"
-      flat
-      icon="add"
-      color="primary"
-    )
 
 </template>
 

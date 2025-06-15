@@ -47,7 +47,7 @@ export default defineComponent({
   },
   data() {
     return {
-      mode: "pick" as FaceForgeMode,
+      mode: "create" as FaceForgeMode,
       targetModelId: null as string | null,
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
@@ -172,7 +172,7 @@ export default defineComponent({
           type: "faceForge",
           trainingPreset: trainingMode as any,
         }).catch(() => null)
-        
+
         const modelId = modelResponse?.data
         if (!modelId) return Loading.hide()
         await uploadTrainingImages(modelId, formData, (progress) => {

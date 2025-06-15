@@ -1,39 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://fiddl.art</loc>
+    <loc>https://app.fiddl.art</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>
   <url>
-    <loc>https://fiddl.art@</loc>
+    <loc>https://app.fiddl.art/create</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>
   <url>
-    <loc>https://fiddl.art/stats</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/create</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/faceForge/</loc>
+    <loc>https://fiddl.art/forge/</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>
   <url>
     <loc>https://fiddl.art/browse</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/a</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/settings</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/creations/</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>
   <url>
@@ -48,15 +28,6 @@
     <loc>https://fiddl.art/r/</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>
-  <url>
-    <loc>https://fiddl.art/admin</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
-    <loc>https://fiddl.art/claim/</loc>
-    <lastmod>2025-02-08T12:29:17.838Z</lastmod>
-  </url>
-  <url>
     <loc>https://fiddl.art/tos</loc>
     <lastmod>2025-02-08T12:29:17.838Z</lastmod>
   </url>

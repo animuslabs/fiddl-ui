@@ -3,9 +3,7 @@ q-page.full-width.full-height.relative-position.bg-black
   div(v-if="userId")
     ProfilePage(:userId="userId")
   div(v-else)
-
     Landing(:triggerMailForm="showMailForm")
-
 </template>
 <style lang="sass" scoped>
 .bgimg

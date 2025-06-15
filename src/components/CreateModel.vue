@@ -18,7 +18,7 @@ div.q-mt-md
       p You can use the same person's face in different poses, lighting, and expressions
   .centered.q-mt-md.q-gutter-md.q-ma-md
     div
-      p Pick a name for this face forge
+      p Pick a name for this forge model
       q-input(v-model="modelName" outlined)
     div
       p Training Mode

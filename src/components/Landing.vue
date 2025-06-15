@@ -156,7 +156,7 @@ const infoCards = [
     description: "Put yourself inside the artwork by uploading your photos.",
     icon: "sym_o_instant_mix",
     href: "/blog/guides/faceForge",
-    hrefLabel: "Face Forge",
+    hrefLabel: "Forge",
   },
 ]
 
