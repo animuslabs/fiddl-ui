@@ -70,9 +70,11 @@ export function generateShortHash(input: string): string {
 export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
   console.error(err)
   umami.track("error", { message: err.message, error: err })
+  let message = err.message || "An error occurred"
+  if (err.response?.data?.message) message = err.response.data.message
   Dialog.create({
     title: "Error",
-    message: err.message,
+    message,
     ok: true,
   })
 }
