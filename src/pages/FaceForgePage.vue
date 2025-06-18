@@ -1,14 +1,8 @@
 <template lang="pug">
 q-page
-  PickModelComponent(
-    v-if="mode === 'pick'"
-    @selectModel="selectModel"
-    @createModel="mode = 'create'"
-  )
+  PickModelComponent( v-if="mode === 'pick'" @selectModel="selectModel" @createModel="mode = 'create'")
   div(v-if="mode == 'create'")
-    CreateModelComponent(
-      @startTraining="startTraining"
-    )
+    CreateModelComponent(@startTraining="startTraining")
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)
   WatchTrainingComponent(

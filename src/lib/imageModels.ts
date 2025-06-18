@@ -1,8 +1,40 @@
-import { z } from "zod"
-
-export const imageModels = ["ultra", "sd3-lg", "core", "dall-e-3", "flux-pro-ultra", "flux-dev", "flux-pro", "custom"] as const
+export const imageModels = [
+  "ultra",
+  "sd3-lg",
+  "core",
+  "dall-e-3",
+  "flux-pro-ultra",
+  "flux-dev",
+  "flux-pro",
+  "custom",
+  "imagen4", //
+  "imagen4-ultra", //
+  // "photon",
+  // "recraft3",
+  // "recraft3-svg",
+] as const
 export type ImageModel = (typeof imageModels)[number]
 export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
+  {
+    name: "imagen4",
+    pointsCost: 8,
+  },
+  {
+    name: "imagen4-ultra",
+    pointsCost: 16,
+  },
+  // {
+  //   name: "photon",
+  //   pointsCost: 6,
+  // },
+  // {
+  //   name: "recraft3",
+  //   pointsCost: 12,
+  // },
+  // {
+  //   name: "recraft3-svg",
+  //   pointsCost: 16,
+  // },
   {
     name: "ultra",
     pointsCost: 16,
