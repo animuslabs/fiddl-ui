@@ -51,6 +51,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
         return ["1:1", "16:9", "9:16", "4:5", "5:4"]
       } else if (state.req.model.includes("imagen")) {
         return ["1:1", "9:16", "16:9", "3:4", "4:3"]
+      } else if (state.req.model.includes("recraft") || state.req.model.includes("photon")) {
+        return ["1:1", "9:16", "16:9", "3:4", "4:3", "9:21", "21:9"]
       } else return availableAspectRatios
     },
     selectedModelPrice(state) {

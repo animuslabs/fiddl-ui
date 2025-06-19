@@ -9,9 +9,9 @@ export const imageModels = [
   "custom",
   "imagen4", //
   "imagen4-ultra", //
-  // "photon",
-  // "recraft3",
-  // "recraft3-svg",
+  "photon",
+  "recraft3",
+  "recraft3-svg",
 ] as const
 export type ImageModel = (typeof imageModels)[number]
 export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
@@ -23,18 +23,18 @@ export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
     name: "imagen4-ultra",
     pointsCost: 16,
   },
-  // {
-  //   name: "photon",
-  //   pointsCost: 6,
-  // },
-  // {
-  //   name: "recraft3",
-  //   pointsCost: 12,
-  // },
-  // {
-  //   name: "recraft3-svg",
-  //   pointsCost: 16,
-  // },
+  {
+    name: "photon",
+    pointsCost: 6,
+  },
+  {
+    name: "recraft3",
+    pointsCost: 12,
+  },
+  {
+    name: "recraft3-svg",
+    pointsCost: 16,
+  },
   {
     name: "ultra",
     pointsCost: 16,
