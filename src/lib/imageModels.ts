@@ -12,12 +12,17 @@ export const imageModels = [
   "photon",
   "recraft3",
   "recraft3-svg",
+  "gpt-image-1",
 ] as const
 export type ImageModel = (typeof imageModels)[number]
 export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   {
     name: "imagen4",
     pointsCost: 8,
+  },
+  {
+    name: "gpt-image-1",
+    pointsCost: 7,
   },
   {
     name: "imagen4-ultra",

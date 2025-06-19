@@ -46,7 +46,7 @@ export const useCreateCardStore = defineStore("createCardStore", {
   },
   getters: {
     availableAspectRatios(state) {
-      if (state.req.model.includes("dall")) return ["1:1", "16:9", "9:16"]
+      if (state.req.model.includes("dall") || state.req.model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
       if (["flux-dev,flux-pro,flux-pro-ultra"].includes(state.req.model)) {
         return ["1:1", "16:9", "9:16", "4:5", "5:4"]
       } else if (state.req.model.includes("imagen")) {
