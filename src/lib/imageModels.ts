@@ -22,7 +22,7 @@ export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   },
   {
     name: "gpt-image-1",
-    pointsCost: 7,
+    pointsCost: 18,
   },
   {
     name: "imagen4-ultra",
