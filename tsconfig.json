@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.base.json",
   "vueCompilerOptions": {
     "plugins": ["@vue/language-plugin-pug"]
   },
@@ -6,47 +7,22 @@
     "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true,
     "types": ["vite/client", "node", "@types/node", "vue-router", "quasar"],
-    "baseUrl": ".", // Needed to avoid TS error when using paths
     "allowJs": true,
     "noUnusedLocals": false,
     "noImplicitAny": false,
-    // `baseUrl` must be placed on the extending configuration in devland, or paths won't be recognized
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    // Needed to address https://github.com/quasarframework/app-extension-typescript/issues/36
-    "noEmit": true,
-    "resolveJsonModule": true,
-    // Avoid cross-os errors due to inconsistent file casing
-    "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "strict": true,
-    "target": "esnext",
     "isolatedModules": true,
     "useDefineForClassFields": true,
-    // Fix Volar issue https://github.com/johnsoncodehk/volar/issues/1153
     "jsx": "preserve",
-    "lib": ["esnext", "dom"],
-    "paths": {
-      "lib/*": ["src/lib/*"],
-      "src/*": ["src/*"],
-      "app/*": ["*"],
-      "components/*": ["src/components/*"],
-      "layouts/*": ["src/layouts/*"],
-      "pages/*": ["src/pages/*"],
-      "assets/*": ["src/assets/*"],
-      "boot/*": ["src/boot/*"],
-      "stores/*": ["src/stores/*"]
-    }
+    "lib": ["esnext", "dom"]
   },
-  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", "dist", ".quasar", "node_modules", "../fiddl-server/**/*"],
+  "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", ".quasar", "../fiddl-server/**/*"],
   "include": [
-    "src/**/*.ts",
     "src/quasar.d.ts", // Explicitly include your custom type definitions
     "src/shims.d.ts", // Explicitly include your custom type definitions
-    "src/**/*.vue",
-    "quasar.config.js"
+    "quasar.config.js",
+    "netlify/edge-functions/*",
+    "src/**/*"
   ]
 }

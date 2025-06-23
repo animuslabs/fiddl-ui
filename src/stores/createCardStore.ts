@@ -10,6 +10,7 @@ import umami from "lib/umami"
 import { CustomModel } from "lib/api"
 import { useUserAuth } from "src/stores/userAuth"
 import { createImprovePrompt, createRandomPrompt, modelsGetModel } from "lib/orval"
+import { useRouter } from "vue-router"
 
 const defaultImageRequest: CreateImageRequest = {
   prompt: "",
@@ -27,6 +28,7 @@ const availableAspectRatios = Object.freeze(aspectRatios)
 export const useCreateCardStore = defineStore("createCardStore", {
   state: () => {
     const loadedRequest = LocalStorage.getItem("req") as CreateImageRequestWithCustomModel | null
+    const router = useRouter()
     return {
       createSession: useCreateSession(),
       creations: useCreations(),
@@ -35,6 +37,8 @@ export const useCreateCardStore = defineStore("createCardStore", {
       userAuth: useUserAuth(),
       privateMode: false,
       turnstileValidated: true,
+      // router: useCreateRouter(),
+      router,
       loading: {
         new: false,
         randomize: false,

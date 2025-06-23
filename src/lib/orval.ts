@@ -114,21 +114,33 @@ export interface ErrorNOTFOUND {
   issues?: ErrorNOTFOUNDIssuesItem[];
 }
 
+/**
+ * PkAuthRegisterStartIn
+ */
 export type PkAuthRegisterStartBody = {
   email?: string;
   phone?: string;
   referredByUserName?: string;
 };
 
+/**
+ * PkAuthRegisterFinishIn
+ */
 export type PkAuthRegisterFinishBody = {
   userId: string;
   data?: unknown;
 };
 
+/**
+ * PkAuthLoginStartIn
+ */
 export type PkAuthLoginStartBody = {
   userId: string;
 };
 
+/**
+ * PkAuthLoginFinishIn
+ */
 export type PkAuthLoginFinishBody = {
   userId: string;
   data?: unknown;
@@ -147,6 +159,12 @@ export const CreateImageBodyModel = {
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
   custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
 } as const;
 
 export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
@@ -165,6 +183,9 @@ export const CreateImageBodyAspectRatio = {
   '9:21': '9:21',
 } as const;
 
+/**
+ * CreateImageIn
+ */
 export type CreateImageBody = {
   prompt: string;
   negativePrompt?: string;
@@ -180,16 +201,25 @@ export type CreateImageBody = {
   customModelId?: string;
 };
 
+/**
+ * CreateImageOut
+ */
 export type CreateImage200 = {
   ids: string[];
   id: string;
   errors: string[];
 };
 
+/**
+ * CreateRandomPromptIn
+ */
 export type CreateRandomPromptBody = {
   theme?: string;
 };
 
+/**
+ * CreateImprovePromptIn
+ */
 export type CreateImprovePromptBody = {
   prompt: string;
 };
@@ -198,6 +228,9 @@ export type CreationsImageDataParams = {
 imageId: string;
 };
 
+/**
+ * CreationsImageDataOut
+ */
 export type CreationsImageData200 = {
   id: string;
   createdAt: string;
@@ -243,6 +276,12 @@ export const CreationsUserImagePurchasesModel = {
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
   custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
 } as const;
 
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
@@ -304,6 +343,12 @@ export const CreationsCreateRequestsModel = {
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
   custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
 } as const;
 
 export type CreationsCreateRequestsAspectRatio = typeof CreationsCreateRequestsAspectRatio[keyof typeof CreationsCreateRequestsAspectRatio];
@@ -342,6 +387,9 @@ export type CreationsCreateRequestParams = {
 requestId: string;
 };
 
+/**
+ * CreationsCreateRequestOut
+ */
 export type CreationsCreateRequest200 = {
   id: string;
   imageIds: string[];
@@ -393,6 +441,12 @@ export const CreationsBrowseCreateRequestsModel = {
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
   custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
 } as const;
 
 export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
@@ -423,10 +477,16 @@ export type CreationsUpscaledImageParams = {
 imageId: string;
 };
 
+/**
+ * CreationsPurchaseImageIn
+ */
 export type CreationsPurchaseImageBody = {
   imageId: string;
 };
 
+/**
+ * CreationsPurchaseImageOut
+ */
 export type CreationsPurchaseImage200 = {
   id: string;
   userId: string;
@@ -434,14 +494,23 @@ export type CreationsPurchaseImage200 = {
   createdAt: string;
 };
 
+/**
+ * CreationsDeleteImageIn
+ */
 export type CreationsDeleteImageBody = {
   imageId: string;
 };
 
+/**
+ * CreationsDeleteRequestIn
+ */
 export type CreationsDeleteRequestBody = {
   requestId: string;
 };
 
+/**
+ * CreationsSetRequestPrivacyIn
+ */
 export type CreationsSetRequestPrivacyBody = {
   requestId: string;
   public: boolean;
@@ -466,6 +535,9 @@ export const PointsInitBuyPackageBodyMethod = {
   telosEVM: 'telosEVM',
 } as const;
 
+/**
+ * PointsInitBuyPackageIn
+ */
 export type PointsInitBuyPackageBody = {
   packageId: number;
   method: PointsInitBuyPackageBodyMethod;
@@ -527,6 +599,9 @@ export type PointsInitBuyPackage200AnyOfThree = {
   updatedAt: string | null;
 };
 
+/**
+ * PointsInitBuyPackageOut
+ */
 export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
 
 export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
@@ -542,6 +617,9 @@ export const PointsFinishBuyPackageBodyMethod = {
   telosEVM: 'telosEVM',
 } as const;
 
+/**
+ * PointsFinishBuyPackageIn
+ */
 export type PointsFinishBuyPackageBody = {
   orderId: string;
   method: PointsFinishBuyPackageBodyMethod;
@@ -567,6 +645,9 @@ export type PointsFinishBuyPackage200AnyOfFour = {
   status: string;
 };
 
+/**
+ * PointsFinishBuyPackageOut
+ */
 export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour;
 
 export type PointsGetOrders200PayPalOrdersItem = {
@@ -606,6 +687,9 @@ export type PointsGetOrders200CryptoOrdersItem = {
   updatedAt: string | null;
 };
 
+/**
+ * PointsGetOrdersOut
+ */
 export type PointsGetOrders200 = {
   payPalOrders: PointsGetOrders200PayPalOrdersItem[];
   cryptoOrders: PointsGetOrders200CryptoOrdersItem[];
@@ -687,6 +771,9 @@ export type PointsGetOrder200AnyOfTwo = {
   updatedAt: string | null;
 };
 
+/**
+ * PointsGetOrderOut
+ */
 export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
 
 export type UserGetParams = {
@@ -700,6 +787,9 @@ export type UserGet200AvatarConfig = {
   imageId: string;
 } | null;
 
+/**
+ * UserGetOut
+ */
 export type UserGet200 = {
   id: string;
   /** @nullable */
@@ -724,6 +814,9 @@ export type UserProfileParams = {
 userId: string;
 };
 
+/**
+ * UserProfileOut
+ */
 export type UserProfile200 = {
   userId: string;
   /** @nullable */
@@ -765,6 +858,9 @@ export type UserPublicProfile200Profile = {
   linksJSON: string | null;
 };
 
+/**
+ * UserPublicProfileOut
+ */
 export type UserPublicProfile200 = {
   profile: UserPublicProfile200Profile;
   imagesCreated: number;
@@ -775,10 +871,16 @@ export type UserGetUsernameParams = {
 userId: string;
 };
 
+/**
+ * UserSetUsernameIn
+ */
 export type UserSetUsernameBody = {
   username: string;
 };
 
+/**
+ * UserSetUsernameOut
+ */
 export type UserSetUsername200 = {
   userId: string;
   /** @nullable */
@@ -807,10 +909,16 @@ export type UserSetUsername200 = {
   lastUsernameChange: string | null;
 };
 
+/**
+ * UserSetBioIn
+ */
 export type UserSetBioBody = {
   bio: string;
 };
 
+/**
+ * UserSetBioOut
+ */
 export type UserSetBio200 = {
   userId: string;
   /** @nullable */
@@ -839,6 +947,9 @@ export type UserSetBio200 = {
   lastUsernameChange: string | null;
 };
 
+/**
+ * UserSendVerificationEmailIn
+ */
 export type UserSendVerificationEmailBody = {
   email: string;
 };
@@ -926,6 +1037,9 @@ export const UserGetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+/**
+ * UserGetNotificationConfigOut
+ */
 export type UserGetNotificationConfig200 = {
   emailFrequency: UserGetNotificationConfig200EmailFrequency;
   phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
@@ -956,6 +1070,9 @@ export const UserSetNotificationConfigBodyPhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+/**
+ * UserSetNotificationConfigIn
+ */
 export type UserSetNotificationConfigBody = {
   email?: boolean;
   phone?: boolean;
@@ -985,6 +1102,9 @@ export const UserSetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+/**
+ * UserSetNotificationConfigOut
+ */
 export type UserSetNotificationConfig200 = {
   emailFrequency: UserSetNotificationConfig200EmailFrequency;
   phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
@@ -993,6 +1113,9 @@ export type UserSetNotificationConfig200 = {
   phone: boolean;
 };
 
+/**
+ * UserUnsubscribeEmailNotificationsIn
+ */
 export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
 
 export type UserSetAvatarBodyPosition = {
@@ -1000,6 +1123,9 @@ export type UserSetAvatarBodyPosition = {
   y: number;
 };
 
+/**
+ * UserSetAvatarIn
+ */
 export type UserSetAvatarBody = {
   imageId: string;
   scale: number;
@@ -1024,21 +1150,33 @@ export type UserAllUsers200Item = {
   Profile: UserAllUsers200ItemProfile;
 };
 
+/**
+ * LoginLinkInitLoginLinkIn
+ */
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
   referredBy?: string;
 };
 
+/**
+ * LoginLinkLoginWithLinkIn
+ */
 export type LoginLinkLoginWithLinkBody = {
   linkId: string;
 };
 
+/**
+ * LoginLinkLoginWithLinkOut
+ */
 export type LoginLinkLoginWithLink200 = {
   token: string;
   userId: string;
 };
 
+/**
+ * StatsUsersOut
+ */
 export type StatsUsers200 = {
   spentPoints: number;
   spentOver100Points: number;
@@ -1063,6 +1201,9 @@ export type StatsImages200AverageImageQuantityPerCreateRequest = {
   _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg;
 };
 
+/**
+ * StatsImagesOut
+ */
 export type StatsImages200 = {
   totalCreated: number;
   totalUpscaled: number;
@@ -1075,6 +1216,9 @@ export type StatsImages200 = {
   imageCreationFailed: number;
 };
 
+/**
+ * StatsCollectionsOut
+ */
 export type StatsCollections200 = {
   collectionsCreated: number;
   emptyCollections: number;
@@ -1089,6 +1233,9 @@ export type StatsPayments200PaypalOrdersTotalPaid = {
   _sum: _StatsPayments200PaypalOrdersTotalPaidSum;
 };
 
+/**
+ * StatsPaymentsOut
+ */
 export type StatsPayments200 = {
   incompletePayPayPalOrders: number;
   completePayPayPalOrders: number;
@@ -1100,10 +1247,16 @@ name: string;
 imageId: string;
 };
 
+/**
+ * CollectionsLikeImageIn
+ */
 export type CollectionsLikeImageBody = {
   imageId: string;
 };
 
+/**
+ * CollectionsUnlikeImageIn
+ */
 export type CollectionsUnlikeImageBody = {
   imageId: string;
 };
@@ -1117,6 +1270,9 @@ export type _CollectionsGetCollectionMeta200Count = {
   Favorited: number;
 };
 
+/**
+ * CollectionsGetCollectionMetaOut
+ */
 export type CollectionsGetCollectionMeta200 = {
   id: string;
   name: string;
@@ -1131,6 +1287,9 @@ ownerId: string;
 collectionName: string;
 };
 
+/**
+ * CollectionsFindCollectionByNameOut
+ */
 export type CollectionsFindCollectionByName200 = {
   id: string;
 };
@@ -1155,10 +1314,16 @@ export type CollectionsGetCollectionImages200Item = {
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
 
+/**
+ * PromoCreatePromoCodeIn
+ */
 export type PromoCreatePromoCodeBody = {
   points: number;
 };
 
+/**
+ * PromoCreatePromoCodeOut
+ */
 export type PromoCreatePromoCode200 = {
   id: string;
   points: number;
@@ -1169,6 +1334,9 @@ export type PromoCreatePromoCode200 = {
   createdAt: string;
 };
 
+/**
+ * PromoDeletePromoCodeIn
+ */
 export type PromoDeletePromoCodeBody = {
   id: string;
 };
@@ -1187,6 +1355,9 @@ export type PromoGetPromoCodeDetailsParams = {
 id: string;
 };
 
+/**
+ * PromoGetPromoCodeDetailsOut
+ */
 export type PromoGetPromoCodeDetails200 = {
   id: string;
   points: number;
@@ -1197,10 +1368,16 @@ export type PromoGetPromoCodeDetails200 = {
   createdAt: string;
 };
 
+/**
+ * PromoClaimPromoCodeIn
+ */
 export type PromoClaimPromoCodeBody = {
   id: string;
 };
 
+/**
+ * ModelsSetModelNameIn
+ */
 export type ModelsSetModelNameBody = {
   id: string;
   name: string;
@@ -1283,6 +1460,9 @@ export const ModelsCreateModelBodyTrainingPreset = {
   extreme: 'extreme',
 } as const;
 
+/**
+ * ModelsCreateModelIn
+ */
 export type ModelsCreateModelBody = {
   name: string;
   type: ModelsCreateModelBodyType;
@@ -1314,6 +1494,9 @@ export type ModelsGetTrainingStatus200Urls = {
   stream?: string;
 };
 
+/**
+ * ModelsGetTrainingStatusOut
+ */
 export type ModelsGetTrainingStatus200 = {
   id: string;
   status: string;
@@ -1333,6 +1516,9 @@ export type ModelsGetTrainingStatus200 = {
   urls: ModelsGetTrainingStatus200Urls;
 };
 
+/**
+ * ModelsDeleteModelIn
+ */
 export type ModelsDeleteModelBody = {
   id: string;
 };
@@ -1372,6 +1558,9 @@ export const ModelsGetModel200TrainingPreset = {
   extreme: 'extreme',
 } as const;
 
+/**
+ * ModelsGetModelOut
+ */
 export type ModelsGetModel200 = {
   status: ModelsGetModel200Status;
   modelType: ModelsGetModel200ModelType;
@@ -1389,20 +1578,32 @@ export type ModelsGetModel200 = {
   Public: boolean;
 };
 
+/**
+ * ModelsSetModelPrivacyIn
+ */
 export type ModelsSetModelPrivacyBody = {
   id: string;
   public: boolean;
 };
 
+/**
+ * AdminLoginAsUserIn
+ */
 export type AdminLoginAsUserBody = {
   id: string;
 };
 
+/**
+ * PrivyAuthenticateIn
+ */
 export type PrivyAuthenticateBody = {
   accessToken: string;
   referrerUsername?: string;
 };
 
+/**
+ * PrivyAuthenticateOut
+ */
 export type PrivyAuthenticate200 = {
   token: string;
   userId: string;

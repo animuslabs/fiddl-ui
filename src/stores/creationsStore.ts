@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 
 import { creationsCreateRequests, creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody } from "lib/orval"
-import { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"

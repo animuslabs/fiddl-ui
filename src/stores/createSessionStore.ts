@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { type CreateImageRequest, type CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import { type CreateImageRequest, type CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { catchErr, toObject } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"

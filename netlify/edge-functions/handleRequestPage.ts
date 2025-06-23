@@ -1,5 +1,7 @@
 import { Context } from "@netlify/edge-functions"
-import { setSocialMetadata, shortIdToLong } from "./lib/util.ts"
+import { setSocialMetadata, shortIdToLong, throwErr } from "../../src/lib/util"
+import { creationsCreateRequest } from "../../src/lib/orval"
+
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
   const response = await context.next()
@@ -12,12 +14,14 @@ export default async (request: Request, context: Context) => {
 
   const segments = url.pathname.split("/")
   const id = segments[2]
-  console.log(id)
+  console.log("shortId:", id)
+  if (!id) throwErr("missing id")
   const longId = shortIdToLong(id)
-  const requestData = await fetch(`https://api.fiddl.art/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
+  // const requestData = await fetch(`https://api.fiddl.art/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
   // const requestData = await fetch(`http://localhost:4444/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
-  const jsonData = await requestData.json()
-  const images = jsonData.result.data.imageIds
+  const requestData = await creationsCreateRequest({ requestId: longId })
+  const jsonData = requestData.data
+  const images = jsonData.imageIds
   const imageId = images[url.searchParams.get("index") || 0]
   const imageUrl = `https://api.fiddl.art/images/${imageId}-md.webp`
   // const imageUrl = `http://localhost:4444/images/${imageId}-md.webp`
