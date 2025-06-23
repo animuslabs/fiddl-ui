@@ -1615,7 +1615,7 @@ export const getPkAuthRegisterStartUrl = () => {
 
   
 
-  return `/pkAuth/registerStart`
+  return `https://api.fiddl.art/api/pkAuth/registerStart`
 }
 
 export const pkAuthRegisterStart = async (pkAuthRegisterStartBody: PkAuthRegisterStartBody, options?: RequestInit): Promise<pkAuthRegisterStartResponse> => {
@@ -1674,7 +1674,7 @@ export const getPkAuthRegisterFinishUrl = () => {
 
   
 
-  return `/pkAuth/registerFinish`
+  return `https://api.fiddl.art/api/pkAuth/registerFinish`
 }
 
 export const pkAuthRegisterFinish = async (pkAuthRegisterFinishBody: PkAuthRegisterFinishBody, options?: RequestInit): Promise<pkAuthRegisterFinishResponse> => {
@@ -1733,7 +1733,7 @@ export const getPkAuthLoginStartUrl = () => {
 
   
 
-  return `/pkAuth/loginStart`
+  return `https://api.fiddl.art/api/pkAuth/loginStart`
 }
 
 export const pkAuthLoginStart = async (pkAuthLoginStartBody: PkAuthLoginStartBody, options?: RequestInit): Promise<pkAuthLoginStartResponse> => {
@@ -1792,7 +1792,7 @@ export const getPkAuthLoginFinishUrl = () => {
 
   
 
-  return `/pkAuth/loginFinish`
+  return `https://api.fiddl.art/api/pkAuth/loginFinish`
 }
 
 export const pkAuthLoginFinish = async (pkAuthLoginFinishBody: PkAuthLoginFinishBody, options?: RequestInit): Promise<pkAuthLoginFinishResponse> => {
@@ -1851,7 +1851,7 @@ export const getCreateImageUrl = () => {
 
   
 
-  return `/create/image`
+  return `https://api.fiddl.art/api/create/image`
 }
 
 export const createImage = async (createImageBody: CreateImageBody, options?: RequestInit): Promise<createImageResponse> => {
@@ -1910,7 +1910,7 @@ export const getCreateRandomPromptUrl = () => {
 
   
 
-  return `/create/randomPrompt`
+  return `https://api.fiddl.art/api/create/randomPrompt`
 }
 
 export const createRandomPrompt = async (createRandomPromptBody: CreateRandomPromptBody, options?: RequestInit): Promise<createRandomPromptResponse> => {
@@ -1969,7 +1969,7 @@ export const getCreateImprovePromptUrl = () => {
 
   
 
-  return `/create/improvePrompt`
+  return `https://api.fiddl.art/api/create/improvePrompt`
 }
 
 export const createImprovePrompt = async (createImprovePromptBody: CreateImprovePromptBody, options?: RequestInit): Promise<createImprovePromptResponse> => {
@@ -2040,7 +2040,7 @@ export const getCreationsImageDataUrl = (params: CreationsImageDataParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/imageData?${stringifiedParams}` : `/creations/imageData`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/imageData?${stringifiedParams}` : `https://api.fiddl.art/api/creations/imageData`
 }
 
 export const creationsImageData = async (params: CreationsImageDataParams, options?: RequestInit): Promise<creationsImageDataResponse> => {
@@ -2110,7 +2110,7 @@ export const getCreationsUserImagePurchasesUrl = (params?: CreationsUserImagePur
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/userImagePurchases?${stringifiedParams}` : `/creations/userImagePurchases`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/userImagePurchases?${stringifiedParams}` : `https://api.fiddl.art/api/creations/userImagePurchases`
 }
 
 export const creationsUserImagePurchases = async (params?: CreationsUserImagePurchasesParams, options?: RequestInit): Promise<creationsUserImagePurchasesResponse> => {
@@ -2180,7 +2180,7 @@ export const getCreationsCreateRequestsUrl = (params?: CreationsCreateRequestsPa
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/createRequests?${stringifiedParams}` : `/creations/createRequests`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createRequests`
 }
 
 export const creationsCreateRequests = async (params?: CreationsCreateRequestsParams, options?: RequestInit): Promise<creationsCreateRequestsResponse> => {
@@ -2250,7 +2250,7 @@ export const getCreationsCreateRequestUrl = (params: CreationsCreateRequestParam
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/createRequest?${stringifiedParams}` : `/creations/createRequest`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createRequest`
 }
 
 export const creationsCreateRequest = async (params: CreationsCreateRequestParams, options?: RequestInit): Promise<creationsCreateRequestResponse> => {
@@ -2320,7 +2320,7 @@ export const getCreationsBrowseCreateRequestsUrl = (params?: CreationsBrowseCrea
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/browseCreateRequests?${stringifiedParams}` : `/creations/browseCreateRequests`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/browseCreateRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/browseCreateRequests`
 }
 
 export const creationsBrowseCreateRequests = async (params?: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<creationsBrowseCreateRequestsResponse> => {
@@ -2390,7 +2390,7 @@ export const getCreationsHdImageUrl = (params: CreationsHdImageParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/hdImage?${stringifiedParams}` : `/creations/hdImage`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/hdImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/hdImage`
 }
 
 export const creationsHdImage = async (params: CreationsHdImageParams, options?: RequestInit): Promise<creationsHdImageResponse> => {
@@ -2460,7 +2460,7 @@ export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParam
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/originalImage?${stringifiedParams}` : `/creations/originalImage`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/originalImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/originalImage`
 }
 
 export const creationsOriginalImage = async (params: CreationsOriginalImageParams, options?: RequestInit): Promise<creationsOriginalImageResponse> => {
@@ -2530,7 +2530,7 @@ export const getCreationsUpscaledImageUrl = (params: CreationsUpscaledImageParam
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/creations/upscaledImage?${stringifiedParams}` : `/creations/upscaledImage`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/upscaledImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/upscaledImage`
 }
 
 export const creationsUpscaledImage = async (params: CreationsUpscaledImageParams, options?: RequestInit): Promise<creationsUpscaledImageResponse> => {
@@ -2588,7 +2588,7 @@ export const getCreationsPurchaseImageUrl = () => {
 
   
 
-  return `/creations/purchaseImage`
+  return `https://api.fiddl.art/api/creations/purchaseImage`
 }
 
 export const creationsPurchaseImage = async (creationsPurchaseImageBody: CreationsPurchaseImageBody, options?: RequestInit): Promise<creationsPurchaseImageResponse> => {
@@ -2647,7 +2647,7 @@ export const getCreationsDeleteImageUrl = () => {
 
   
 
-  return `/creations/deleteImage`
+  return `https://api.fiddl.art/api/creations/deleteImage`
 }
 
 export const creationsDeleteImage = async (creationsDeleteImageBody: CreationsDeleteImageBody, options?: RequestInit): Promise<creationsDeleteImageResponse> => {
@@ -2706,7 +2706,7 @@ export const getCreationsDeleteRequestUrl = () => {
 
   
 
-  return `/creations/deleteRequest`
+  return `https://api.fiddl.art/api/creations/deleteRequest`
 }
 
 export const creationsDeleteRequest = async (creationsDeleteRequestBody: CreationsDeleteRequestBody, options?: RequestInit): Promise<creationsDeleteRequestResponse> => {
@@ -2765,7 +2765,7 @@ export const getCreationsSetRequestPrivacyUrl = () => {
 
   
 
-  return `/creations/setRequestPrivacy`
+  return `https://api.fiddl.art/api/creations/setRequestPrivacy`
 }
 
 export const creationsSetRequestPrivacy = async (creationsSetRequestPrivacyBody: CreationsSetRequestPrivacyBody, options?: RequestInit): Promise<creationsSetRequestPrivacyResponse> => {
@@ -2829,7 +2829,7 @@ export const getPointsPackagesAvailableUrl = () => {
 
   
 
-  return `/points/packagesAvailable`
+  return `https://api.fiddl.art/api/points/packagesAvailable`
 }
 
 export const pointsPackagesAvailable = async ( options?: RequestInit): Promise<pointsPackagesAvailableResponse> => {
@@ -2887,7 +2887,7 @@ export const getPointsInitBuyPackageUrl = () => {
 
   
 
-  return `/points/initBuyPackage`
+  return `https://api.fiddl.art/api/points/initBuyPackage`
 }
 
 export const pointsInitBuyPackage = async (pointsInitBuyPackageBody: PointsInitBuyPackageBody, options?: RequestInit): Promise<pointsInitBuyPackageResponse> => {
@@ -2946,7 +2946,7 @@ export const getPointsFinishBuyPackageUrl = () => {
 
   
 
-  return `/points/finishBuyPackage`
+  return `https://api.fiddl.art/api/points/finishBuyPackage`
 }
 
 export const pointsFinishBuyPackage = async (pointsFinishBuyPackageBody: PointsFinishBuyPackageBody, options?: RequestInit): Promise<pointsFinishBuyPackageResponse> => {
@@ -3010,7 +3010,7 @@ export const getPointsGetOrdersUrl = () => {
 
   
 
-  return `/points/getOrders`
+  return `https://api.fiddl.art/api/points/getOrders`
 }
 
 export const pointsGetOrders = async ( options?: RequestInit): Promise<pointsGetOrdersResponse> => {
@@ -3080,7 +3080,7 @@ export const getPointsGetOrderUrl = (params: PointsGetOrderParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/points/getOrder?${stringifiedParams}` : `/points/getOrder`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/points/getOrder?${stringifiedParams}` : `https://api.fiddl.art/api/points/getOrder`
 }
 
 export const pointsGetOrder = async (params: PointsGetOrderParams, options?: RequestInit): Promise<pointsGetOrderResponse> => {
@@ -3150,7 +3150,7 @@ export const getUserGetUrl = (params: UserGetParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/get?${stringifiedParams}` : `/user/get`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/get?${stringifiedParams}` : `https://api.fiddl.art/api/user/get`
 }
 
 export const userGet = async (params: UserGetParams, options?: RequestInit): Promise<userGetResponse> => {
@@ -3220,7 +3220,7 @@ export const getUserProfileUrl = (params: UserProfileParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/profile?${stringifiedParams}` : `/user/profile`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/profile?${stringifiedParams}` : `https://api.fiddl.art/api/user/profile`
 }
 
 export const userProfile = async (params: UserProfileParams, options?: RequestInit): Promise<userProfileResponse> => {
@@ -3290,7 +3290,7 @@ export const getUserPublicProfileUrl = (params: UserPublicProfileParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/publicProfile?${stringifiedParams}` : `/user/publicProfile`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/publicProfile?${stringifiedParams}` : `https://api.fiddl.art/api/user/publicProfile`
 }
 
 export const userPublicProfile = async (params: UserPublicProfileParams, options?: RequestInit): Promise<userPublicProfileResponse> => {
@@ -3360,7 +3360,7 @@ export const getUserGetUsernameUrl = (params: UserGetUsernameParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/getUsername?${stringifiedParams}` : `/user/getUsername`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/getUsername?${stringifiedParams}` : `https://api.fiddl.art/api/user/getUsername`
 }
 
 export const userGetUsername = async (params: UserGetUsernameParams, options?: RequestInit): Promise<userGetUsernameResponse> => {
@@ -3418,7 +3418,7 @@ export const getUserSetUsernameUrl = () => {
 
   
 
-  return `/user/setUsername`
+  return `https://api.fiddl.art/api/user/setUsername`
 }
 
 export const userSetUsername = async (userSetUsernameBody: UserSetUsernameBody, options?: RequestInit): Promise<userSetUsernameResponse> => {
@@ -3477,7 +3477,7 @@ export const getUserSetBioUrl = () => {
 
   
 
-  return `/user/setBio`
+  return `https://api.fiddl.art/api/user/setBio`
 }
 
 export const userSetBio = async (userSetBioBody: UserSetBioBody, options?: RequestInit): Promise<userSetBioResponse> => {
@@ -3536,7 +3536,7 @@ export const getUserSendVerificationEmailUrl = () => {
 
   
 
-  return `/user/sendVerificationEmail`
+  return `https://api.fiddl.art/api/user/sendVerificationEmail`
 }
 
 export const userSendVerificationEmail = async (userSendVerificationEmailBody: UserSendVerificationEmailBody, options?: RequestInit): Promise<userSendVerificationEmailResponse> => {
@@ -3607,7 +3607,7 @@ export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/pointsHistory?${stringifiedParams}` : `/user/pointsHistory`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/pointsHistory?${stringifiedParams}` : `https://api.fiddl.art/api/user/pointsHistory`
 }
 
 export const userPointsHistory = async (params?: UserPointsHistoryParams, options?: RequestInit): Promise<userPointsHistoryResponse> => {
@@ -3677,7 +3677,7 @@ export const getUserFindByUsernameUrl = (params: UserFindByUsernameParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/findByUsername?${stringifiedParams}` : `/user/findByUsername`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByUsername?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByUsername`
 }
 
 export const userFindByUsername = async (params: UserFindByUsernameParams, options?: RequestInit): Promise<userFindByUsernameResponse> => {
@@ -3747,7 +3747,7 @@ export const getUserFindByEmailUrl = (params: UserFindByEmailParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/findByEmail?${stringifiedParams}` : `/user/findByEmail`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByEmail?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByEmail`
 }
 
 export const userFindByEmail = async (params: UserFindByEmailParams, options?: RequestInit): Promise<userFindByEmailResponse> => {
@@ -3817,7 +3817,7 @@ export const getUserFindByPhoneUrl = (params: UserFindByPhoneParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/findByPhone?${stringifiedParams}` : `/user/findByPhone`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByPhone?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByPhone`
 }
 
 export const userFindByPhone = async (params: UserFindByPhoneParams, options?: RequestInit): Promise<userFindByPhoneResponse> => {
@@ -3887,7 +3887,7 @@ export const getUserFindByPrivyIdUrl = (params: UserFindByPrivyIdParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/user/findByPrivyId?${stringifiedParams}` : `/user/findByPrivyId`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByPrivyId?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByPrivyId`
 }
 
 export const userFindByPrivyId = async (params: UserFindByPrivyIdParams, options?: RequestInit): Promise<userFindByPrivyIdResponse> => {
@@ -3950,7 +3950,7 @@ export const getUserGetNotificationConfigUrl = () => {
 
   
 
-  return `/user/getNotificationConfig`
+  return `https://api.fiddl.art/api/user/getNotificationConfig`
 }
 
 export const userGetNotificationConfig = async ( options?: RequestInit): Promise<userGetNotificationConfigResponse> => {
@@ -4008,7 +4008,7 @@ export const getUserSetNotificationConfigUrl = () => {
 
   
 
-  return `/user/setNotificationConfig`
+  return `https://api.fiddl.art/api/user/setNotificationConfig`
 }
 
 export const userSetNotificationConfig = async (userSetNotificationConfigBody: UserSetNotificationConfigBody, options?: RequestInit): Promise<userSetNotificationConfigResponse> => {
@@ -4067,7 +4067,7 @@ export const getUserUnsubscribeEmailNotificationsUrl = () => {
 
   
 
-  return `/user/unsubscribeEmailNotifications`
+  return `https://api.fiddl.art/api/user/unsubscribeEmailNotifications`
 }
 
 export const userUnsubscribeEmailNotifications = async (userUnsubscribeEmailNotificationsBody: UserUnsubscribeEmailNotificationsBody, options?: RequestInit): Promise<userUnsubscribeEmailNotificationsResponse> => {
@@ -4126,7 +4126,7 @@ export const getUserSetAvatarUrl = () => {
 
   
 
-  return `/user/setAvatar`
+  return `https://api.fiddl.art/api/user/setAvatar`
 }
 
 export const userSetAvatar = async (userSetAvatarBody: UserSetAvatarBody, options?: RequestInit): Promise<userSetAvatarResponse> => {
@@ -4190,7 +4190,7 @@ export const getUserAllUsersUrl = () => {
 
   
 
-  return `/user/allUsers`
+  return `https://api.fiddl.art/api/user/allUsers`
 }
 
 export const userAllUsers = async ( options?: RequestInit): Promise<userAllUsersResponse> => {
@@ -4248,7 +4248,7 @@ export const getLoginLinkInitLoginLinkUrl = () => {
 
   
 
-  return `/loginLink/initLoginLink`
+  return `https://api.fiddl.art/api/loginLink/initLoginLink`
 }
 
 export const loginLinkInitLoginLink = async (loginLinkInitLoginLinkBody: LoginLinkInitLoginLinkBody, options?: RequestInit): Promise<loginLinkInitLoginLinkResponse> => {
@@ -4307,7 +4307,7 @@ export const getLoginLinkLoginWithLinkUrl = () => {
 
   
 
-  return `/loginLink/loginWithLink`
+  return `https://api.fiddl.art/api/loginLink/loginWithLink`
 }
 
 export const loginLinkLoginWithLink = async (loginLinkLoginWithLinkBody: LoginLinkLoginWithLinkBody, options?: RequestInit): Promise<loginLinkLoginWithLinkResponse> => {
@@ -4371,7 +4371,7 @@ export const getStatsUsersUrl = () => {
 
   
 
-  return `/stats/users`
+  return `https://api.fiddl.art/api/stats/users`
 }
 
 export const statsUsers = async ( options?: RequestInit): Promise<statsUsersResponse> => {
@@ -4434,7 +4434,7 @@ export const getStatsImagesUrl = () => {
 
   
 
-  return `/stats/images`
+  return `https://api.fiddl.art/api/stats/images`
 }
 
 export const statsImages = async ( options?: RequestInit): Promise<statsImagesResponse> => {
@@ -4497,7 +4497,7 @@ export const getStatsCollectionsUrl = () => {
 
   
 
-  return `/stats/collections`
+  return `https://api.fiddl.art/api/stats/collections`
 }
 
 export const statsCollections = async ( options?: RequestInit): Promise<statsCollectionsResponse> => {
@@ -4560,7 +4560,7 @@ export const getStatsPaymentsUrl = () => {
 
   
 
-  return `/stats/payments`
+  return `https://api.fiddl.art/api/stats/payments`
 }
 
 export const statsPayments = async ( options?: RequestInit): Promise<statsPaymentsResponse> => {
@@ -4623,7 +4623,7 @@ export const getStatsApiMetricsUrl = () => {
 
   
 
-  return `/stats/apiMetrics`
+  return `https://api.fiddl.art/api/stats/apiMetrics`
 }
 
 export const statsApiMetrics = async ( options?: RequestInit): Promise<statsApiMetricsResponse> => {
@@ -4693,7 +4693,7 @@ export const getCollectionsImageInUsersCollectionUrl = (params: CollectionsImage
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/collections/imageInUsersCollection?${stringifiedParams}` : `/collections/imageInUsersCollection`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/imageInUsersCollection?${stringifiedParams}` : `https://api.fiddl.art/api/collections/imageInUsersCollection`
 }
 
 export const collectionsImageInUsersCollection = async (params: CollectionsImageInUsersCollectionParams, options?: RequestInit): Promise<collectionsImageInUsersCollectionResponse> => {
@@ -4751,7 +4751,7 @@ export const getCollectionsLikeImageUrl = () => {
 
   
 
-  return `/collections/likeImage`
+  return `https://api.fiddl.art/api/collections/likeImage`
 }
 
 export const collectionsLikeImage = async (collectionsLikeImageBody: CollectionsLikeImageBody, options?: RequestInit): Promise<collectionsLikeImageResponse> => {
@@ -4810,7 +4810,7 @@ export const getCollectionsUnlikeImageUrl = () => {
 
   
 
-  return `/collections/unlikeImage`
+  return `https://api.fiddl.art/api/collections/unlikeImage`
 }
 
 export const collectionsUnlikeImage = async (collectionsUnlikeImageBody: CollectionsUnlikeImageBody, options?: RequestInit): Promise<collectionsUnlikeImageResponse> => {
@@ -4881,7 +4881,7 @@ export const getCollectionsGetCollectionMetaUrl = (params: CollectionsGetCollect
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/collections/getCollectionMeta?${stringifiedParams}` : `/collections/getCollectionMeta`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionMeta?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionMeta`
 }
 
 export const collectionsGetCollectionMeta = async (params: CollectionsGetCollectionMetaParams, options?: RequestInit): Promise<collectionsGetCollectionMetaResponse> => {
@@ -4951,7 +4951,7 @@ export const getCollectionsFindCollectionByNameUrl = (params: CollectionsFindCol
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/collections/findCollectionByName?${stringifiedParams}` : `/collections/findCollectionByName`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/findCollectionByName?${stringifiedParams}` : `https://api.fiddl.art/api/collections/findCollectionByName`
 }
 
 export const collectionsFindCollectionByName = async (params: CollectionsFindCollectionByNameParams, options?: RequestInit): Promise<collectionsFindCollectionByNameResponse> => {
@@ -5021,7 +5021,7 @@ export const getCollectionsGetCollectionImagesUrl = (params: CollectionsGetColle
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/collections/getCollectionImages?${stringifiedParams}` : `/collections/getCollectionImages`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionImages?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionImages`
 }
 
 export const collectionsGetCollectionImages = async (params: CollectionsGetCollectionImagesParams, options?: RequestInit): Promise<collectionsGetCollectionImagesResponse> => {
@@ -5079,7 +5079,7 @@ export const getPromoCreatePromoCodeUrl = () => {
 
   
 
-  return `/promo/createPromoCode`
+  return `https://api.fiddl.art/api/promo/createPromoCode`
 }
 
 export const promoCreatePromoCode = async (promoCreatePromoCodeBody: PromoCreatePromoCodeBody, options?: RequestInit): Promise<promoCreatePromoCodeResponse> => {
@@ -5138,7 +5138,7 @@ export const getPromoDeletePromoCodeUrl = () => {
 
   
 
-  return `/promo/deletePromoCode`
+  return `https://api.fiddl.art/api/promo/deletePromoCode`
 }
 
 export const promoDeletePromoCode = async (promoDeletePromoCodeBody: PromoDeletePromoCodeBody, options?: RequestInit): Promise<promoDeletePromoCodeResponse> => {
@@ -5202,7 +5202,7 @@ export const getPromoGetPromoCodesUrl = () => {
 
   
 
-  return `/promo/getPromoCodes`
+  return `https://api.fiddl.art/api/promo/getPromoCodes`
 }
 
 export const promoGetPromoCodes = async ( options?: RequestInit): Promise<promoGetPromoCodesResponse> => {
@@ -5272,7 +5272,7 @@ export const getPromoGetPromoCodeDetailsUrl = (params: PromoGetPromoCodeDetailsP
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/promo/getPromoCodeDetails?${stringifiedParams}` : `/promo/getPromoCodeDetails`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/promo/getPromoCodeDetails?${stringifiedParams}` : `https://api.fiddl.art/api/promo/getPromoCodeDetails`
 }
 
 export const promoGetPromoCodeDetails = async (params: PromoGetPromoCodeDetailsParams, options?: RequestInit): Promise<promoGetPromoCodeDetailsResponse> => {
@@ -5330,7 +5330,7 @@ export const getPromoClaimPromoCodeUrl = () => {
 
   
 
-  return `/promo/claimPromoCode`
+  return `https://api.fiddl.art/api/promo/claimPromoCode`
 }
 
 export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPromoCodeBody, options?: RequestInit): Promise<promoClaimPromoCodeResponse> => {
@@ -5389,7 +5389,7 @@ export const getModelsSetModelNameUrl = () => {
 
   
 
-  return `/models/setModelName`
+  return `https://api.fiddl.art/api/models/setModelName`
 }
 
 export const modelsSetModelName = async (modelsSetModelNameBody: ModelsSetModelNameBody, options?: RequestInit): Promise<modelsSetModelNameResponse> => {
@@ -5453,7 +5453,7 @@ export const getModelsGetUserModelsUrl = () => {
 
   
 
-  return `/models/getUserModels`
+  return `https://api.fiddl.art/api/models/getUserModels`
 }
 
 export const modelsGetUserModels = async ( options?: RequestInit): Promise<modelsGetUserModelsResponse> => {
@@ -5511,7 +5511,7 @@ export const getModelsCreateModelUrl = () => {
 
   
 
-  return `/models/createModel`
+  return `https://api.fiddl.art/api/models/createModel`
 }
 
 export const modelsCreateModel = async (modelsCreateModelBody: ModelsCreateModelBody, options?: RequestInit): Promise<modelsCreateModelResponse> => {
@@ -5582,7 +5582,7 @@ export const getModelsGetTrainingStatusUrl = (params: ModelsGetTrainingStatusPar
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/models/getTrainingStatus?${stringifiedParams}` : `/models/getTrainingStatus`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getTrainingStatus?${stringifiedParams}` : `https://api.fiddl.art/api/models/getTrainingStatus`
 }
 
 export const modelsGetTrainingStatus = async (params: ModelsGetTrainingStatusParams, options?: RequestInit): Promise<modelsGetTrainingStatusResponse> => {
@@ -5640,7 +5640,7 @@ export const getModelsDeleteModelUrl = () => {
 
   
 
-  return `/models/deleteModel`
+  return `https://api.fiddl.art/api/models/deleteModel`
 }
 
 export const modelsDeleteModel = async (modelsDeleteModelBody: ModelsDeleteModelBody, options?: RequestInit): Promise<modelsDeleteModelResponse> => {
@@ -5711,7 +5711,7 @@ export const getModelsGetModelUrl = (params: ModelsGetModelParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/models/getModel?${stringifiedParams}` : `/models/getModel`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getModel?${stringifiedParams}` : `https://api.fiddl.art/api/models/getModel`
 }
 
 export const modelsGetModel = async (params: ModelsGetModelParams, options?: RequestInit): Promise<modelsGetModelResponse> => {
@@ -5769,7 +5769,7 @@ export const getModelsSetModelPrivacyUrl = () => {
 
   
 
-  return `/models/setModelPrivacy`
+  return `https://api.fiddl.art/api/models/setModelPrivacy`
 }
 
 export const modelsSetModelPrivacy = async (modelsSetModelPrivacyBody: ModelsSetModelPrivacyBody, options?: RequestInit): Promise<modelsSetModelPrivacyResponse> => {
@@ -5828,7 +5828,7 @@ export const getAdminLoginAsUserUrl = () => {
 
   
 
-  return `/admin/loginAsUser`
+  return `https://api.fiddl.art/api/admin/loginAsUser`
 }
 
 export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBody, options?: RequestInit): Promise<adminLoginAsUserResponse> => {
@@ -5887,7 +5887,7 @@ export const getPrivyAuthenticateUrl = () => {
 
   
 
-  return `/privy/authenticate`
+  return `https://api.fiddl.art/api/privy/authenticate`
 }
 
 export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticateBody, options?: RequestInit): Promise<privyAuthenticateResponse> => {
