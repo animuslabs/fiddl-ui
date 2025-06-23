@@ -13,13 +13,11 @@ div.q-mt-md
       )
   .centered
     div.q-ma-lg(style="max-width:800px")
-      p Upload 15-30 images of a person's face to create a custom model
-      p The more diverse the images, the better the model will be
-      p You can use the same person's face in different poses, lighting, and expressions
+      p Upload 15-30 images of a subject or style
   .centered.q-mt-md.q-gutter-md.q-ma-md
     div
       p Pick a name for this forge model
-      q-input(v-model="modelName" outlined)
+      q-input( v-model="modelName" outlined)
     div
       p Training Mode
       q-select(
