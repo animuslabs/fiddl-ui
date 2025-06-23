@@ -8,4 +8,11 @@ export default defineConfig({
       client: "vue-query",
     },
   },
+  edge: {
+    input: "../fiddl-server/openapi.json",
+    output: {
+      target: "./netlify/edge-functions/lib/orval.ts",
+      client: "fetch",
+    },
+  },
 })

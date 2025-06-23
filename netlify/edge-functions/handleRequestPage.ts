@@ -1,6 +1,6 @@
 import { Context } from "@netlify/edge-functions"
-import { setSocialMetadata, shortIdToLong, throwErr } from "../../src/lib/util"
-import { creationsCreateRequest } from "../../src/lib/orval"
+import { setSocialMetadata, shortIdToLong } from "./lib/util.ts"
+import { creationsCreateRequest } from "./lib/orval.ts"
 
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
@@ -15,11 +15,12 @@ export default async (request: Request, context: Context) => {
   const segments = url.pathname.split("/")
   const id = segments[2]
   console.log("shortId:", id)
-  if (!id) throwErr("missing id")
+  if (!id) throw Error("id error")
   const longId = shortIdToLong(id)
   // const requestData = await fetch(`https://api.fiddl.art/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
   // const requestData = await fetch(`http://localhost:4444/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
   const requestData = await creationsCreateRequest({ requestId: longId })
+  if (requestData.status != 200) throw Error("request error:" + JSON.stringify(requestData.data, null, 2))
   const jsonData = requestData.data
   const images = jsonData.imageIds
   const imageId = images[url.searchParams.get("index") || 0]

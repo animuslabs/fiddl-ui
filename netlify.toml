@@ -8,7 +8,10 @@
   path = "/r/*"
 
 [functions]
-  included_files = ["netlify/edge-functions/lib/**"]
+  included_files = [
+    "netlify/edge-functions/lib/**",
+    "src/lib/**.ts"
+  ]
 
 [[redirects]]
   from = "/blog/*"
