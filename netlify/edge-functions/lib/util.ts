@@ -71,3 +71,10 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   }
   return bytes.buffer
 }
+
+export const apiFetch = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
+  const baseUrl = "https://api.fiddl.art/api"
+  const res = await fetch(`${baseUrl}${url}`, options)
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}

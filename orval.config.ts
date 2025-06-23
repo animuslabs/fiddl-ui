@@ -13,6 +13,7 @@ export default defineConfig({
     output: {
       target: "./netlify/edge-functions/lib/orval.ts",
       client: "fetch",
+      baseUrl: "https://api.fiddl.art/api",
     },
   },
 })
