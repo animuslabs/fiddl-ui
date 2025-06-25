@@ -32,6 +32,7 @@ q-card.q-pa-md
 import { QRejectedEntry, QUploader } from "quasar"
 import { defineComponent, ref } from "vue"
 import { useQuasar } from "quasar"
+import { md5File } from "lib/md5"
 
 export default defineComponent({
   name: "ImageUploader",
@@ -101,7 +102,7 @@ export default defineComponent({
     uploadFiles() {
       try {
         const imageData = new FormData()
-        this.previewFiles.forEach(({ file }, i) => {
+        this.previewFiles.forEach(async ({ file }, i) => {
           imageData.append("image", file)
         })
         this.$emit("formData", imageData)

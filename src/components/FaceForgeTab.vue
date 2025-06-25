@@ -144,7 +144,7 @@ export default defineComponent({
         await uploadTrainingImages(modelId, formData, (progress) => {
           // Handle progress updates if needed
         })
-        if (typeof modelId === 'string') {
+        if (typeof modelId === "string") {
           this.targetModelId = modelId
         }
         this.mode = "watchTraining"
