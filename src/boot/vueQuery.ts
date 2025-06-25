@@ -13,6 +13,7 @@ if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
 
 // Configure axios
 axios.defaults.baseURL = apiUrl
+axios.defaults.timeout = 0
 
 // Add auth interceptor for JWT
 axios.interceptors.request.use((config) => {

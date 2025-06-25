@@ -13,7 +13,8 @@ div.q-mt-md
       )
   .centered
     div.q-ma-lg(style="max-width:800px")
-      p Upload 15-30 images of a subject or style
+      p Upload 15-30 images of a subject or style.
+      p The more images you add, the more precise and consistent your custom model becomes.
   .centered.q-mt-md.q-gutter-md.q-ma-md
     div
       p Pick a name for this forge model
