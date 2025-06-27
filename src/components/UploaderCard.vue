@@ -1,33 +1,55 @@
 <template lang="pug">
-  q-card.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop" style="max-width:95vw;" )
+  q-card.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop($event)" style="max-width:95vw;" )
     .centered.q-mb-md
       h5 {{ isMobile ? 'Tap to select images' : 'Drag and drop images here' }}
     input.hidden(ref="fileInput" type="file" accept="image/*" multiple @change="handleFiles")
     q-separator.q-mt-md(color="grey-8")
     .thumb-grid.q-pa-lg.relative-position
-      .absolute-center.q-pa-xl(v-if="!files.length" style="border: 2px dashed grey; border-radius: 8px;")
+      .absolute-center.q-pa-xl(v-if="!forgeStore.state.files.length" style="border: 2px dashed grey; border-radius: 8px;")
         q-icon(name="add_photo_alternate" size="64px" color="grey" @click="fileInput?.click()")
-      .thumb(v-for="(file, i) in files" :key="i")
+      .thumb(v-for="(file, i) in forgeStore.state.files" :key="i")
         img(:src="URL.createObjectURL(file)")
         button.remove-btn(@click="remove(i)") ×
     q-separator(color="grey-8")
     .centered.q-ma-sm
       q-chip( text-color="white" icon="data_usage" )
-        | {{ totalSizeMB.toFixed(1) }} / {{ props.maxTotalSizeMB }} MB
+        | {{ forgeStore.totalSizeMB.value.toFixed(1) }} / {{ props.maxTotalSizeMB }} MB
       q-chip( text-color="white" icon="photo_library" )
-        | {{ files.length }} / {{ props.maxFiles }} images
+        | {{ forgeStore.state.files.length }} / {{ props.maxFiles }} images
     .centered.q-gutter-sm.items-center
-      q-btn(label="Clear All" color="grey" icon="delete" @click="clearItems" :disable="!files.length" outline)
+      q-btn(label="Clear All" color="grey" icon="delete" @click="clearItems" :disable="!forgeStore.state.files.length" outline)
       q-btn(outline color="primary" label="Select Files" icon="add_photo_alternate" @click="fileInput?.click()" )
-      q-btn(color="primary" label="Upload All" icon="cloud_upload" @click="emit('filesReady',files)" :disable="!files.length")
+      q-btn(v-if="!hideUploadButton" color="primary" label="Upload All" icon="cloud_upload" @click="triggerFilesReady" :disable="!forgeStore.state.files.length")
   </template>
 
 <script setup lang="ts">
-import { computed, ref, defineEmits } from "vue"
+import { computed, ref, defineEmits, onMounted } from "vue"
 import { Dialog, Notify, useQuasar } from "quasar"
+import { useForgeStore } from "stores/forgeStore"
 
-const $q = useQuasar()
-const isMobile = computed(() => $q.platform.is.mobile)
+const quasar = useQuasar()
+const isMobile = computed(() => quasar.platform.is.mobile)
+
+const forgeStore = useForgeStore()
+const { state, totalSizeMB, addFiles, clearFiles } = forgeStore
+
+const props = defineProps({
+  maxTotalSizeMB: { type: Number, default: 100 },
+  maxFileSizeMB: { type: Number, default: 10 },
+  maxFiles: { type: Number, default: 50 },
+  hideUploadButton: { type: Boolean, default: false },
+})
+
+const emit = defineEmits<{
+  (e: "filesReady", files: File[]): void
+}>()
+
+const fileInput = ref<HTMLInputElement | null>(null)
+const URL = window.URL
+
+function triggerFilesReady() {
+  emit("filesReady", [...state.files])
+}
 
 function clearItems() {
   Dialog.create({
@@ -40,36 +62,20 @@ function clearItems() {
       color: "negative",
     },
   }).onOk(() => {
-    files.value = []
+    clearFiles()
     if (fileInput.value) {
       fileInput.value.value = ""
     }
   })
 }
-
-const props = defineProps({
-  maxTotalSizeMB: { type: Number, default: 100 },
-  maxFileSizeMB: { type: Number, default: 10 },
-  maxFiles: { type: Number, default: 50 },
+onMounted(() => {
+  forgeStore.reset()
 })
-
-const files = ref<File[]>([])
-const fileInput = ref<HTMLInputElement | null>(null)
-const URL = window.URL
-
-const emit = defineEmits<{
-  (e: "filesReady", files: File[]): void
-}>()
-
-const totalSizeMB = computed(() => files.value.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024))
-
-const remainingMB = computed(() => props.maxTotalSizeMB - totalSizeMB.value)
-const remainingFiles = computed(() => props.maxFiles - files.value.length)
 
 function validateFiles(newFiles: File[]) {
   const errors: string[] = []
 
-  if (files.value.length + newFiles.length > props.maxFiles) {
+  if (state.files.length + newFiles.length > props.maxFiles) {
     errors.push("Too many files.")
   }
 
@@ -82,9 +88,16 @@ function validateFiles(newFiles: File[]) {
     }
   }
 
-  const newTotalSize = files.value.reduce((acc, f) => acc + f.size, 0) + newFiles.reduce((acc, f) => acc + f.size, 0)
+  const newTotalSize = totalSizeMB.value * 1024 * 1024 + newFiles.reduce((acc, f) => acc + f.size, 0)
   if (newTotalSize / (1024 * 1024) > props.maxTotalSizeMB) {
     errors.push("Total size exceeds limit.")
+  }
+
+  const existingFiles = new Set(state.files.map((f) => f.name))
+  for (const file of newFiles) {
+    if (existingFiles.has(file.name)) {
+      errors.push(`File ${file.name} is already included.`)
+    }
   }
 
   return errors
@@ -102,7 +115,7 @@ function handleDrop(e: DragEvent) {
     })
     return
   }
-  files.value.push(...dropped.filter((f) => f.type.startsWith("image/")))
+  addFiles(dropped.filter((f) => f.type.startsWith("image/")))
 }
 
 function handleFiles(e: Event) {
@@ -118,12 +131,12 @@ function handleFiles(e: Event) {
     })
     return
   }
-  files.value.push(...selected.filter((f) => f.type.startsWith("image/")))
+  addFiles(selected.filter((f) => f.type.startsWith("image/")))
   input.value = ""
 }
 
 function remove(index: number) {
-  files.value.splice(index, 1)
+  state.files.splice(index, 1)
 }
 </script>
 

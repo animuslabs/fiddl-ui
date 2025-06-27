@@ -5,6 +5,7 @@ import type { TRPCClientError } from "@trpc/client"
 import type { AppRouter } from "lib/server"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
+import stripAnsi from "strip-ansi"
 
 /**
  * Shares an image via the native share feature, with a fallback for unsupported devices.
@@ -69,9 +70,10 @@ export function generateShortHash(input: string): string {
 
 export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
   console.error(err)
+  const cleanErr = stripAnsi(err.message || err.toString())
   umami.track("error", { message: err.message, error: err })
-  let message = err.message || "An error occurred"
-  if (err.response?.data?.message) message = err.response.data.message
+  let message = cleanErr
+  if (err.response?.data?.message) message = stripAnsi(err.response.data.message)
   Dialog.create({
     title: "Error",
     message,

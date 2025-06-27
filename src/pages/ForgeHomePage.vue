@@ -1,5 +1,5 @@
 <template lang="pug">
-q-page
+q-page.q-mb-xl
   .centered
     h1.lobster-font Forge
   .centered.q-mt-md

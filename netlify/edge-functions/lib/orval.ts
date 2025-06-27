@@ -1413,6 +1413,7 @@ export type PrivyAuthenticate200 = {
 
 export type TrainingSetsCreateSetBody = {
   name: string;
+  description: string;
   /**
    * @minimum 1
    * @maximum 200
@@ -1422,10 +1423,24 @@ export type TrainingSetsCreateSetBody = {
   zipSizeMb: number;
 };
 
+export type TrainingSetsCreateSet200SignedZipUploadDataFields = {[key: string]: string};
+
+export type TrainingSetsCreateSet200SignedZipUploadData = {
+  url: string;
+  fields: TrainingSetsCreateSet200SignedZipUploadDataFields;
+};
+
+export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields = {[key: string]: string};
+
+export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItem = {
+  url: string;
+  fields: TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields;
+};
+
 export type TrainingSetsCreateSet200 = {
   trainingSetId: string;
-  signedZipUploadUrl: string;
-  signedThumbnailUploadUrls: string[];
+  signedZipUploadData: TrainingSetsCreateSet200SignedZipUploadData;
+  signedThumbnailUploadDatas: TrainingSetsCreateSet200SignedThumbnailUploadDatasItem[];
 };
 
 export type TrainingSetsFinalizeSetBody = {
@@ -1445,6 +1460,8 @@ export type TrainingSetsGetUserSets200Item = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  /** @nullable */
+  description: string | null;
 };
 
 export type TrainingSetsGetSetParams = {
@@ -1460,6 +1477,8 @@ export type TrainingSetsGetSet200 = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  /** @nullable */
+  description: string | null;
 };
 
 export type TrainingSetsDeleteSetBody = {
