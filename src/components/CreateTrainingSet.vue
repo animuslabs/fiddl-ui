@@ -41,6 +41,7 @@ import { catchErr, sleep } from "lib/util"
 import { useForgeStore } from "src/stores/forgeStore"
 import { Dialog, Loading } from "quasar"
 import { uploadToPresignedPost, uploadWithProgress } from "lib/api"
+import { generateWebpThumbnails } from "../lib/imageUtils"
 export default defineComponent({
   components: {
     UploaderCard,
@@ -93,6 +94,23 @@ export default defineComponent({
           file: blob,
           presignedPost: newTrainingSet.signedZipUploadData,
         })
+        Loading.show({
+          message: "Preparing thumbnails...",
+          spinnerSize: 50,
+          spinnerColor: "primary",
+        })
+        const thumbnails = await generateWebpThumbnails(files, 256, 70)
+        for (let i = 0; i < thumbnails.length; i++) {
+          const file = thumbnails[i]
+          const presignedPost = newTrainingSet.signedThumbnailUploadDatas[i]
+          if (!file || !presignedPost) continue
+          await uploadToPresignedPost({ file, presignedPost })
+          Loading.show({
+            message: `Uploading thumbnail ${i + 1}/${thumbnails.length}...`,
+            spinnerSize: 50,
+            spinnerColor: "primary",
+          })
+        }
       } catch (error) {
         console.error("Error handling files:", error)
         catchErr(error)
