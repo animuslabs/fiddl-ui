@@ -1,14 +1,18 @@
 <template lang="pug">
 div.q-mt-md
   .centered
-    h5 Forge Models
+    h3 My Models
+  .centered
+    p Each model is trained on a training set
   .centered.q-mt-md
     q-btn(
-      label="Create Forge Model"
+      label="Create Model"
       @click="$emit('createModel')"
       size="lg"
       icon="add"
       color="primary"
+      outline
+      rounded
     )
   .centered.q-ma-md
     CustomModelsList(@modelClicked="handleModelClicked")

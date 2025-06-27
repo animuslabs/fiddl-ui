@@ -35,6 +35,7 @@
     "@types/ms": "^0.7.34",
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
+    "client-zip": "^2.5.0",
     "crypto-browserify": "^3.12.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",

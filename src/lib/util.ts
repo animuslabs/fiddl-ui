@@ -1,6 +1,6 @@
 import { TranscriptLine } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
-import crypto from "crypto-js"
+import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
 import type { AppRouter } from "lib/server"
 import { Dialog, LocalStorage } from "quasar"
@@ -64,7 +64,7 @@ export function extractImageId(url: string): string | null {
 
 export function generateShortHash(input: string): string {
   // return crypto.createHash("md5").update(input).digest("base64").slice(0, 8)
-  return crypto.HmacMD5(input, "Key").toString()
+  return cryptoJs.HmacMD5(input, "Key").toString()
 }
 
 export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
@@ -359,4 +359,32 @@ export function pickRand<T>(arr: T[]): T {
 }
 export function removeDuplicates<T>(arr: T[]): T[] {
   return Array.from(new Set(arr))
+}
+
+export async function generateThumbnail(file: File, maxSize = 512): Promise<Blob> {
+  const img = new Image()
+  img.src = URL.createObjectURL(file)
+
+  await new Promise((resolve) => (img.onload = resolve))
+
+  const canvas = document.createElement("canvas")
+  const scale = Math.min(maxSize / img.width, maxSize / img.height)
+  canvas.width = img.width * scale
+  canvas.height = img.height * scale
+
+  const ctx = canvas.getContext("2d")!
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+  return await new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.75)
+  })
+}
+
+export async function generateThumbnails(files: File[]): Promise<{ id: string; blob: Blob }[]> {
+  return Promise.all(
+    files.map(async (file) => ({
+      id: crypto.randomUUID(),
+      blob: await generateThumbnail(file),
+    })),
+  )
 }

@@ -27,7 +27,7 @@
   [
     "faceForge",
     "/forge/:mode?",
-    "FaceForgePage"
+    "ForgeHomePage"
   ],
   [
     "browse",

@@ -14,6 +14,16 @@ export function img(id: string, size: ImageSize, width?: number | false, format?
   else return netlifyImgPath + `${id}-${size}.webp` + params
 }
 
+export function s3Img(s3Key: string, size?: ImageSize, width?: number | false, format?: string | false, quality?: number | false): string {
+  let params = ""
+  if (width) params += `&w=${width}`
+  if (format) params += `&fm=${format}`
+  if (quality) params += `&q=${quality}`
+  // if (window.location.hostname === "localhost") return `${imageApiUrl}${s3Key}-${size}.webp`
+  // else return import.meta.env.VITE_S3_URL + `s3Key`
+  return import.meta.env.VITE_S3_URL + `s3Key`
+}
+
 export function avatarImg(userId: string, width?: number | false, format?: string | false, quality?: number | false) {
   let params = ""
   if (width) params += `&w=${width}`

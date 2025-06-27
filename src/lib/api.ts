@@ -9,6 +9,7 @@ import type {
   ModelsGetTrainingStatusQueryResult,
   ModelsGetUserModelsQueryResult,
   PromoGetPromoCodeDetailsQueryResult,
+  TrainingSetsGetSetQueryResult,
   UserAllUsersQueryResult,
   UserGetNotificationConfigQueryResult,
   UserGetQueryResult,
@@ -70,3 +71,4 @@ export type CustomModelWithRequests = ModelsGetUserModelsQueryResult["data"][num
 export type CustomModel = ModelsGetModelQueryResult["data"]
 export type TrainingData = ModelsGetTrainingStatusQueryResult["data"]
 export type User = UserAllUsersQueryResult["data"][number]
+export type TrainingSet = TrainingSetsGetSetQueryResult["data"]
