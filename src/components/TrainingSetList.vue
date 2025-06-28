@@ -7,6 +7,8 @@
             q-btn(icon="delete" flat color="accent" @click="deleteSet(trainingSet)" round)
           .row
             q-btn(icon="edit" flat color="white" @click="editSetName(trainingSet)" round)
+          //- .row
+          //-   q-btn(icon="edit" flat color="white" @click="finalize(trainingSet)" round)
         .col.cursor-pointer(@click.native="handleSetClicked(trainingSet)" v-if="$q.screen.width > 500")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ trainingSet.name }}
@@ -25,7 +27,7 @@
               .full-width.q-mt-md
               .row
                 div
-                div(v-for="thumbnailId in trainingSet.thumbnailIds || []" :key="thumbnailId")
+                div(v-for="thumbnailId in trimThumbnails(trainingSet)" :key="thumbnailId")
                   .relative-position(style="width:60px; height:90px;")
                     img(:src="s3Img(thumbnailKey(trainingSet.id,thumbnailId))" :style="lgImgStyle")
               .lt-md.full-width.q-mt-md
@@ -73,10 +75,10 @@ import { CustomModel, CustomModelWithRequests, TrainingSet } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { defineComponent } from "vue"
-import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel, trainingSetsRenameSet, trainingSetsGetUserSets } from "src/lib/orval"
+import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel, trainingSetsRenameSet, trainingSetsGetUserSets, trainingSetsFinalizeSet, trainingSetsDeleteSet } from "src/lib/orval"
 import { timeSince } from "lib/util"
 import { img, s3Img } from "lib/netlifyImg"
-const thumbnailKey = (trainingSetId: string, thumbnailId: string) => `training-sets/${trainingSetId}/thumbnails/${thumbnailId}.webp`
+const thumbnailKey = (trainingSetId: string, thumbnailId: string) => `trainingSets/${trainingSetId}/thumbnails/${thumbnailId}.webp`
 
 export default defineComponent({
   components: {},
@@ -117,6 +119,20 @@ export default defineComponent({
   },
   mounted() {},
   methods: {
+    trimThumbnails(trainingSet: TrainingSet) {
+      if (!trainingSet.thumbnailIds || trainingSet.thumbnailIds.length <= 4) return trainingSet.thumbnailIds
+      return trainingSet.thumbnailIds.slice(0, 4)
+    },
+    async finalize(trainingSet: TrainingSet) {
+      if (!trainingSet.id) return
+      try {
+        await trainingSetsFinalizeSet({ trainingSetId: trainingSet.id })
+        Notify.create("Training Set finalized successfully")
+        await this.loadData()
+      } catch (error) {
+        catchErr(error)
+      }
+    },
     async changeSetName() {
       if (!this.editingSetNameId) return
       try {
@@ -170,7 +186,7 @@ export default defineComponent({
         },
       }).onOk(async () => {
         try {
-          await modelsDeleteModel({ id: trainingSet.id })
+          await trainingSetsDeleteSet({ trainingSetId: trainingSet.id })
           Notify.create(`${trainingSet.name} deleted`)
           await this.loadData()
         } catch (error) {

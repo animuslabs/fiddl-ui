@@ -86,6 +86,19 @@ function validateFiles(newFiles: File[]) {
     if (file.size / (1024 * 1024) > props.maxFileSizeMB) {
       errors.push(`File ${file.name} exceeds the max file size.`)
     }
+    if (file.size === 0) {
+      errors.push(`File ${file.name} is empty.`)
+    }
+
+    // ensure the file is at least 128x128 pixels
+    let img = new Image()
+    img.src = URL.createObjectURL(file)
+    img.onload = () => {
+      if (img.width < 128 || img.height < 128) {
+        errors.push(`File ${file.name} must be at least 128x128 pixels.`)
+      }
+      URL.revokeObjectURL(img.src) // Clean up the object URL after use
+    }
   }
 
   const newTotalSize = totalSizeMB.value * 1024 * 1024 + newFiles.reduce((acc, f) => acc + f.size, 0)
