@@ -6,12 +6,6 @@
     </div>
 
     <div class="q-mb-md">
-      <h3>Select Training Model</h3>
-      <PickModel @select-model="onSelectModel" />
-      <div v-if="selectedModel" class="q-mt-sm text-primary">Selected Model: {{ selectedModel.name }}</div>
-    </div>
-
-    <div class="q-mb-md">
       <h3>Select Training Set</h3>
       <PickTrainingSet @select-set="onSelectSet" />
       <div v-if="selectedSet" class="q-mt-sm text-primary">Selected Set: {{ selectedSet.name }}</div>

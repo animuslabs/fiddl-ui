@@ -2,8 +2,9 @@
   q-page.flex.column.full-width
     .centered.q-mt-lg
       h2(v-if="!state.selectedSet") Training Sets
+      h2(v-else) Training Set
     template(v-if="state.selectedSet")
-      .centered
+      .centered.q-mt-md
         TrainingSetCard(:trainingSet="state.selectedSet" @updated="selectedSet.refetch()" )
       .centered.q-gutter-md.q-mt-sm
         q-btn.q-mt-md.q-mb-md(size="md" flat label="All Sets" icon="arrow_back" color="grey" @click="$router.push({ name:'trainingSet' })")
@@ -15,7 +16,7 @@
         .centered.q-col-gutter-md.flex-wrap
           MediaGallery(:mediaObjects="thumbnailObjects" layout="grid" :cols-desktop="5" style="max-width:1000px;")
       q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-else)
-        .centered.bg-grey-10
+        .centered
           h4.text-capitalize Models Trained using this set
         q-separator
         .centered

@@ -1,5 +1,5 @@
 <template lang="pug">
-q-page.q-mb-xl
+q-page.q-mb-xl.q-px-lg
   .centered
     h1.lobster-font Forge
   .centered.q-mt-md
@@ -9,7 +9,7 @@ q-page.q-mb-xl
       PickModel(  @selectModel="selectModel" @createModel="mode = 'createModel'")
     .col-6
       PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
-  div(v-if="mode == 'createModel'")
+  div(v-if="mode == 'createModel'").full-width
     CreateModel(@startTraining="startTraining")
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)

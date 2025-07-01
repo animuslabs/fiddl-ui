@@ -67,7 +67,7 @@ q-layout(view="lHh Lpr lFf" )
 
   q-page-container.centered.bg-grey-10
     .centered.bg-dark(style="width:100vw; height:100%" )
-      router-view
+      router-view.full-width(style="max-width:1500px;")
       .full-width.q-pa-md.bg-grey-10
         .centered.items-center.q-gutter-md
           q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
