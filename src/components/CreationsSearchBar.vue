@@ -14,13 +14,13 @@
             q-item(clickable @click="creationsStore.filter.model = undefined" v-close-popup) Any
             q-item(clickable @click="creationsStore.filter.model = model" v-for="model of imageModels" v-close-popup) {{ model }}
         q-btn(size="sm" icon="clear" flat @click="creationsStore.resetFilters()" v-if="creationsStore.filterActive")
-        q-btn(size="sm" icon="search" flat @click="expandSearch = true" v-if="!expandSearch && $q.screen.width < 600")
-        .row(v-if="$q.screen.width >= 600").no-wrap
+        q-btn(size="sm" icon="search" flat @click="expandSearch = true" v-if="!expandSearch && quasar.screen.width < 600")
+        .row(v-if="quasar.screen.width >= 600").no-wrap
           .col-grow
             q-input(  style="min-width:200px;" @clear="()=>{creationsStore.reset(); creationsStore.resetFilters()}" clearable v-model="creationsStore.search" filled placeholder="search" square dense)
           .col-auto
             q-btn(icon="search" type="submit" flat square )
-      .row.full-width.q-mb-sm.q-mt-sm.search-bar2( v-if="$q.screen.width < 600 && expandSearch")
+      .row.full-width.q-mb-sm.q-mt-sm.search-bar2( v-if="quasar.screen.width < 600 && expandSearch")
         .col-grow
           q-input( style="min-width:200px;" @clear="creationsStore.reset()" clearable v-model="creationsStore.search" filled placeholder="search" square dense)
         .col-auto
@@ -37,7 +37,7 @@ import { defineComponent } from "vue"
 export default defineComponent({
   data() {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       creationsStore: useCreations(),
       aspectRatios,
       imageModels,

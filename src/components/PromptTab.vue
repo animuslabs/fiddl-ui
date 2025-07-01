@@ -1,5 +1,5 @@
 <template lang="pug">
-.centered.full-height.full-width
+.centered.full-height.full-width.bg-black
   .full-width
     .row.full-height.full-width.no-wrap
       .col-auto.q-ml-md( v-if="$q.screen.gt.sm")
@@ -25,7 +25,7 @@
 
             .centered
               div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
-                ImageRequestCard(:creation="creation")
+                ImageRequestCard.bg-black(:creation="creation")
               div(v-else v-for="image in creationsStore.allCreationImages"  :key="image.creationId+'1'")
                 CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="image.imageId" style="width:150px; height:150px;" @click="showDetails(image.creationId)")
           .centered.q-ma-md(v-if="creationsStore.creations.length > 9")

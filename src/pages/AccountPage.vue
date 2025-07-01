@@ -35,10 +35,10 @@ q-page.full-height.full-width
           div.q-ml-md
             q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
-          .q-ma-md(v-if="!userAuth.userProfile?.emailVerified")
-            q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
-        .centered(v-if="!userAuth.userProfile?.emailVerified")
-          small.text-positive Earn 100 Points when you verify your email
+        //-   .q-ma-md(v-if="!userAuth.userProfile?.emailVerified")
+        //-     q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
+        //- .centered(v-if="!userAuth.userProfile?.emailVerified")
+        //-   small.text-positive Earn 100 Points when you verify your email
         //- h6.q-pt-md Pangea Account
         //- .row.items-center
         //-   div

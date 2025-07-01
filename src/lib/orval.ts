@@ -1253,6 +1253,9 @@ export type ModelsGetUserModels200ItemModelType = typeof ModelsGetUserModels200I
 export const ModelsGetUserModels200ItemModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
 } as const;
 
 export type ModelsGetUserModels200ItemTrainingPreset = typeof ModelsGetUserModels200ItemTrainingPreset[keyof typeof ModelsGetUserModels200ItemTrainingPreset];
@@ -1264,6 +1267,7 @@ export const ModelsGetUserModels200ItemTrainingPreset = {
   normal: 'normal',
   advanced: 'advanced',
   extreme: 'extreme',
+  custom: 'custom',
 } as const;
 
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
@@ -1390,6 +1394,9 @@ export type ModelsGetModel200ModelType = typeof ModelsGetModel200ModelType[keyof
 export const ModelsGetModel200ModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
 } as const;
 
 export type ModelsGetModel200TrainingPreset = typeof ModelsGetModel200TrainingPreset[keyof typeof ModelsGetModel200TrainingPreset];
@@ -1401,6 +1408,7 @@ export const ModelsGetModel200TrainingPreset = {
   normal: 'normal',
   advanced: 'advanced',
   extreme: 'extreme',
+  custom: 'custom',
 } as const;
 
 export type ModelsGetModel200 = {
@@ -1441,8 +1449,20 @@ export type PrivyAuthenticate200 = {
   userId: string;
 };
 
+export type TrainingSetsCreateSetBodyType = typeof TrainingSetsCreateSetBodyType[keyof typeof TrainingSetsCreateSetBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsCreateSetBodyType = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsCreateSetBody = {
+  /** @maxLength 30 */
   name: string;
+  type: TrainingSetsCreateSetBodyType;
+  /** @maxLength 400 */
   description: string;
   /**
    * @minimum 1
@@ -1481,7 +1501,17 @@ export type TrainingSetsGetUserSetsParams = {
 userId: string;
 };
 
+export type TrainingSetsGetUserSets200ItemType = typeof TrainingSetsGetUserSets200ItemType[keyof typeof TrainingSetsGetUserSets200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemType = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsGetUserSets200Item = {
+  type: TrainingSetsGetUserSets200ItemType;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1490,6 +1520,8 @@ export type TrainingSetsGetUserSets200Item = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  updatedAt: string;
+  deleted: boolean;
   /** @nullable */
   description: string | null;
 };
@@ -1498,7 +1530,17 @@ export type TrainingSetsGetSetParams = {
 trainingSetId: string;
 };
 
+export type TrainingSetsGetSet200Type = typeof TrainingSetsGetSet200Type[keyof typeof TrainingSetsGetSet200Type];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200Type = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsGetSet200 = {
+  type: TrainingSetsGetSet200Type;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1507,6 +1549,8 @@ export type TrainingSetsGetSet200 = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  updatedAt: string;
+  deleted: boolean;
   /** @nullable */
   description: string | null;
 };
@@ -1515,9 +1559,12 @@ export type TrainingSetsDeleteSetBody = {
   trainingSetId: string;
 };
 
-export type TrainingSetsRenameSetBody = {
+export type TrainingSetsEditSetBody = {
   trainingSetId: string;
+  /** @maxLength 32 */
   newName: string;
+  /** @maxLength 400 */
+  newDescription: string;
 };
 
 export const pkAuthRegisterStart = (
@@ -5718,24 +5765,24 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
-export const trainingSetsRenameSet = (
-    trainingSetsRenameSetBody: MaybeRef<TrainingSetsRenameSetBody>, options?: AxiosRequestConfig
+export const trainingSetsEditSet = (
+    trainingSetsEditSetBody: MaybeRef<TrainingSetsEditSetBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown>> => {
-    trainingSetsRenameSetBody = unref(trainingSetsRenameSetBody);
+    trainingSetsEditSetBody = unref(trainingSetsEditSetBody);
     
     return axios.post(
-      `/trainingSets/renameSet`,
-      trainingSetsRenameSetBody,options
+      `/trainingSets/editSet`,
+      trainingSetsEditSetBody,options
     );
   }
 
 
 
-export const getTrainingSetsRenameSetMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trainingSetsRenameSet>>, TError,{data: TrainingSetsRenameSetBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof trainingSetsRenameSet>>, TError,{data: TrainingSetsRenameSetBody}, TContext> => {
+export const getTrainingSetsEditSetMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trainingSetsEditSet>>, TError,{data: TrainingSetsEditSetBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof trainingSetsEditSet>>, TError,{data: TrainingSetsEditSetBody}, TContext> => {
 
-const mutationKey = ['trainingSetsRenameSet'];
+const mutationKey = ['trainingSetsEditSet'];
 const {mutation: mutationOptions, axios: axiosOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5745,10 +5792,10 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trainingSetsRenameSet>>, {data: TrainingSetsRenameSetBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trainingSetsEditSet>>, {data: TrainingSetsEditSetBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  trainingSetsRenameSet(data,axiosOptions)
+          return  trainingSetsEditSet(data,axiosOptions)
         }
 
         
@@ -5756,20 +5803,20 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type TrainingSetsRenameSetMutationResult = NonNullable<Awaited<ReturnType<typeof trainingSetsRenameSet>>>
-    export type TrainingSetsRenameSetMutationBody = TrainingSetsRenameSetBody
-    export type TrainingSetsRenameSetMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+    export type TrainingSetsEditSetMutationResult = NonNullable<Awaited<ReturnType<typeof trainingSetsEditSet>>>
+    export type TrainingSetsEditSetMutationBody = TrainingSetsEditSetBody
+    export type TrainingSetsEditSetMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
 
-    export const useTrainingSetsRenameSet = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trainingSetsRenameSet>>, TError,{data: TrainingSetsRenameSetBody}, TContext>, axios?: AxiosRequestConfig}
+    export const useTrainingSetsEditSet = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trainingSetsEditSet>>, TError,{data: TrainingSetsEditSetBody}, TContext>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient): UseMutationReturnType<
-        Awaited<ReturnType<typeof trainingSetsRenameSet>>,
+        Awaited<ReturnType<typeof trainingSetsEditSet>>,
         TError,
-        {data: TrainingSetsRenameSetBody},
+        {data: TrainingSetsEditSetBody},
         TContext
       > => {
 
-      const mutationOptions = getTrainingSetsRenameSetMutationOptions(options);
+      const mutationOptions = getTrainingSetsEditSetMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -14,13 +14,13 @@
             q-item(clickable @click="browserStore.filter.model = undefined" v-close-popup) Any
             q-item(clickable @click="browserStore.filter.model = model" v-for="model of imageModels" v-close-popup) {{ model }}
         q-btn(size="sm" icon="clear" flat @click="browserStore.resetFilters()" v-if="browserStore.filterActive")
-        q-btn(size="sm" icon="search" flat @click="expandSearch = true" v-if="!expandSearch && $q.screen.width < 600")
-        .row(v-if="$q.screen.width >= 600").no-wrap.items-center
+        q-btn(size="sm" icon="search" flat @click="expandSearch = true" v-if="!expandSearch && quasar.screen.width < 600")
+        .row(v-if="quasar.screen.width >= 600").no-wrap.items-center
           .col-grow
             q-input(  style="min-width:200px;" @clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
           .col-auto
             q-btn(icon="search" type="submit" flat square )
-      .row.full-width.q-pb-sm.q-pt-sm.no-wrap( v-if="$q.screen.width < 600 && expandSearch")
+      .row.full-width.q-pb-sm.q-pt-sm.no-wrap( v-if="quasar.screen.width < 600 && expandSearch")
         .col-grow
           q-input(@clear="browserStore.reset()" clearable v-model="browserStore.search" filled placeholder="search" square dense)
         .col-auto
@@ -41,7 +41,7 @@ export default defineComponent({
   },
   data() {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       browserStore: useBrowserStore(),
       aspectRatios,
       imageModels,
@@ -76,7 +76,7 @@ export default defineComponent({
     const savedImageSize = LocalStorage.getItem("browserImageSize")
     console.log("savedSize", savedImageSize, typeof savedImageSize)
     if (savedImageSize == "null" || !savedImageSize) this.viewMode.imageSize = null
-    else this.viewMode.imageSize = this.$q.screen.gt.sm ? "medium" : "small"
+    else this.viewMode.imageSize = this.quasar.screen.gt.sm ? "medium" : "small"
     console.log("viewMode", this.viewMode.imageSize)
   },
   methods: {

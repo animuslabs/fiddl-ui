@@ -1223,6 +1223,9 @@ export type ModelsGetUserModels200ItemModelType = typeof ModelsGetUserModels200I
 export const ModelsGetUserModels200ItemModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
 } as const;
 
 export type ModelsGetUserModels200ItemTrainingPreset = typeof ModelsGetUserModels200ItemTrainingPreset[keyof typeof ModelsGetUserModels200ItemTrainingPreset];
@@ -1234,6 +1237,7 @@ export const ModelsGetUserModels200ItemTrainingPreset = {
   normal: 'normal',
   advanced: 'advanced',
   extreme: 'extreme',
+  custom: 'custom',
 } as const;
 
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
@@ -1360,6 +1364,9 @@ export type ModelsGetModel200ModelType = typeof ModelsGetModel200ModelType[keyof
 export const ModelsGetModel200ModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
 } as const;
 
 export type ModelsGetModel200TrainingPreset = typeof ModelsGetModel200TrainingPreset[keyof typeof ModelsGetModel200TrainingPreset];
@@ -1371,6 +1378,7 @@ export const ModelsGetModel200TrainingPreset = {
   normal: 'normal',
   advanced: 'advanced',
   extreme: 'extreme',
+  custom: 'custom',
 } as const;
 
 export type ModelsGetModel200 = {
@@ -1411,8 +1419,20 @@ export type PrivyAuthenticate200 = {
   userId: string;
 };
 
+export type TrainingSetsCreateSetBodyType = typeof TrainingSetsCreateSetBodyType[keyof typeof TrainingSetsCreateSetBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsCreateSetBodyType = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsCreateSetBody = {
+  /** @maxLength 30 */
   name: string;
+  type: TrainingSetsCreateSetBodyType;
+  /** @maxLength 400 */
   description: string;
   /**
    * @minimum 1
@@ -1451,7 +1471,17 @@ export type TrainingSetsGetUserSetsParams = {
 userId: string;
 };
 
+export type TrainingSetsGetUserSets200ItemType = typeof TrainingSetsGetUserSets200ItemType[keyof typeof TrainingSetsGetUserSets200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemType = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsGetUserSets200Item = {
+  type: TrainingSetsGetUserSets200ItemType;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1460,6 +1490,8 @@ export type TrainingSetsGetUserSets200Item = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  updatedAt: string;
+  deleted: boolean;
   /** @nullable */
   description: string | null;
 };
@@ -1468,7 +1500,17 @@ export type TrainingSetsGetSetParams = {
 trainingSetId: string;
 };
 
+export type TrainingSetsGetSet200Type = typeof TrainingSetsGetSet200Type[keyof typeof TrainingSetsGetSet200Type];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200Type = {
+  subject: 'subject',
+  style: 'style',
+} as const;
+
 export type TrainingSetsGetSet200 = {
+  type: TrainingSetsGetSet200Type;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1477,6 +1519,8 @@ export type TrainingSetsGetSet200 = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
+  updatedAt: string;
+  deleted: boolean;
   /** @nullable */
   description: string | null;
 };
@@ -1485,9 +1529,12 @@ export type TrainingSetsDeleteSetBody = {
   trainingSetId: string;
 };
 
-export type TrainingSetsRenameSetBody = {
+export type TrainingSetsEditSetBody = {
   trainingSetId: string;
+  /** @maxLength 32 */
   newName: string;
+  /** @maxLength 400 */
+  newDescription: string;
 };
 
 export type pkAuthRegisterStartResponse200 = {
@@ -6201,59 +6248,59 @@ export const trainingSetsDeleteSet = async (trainingSetsDeleteSetBody: TrainingS
 
 
 
-export type trainingSetsRenameSetResponse200 = {
+export type trainingSetsEditSetResponse200 = {
   data: unknown
   status: 200
 }
 
-export type trainingSetsRenameSetResponse400 = {
+export type trainingSetsEditSetResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type trainingSetsRenameSetResponse401 = {
+export type trainingSetsEditSetResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type trainingSetsRenameSetResponse403 = {
+export type trainingSetsEditSetResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type trainingSetsRenameSetResponse500 = {
+export type trainingSetsEditSetResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type trainingSetsRenameSetResponseComposite = trainingSetsRenameSetResponse200 | trainingSetsRenameSetResponse400 | trainingSetsRenameSetResponse401 | trainingSetsRenameSetResponse403 | trainingSetsRenameSetResponse500;
+export type trainingSetsEditSetResponseComposite = trainingSetsEditSetResponse200 | trainingSetsEditSetResponse400 | trainingSetsEditSetResponse401 | trainingSetsEditSetResponse403 | trainingSetsEditSetResponse500;
     
-export type trainingSetsRenameSetResponse = trainingSetsRenameSetResponseComposite & {
+export type trainingSetsEditSetResponse = trainingSetsEditSetResponseComposite & {
   headers: Headers;
 }
 
-export const getTrainingSetsRenameSetUrl = () => {
+export const getTrainingSetsEditSetUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/trainingSets/renameSet`
+  return `https://api.fiddl.art/api/trainingSets/editSet`
 }
 
-export const trainingSetsRenameSet = async (trainingSetsRenameSetBody: TrainingSetsRenameSetBody, options?: RequestInit): Promise<trainingSetsRenameSetResponse> => {
+export const trainingSetsEditSet = async (trainingSetsEditSetBody: TrainingSetsEditSetBody, options?: RequestInit): Promise<trainingSetsEditSetResponse> => {
   
-  const res = await fetch(getTrainingSetsRenameSetUrl(),
+  const res = await fetch(getTrainingSetsEditSetUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      trainingSetsRenameSetBody,)
+      trainingSetsEditSetBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsRenameSetResponse['data'] = body ? JSON.parse(body) : {}
+  const data: trainingSetsEditSetResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as trainingSetsRenameSetResponse
+  return { data, status: res.status, headers: res.headers } as trainingSetsEditSetResponse
 }

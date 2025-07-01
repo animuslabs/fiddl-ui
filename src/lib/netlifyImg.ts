@@ -33,3 +33,5 @@ export function avatarImg(userId: string, width?: number | false, format?: strin
   // if (window.location.hostname === "localhost") return `${avatarsApiUrl}${userId}.webp`
   // else return netlifyAvatarsPath + `${userId}.webp` + params
 }
+
+export const trainingSetThumbnailKey = (trainingSetId: string, thumbnailId: string) => `trainingSets/${trainingSetId}/thumbnails/${thumbnailId}.webp`

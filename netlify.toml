@@ -14,19 +14,21 @@
   ]
 
 [[redirects]]
-  from = "/blog/*"
-  to = "https://fiddl.art/blog/:splat"
-  status = 200
+  from = "/.netlify/images"
+  status = 404
+  force = true
+  conditions = { Query = ["url"] }
 
 [[redirects]]
-  from = "/"
-  to = "/home.html"
+  from = "/blog/*"
+  to = "https://fiddl.art/blog/:splat"
   status = 200
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]

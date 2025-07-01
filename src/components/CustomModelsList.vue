@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-list(v-if="models?.length").full-width
+  q-list(v-if="models?.length" style="max-width:95vw;")
     q-item(v-for="model in models" :key="model.id")
       .row.q-gutter-xs.items-center
         .col-auto
@@ -9,7 +9,7 @@
             q-btn(icon="edit" flat color="white" @click="editModelName(model)" round)
           .row
             q-btn(:icon="privacyIcon(model)" flat color="white" @click="toggleModelPrivacy(model)" round)
-        .col.cursor-pointer(@click.native="handleModelClick(model)" v-if="$q.screen.width > 500")
+        .col.cursor-pointer(@click.native="handleModelClick(model)" v-if="quasar.screen.width > 500")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ model.name }}
           .row.q-gutter-md.full-width
@@ -93,7 +93,7 @@ export default defineComponent({
   },
   data: function () {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       models: [] as CustomModelWithRequests[] | null,
       timeSince,
       img,

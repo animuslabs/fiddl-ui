@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-card.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop($event)" style="max-width:95vw;" )
+  q-card.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop($event)" )
     .centered.q-mb-md
       h5 {{ isMobile ? 'Tap to select images' : 'Drag and drop images here' }}
     input.hidden(ref="fileInput" type="file" accept="image/*" multiple @change="handleFiles")
@@ -158,9 +158,9 @@ function remove(index: number) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 8px;
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
-  max-width: 700px;
+  /* max-width: 700px; */
   min-height: 200px;
   /* width: 300px; */
 }

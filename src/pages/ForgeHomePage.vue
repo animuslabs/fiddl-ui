@@ -6,18 +6,18 @@ q-page.q-mb-xl
     p Train custom models with your own images
   .centered.full-width(v-if="mode === 'pick'")
     .col-6
-      PickModel(  @selectModel="selectModel" @createModel="mode = 'create'")
+      PickModel(  @selectModel="selectModel" @createModel="mode = 'createModel'")
     .col-6
       PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
-  div(v-if="mode == 'create'")
+  div(v-if="mode == 'createModel'")
     CreateModel(@startTraining="startTraining")
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)
   div(v-if="mode == 'createSet'")
     CreateTrainingSet()
-    .centered
-      q-btn(label="back" @click="mode='pick'" color="primary" flat)
-  WatchTrainingComponent(
+    //- .centered
+    //-   q-btn(label="back" @click="mode='pick'" color="primary" flat)
+  WatchTraining(
     v-if="mode === 'train' && targetModelData"
     :trainingData="trainingData"
     :modelData="targetModelData"
@@ -29,19 +29,18 @@ q-page.q-mb-xl
 <script lang="ts">
 import { defineComponent } from "vue"
 import { modelsGetModel, modelsGetTrainingStatus, modelsCreateModel } from "src/lib/orval"
-import { useQuasar } from "quasar"
-import { Loading } from "quasar"
+import { Dialog, Loading, Notify } from "quasar"
 import { CustomModel, TrainingSet, uploadTrainingImages, type TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
 import PickModel from "components/PickModel.vue"
-import CreateModel from "components/CreateTrainingSet.vue"
+import CreateModel from "components/CreateModel.vue"
 import WatchTraining from "components/WatchTraining.vue"
 import UseModel from "components/UseModel.vue"
 import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
 import CreateTrainingSet from "components/CreateTrainingSet.vue"
-type FaceForgeMode = "pick" | "create" | "train" | "createSet"
+type FaceForgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
   components: {
     PickModel,
@@ -50,10 +49,6 @@ export default defineComponent({
     UseModel,
     PickTrainingSet,
     CreateTrainingSet,
-  },
-  setup() {
-    const $q = useQuasar()
-    return { $q }
   },
   data() {
     return {
@@ -136,6 +131,7 @@ export default defineComponent({
   methods: {
     selectSet(set: TrainingSet) {
       console.log("selected set", set)
+      void this.$router.push({ name: "trainingSet", params: { trainingSetId: set.id } })
     },
     async pickMode() {
       // await this.$router.replace({ params: { mode: "pick" }, query: {} })
@@ -196,10 +192,10 @@ export default defineComponent({
         this.mode = "train"
         void this.loadTrainingData()
         Loading.hide()
-        this.$q?.notify({ color: "positive", message: "Files uploaded!" })
+        Notify.create({ color: "positive", message: "Files uploaded!" })
       } catch (err: any) {
         Loading.hide()
-        this.$q?.dialog({
+        Dialog.create({
           color: "negative",
           message: "Error uploading files: " + err.message,
         })

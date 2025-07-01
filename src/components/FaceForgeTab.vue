@@ -42,8 +42,8 @@ export default defineComponent({
     UseModelComponent,
   },
   setup() {
-    const $q = useQuasar()
-    return { $q }
+    const quasar = useQuasar()
+    return { quasar: quasar }
   },
   data() {
     return {
@@ -150,10 +150,10 @@ export default defineComponent({
         this.mode = "watchTraining"
         void this.loadTrainingData()
         Loading.hide()
-        this.$q.notify({ color: "positive", message: "Files uploaded!" })
+        this.quasar.notify({ color: "positive", message: "Files uploaded!" })
       } catch (err: any) {
         Loading.hide()
-        this.$q.dialog({
+        this.quasar.dialog({
           color: "negative",
           message: "Error uploading files: " + err.message,
         })

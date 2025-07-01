@@ -13,12 +13,12 @@ div.q-ma-md
         size="lg"
       )
   .row
-    .centered.q-ma-md(v-if="!notEnoughPoints")
+    .col-auto(v-if="!notEnoughPoints")
       div
         p Upload 15-30 images of a subject or style.
         p.q-mb-sm Adding more high quality images will generally improve the quality of models trained on this set.
-        UploaderCard( hideUploadButton)
-    .centered(style="max-width:500px;").full-width.q-mt-md
+        UploaderCard( hideUploadButton style="max-width:600px;")
+    .col(style="max-width:500px; min-width:300px;").full-width.q-mt-md
       .row.q-ma-md.q-gutter-md
         .row
           div.q-mr-md
@@ -51,9 +51,22 @@ div.q-ma-md
           p.q-mt-sm This description is used during training to help models understand the content.
         .row
           h4 Cost: {{ price.toLocaleString() }} Fiddl Points
+          p.q-mt-sm Once created, a Training Set can be used to train multiple models.
+
       .centered.q-mt-lg
         div
           q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || !setDescription || notEnoughPoints || !forgeStore.state.files.length || !trainingSetType " @click="handleFiles")
+  q-dialog( v-model="finishModal" persistent )
+    q-card.q-pa-md
+      q-card-section
+        .row.items-center
+            q-icon.q-mr-md(name="check" size="64px" color="primary").q-mb-md
+            h3 Training Set Created
+        p Your training set #[strong {{setName}}] has been created successfully!
+        p You can now use this set to train models.
+      q-card-actions
+        q-btn(label="Create Model", color="primary" flat @click="$router.push({name:'forge',params:{mode:'createModel'},query:{trainingSetId:newTrainingSetId}})")
+        q-btn(label="Forge Home", color="primary", @click="$router.push({name:'forge'})" flat)
 </template>
 
 <script lang="ts">
@@ -61,13 +74,20 @@ import { defineComponent } from "vue"
 import UploaderCard from "./UploaderCard.vue"
 import { zipFiles } from "lib/zipClient"
 import { trainingSetsCreateSet, trainingSetsFinalizeSet } from "lib/orval"
-import { catchErr, sleep } from "lib/util"
+import { catchErr, sleep, throwErr } from "lib/util"
 import { useForgeStore } from "src/stores/forgeStore"
 import { Dialog, Loading } from "quasar"
 import { uploadToPresignedPost, uploadWithProgress } from "lib/api"
 import { generateWebpThumbnails } from "../lib/imageUtils"
 
-const trainingSetTypes = [
+type TrainingSetTypes = "subject" | "style"
+
+const trainingSetTypes: {
+  label: string
+  value: TrainingSetTypes
+  icon: string
+  description: string
+}[] = [
   {
     label: "Subject",
     value: "subject",
@@ -94,7 +114,9 @@ export default defineComponent({
       setDescription: "" as string | null | number,
       price: 10,
       forgeStore: useForgeStore(),
-      trainingSetType: null as any,
+      finishModal: false as boolean,
+      trainingSetType: null as TrainingSetTypes | null,
+      newTrainingSetId: null as string | null,
     }
   },
   computed: {
@@ -128,12 +150,13 @@ export default defineComponent({
         const zipped = await zipFiles(files)
         const blob = new Blob([zipped], { type: "application/zip" })
         console.log("Zipped blob size:", blob.size)
-        await sleep(1000) // Simulate delay for UI feedback
+        if (!this.trainingSetType) throwErr("missing training set type")
         const trainingSetResult = await trainingSetsCreateSet({
           name: String(this.setName),
           description: String(this.setDescription),
           numImages: files.length,
           zipSizeMb: blob.size / 1_000_000,
+          type: this.trainingSetType,
         })
         const { data: newTrainingSet, status, statusText } = trainingSetResult
         console.log("New training set created:", newTrainingSet)
@@ -170,6 +193,8 @@ export default defineComponent({
         await trainingSetsFinalizeSet({
           trainingSetId: newTrainingSet.trainingSetId,
         })
+        this.newTrainingSetId = newTrainingSet.trainingSetId
+        this.finishModal = true
       } catch (error) {
         console.error("Error handling files:", error)
         catchErr(error)
@@ -179,14 +204,6 @@ export default defineComponent({
 
         // this.forgeStore.reset()
       }
-      Dialog.create({
-        title: "Training Set Created",
-        message: `Your training set "${this.setName}" has been created successfully!`,
-        ok: {
-          label: "OK",
-          color: "primary",
-        },
-      })
     },
   },
 })
