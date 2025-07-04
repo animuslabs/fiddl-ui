@@ -6,7 +6,7 @@ import type { AppRouter } from "lib/server"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 import stripAnsi from "strip-ansi"
-
+import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@prisma/client"
 /**
  * Shares an image via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -389,4 +389,23 @@ export async function generateThumbnails(files: File[]): Promise<{ id: string; b
       blob: await generateThumbnail(file),
     })),
   )
+}
+
+export const modelPrice: Record<CustomModelType, number> = {
+  fluxDev: 3,
+  fluxPro: 10,
+  fluxProUltra: 20,
+  faceClone: 10,
+  faceForge: 20,
+}
+
+export const fineTuneTypePrice: Record<FineTuneType, number> = {
+  lora: 5,
+  full: 35,
+}
+
+export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTuneType, numImages: number): number {
+  const model = modelPrice[modelType] ?? throwErr("invalid modelTypes")
+  const fineTune = fineTuneTypePrice[fineTuneType] ?? throwErr("invalid fineTuneType")
+  return (model + fineTune) * numImages + 100
 }

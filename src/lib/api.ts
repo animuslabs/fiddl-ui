@@ -83,6 +83,7 @@ export async function uploadToPresignedPost({
     fields: Record<string, string>
   }
 }) {
+  console.log(presignedPost.fields)
   const formData = new FormData()
 
   // Add the signed fields first
@@ -100,12 +101,17 @@ export async function uploadToPresignedPost({
 
   if (!res.ok) {
     const text = await res.text()
+    console.log(res)
     throw new Error(`Upload failed: ${res.status} ${res.statusText} — ${text}`)
   }
 
   return true
 }
-
+function openXmlDebugTab(xmlString: string) {
+  const blob = new Blob([xmlString], { type: "application/xml" })
+  const url = URL.createObjectURL(blob)
+  window.open(url, "_blank")
+}
 export function uploadWithProgress({
   file,
   presignedPost,
@@ -118,6 +124,7 @@ export function uploadWithProgress({
   }
   onProgress?: (percent: number) => void
 }): Promise<void> {
+  console.log(presignedPost.fields)
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     Object.entries(presignedPost.fields).forEach(([k, v]) => {
@@ -139,6 +146,8 @@ export function uploadWithProgress({
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve()
       } else {
+        console.log(xhr)
+        openXmlDebugTab(xhr.responseText)
         reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`))
       }
     }

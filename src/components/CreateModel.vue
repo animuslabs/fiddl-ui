@@ -1,156 +1,210 @@
 <template lang="pug">
-  .q-pa-md.q-px-lg
+  div
     .centered.q-mb-md
-      h3 Train Custom Model
-    .row.q-col-gutter-lg.full-width
+      h3 Train a Custom Model
+    .row.q-col-gutter-sm.full-width
       .col-12.col-md-6
         h6 Training Set
         .centered
           TrainingSetCard.q-mb-md(
-            v-if="selectedSet"
-            :trainingSet="selectedSet"
+            v-if="state.trainingSet"
+            :trainingSet="state.trainingSet"
             @updated="reloadSelectedSet"
+            hide-buttons
           )
-        .centered.q-ma-md(v-if="!selectedSet")
-          h5.text-secondary No Set Selected
+        .centered.q-ma-md(v-if="!state.trainingSet")
+          h5.text-secondary No Training Set Selected
         .centered
-          q-btn(label="Choose Training Set" outline color="primary" rounded @click="dialogOpen = true")
+          q-btn(size="md" label="Select a Training Set" outline color="primary" rounded @click="state.dialogOpen = true")
 
-        .row.q-gutter-md.q-mt-md
+      .col-12.col-md-6.q-mb-md
+        .centered.q-gutter-sm.q-mb-md
           .col
             p.q-mt-md Base Model
-            q-btn.q-mt-md(:label="selectedBaseModel.name" color="primary" outline size="md" no-caps)
-              .badge-lg
-                p {{ selectedBaseModel.price }}
+            q-btn.q-mt-md(rounded :label="state.baseModel.name" color="primary" outline size="lg" no-caps)
+              .badge
+                p {{ modelPrice[state.baseModel.value] }}
               q-menu
-                q-list(padding style="max-width:200px")
+                q-list(padding style="max-width:300px")
                   .q-ma-lg.cursor-pointer.relative-position(
                     v-for="model in baseModels"
                     :key="model.name"
                     clickable
                     v-close-popup
-                    @click="selectedBaseModel = model"
+                    @click="state.baseModel = model"
                   )
-                    .absolute(style="left:-15px; height:100%; width:5px;" v-if="model.name == selectedBaseModel.name").bg-primary
+                    .absolute(style="left:-15px; height:100%; width:5px;" v-if="model.name == state.baseModel.name").bg-primary
                     .row
-                      h5.relative-position.q-pr-md {{ model.name }}
-                        .badge-lg
-                          p {{ model.price }}
+                      h4.relative-position.q-pr-lg {{ model.name }}
+                        .badge(style="")
+                          p {{ modelPrice[model.value] }}
                     .row
                       p {{ model.description }}
           .col
-            p.q-mt-md Training Preset
-            q-btn.q-mt-md(:label="selectedPreset.name" color="primary" outline size="md" no-caps)
-              .badge-lg
-                p {{ selectedPreset.price }}
-              q-menu
-                q-list(padding style="max-width:200px")
+            p.q-mt-md Training Mode
+            q-btn.q-mt-md.text-capitalize(rounded :label="state.modelMode.value" color="primary" outline size="lg" no-caps :icon="state.modelMode.icon")
+              q-menu(style="text-transform: none;")
+                q-list(padding style="max-width:300px" separator)
                   .q-ma-lg.cursor-pointer.relative-position(
-                    v-for="preset in trainingPresets"
-                    :key="preset.name"
+                    v-for="mode in trainingModes"
+                    :key="mode.value"
                     clickable
                     v-close-popup
-                    @click="selectedPreset = preset"
+                    @click="state.modelMode = mode"
                   )
-                    .absolute(style="left:-15px; height:100%; width:5px;" v-if="preset.name === selectedPreset.name").bg-primary
-                    .row
-                      h5.relative-position.q-pr-lg {{ preset.name }}
-                        .badge-lg
-                          p {{ preset.price }}
-                    .row
-                      p {{ preset.description }}
+                    .absolute(style="left:-15px; height:100%; width:5px;" v-if="mode.value === state.modelMode.value").bg-primary
+                    .row.align-items
+                      q-icon.q-mr-sm(:name="mode.icon" size="36px")
+                      h4.relative-position.q-pr-lg.text-capitalize {{ mode.value }}
+                    .row.q-mt-xs
+                      p {{ mode.description }}
 
-        .q-mt-md(v-if="isCustom")
-          p Custom Parameters
-          .q-pa-sm
-            q-slider(v-model="advanced.steps" :min="100" :max="2000" :step="100" label-always dense)
-            q-input(v-model.number="advanced.learningRate" label="Learning Rate" type="number" dense outlined)
+          .col
+            p.q-mt-md Model Type
+            q-btn.q-mt-md.relative-position(rounded :label="state.fineTuneType.label" color="primary" outline size="lg" no-caps)
+              .badge
+                p {{ fineTuneTypePrice[state.fineTuneType.value] }}
+              q-menu
+                q-list(padding style="max-width:300px")
+                  .q-ma-lg.cursor-pointer.relative-position(
+                    v-for="type in fineTuneTypeData"
+                    :key="type.value"
+                    clickable
+                    v-close-popup
+                    @click="state.fineTuneType = type"
+                    :class="{'disabled':state.baseModel.value == 'fluxDev' && type.value == 'full'}"
+                  )
+                    .absolute(style="left:-15px; height:100%; width:5px;" v-if="type.value === state.fineTuneType.value").bg-primary
+                    .row
+                      h4.relative-position.q-pr-lg {{ type.label }}
+                        .badge
+                          p {{ fineTuneTypePrice[type.value] }}
+                    .row
+                      p {{ type.description }}
 
-      .col-12.col-md-6
         p Model Name
-        q-input.q-mb-md.q-mt-sm(v-model="modelName" input-style="font-size:24px" style="font-size:40px" filled)
+        q-input.q-mb-md.q-mt-sm(v-model="state.name" input-style="font-size:24px" style="font-size:40px" filled)
         p Model Description
-        q-input.q-mt-sm(v-model="modelDescription" type="textarea" filled autogrow )
+        q-input.q-mt-sm(v-model="state.description" type="textarea" filled autogrow)
         .centered.q-mt-md.relative-position
         .centered
           q-btn.q-mt-lg(
-            label="Create Model"
+            label="Start Training"
             color="primary"
             size="lg"
-            icon="add"
+            icon="model_training"
             :disable="!canCreate"
-            @click="createModel"
+            @click="state.showConfirmWindow = true"
           )
             .badge-lg
               p {{ totalCost }}
 
-    q-dialog(v-model="dialogOpen")
+    q-dialog(v-model="state.dialogOpen")
       PickTrainingSet(@select-set="onSelectSet")
-  </template>
+    q-dialog(v-model="state.showConfirmWindow"  )
+      q-card.q-pa-md(style="min-height:300px; width:500px; max-width:100vw;")
+        h3.text-secondary Confirm
+        p You are about to create a custom model.
+        p The process will take 15-45 minutes depending on the number of images and model settings.
+        .centered.q-gutter-md.items-center.q-mt-md
+          q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:60px;" alt="fiddl points logo" no-spinner)
+        .centered.q-mt-sm
+          h4 The cost is #[strong {{ totalCost }} Fiddl Points]
+        .centered.q-ma-md.q-mt-xl.items-center.q-gutter-md
+          div.relative-position
+            q-btn( label="Start Training" color="primary" size="lg" icon="model_training" :disable="!canCreate" @click="createModel")
+              .badge-lg
+                p {{ totalCost }}
+        .centered
+          q-btn( label="< back" flat color="grey" @click="state.showConfirmWindow = false")
+</template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from "vue"
+import { ref, computed, reactive, onMounted, watchEffect, readonly } from "vue"
 import PickTrainingSet from "./PickTrainingSet.vue"
 import TrainingSetCard from "./TrainingSetCard.vue"
 import type { TrainingSet } from "lib/api"
+import { modelsCreateModel, trainingSetsGetSet } from "lib/orval"
+import { useRoute, useRouter } from "vue-router"
+import { trainModelPrice, modelPrice, fineTuneTypePrice, throwErr, catchErr } from "lib/util"
+import { baseModels, fineTuneTypeData, trainingModes } from "lib/createModelConfigs"
+import { Loading } from "quasar"
 
-interface BaseModelData {
-  name: "Flux Dev" | "Flux Pro" | "Flux Pro Ultra"
-  description: string
-  price: number
-}
-const baseModels: BaseModelData[] = [
-  { name: "Flux Dev", description: "For quick experiments", price: 400 },
-  { name: "Flux Pro", description: "Realistic", price: 800 },
-  { name: "Flux Pro Ultra", description: "Insanely detailed", price: 1200 },
-]
+const route = useRoute()
+const router = useRouter()
 
-interface TrainingPresetData {
-  name: "Basic" | "Advanced" | "Custom"
-  description: string
-  price: number
-}
-const trainingPresets: TrainingPresetData[] = [
-  { name: "Basic", description: "Default settings", price: 200 },
-  { name: "Advanced", description: "Better quality", price: 500 },
-  { name: "Custom", description: "Fine-tune parameters", price: 0 },
-]
+onMounted(() => {
+  const querySet = route.query.trainingSetId
+  if (typeof querySet != "string") return
+  void reloadSelectedSet(querySet)
+})
 
-const dialogOpen = ref(false)
-const selectedSet = ref<TrainingSet | null>(null)
 function onSelectSet(set: TrainingSet) {
-  selectedSet.value = set
-  dialogOpen.value = false
+  state.trainingSet = set
+  state.dialogOpen = false
+  void router.replace({ query: { ...route.query, trainingSetId: set.id } })
 }
-function reloadSelectedSet() {}
 
-const selectedBaseModel = ref<BaseModelData>(baseModels[0]!)
-const selectedPreset = ref<TrainingPresetData>(trainingPresets[0]!)
-const isCustom = computed(() => selectedPreset.value.name === "Custom")
+async function reloadSelectedSet(trainingSetId?: string) {
+  try {
+    if (!state.trainingSet && !trainingSetId) return
+    const setResult = await trainingSetsGetSet({ trainingSetId: trainingSetId || state.trainingSet?.id || "" })
+    state.trainingSet = setResult.data
+    void router.replace({ query: { ...route.query, trainingSetId: trainingSetId || state.trainingSet?.id } })
+  } catch (err: any) {
+    console.error(err)
+    state.trainingSet = null
+  }
+}
 
-const modelName = ref("")
-const modelDescription = ref("")
-const advanced = reactive({ steps: 800, learningRate: 0.0001 })
+const canCreate = computed(() => !!state.trainingSet && !!state.name?.trim())
 
-const canCreate = computed(() => !!selectedSet.value && !!selectedBaseModel.value && !!selectedPreset.value && !!modelName.value.trim())
+const totalCost = computed(() => trainModelPrice(state.baseModel.value, state.fineTuneType.value, state.trainingSet?.numImages || 0))
 
-const totalCost = computed(() => selectedBaseModel.value.price + selectedPreset.value.price)
-
-function startTraining() {
-  // TODO: implement API call
-  console.log("Starting training with:", {
-    set: selectedSet.value,
-    baseModel: selectedBaseModel.value,
-    preset: selectedPreset.value,
-    name: modelName.value.trim(),
-    description: modelDescription.value.trim(),
-    params: { ...advanced },
-    cost: totalCost.value,
-  })
+async function startTraining() {
+  if (!state.baseModel || !state.fineTuneType || !state.modelMode || !state.name || !state.trainingSet) return
+  console.log("start training")
+  try {
+    const { data } = await modelsCreateModel({
+      baseModel: state.baseModel.value,
+      description: state.description || "",
+      fineTuneType: state.fineTuneType.value,
+      modelMode: state.modelMode.value,
+      name: state.name,
+      trainingSetId: state.trainingSet.id,
+    })
+    console.log(data)
+    void router.push({ name: "forge", params: { mode: "train" }, query: { customModelId: data } })
+  } catch (err: any) {
+    catchErr(err)
+  } finally {
+    Loading.hide()
+  }
 }
 
 function createModel() {
   if (!canCreate.value) return
-  startTraining()
+  // state.showConfirmWindow = false
+  Loading.show()
+  void startTraining()
 }
+
+const state = reactive({
+  modelMode: Object.freeze(trainingModes[0]!),
+  baseModel: Object.freeze(baseModels[0]!),
+  fineTuneType: Object.freeze(fineTuneTypeData[0]!),
+  name: null as string | null,
+  description: null as string | null,
+  dialogOpen: false as boolean,
+  trainingSet: null as TrainingSet | null,
+  showConfirmWindow: false,
+})
+
+watchEffect(() => {
+  if (!state.trainingSet) return
+  if (state.trainingSet.numImages < 30 && state.fineTuneType.value === "full") {
+    state.fineTuneType = fineTuneTypeData[0]!
+    catchErr("Advanced mode requires at least 30 training images.")
+  }
+})
 </script>

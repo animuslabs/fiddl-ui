@@ -12,50 +12,29 @@ div.q-ma-md
         color="accent"
         size="lg"
       )
-  .row
-    .col-auto(v-if="!notEnoughPoints")
+  .centered
+    div(v-if="!notEnoughPoints")
       div
         p Upload 15-30 images of a subject or style.
-        p.q-mb-sm Adding more high quality images will generally improve the quality of models trained on this set.
+        p.q-mb-md Adding more high quality images will generally improve the quality of models trained on this set.
         UploaderCard( hideUploadButton style="max-width:600px;")
-    .col(style="max-width:500px; min-width:300px;").full-width.q-mt-md
-      .row.q-ma-md.q-gutter-md
-        .row
-          div.q-mr-md
-            p.q-mb-sm Pick a name for this training set
-            q-input( v-model="setName" outlined)
+
+      div(style="max-width:600px; min-width:300px;").full-width.q-mt-md
+        .row.q-gutter-sm.full-width
+          .col-5.q-mr-md
+            p.q-mb-sm Name
+            q-input( v-model="setName" filled)
+          .col
+            p.q-mb-sm Note (optional)
+            q-input( v-model="setDescription" filled type="textarea" :rows="3" )
+
+        .centered.q-mt-lg
           div
-            p.q-mb-sm Training Set Type
-            q-btn(:label="getTrainingSetTypeLabel" color="primary" rounded text-color="white" :icon="getTrainingSetTypeIcon" style="height:56px;")
-              q-menu
-                q-list(style="max-width:300px;" separator)
-                  q-item(
-                    v-for="type in trainingSetTypes"
-                    :key="type.value"
-                    clickable
-                    @click="trainingSetType = type.value"
-                    v-close-popup
-                  )
-                    div
-                      .row.items-center
-                        q-icon(:name="type.icon" size="20px").q-mr-sm
-                        h4 {{ type.label }}
-                        .col-grow.q-mt-sm
-                          .row.items-center
-                            span {{ type.description }}
-
-        div
-          p.q-mb-sm Describe the subject or style of this training set
-          q-input( v-model="setDescription" outlined type="textarea" rows="3" autogrow
-            placeholder="e.g. 'A portrait of John Doe' or 'a painting style using bright colors'")
-          p.q-mt-sm This description is used during training to help models understand the content.
-        .row
-          h4 Cost: {{ price.toLocaleString() }} Fiddl Points
-          p.q-mt-sm Once created, a Training Set can be used to train multiple models.
-
-      .centered.q-mt-lg
-        div
-          q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || !setDescription || notEnoughPoints || !forgeStore.state.files.length || !trainingSetType " @click="handleFiles")
+            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || !setDescription || notEnoughPoints || !forgeStore.state.files.length " @click="handleFiles")
+              .badge
+                p 10
+        .centered
+          p.q-mt-md Once created, a Training Set can be used to train multiple models.
   q-dialog( v-model="finishModal" persistent )
     q-card.q-pa-md
       q-card-section
@@ -80,27 +59,31 @@ import { Dialog, Loading } from "quasar"
 import { uploadToPresignedPost, uploadWithProgress } from "lib/api"
 import { generateWebpThumbnails } from "../lib/imageUtils"
 
-type TrainingSetTypes = "subject" | "style"
-
-const trainingSetTypes: {
-  label: string
-  value: TrainingSetTypes
-  icon: string
-  description: string
-}[] = [
-  {
-    label: "Subject",
-    value: "subject",
-    icon: "face",
-    description: "focused on a specific person or object.",
-  },
-  {
-    label: "Style",
-    value: "style",
-    icon: "palette",
-    description: "focused on a specific artistic style or theme.",
-  },
-]
+// const trainingSetTypes: {
+//   label: string
+//   value: TrainingSetType
+//   icon: string
+//   description: string
+// }[] = [
+//   {
+//     label: "Subject",
+//     value: "subject",
+//     icon: "face",
+//     description: "focused on a specific person or object.",
+//   },
+//   {
+//     label: "Style",
+//     value: "style",
+//     icon: "palette",
+//     description: "focused on a specific artistic style or theme.",
+//   },
+//   {
+//     label: "Object",
+//     value: "object",
+//     icon: "palette",
+//     description: "focused on a specific artistic style or theme.",
+//   },
+// ]
 
 export default defineComponent({
   components: {
@@ -109,27 +92,18 @@ export default defineComponent({
   emits: {},
   data() {
     return {
-      trainingSetTypes,
       setName: "" as string | null | number,
       setDescription: "" as string | null | number,
       price: 10,
       forgeStore: useForgeStore(),
       finishModal: false as boolean,
-      trainingSetType: null as TrainingSetTypes | null,
       newTrainingSetId: null as string | null,
+      loading: true,
     }
   },
   computed: {
     notEnoughPoints() {
       return this.price > (this.$userAuth.userData?.availablePoints || 0)
-    },
-    getTrainingSetTypeLabel(): string {
-      const found = this.trainingSetTypes.find((t) => t.value === this.trainingSetType)
-      return found ? found.label : "Select Type"
-    },
-    getTrainingSetTypeIcon(): string {
-      const found = this.trainingSetTypes.find((t) => t.value === this.trainingSetType)
-      return found?.icon || "help"
     },
   },
   methods: {
@@ -150,13 +124,11 @@ export default defineComponent({
         const zipped = await zipFiles(files)
         const blob = new Blob([zipped], { type: "application/zip" })
         console.log("Zipped blob size:", blob.size)
-        if (!this.trainingSetType) throwErr("missing training set type")
         const trainingSetResult = await trainingSetsCreateSet({
           name: String(this.setName),
           description: String(this.setDescription),
           numImages: files.length,
-          zipSizeMb: blob.size / 1_000_000,
-          type: this.trainingSetType,
+          zipSizeMb: Math.ceil(blob.size / 1_000_000),
         })
         const { data: newTrainingSet, status, statusText } = trainingSetResult
         console.log("New training set created:", newTrainingSet)

@@ -23,7 +23,6 @@ import { toObject, timeSince, catchErr } from "lib/util"
 import { request } from "http"
 import { Dialog } from "quasar"
 import UploaderCard from "src/components/UploaderCard.vue"
-import FaceForgeTab from "src/components/FaceForgeTab.vue"
 import PromptTab from "src/components/PromptTab.vue"
 import { useCreateCardStore } from "src/stores/createCardStore"
 
@@ -33,7 +32,6 @@ export default defineComponent({
     CreatedImageCard,
     ImageRequestCard,
     UploaderCard,
-    FaceForgeTab,
     PromptTab,
   },
   setup() {
@@ -58,7 +56,7 @@ export default defineComponent({
           const imageMeta = imageResponse?.data
           console.log("imageMeta", imageMeta)
           if (!imageMeta) return
-          
+
           const requestResponse = await creationsCreateRequest({ requestId: imageMeta.imageRequestId })
           const requestMeta = requestResponse?.data as any
           if (!requestMeta) return

@@ -20,8 +20,11 @@
               p Created
               h5 {{ timeSince(new Date(model.createdAt)) }}
             .col-auto(style="width:120px;")
-              p Preset
-              h4(style="text-transform:capitalize") {{ model.trainingPreset }}
+              p Mode
+              h4(style="text-transform:capitalize") {{ model.mode }}
+            .col-auto(style="width:120px;")
+              p Type
+              h4(style="text-transform:capitalize") {{ model.fineTuneType }}
           .row.q-ml-md
             .col-auto(v-if="model.imageRequests.length")
               .full-width.q-mt-md
@@ -41,9 +44,9 @@
             .col-auto.q-mr-md
               small Created
               p {{ timeSince(new Date(model.createdAt)) }}
-            .col-auto
-              small Preset
-              h6(style="text-transform:capitalize") {{ model.trainingPreset }}
+            //- .col-auto
+            //-   small Preset
+            //-   h6(style="text-transform:capitalize") {{ model. }}
           .row
             .col-auto(v-if="model.imageRequests.length").q-mt-sm
               .lt-md.full-width
@@ -75,7 +78,7 @@ import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { defineComponent } from "vue"
-import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel } from "src/lib/orval"
+import { modelsSetModelPrivacy, modelsGetUserModels, modelsDeleteModel, modelsEditModel } from "src/lib/orval"
 import { timeSince } from "lib/util"
 import { img } from "lib/netlifyImg"
 
@@ -85,6 +88,11 @@ export default defineComponent({
     trainedOnly: {
       type: Boolean,
       default: false,
+      required: false,
+    },
+    trainingSetId: {
+      type: String,
+      default: undefined,
       required: false,
     },
   },
@@ -98,6 +106,7 @@ export default defineComponent({
       timeSince,
       img,
       newModelName: "",
+      newModelDescription: "" as string | null,
       showEditNameDialog: false,
       editingModelNameId: null as string | null,
     }
@@ -131,7 +140,7 @@ export default defineComponent({
     async setModelName() {
       if (!this.editingModelNameId) return
       try {
-        await modelsSetModelName({ id: this.editingModelNameId, name: this.newModelName })
+        await modelsEditModel({ id: this.editingModelNameId, name: this.newModelName, description: this.newModelDescription || "" })
         this.showEditNameDialog = false
         Notify.create("Model name updated")
         await this.loadData()
@@ -142,6 +151,7 @@ export default defineComponent({
     editModelName(model: CustomModel) {
       this.editingModelNameId = model.id
       this.newModelName = model.name
+      this.newModelDescription = model.description
       this.showEditNameDialog = true
     },
     async loadData() {
@@ -155,6 +165,7 @@ export default defineComponent({
         } else {
           this.models = models?.filter((m) => m.status === "trained")
         }
+        if (this.trainingSetId) this.models = models?.filter((m) => m.trainingSetId === this.trainingSetId)
       } catch (error) {
         catchErr(error)
         this.models = []

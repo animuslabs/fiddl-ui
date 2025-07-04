@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-card.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop($event)" )
+  q-card.relative-position.q-pa-md.cursor-pointer(@dragover.prevent @drop.prevent="handleDrop($event)" )
     .centered.q-mb-md
       h5 {{ isMobile ? 'Tap to select images' : 'Drag and drop images here' }}
     input.hidden(ref="fileInput" type="file" accept="image/*" multiple @change="handleFiles")
@@ -8,7 +8,7 @@
       .absolute-center.q-pa-xl(v-if="!forgeStore.state.files.length" style="border: 2px dashed grey; border-radius: 8px;")
         q-icon(name="add_photo_alternate" size="64px" color="grey" @click="fileInput?.click()")
       .thumb(v-for="(file, i) in forgeStore.state.files" :key="i")
-        img(:src="URL.createObjectURL(file)")
+        q-img(:src="state.fileUrls[file.name]")
         button.remove-btn(@click="remove(i)") ×
     q-separator(color="grey-8")
     .centered.q-ma-sm
@@ -20,13 +20,17 @@
       q-btn(label="Clear All" color="grey" icon="delete" @click="clearItems" :disable="!forgeStore.state.files.length" outline)
       q-btn(outline color="primary" label="Select Files" icon="add_photo_alternate" @click="fileInput?.click()" )
       q-btn(v-if="!hideUploadButton" color="primary" label="Upload All" icon="cloud_upload" @click="triggerFilesReady" :disable="!forgeStore.state.files.length")
+    div(style="position:absolute;inset:0;background:#0008;z-index:10" v-if="loading")
+      .absolute-center
+        q-spinner(size="100px" color="primary")
   </template>
 
 <script setup lang="ts">
 import { computed, ref, defineEmits, onMounted } from "vue"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { useForgeStore } from "stores/forgeStore"
-
+import { sleep } from "lib/util"
+const loading = ref(false)
 const quasar = useQuasar()
 const isMobile = computed(() => quasar.platform.is.mobile)
 
@@ -116,10 +120,13 @@ function validateFiles(newFiles: File[]) {
   return errors
 }
 
-function handleDrop(e: DragEvent) {
+async function handleDrop(e: DragEvent) {
+  console.log("handle drop")
+  loading.value = true
   const dropped = Array.from(e.dataTransfer?.files || [])
   const errors = validateFiles(dropped)
   if (errors.length) {
+    loading.value = false
     Notify.create({
       type: "negative",
       message: errors.join("\n"),
@@ -128,7 +135,12 @@ function handleDrop(e: DragEvent) {
     })
     return
   }
-  addFiles(dropped.filter((f) => f.type.startsWith("image/")))
+
+  void addFiles(dropped.filter((f) => f.type.startsWith("image/"))).then(() => {
+    void sleep(100).then(() => {
+      loading.value = false
+    })
+  })
 }
 
 function handleFiles(e: Event) {
@@ -144,12 +156,16 @@ function handleFiles(e: Event) {
     })
     return
   }
-  addFiles(selected.filter((f) => f.type.startsWith("image/")))
+  void addFiles(selected.filter((f) => f.type.startsWith("image/")))
   input.value = ""
 }
 
 function remove(index: number) {
+  const fileName = state.files[index]?.name
+  if (!fileName) return
   state.files.splice(index, 1)
+  URL.revokeObjectURL(state.fileUrls[fileName] || "")
+  delete state.fileUrls[fileName]
 }
 </script>
 

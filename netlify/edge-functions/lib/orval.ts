@@ -701,19 +701,19 @@ export type UserGet200AvatarConfig = {
 export type UserGet200 = {
   id: string;
   /** @nullable */
-  privyId: string | null;
-  /** @nullable */
   webauthnUserID: string | null;
   /** @nullable */
   currentPassKeyChallenge: string | null;
-  admin: boolean;
   availablePoints: number;
   createdAt: string;
   updatedAt: string;
   spentPoints: number;
+  admin: boolean;
   /** @nullable */
   referredById: string | null;
   lastNotificationSent: string;
+  /** @nullable */
+  privyId: string | null;
   /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
 };
@@ -741,13 +741,13 @@ export type UserProfile200 = {
   createdAt: string;
   updatedAt: string;
   /** @nullable */
-  pangeaAccount: string | null;
+  lastUsernameChange: string | null;
   /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
   /** @nullable */
-  lastUsernameChange: string | null;
+  pangeaAccount: string | null;
 };
 
 export type UserPublicProfileParams = {
@@ -796,13 +796,13 @@ export type UserSetUsername200 = {
   createdAt: string;
   updatedAt: string;
   /** @nullable */
-  pangeaAccount: string | null;
+  lastUsernameChange: string | null;
   /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
   /** @nullable */
-  lastUsernameChange: string | null;
+  pangeaAccount: string | null;
 };
 
 export type UserSetBioBody = {
@@ -828,13 +828,13 @@ export type UserSetBio200 = {
   createdAt: string;
   updatedAt: string;
   /** @nullable */
-  pangeaAccount: string | null;
+  lastUsernameChange: string | null;
   /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
   /** @nullable */
-  lastUsernameChange: string | null;
+  pangeaAccount: string | null;
 };
 
 export type UserSendVerificationEmailBody = {
@@ -867,10 +867,10 @@ export type UserPointsHistory200ItemType = typeof UserPointsHistory200ItemType[k
 export const UserPointsHistory200ItemType = {
   purchase: 'purchase',
   refund: 'refund',
-  commission: 'commission',
   comission: 'comission',
   bonus: 'bonus',
   referral: 'referral',
+  commission: 'commission',
   promoCode: 'promoCode',
   createModel: 'createModel',
   cryptoDeposit: 'cryptoDeposit',
@@ -1200,9 +1200,16 @@ export type PromoClaimPromoCodeBody = {
   id: string;
 };
 
-export type ModelsSetModelNameBody = {
+export type ModelsEditModelBody = {
   id: string;
+  /** @maxLength 30 */
   name: string;
+  /** @maxLength 500 */
+  description: string;
+};
+
+export type ModelsGetUserModelsParams = {
+trainingSetId?: string;
 };
 
 export type ModelsGetUserModels200ItemStatus = typeof ModelsGetUserModels200ItemStatus[keyof typeof ModelsGetUserModels200ItemStatus];
@@ -1228,16 +1235,27 @@ export const ModelsGetUserModels200ItemModelType = {
   fluxProUltra: 'fluxProUltra',
 } as const;
 
-export type ModelsGetUserModels200ItemTrainingPreset = typeof ModelsGetUserModels200ItemTrainingPreset[keyof typeof ModelsGetUserModels200ItemTrainingPreset];
+/**
+ * @nullable
+ */
+export type ModelsGetUserModels200ItemFineTuneType = typeof ModelsGetUserModels200ItemFineTuneType[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetUserModels200ItemTrainingPreset = {
-  simple: 'simple',
-  normal: 'normal',
-  advanced: 'advanced',
-  extreme: 'extreme',
-  custom: 'custom',
+export const ModelsGetUserModels200ItemFineTuneType = {
+  lora: 'lora',
+  full: 'full',
+} as const;
+
+export type ModelsGetUserModels200ItemMode = typeof ModelsGetUserModels200ItemMode[keyof typeof ModelsGetUserModels200ItemMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetUserModels200ItemMode = {
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
 } as const;
 
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
@@ -1252,7 +1270,9 @@ export type ModelsGetUserModels200ItemImageRequestsItem = {
 export type ModelsGetUserModels200Item = {
   status: ModelsGetUserModels200ItemStatus;
   modelType: ModelsGetUserModels200ItemModelType;
-  trainingPreset: ModelsGetUserModels200ItemTrainingPreset;
+  /** @nullable */
+  fineTuneType: ModelsGetUserModels200ItemFineTuneType;
+  mode: ModelsGetUserModels200ItemMode;
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1260,82 +1280,85 @@ export type ModelsGetUserModels200Item = {
   name: string;
   slug: string;
   /** @nullable */
+  trainingError: string | null;
+  /** @nullable */
   trainingId: string | null;
   /** @nullable */
-  trainingError: string | null;
+  inferenceId: string | null;
   Public: boolean;
   /** @nullable */
   trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
   imageRequests: ModelsGetUserModels200ItemImageRequestsItem[];
 };
 
-export type ModelsCreateModelBodyType = typeof ModelsCreateModelBodyType[keyof typeof ModelsCreateModelBodyType];
+export type ModelsCreateModelBodyBaseModel = typeof ModelsCreateModelBodyBaseModel[keyof typeof ModelsCreateModelBodyBaseModel];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsCreateModelBodyType = {
+export const ModelsCreateModelBodyBaseModel = {
+  faceClone: 'faceClone',
   faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
 } as const;
 
-export type ModelsCreateModelBodyTrainingPreset = typeof ModelsCreateModelBodyTrainingPreset[keyof typeof ModelsCreateModelBodyTrainingPreset];
+export type ModelsCreateModelBodyModelMode = typeof ModelsCreateModelBodyModelMode[keyof typeof ModelsCreateModelBodyModelMode];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsCreateModelBodyTrainingPreset = {
-  simple: 'simple',
-  normal: 'normal',
-  advanced: 'advanced',
-  extreme: 'extreme',
+export const ModelsCreateModelBodyModelMode = {
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
+
+export type ModelsCreateModelBodyFineTuneType = typeof ModelsCreateModelBodyFineTuneType[keyof typeof ModelsCreateModelBodyFineTuneType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsCreateModelBodyFineTuneType = {
+  lora: 'lora',
+  full: 'full',
 } as const;
 
 export type ModelsCreateModelBody = {
   name: string;
-  type: ModelsCreateModelBodyType;
-  trainingPreset: ModelsCreateModelBodyTrainingPreset;
+  description: string;
+  baseModel: ModelsCreateModelBodyBaseModel;
+  modelMode: ModelsCreateModelBodyModelMode;
+  fineTuneType: ModelsCreateModelBodyFineTuneType;
+  trainingSetId: string;
 };
 
 export type ModelsGetTrainingStatusParams = {
 id: string;
 };
 
-export type ModelsGetTrainingStatus200Input = {[key: string]: unknown};
-
-export type ModelsGetTrainingStatus200Source = typeof ModelsGetTrainingStatus200Source[keyof typeof ModelsGetTrainingStatus200Source];
+export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200Status[keyof typeof ModelsGetTrainingStatus200Status];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetTrainingStatus200Source = {
-  api: 'api',
-  web: 'web',
+export const ModelsGetTrainingStatus200Status = {
+  trained: 'trained',
+  succeeded: 'succeeded',
+  failed: 'failed',
 } as const;
 
-export type ModelsGetTrainingStatus200Metrics = {
-  predict_time?: number;
-};
-
-export type ModelsGetTrainingStatus200Urls = {
-  get: string;
-  cancel: string;
-  stream?: string;
-};
-
 export type ModelsGetTrainingStatus200 = {
-  id: string;
-  status: string;
-  model: string;
-  version: string;
-  input: ModelsGetTrainingStatus200Input;
-  output?: unknown;
-  source: ModelsGetTrainingStatus200Source;
-  error?: unknown;
-  logs?: string;
-  metrics?: ModelsGetTrainingStatus200Metrics;
-  webhook?: string;
-  webhook_events_filter?: string[];
-  created_at: string;
-  started_at?: string;
-  completed_at?: string;
-  urls: ModelsGetTrainingStatus200Urls;
+  status: ModelsGetTrainingStatus200Status;
+  /** @nullable */
+  error: string | null;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  elapsedTime: string;
+  remainingTime: string;
 };
 
 export type ModelsDeleteModelBody = {
@@ -1369,22 +1392,35 @@ export const ModelsGetModel200ModelType = {
   fluxProUltra: 'fluxProUltra',
 } as const;
 
-export type ModelsGetModel200TrainingPreset = typeof ModelsGetModel200TrainingPreset[keyof typeof ModelsGetModel200TrainingPreset];
+/**
+ * @nullable
+ */
+export type ModelsGetModel200FineTuneType = typeof ModelsGetModel200FineTuneType[keyof typeof ModelsGetModel200FineTuneType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200TrainingPreset = {
-  simple: 'simple',
-  normal: 'normal',
-  advanced: 'advanced',
-  extreme: 'extreme',
-  custom: 'custom',
+export const ModelsGetModel200FineTuneType = {
+  lora: 'lora',
+  full: 'full',
+} as const;
+
+export type ModelsGetModel200Mode = typeof ModelsGetModel200Mode[keyof typeof ModelsGetModel200Mode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetModel200Mode = {
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
 } as const;
 
 export type ModelsGetModel200 = {
   status: ModelsGetModel200Status;
   modelType: ModelsGetModel200ModelType;
-  trainingPreset: ModelsGetModel200TrainingPreset;
+  /** @nullable */
+  fineTuneType: ModelsGetModel200FineTuneType;
+  mode: ModelsGetModel200Mode;
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1392,12 +1428,16 @@ export type ModelsGetModel200 = {
   name: string;
   slug: string;
   /** @nullable */
+  trainingError: string | null;
+  /** @nullable */
   trainingId: string | null;
   /** @nullable */
-  trainingError: string | null;
+  inferenceId: string | null;
   Public: boolean;
   /** @nullable */
   trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
 };
 
 export type ModelsSetModelPrivacyBody = {
@@ -1419,23 +1459,13 @@ export type PrivyAuthenticate200 = {
   userId: string;
 };
 
-export type TrainingSetsCreateSetBodyType = typeof TrainingSetsCreateSetBodyType[keyof typeof TrainingSetsCreateSetBodyType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TrainingSetsCreateSetBodyType = {
-  subject: 'subject',
-  style: 'style',
-} as const;
-
 export type TrainingSetsCreateSetBody = {
   /** @maxLength 30 */
   name: string;
-  type: TrainingSetsCreateSetBodyType;
   /** @maxLength 400 */
   description: string;
   /**
-   * @minimum 1
+   * @minimum 3
    * @maximum 200
    */
   numImages: number;
@@ -1471,17 +1501,7 @@ export type TrainingSetsGetUserSetsParams = {
 userId: string;
 };
 
-export type TrainingSetsGetUserSets200ItemType = typeof TrainingSetsGetUserSets200ItemType[keyof typeof TrainingSetsGetUserSets200ItemType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TrainingSetsGetUserSets200ItemType = {
-  subject: 'subject',
-  style: 'style',
-} as const;
-
 export type TrainingSetsGetUserSets200Item = {
-  type: TrainingSetsGetUserSets200ItemType;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1490,27 +1510,17 @@ export type TrainingSetsGetUserSets200Item = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
-  updatedAt: string;
-  deleted: boolean;
   /** @nullable */
   description: string | null;
+  deleted: boolean;
+  updatedAt: string;
 };
 
 export type TrainingSetsGetSetParams = {
 trainingSetId: string;
 };
 
-export type TrainingSetsGetSet200Type = typeof TrainingSetsGetSet200Type[keyof typeof TrainingSetsGetSet200Type];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TrainingSetsGetSet200Type = {
-  subject: 'subject',
-  style: 'style',
-} as const;
-
 export type TrainingSetsGetSet200 = {
-  type: TrainingSetsGetSet200Type;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -1519,10 +1529,10 @@ export type TrainingSetsGetSet200 = {
   numImages: number;
   status: number;
   thumbnailIds: string[];
-  updatedAt: string;
-  deleted: boolean;
   /** @nullable */
   description: string | null;
+  deleted: boolean;
+  updatedAt: string;
 };
 
 export type TrainingSetsDeleteSetBody = {
@@ -5374,61 +5384,61 @@ export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPro
 
 
 
-export type modelsSetModelNameResponse200 = {
+export type modelsEditModelResponse200 = {
   data: unknown
   status: 200
 }
 
-export type modelsSetModelNameResponse400 = {
+export type modelsEditModelResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type modelsSetModelNameResponse401 = {
+export type modelsEditModelResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type modelsSetModelNameResponse403 = {
+export type modelsEditModelResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type modelsSetModelNameResponse500 = {
+export type modelsEditModelResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type modelsSetModelNameResponseComposite = modelsSetModelNameResponse200 | modelsSetModelNameResponse400 | modelsSetModelNameResponse401 | modelsSetModelNameResponse403 | modelsSetModelNameResponse500;
+export type modelsEditModelResponseComposite = modelsEditModelResponse200 | modelsEditModelResponse400 | modelsEditModelResponse401 | modelsEditModelResponse403 | modelsEditModelResponse500;
     
-export type modelsSetModelNameResponse = modelsSetModelNameResponseComposite & {
+export type modelsEditModelResponse = modelsEditModelResponseComposite & {
   headers: Headers;
 }
 
-export const getModelsSetModelNameUrl = () => {
+export const getModelsEditModelUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/models/setModelName`
+  return `https://api.fiddl.art/api/models/editModel`
 }
 
-export const modelsSetModelName = async (modelsSetModelNameBody: ModelsSetModelNameBody, options?: RequestInit): Promise<modelsSetModelNameResponse> => {
+export const modelsEditModel = async (modelsEditModelBody: ModelsEditModelBody, options?: RequestInit): Promise<modelsEditModelResponse> => {
   
-  const res = await fetch(getModelsSetModelNameUrl(),
+  const res = await fetch(getModelsEditModelUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      modelsSetModelNameBody,)
+      modelsEditModelBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsSetModelNameResponse['data'] = body ? JSON.parse(body) : {}
+  const data: modelsEditModelResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as modelsSetModelNameResponse
+  return { data, status: res.status, headers: res.headers } as modelsEditModelResponse
 }
 
 
@@ -5469,17 +5479,24 @@ export type modelsGetUserModelsResponse = modelsGetUserModelsResponseComposite &
   headers: Headers;
 }
 
-export const getModelsGetUserModelsUrl = () => {
+export const getModelsGetUserModelsUrl = (params?: ModelsGetUserModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `https://api.fiddl.art/api/models/getUserModels`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getUserModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getUserModels`
 }
 
-export const modelsGetUserModels = async ( options?: RequestInit): Promise<modelsGetUserModelsResponse> => {
+export const modelsGetUserModels = async (params?: ModelsGetUserModelsParams, options?: RequestInit): Promise<modelsGetUserModelsResponse> => {
   
-  const res = await fetch(getModelsGetUserModelsUrl(),
+  const res = await fetch(getModelsGetUserModelsUrl(params),
   {      
     ...options,
     method: 'GET'

@@ -10,25 +10,26 @@
         q-btn.q-mt-md.q-mb-md(size="md" flat label="All Sets" icon="arrow_back" color="grey" @click="$router.push({ name:'trainingSet' })")
         q-btn.q-mt-md.q-mb-md(v-if="state.showSetModels == false" @click="state.showSetModels = !state.showSetModels" size="md" outline label="View Models" icon="lightbulb" color="primary" )
         q-btn.q-mt-md.q-mb-md(v-else size="md" @click="state.showSetModels = !state.showSetModels" outline label="View Set" icon="burst_mode" color="primary")
-        q-btn.q-mt-md.q-mb-md( size="md" outline label="Train Model" icon="model_training" color="primary" @click="$router.push({ name:'trainModel', params:{ trainingSetId:state.selectedSet.id } })")
+        q-btn.q-mt-md.q-mb-md( size="md" outline label="Train Model" icon="model_training" color="primary" @click="router.push({name:'forge',params:{mode:'createModel'},query:{trainingSetId:state.selectedSet.id}})")
       q-separator(color="grey-8" )
       q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-if="!state.showSetModels").bg-black
         .centered.q-col-gutter-md.flex-wrap
-          MediaGallery(:mediaObjects="thumbnailObjects" layout="grid" :cols-desktop="5" style="max-width:1000px;")
+          MediaGallery(:mediaObjects="thumbnailObjects" layout="mosaic" :cols-desktop="6" style="max-width:1000px;" :rowHeightRatio="0.8")
       q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-else)
         .centered
           h4.text-capitalize Models Trained using this set
         q-separator
         .centered
-          CustomModelsList(style="max-width:10px;")
+          CustomModelsList(style="max-width:10px;" :trainingSetId="state.selectedSet.id")
     template(v-else)
       q-scroll-area.full-width.q-pa-md(style="height:calc(100vh - 240px);")
-        .centered.gutter-lg.flex-wrap
+        .centered.q-gutter-lg.flex-wrap
           TrainingSetCard.cursor-pointer(
             v-for="set in state.userSets"
             :key="set.id"
             :trainingSet="set"
             @click="$router.push({ name:'trainingSet', params:{ trainingSetId:set.id } })"
+            @updated="trainingSets.refetch"
           )
   </template>
 

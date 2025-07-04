@@ -10,7 +10,7 @@ q-page.q-mb-xl.q-px-lg
     .col-6
       PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
   div(v-if="mode == 'createModel'").full-width
-    CreateModel(@startTraining="startTraining")
+    CreateModel
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)
   div(v-if="mode == 'createSet'")
@@ -77,15 +77,15 @@ export default defineComponent({
     },
     "$route.query": {
       async handler() {
-        const targetfaceForgeId = this.$route.query?.faceForgeId
+        const customModelId = this.$route.query?.customModelId
         if (this.mode == "pick") return
-        if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
-          const modelResponse = await modelsGetModel({ id: targetfaceForgeId }).catch(catchErr)
-          const faceForgeModel = modelResponse?.data
-          if (!faceForgeModel) {
+        if (typeof customModelId == "string") {
+          const modelResponse = await modelsGetModel({ id: customModelId }).catch(catchErr)
+          const customModel = modelResponse?.data
+          if (!customModel) {
             this.mode = "pick"
           } else {
-            this.selectModel(faceForgeModel)
+            this.selectModel(customModel)
           }
         }
       },
@@ -172,34 +172,6 @@ export default defineComponent({
     },
     async loadUserModels() {
       // Load user models if needed
-    },
-    async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: string; formData: FormData }) {
-      try {
-        Loading.show({ message: "Uploading files" })
-        const modelResponse = await modelsCreateModel({
-          name: modelName,
-          type: "faceForge",
-          trainingPreset: trainingMode as any,
-        }).catch(() => null)
-
-        const modelId = modelResponse?.data
-        if (!modelId) return Loading.hide()
-        await uploadTrainingImages(modelId, formData, (progress) => {
-          console.log(`Upload progress: ${progress.toFixed(2)}%`)
-          Loading.show({ message: `Uploading files: ${progress.toFixed(2)}%` })
-        })
-        this.targetModelId = modelId
-        this.mode = "train"
-        void this.loadTrainingData()
-        Loading.hide()
-        Notify.create({ color: "positive", message: "Files uploaded!" })
-      } catch (err: any) {
-        Loading.hide()
-        Dialog.create({
-          color: "negative",
-          message: "Error uploading files: " + err.message,
-        })
-      }
     },
   },
 })

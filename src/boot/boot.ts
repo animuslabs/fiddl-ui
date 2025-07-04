@@ -3,4 +3,9 @@ import { useUserAuth } from "src/stores/userAuth"
 
 export default boot(({ app }) => {
   app.config.globalProperties.$userAuth = useUserAuth()
+  if (location.hostname === "localhost") {
+    localStorage.setItem("umami.disabled", "true")
+  } else {
+    localStorage.removeItem("umami.disabled")
+  }
 })

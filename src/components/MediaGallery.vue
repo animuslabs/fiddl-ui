@@ -18,6 +18,7 @@ const props = withDefaults(
     thumbSizeDesktop?: number
     thumbSizeMobile?: number
     selectable?: boolean
+    rowHeightRatio?: number
   }>(),
   {
     layout: "grid",
@@ -27,6 +28,7 @@ const props = withDefaults(
     thumbSizeDesktop: 200,
     thumbSizeMobile: 120,
     selectable: false,
+    rowHeightRatio: 1.2,
   },
 )
 
@@ -36,7 +38,12 @@ const emit = defineEmits<{
 
 const $q = useQuasar()
 const isMobile = computed(() => $q.screen.lt.md)
-const cols = computed(() => (isMobile.value ? props.colsMobile : props.colsDesktop))
+// const cols = computed(() => (isMobile.value ? props.colsMobile : props.colsDesktop))
+const cols = computed(() => {
+  if ($q.screen.lt.sm) return 2
+  if ($q.screen.lt.md) return 5
+  return props.colsDesktop
+})
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 
@@ -46,18 +53,32 @@ const wrapperStyles = computed(() => ({
   gap: gapValue.value,
   ...(props.layout === "mosaic"
     ? {
-        gridAutoRows: `${thumbSize.value}px`,
+        gridAutoRows: `${thumbSize.value * props.rowHeightRatio}px`,
         gridAutoFlow: "dense",
       }
     : {}),
 }))
 
-const imgStyles = computed(() => ({
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
-  borderRadius: "8px",
-}))
+const imgStyles = computed(() => {
+  const base = {
+    width: "100%",
+    objectFit: "cover" as const,
+  }
+
+  if (props.layout === "grid") {
+    return {
+      ...base,
+      height: `${thumbSize.value}px`,
+      width: `${thumbSize.value}px`,
+    }
+  }
+
+  // Let mosaic layout expand based on grid row height
+  return {
+    ...base,
+    height: "100%",
+  }
+})
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
 
@@ -65,6 +86,7 @@ onMounted(async () => {
   galleryItems.value = await Promise.all(
     props.mediaObjects.map(async (item) => {
       const ratio = await getImageAspectRatio(item.url)
+      console.log(ratio)
       return { ...item, aspectRatio: ratio }
     }),
   )
@@ -78,6 +100,14 @@ async function getImageAspectRatio(url: string): Promise<number> {
     img.src = url
   })
 }
+function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
+  if (props.layout !== "mosaic") return {}
+  const aspect = m.aspectRatio ?? 1
+  return {
+    gridRowEnd: `span ${Math.ceil((1 / aspect) * props.rowHeightRatio)}`,
+    gridColumnEnd: aspect > 1.5 ? "span 2" : undefined,
+  }
+}
 </script>
 
 <template lang="pug">
@@ -85,7 +115,7 @@ async function getImageAspectRatio(url: string): Promise<number> {
   div(
     v-for="m in galleryItems"
     :key="m.id"
-    :style="props.layout === 'mosaic' ? { gridRowEnd: 'span ' + Math.ceil((m.aspectRatio ?? 1) * 1.2) } : {}"
+    :style="getItemStyle(m)"
   )
     q-img(
       :src="m.url"

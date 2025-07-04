@@ -14,17 +14,17 @@ div
               p Clear Prompt
         .centered.q-ma-md
           q-btn( icon="lightbulb" flat @click="newPrompt()" :loading="loading.new" :disable="anyLoading" ).q-mr-md
-            .badge
+            .badge-sm
               p 1
             q-tooltip
               p Generate a new prompt
           q-btn( icon="shuffle" flat @click="randomizePrompt()" :loading="loading.randomize" :disable="anyLoading || req.prompt?.length < 10" ).q-mr-md
-            .badge
+            .badge-sm
               p 1
             q-tooltip
               p randomize an element of the prompt
           q-btn( icon="arrow_upward" flat @click="improvePrompt()" :loading="loading.improve" :disable="anyLoading || req.prompt?.length < 10" )
-            .badge
+            .badge-sm
               p 2
             q-tooltip
               p Improve the prompt
@@ -51,11 +51,11 @@ div
                 q-btn(size="sm" icon="add" flat round @click="createStore.req.seed++" :disable="!createStore.req.seed" )
                 q-btn(size="sm" icon="remove" flat round @click="createStore.req.seed--" :disable="!createStore.req.seed" )
         .row
-          div.q-ma-md
-            p.relative-position Model:
-              .badge
+          div.q-ma-md.relative-position
+            p Model:
+            .row.items-center.relative-position
+              .badge-sm
                 p {{ selectedModelPrice }}
-            .row.items-center
               q-select(v-model="createStore.req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="anyLoading" )
               div.q-ml-md(v-if="createStore.req.model == 'custom'")
                 .row.q-gutter-md
@@ -87,14 +87,9 @@ div
             .row
               h5.q-mb-sm Select a custom model
               .col-grow
-              q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'faceForge',params:{mode:'create'}})")
+              q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'forge',params:{mode:'create'}})")
             q-separator(color="primary").q-mb-lg
-
             CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
-    // q-dialog(v-model="showCreateFaceForge")
-        q-card
-          FaceForgeTab
-
 
 </template>
 <style>
@@ -110,7 +105,6 @@ import { CustomModel } from "lib/api"
 import { LocalStorage, Notify } from "quasar"
 import { toObject } from "lib/util"
 import CustomModelsList from "./CustomModelsList.vue"
-import FaceForgeTab from "./FaceForgeTab.vue"
 import { useCreations } from "src/stores/creationsStore"
 import { ImageModel } from "lib/imageModels"
 
