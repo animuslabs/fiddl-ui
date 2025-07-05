@@ -12,7 +12,7 @@
         q-btn.q-mt-md.q-mb-md(v-else size="md" @click="state.showSetModels = !state.showSetModels" outline label="View Set" icon="burst_mode" color="primary")
         q-btn.q-mt-md.q-mb-md( size="md" outline label="Train Model" icon="model_training" color="primary" @click="router.push({name:'forge',params:{mode:'createModel'},query:{trainingSetId:state.selectedSet.id}})")
       q-separator(color="grey-8" )
-      q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-if="!state.showSetModels").bg-black
+      q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-if="!state.showSetModels")
         .centered.q-col-gutter-md.flex-wrap
           MediaGallery(:mediaObjects="thumbnailObjects" layout="mosaic" :cols-desktop="6" style="max-width:1000px;" :rowHeightRatio="0.8")
       q-scroll-area.q-pa-md(style="height:calc(100vh - 240px);" v-else)
