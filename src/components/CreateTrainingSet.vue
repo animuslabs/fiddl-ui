@@ -30,7 +30,7 @@ div.q-ma-md
 
         .centered.q-mt-lg
           div
-            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || !setDescription || notEnoughPoints || !forgeStore.state.files.length " @click="handleFiles")
+            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length " @click="handleFiles")
               .badge
                 p 10
         .centered
@@ -108,8 +108,8 @@ export default defineComponent({
   },
   methods: {
     async handleFiles() {
-      if (!this.setName || !this.setDescription) {
-        catchErr("Please provide a name and description for the training set.")
+      if (!this.setName) {
+        catchErr("Please provide a name for the training set.")
         return
       }
       let targetThumbnail: null | string = null
