@@ -38,9 +38,9 @@ const forgeStore = useForgeStore()
 const { state, totalSizeMB, addFiles, clearFiles } = forgeStore
 
 const props = defineProps({
-  maxTotalSizeMB: { type: Number, default: 100 },
+  maxTotalSizeMB: { type: Number, default: 800 },
   maxFileSizeMB: { type: Number, default: 10 },
-  maxFiles: { type: Number, default: 50 },
+  maxFiles: { type: Number, default: 150 },
   hideUploadButton: { type: Boolean, default: false },
 })
 
