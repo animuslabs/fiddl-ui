@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /admin/
 Disallow: /login/
 Allow: /
-Sitemap: https://fiddl.art/sitemap-root.xml
+Sitemap: https://app.fiddl.art/sitemap.xml

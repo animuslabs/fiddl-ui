@@ -18,43 +18,6 @@ import viteCompression from "vite-plugin-compression"
 
 const __dirname = path.resolve()
 
-function generateSitemap() {
-  const baseUrl = "https://fiddl.art"
-  const currentDate = new Date().toISOString() // Get current date in ISO format
-  let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`
-  sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
-
-  routeData.forEach((route) => {
-    const path = route[1].replace(/:\w+\??/g, "") // Remove route params
-    const url = `${baseUrl}${path}`
-    sitemap += `  <url>\n`
-    sitemap += `    <loc>${url}</loc>\n`
-    sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
-    sitemap += `  </url>\n`
-  })
-  // add /blog endpoint
-  sitemap += `  <url>\n`
-  sitemap += `    <loc>https://blog.fiddl.art</loc>\n`
-  sitemap += `    <lastmod>${currentDate}</lastmod>\n` // Add lastmod with current time
-  sitemap += `  </url>\n`
-
-  sitemap += `</urlset>`
-
-  // Write the sitemap to a file
-  fs.writeFileSync(path.join(__dirname, "public", "sitemap-root.xml"), sitemap)
-
-  const rootSitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>${baseUrl}/sitemap-root.xml</loc>
-  </sitemap>
-  <sitemap>
-    <loc>https://blog.fiddl.art/sitemap.xml</loc>
-  </sitemap>
-</sitemapindex>`
-  fs.writeFileSync(path.join(__dirname, "public", "sitemap.xml"), rootSitemap)
-  console.log("Sitemap generated successfully")
-}
 export default configure(function (/* ctx */) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -89,9 +52,7 @@ export default configure(function (/* ctx */) {
       extractCSS: true,
 
       htmlMinifyOptions: { minifyJS: true, minifyCSS: true },
-      beforeBuild: (params) => {
-        generateSitemap()
-      },
+
       target: {
         browser: ["es2022", "firefox115", "chrome115", "safari14"],
         node: "node22",
