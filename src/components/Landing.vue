@@ -19,7 +19,7 @@ div.parallax.full-width(style="min-height: 100vh; position: relative; background
       q-btn(size="lg" label="Join the email list" color="accent" @click="showMailForm = true" rounded icon="email" v-scroll-fire="onscroll")
     .centered.q-mt-sm
       p Receive special offers and updates
-  q-dialog(v-model="showMailForm" :maximized="$q.screen.lt.sm")
+  q-dialog(v-model="showMailForm" :maximized="quasar.screen.lt.sm")
     q-card
       .centered.relative-position
         .absolute-center
@@ -167,7 +167,7 @@ export default defineComponent({
   },
   data() {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       showMailSpinner: true,
       moved: false,
       topButtons,

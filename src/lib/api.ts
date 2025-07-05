@@ -9,6 +9,7 @@ import type {
   ModelsGetTrainingStatusQueryResult,
   ModelsGetUserModelsQueryResult,
   PromoGetPromoCodeDetailsQueryResult,
+  TrainingSetsGetSetQueryResult,
   UserAllUsersQueryResult,
   UserGetNotificationConfigQueryResult,
   UserGetQueryResult,
@@ -70,3 +71,88 @@ export type CustomModelWithRequests = ModelsGetUserModelsQueryResult["data"][num
 export type CustomModel = ModelsGetModelQueryResult["data"]
 export type TrainingData = ModelsGetTrainingStatusQueryResult["data"]
 export type User = UserAllUsersQueryResult["data"][number]
+export type TrainingSet = TrainingSetsGetSetQueryResult["data"]
+
+export async function uploadToPresignedPost({
+  file,
+  presignedPost,
+}: {
+  file: Blob
+  presignedPost: {
+    url: string
+    fields: Record<string, string>
+  }
+}) {
+  console.log(presignedPost.fields)
+  const formData = new FormData()
+
+  // Add the signed fields first
+  Object.entries(presignedPost.fields).forEach(([key, value]) => {
+    formData.append(key, value)
+  })
+
+  // Then add the actual file (field name must be "file")
+  formData.append("file", file)
+
+  const res = await fetch(presignedPost.url, {
+    method: "POST",
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    console.log(res)
+    throw new Error(`Upload failed: ${res.status} ${res.statusText} — ${text}`)
+  }
+
+  return true
+}
+function openXmlDebugTab(xmlString: string) {
+  const blob = new Blob([xmlString], { type: "application/xml" })
+  const url = URL.createObjectURL(blob)
+  window.open(url, "_blank")
+}
+export function uploadWithProgress({
+  file,
+  presignedPost,
+  onProgress,
+}: {
+  file: Blob
+  presignedPost: {
+    url: string
+    fields: Record<string, string>
+  }
+  onProgress?: (percent: number) => void
+}): Promise<void> {
+  console.log(presignedPost.fields)
+  return new Promise((resolve, reject) => {
+    const formData = new FormData()
+    Object.entries(presignedPost.fields).forEach(([k, v]) => {
+      formData.append(k, v)
+    })
+    formData.append("file", file)
+
+    const xhr = new XMLHttpRequest()
+    xhr.open("POST", presignedPost.url)
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        const percent = Math.round((e.loaded / e.total) * 100)
+        onProgress(percent)
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+      } else {
+        console.log(xhr)
+        openXmlDebugTab(xhr.responseText)
+        reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error("Upload failed (network error)"))
+    xhr.send(formData)
+  })
+}

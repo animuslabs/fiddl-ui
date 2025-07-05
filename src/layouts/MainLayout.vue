@@ -14,7 +14,7 @@ q-layout(view="lHh Lpr lFf" )
             | create
           q-route-tab(:to="{ name: 'browse' }").gt-xs.text-white
             | browse
-          q-route-tab(:to="{ name: 'faceForge' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'forge' }").gt-xs.text-white
             | Forge
           q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
@@ -27,17 +27,17 @@ q-layout(view="lHh Lpr lFf" )
         //- q-separator(color="white" vertical)
         //- q-btn(flat @click="register()" label="register" size="sm")
       .row.justify-end.full-width.q-gutter-sm(v-else)
-        q-btn(rounded padding="0px" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })")
+        q-btn(rounded padding="0px" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
           .row.items-center
             div.q-ml-md {{ $userAuth?.userData?.availablePoints || 0 }}
-            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;" alt="fiddl points logo")
+            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;" alt="fiddl points logo" no-spinner)
           q-tooltip
             p Add Fiddl Points
         //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
         q-btn(
           round
           padding="1px"
-          color="positive"
+
           @click="menu = true"
         )
           q-img(slot="icon" :src="avatarImg($userAuth.userId || 'avatar')" style="width:40px; height:40px;" alt="avatar" placeholder-src="/blankAvatar.webp" :key="reloadAvatar")
@@ -65,10 +65,10 @@ q-layout(view="lHh Lpr lFf" )
                   q-icon(name="logout" size="20px").q-mr-md
                   div  Logout
 
-  q-page-container.centered.bg-grey-10
-    .centered.bg-dark(style="width:100vw; height:100%" )
-      router-view
-      .full-width.q-pa-md.bg-grey-10
+  q-page-container.centered.bg-transparent
+    .centered(style="width:100vw; height:100%" )
+      router-view.full-width(style="max-width:1500px;")
+      .full-width.q-pa-md
         .centered.items-center.q-gutter-md
           q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
           q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)

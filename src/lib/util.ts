@@ -1,11 +1,12 @@
 import { TranscriptLine } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
-import crypto from "crypto-js"
+import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
 import type { AppRouter } from "lib/server"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
-
+import stripAnsi from "strip-ansi"
+import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@prisma/client"
 /**
  * Shares an image via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -64,14 +65,15 @@ export function extractImageId(url: string): string | null {
 
 export function generateShortHash(input: string): string {
   // return crypto.createHash("md5").update(input).digest("base64").slice(0, 8)
-  return crypto.HmacMD5(input, "Key").toString()
+  return cryptoJs.HmacMD5(input, "Key").toString()
 }
 
 export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
   console.error(err)
+  const cleanErr = stripAnsi(err.message || err.toString())
   umami.track("error", { message: err.message, error: err })
-  let message = err.message || "An error occurred"
-  if (err.response?.data?.message) message = err.response.data.message
+  let message = cleanErr
+  if (err.response?.data?.message) message = stripAnsi(err.response.data.message)
   Dialog.create({
     title: "Error",
     message,
@@ -359,4 +361,51 @@ export function pickRand<T>(arr: T[]): T {
 }
 export function removeDuplicates<T>(arr: T[]): T[] {
   return Array.from(new Set(arr))
+}
+
+export async function generateThumbnail(file: File, maxSize = 512): Promise<Blob> {
+  const img = new Image()
+  img.src = URL.createObjectURL(file)
+
+  await new Promise((resolve) => (img.onload = resolve))
+
+  const canvas = document.createElement("canvas")
+  const scale = Math.min(maxSize / img.width, maxSize / img.height)
+  canvas.width = img.width * scale
+  canvas.height = img.height * scale
+
+  const ctx = canvas.getContext("2d")!
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+  return await new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.75)
+  })
+}
+
+export async function generateThumbnails(files: File[]): Promise<{ id: string; blob: Blob }[]> {
+  return Promise.all(
+    files.map(async (file) => ({
+      id: crypto.randomUUID(),
+      blob: await generateThumbnail(file),
+    })),
+  )
+}
+
+export const modelPrice: Record<CustomModelType, number> = {
+  fluxDev: 3,
+  fluxPro: 10,
+  fluxProUltra: 20,
+  faceClone: 10,
+  faceForge: 20,
+}
+
+export const fineTuneTypePrice: Record<FineTuneType, number> = {
+  lora: 5,
+  full: 35,
+}
+
+export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTuneType, numImages: number): number {
+  const model = modelPrice[modelType] ?? throwErr("invalid modelTypes")
+  const fineTune = fineTuneTypePrice[fineTuneType] ?? throwErr("invalid fineTuneType")
+  return (model + fineTune) * numImages + 100
 }

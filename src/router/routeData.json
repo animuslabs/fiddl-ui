@@ -25,9 +25,9 @@
     "CreatePage"
   ],
   [
-    "faceForge",
+    "forge",
     "/forge/:mode?",
-    "FaceForgePage"
+    "ForgeHomePage"
   ],
   [
     "browse",
@@ -88,5 +88,10 @@
     "authCallback",
     "/auth/callback",
     "AuthCallback"
+  ],
+  [
+    "trainingSet",
+    "/trainingSet/:trainingSetId?",
+    "TrainingSetPage"
   ]
 ]

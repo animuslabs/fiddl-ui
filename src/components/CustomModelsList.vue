@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-list(v-if="models?.length").full-width
+  q-list(v-if="models?.length" style="max-width:95vw;")
     q-item(v-for="model in models" :key="model.id")
       .row.q-gutter-xs.items-center
         .col-auto
@@ -9,19 +9,25 @@
             q-btn(icon="edit" flat color="white" @click="editModelName(model)" round)
           .row
             q-btn(:icon="privacyIcon(model)" flat color="white" @click="toggleModelPrivacy(model)" round)
-        .col.cursor-pointer(@click.native="handleModelClick(model)" v-if="$q.screen.width > 500")
+        .col.cursor-pointer(@click.native="handleModelClick(model)" v-if="quasar.screen.width > 500")
           .q-ml-md(style="text-transform: capitalize;")
             h3 {{ model.name }}
           .row.q-gutter-md.full-width
             .col-auto(style="width:100px;")
               p Status
               h4 {{ model.status }}
-            .col-auto(style="width:200px;")
+            .col-auto(style="min-width:100px;")
               p Created
               h5 {{ timeSince(new Date(model.createdAt)) }}
             .col-auto(style="width:120px;")
-              p Preset
-              h4(style="text-transform:capitalize") {{ model.trainingPreset }}
+              p Base Model
+              h4(style="text-transform:capitalize") {{ model.modelType }}
+            .col-auto(style="width:120px;")
+              p Mode
+              h4(style="text-transform:capitalize") {{ model.mode }}
+            .col-auto(style="width:120px;")
+              p Type
+              h4(style="text-transform:capitalize") {{ transformType(model) }}
           .row.q-ml-md
             .col-auto(v-if="model.imageRequests.length")
               .full-width.q-mt-md
@@ -41,9 +47,9 @@
             .col-auto.q-mr-md
               small Created
               p {{ timeSince(new Date(model.createdAt)) }}
-            .col-auto
-              small Preset
-              h6(style="text-transform:capitalize") {{ model.trainingPreset }}
+            //- .col-auto
+            //-   small Preset
+            //-   h6(style="text-transform:capitalize") {{ model. }}
           .row
             .col-auto(v-if="model.imageRequests.length").q-mt-sm
               .lt-md.full-width
@@ -75,7 +81,7 @@ import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { defineComponent } from "vue"
-import { modelsSetModelPrivacy, modelsSetModelName, modelsGetUserModels, modelsDeleteModel } from "src/lib/orval"
+import { modelsSetModelPrivacy, modelsGetUserModels, modelsDeleteModel, modelsEditModel } from "src/lib/orval"
 import { timeSince } from "lib/util"
 import { img } from "lib/netlifyImg"
 
@@ -87,17 +93,23 @@ export default defineComponent({
       default: false,
       required: false,
     },
+    trainingSetId: {
+      type: String,
+      default: undefined,
+      required: false,
+    },
   },
   emits: {
     modelClicked: (model: CustomModel) => true,
   },
   data: function () {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       models: [] as CustomModelWithRequests[] | null,
       timeSince,
       img,
       newModelName: "",
+      newModelDescription: "" as string | null,
       showEditNameDialog: false,
       editingModelNameId: null as string | null,
     }
@@ -116,6 +128,10 @@ export default defineComponent({
     console.log("mounted customModelsList")
   },
   methods: {
+    transformType(model: CustomModel) {
+      if (model.fineTuneType == "lora") return "normal"
+      else return "advanced"
+    },
     async toggleModelPrivacy(model: CustomModel) {
       try {
         await modelsSetModelPrivacy({ id: model.id, public: !model.Public })
@@ -131,7 +147,7 @@ export default defineComponent({
     async setModelName() {
       if (!this.editingModelNameId) return
       try {
-        await modelsSetModelName({ id: this.editingModelNameId, name: this.newModelName })
+        await modelsEditModel({ id: this.editingModelNameId, name: this.newModelName, description: this.newModelDescription || "" })
         this.showEditNameDialog = false
         Notify.create("Model name updated")
         await this.loadData()
@@ -142,6 +158,7 @@ export default defineComponent({
     editModelName(model: CustomModel) {
       this.editingModelNameId = model.id
       this.newModelName = model.name
+      this.newModelDescription = model.description
       this.showEditNameDialog = true
     },
     async loadData() {
@@ -155,6 +172,7 @@ export default defineComponent({
         } else {
           this.models = models?.filter((m) => m.status === "trained")
         }
+        if (this.trainingSetId) this.models = models?.filter((m) => m.trainingSetId === this.trainingSetId)
       } catch (error) {
         catchErr(error)
         this.models = []

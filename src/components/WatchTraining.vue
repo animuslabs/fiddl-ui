@@ -9,8 +9,9 @@ div.q-mt-md
           q-spinner-grid.absolute-center(size="80px" color="primary" )
           q-spinner-cube.absolute-center(size="80px" color="primary" )
       div.q-mt-lg
-        p This will take 15 - 30 minutes
-        p This page will automatically update when training is complete
+        p This will take 5 - 45 minutes
+        p This page will automatically update when training is complete.
+        p You can safely navigate to another page and check back later.
     div(v-if="trainingData" style="width:800px; max-width:90vw")
       .centered
         div(style="max-width:800px").q-ma-md.full-width
@@ -20,23 +21,25 @@ div.q-mt-md
           div
             h6 Status:
             .full-width(style="height: 200px; overflow-y: auto")
-              h3(v-if="(trainingProgress?.percentProgress||0)>0")
+              h3(v-if="(trainingData.progress||0)>0")
                 q-spinner.q-mr-md(color="primary")
                 | {{ trainingData.status }}
               h3(v-else)
                 q-spinner.q-mr-md
-                | Initializing...
+                | Training...
+              div(v-if="modelData.modelType != 'fluxDev'")
+                p Progress data not available for this base model, custom model will be available on the forge page when ready.
               div(v-if="trainingProgress").q-mt-md
-                h4 {{ trainingProgress.percentProgress }}%
-                q-linear-progress(:value="trainingProgress?.percentProgress /100" stripe size="20px" track-color="grey" )
+                h4 {{ trainingProgress }}%
+                q-linear-progress(:value="trainingData.progress /100" stripe size="20px" track-color="grey" )
                 .row.q-gutter-md
                   div
                     h6 Elapsed:
-                    h4 {{ trainingProgress.elapsedTime }}
+                    h4 {{ trainingData.elapsedTime }}
                   .col-grow
                   div
                     h6 Remaining:
-                    h4 {{ trainingProgress.remainingTime }}
+                    h4 {{ trainingData.remainingTime }}
             //- div
             //-   pre(style="height:900px;") {{trainingData}}
   .centered.q-ma-md
@@ -56,8 +59,8 @@ export default defineComponent({
   emits: ["back", "finished"],
   computed: {
     trainingProgress() {
-      if (!this.trainingData?.logs) return null
-      return parseTrainingLog(this.trainingData.logs)
+      if (!this.trainingData) return null
+      return this.trainingData.progress
     },
   },
   watch: {

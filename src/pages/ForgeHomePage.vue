@@ -1,11 +1,23 @@
 <template lang="pug">
-q-page
-  PickModelComponent( v-if="mode === 'pick'" @selectModel="selectModel" @createModel="mode = 'create'")
-  div(v-if="mode == 'create'")
-    CreateModelComponent(@startTraining="startTraining")
+q-page.q-mb-xl.q-px-lg
+  .centered
+    h1.lobster-font Forge
+  .centered.q-mt-md
+    p Train custom models with your own images
+  .centered.full-width(v-if="mode === 'pick'")
+    .col-6
+      PickModel(  @selectModel="selectModel" @createModel="mode = 'createModel'")
+    .col-6
+      PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
+  div(v-if="mode == 'createModel'").full-width
+    CreateModel
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)
-  WatchTrainingComponent(
+  div(v-if="mode == 'createSet'")
+    CreateTrainingSet()
+    //- .centered
+    //-   q-btn(label="back" @click="mode='pick'" color="primary" flat)
+  WatchTraining(
     v-if="mode === 'train' && targetModelData"
     :trainingData="trainingData"
     :modelData="targetModelData"
@@ -17,27 +29,26 @@ q-page
 <script lang="ts">
 import { defineComponent } from "vue"
 import { modelsGetModel, modelsGetTrainingStatus, modelsCreateModel } from "src/lib/orval"
-import { useQuasar } from "quasar"
-import { Loading } from "quasar"
-import { CustomModel, uploadTrainingImages, type TrainingData } from "lib/api"
+import { Dialog, Loading, Notify } from "quasar"
+import { CustomModel, TrainingSet, uploadTrainingImages, type TrainingData } from "lib/api"
 import { parseTrainingLog } from "lib/modelTraining"
-import PickModelComponent from "components/PickModel.vue"
-import CreateModelComponent from "components/CreateModel.vue"
-import WatchTrainingComponent from "components/WatchTraining.vue"
-import UseModelComponent from "components/UseModel.vue"
+import PickModel from "components/PickModel.vue"
+import CreateModel from "components/CreateModel.vue"
+import WatchTraining from "components/WatchTraining.vue"
+import UseModel from "components/UseModel.vue"
 import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
 import { catchErr } from "lib/util"
-type FaceForgeMode = "pick" | "create" | "train"
+import PickTrainingSet from "src/components/PickTrainingSet.vue"
+import CreateTrainingSet from "components/CreateTrainingSet.vue"
+type FaceForgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
   components: {
-    PickModelComponent,
-    CreateModelComponent,
-    WatchTrainingComponent,
-    UseModelComponent,
-  },
-  setup() {
-    const $q = useQuasar()
-    return { $q }
+    PickModel,
+    CreateModel,
+    WatchTraining,
+    UseModel,
+    PickTrainingSet,
+    CreateTrainingSet,
   },
   data() {
     return {
@@ -49,12 +60,7 @@ export default defineComponent({
       createStore: useCreateCardStore(),
     }
   },
-  computed: {
-    trainingProgress() {
-      if (!this.trainingData?.logs) return null
-      return parseTrainingLog(this.trainingData.logs)
-    },
-  },
+  computed: {},
   watch: {
     "$route.params": {
       handler() {
@@ -66,15 +72,15 @@ export default defineComponent({
     },
     "$route.query": {
       async handler() {
-        const targetfaceForgeId = this.$route.query?.faceForgeId
+        const customModelId = this.$route.query?.customModelId
         if (this.mode == "pick") return
-        if (targetfaceForgeId && typeof targetfaceForgeId == "string") {
-          const modelResponse = await modelsGetModel({ id: targetfaceForgeId }).catch(catchErr)
-          const faceForgeModel = modelResponse?.data
-          if (!faceForgeModel) {
+        if (typeof customModelId == "string") {
+          const modelResponse = await modelsGetModel({ id: customModelId }).catch(catchErr)
+          const customModel = modelResponse?.data
+          if (!customModel) {
             this.mode = "pick"
           } else {
-            this.selectModel(faceForgeModel)
+            this.selectModel(customModel)
           }
         }
       },
@@ -92,7 +98,7 @@ export default defineComponent({
     },
     targetModelId: {
       async handler(val) {
-        if (val) await this.$router.replace({ params: { mode: this.mode }, query: { faceForgeId: val } })
+        if (val) await this.$router.replace({ params: { mode: this.mode }, query: val ? { ...this.$route.query, customModelId: val } : { ...this.$route.query } })
         else await this.$router.replace({ params: { mode: this.mode }, query: {} })
       },
       immediate: false,
@@ -118,6 +124,10 @@ export default defineComponent({
     },
   },
   methods: {
+    selectSet(set: TrainingSet) {
+      console.log("selected set", set)
+      void this.$router.push({ name: "trainingSet", params: { trainingSetId: set.id } })
+    },
     async pickMode() {
       // await this.$router.replace({ params: { mode: "pick" }, query: {} })
       this.mode = "pick"
@@ -157,34 +167,6 @@ export default defineComponent({
     },
     async loadUserModels() {
       // Load user models if needed
-    },
-    async startTraining({ modelName, trainingMode, formData }: { modelName: string; trainingMode: string; formData: FormData }) {
-      try {
-        Loading.show({ message: "Uploading files" })
-        const modelResponse = await modelsCreateModel({
-          name: modelName,
-          type: "faceForge",
-          trainingPreset: trainingMode as any,
-        }).catch(() => null)
-
-        const modelId = modelResponse?.data
-        if (!modelId) return Loading.hide()
-        await uploadTrainingImages(modelId, formData, (progress) => {
-          console.log(`Upload progress: ${progress.toFixed(2)}%`)
-          Loading.show({ message: `Uploading files: ${progress.toFixed(2)}%` })
-        })
-        this.targetModelId = modelId
-        this.mode = "train"
-        void this.loadTrainingData()
-        Loading.hide()
-        this.$q?.notify({ color: "positive", message: "Files uploaded!" })
-      } catch (err: any) {
-        Loading.hide()
-        this.$q?.dialog({
-          color: "negative",
-          message: "Error uploading files: " + err.message,
-        })
-      }
     },
   },
 })

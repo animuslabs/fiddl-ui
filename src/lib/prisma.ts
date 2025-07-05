@@ -1,13 +1,11 @@
-import type { AppRouter } from "fiddl-server/dist/server"
 import { type Prisma } from "fiddl-server/dist/lib/db"
-import { inferProcedureOutput } from "@trpc/server"
 
 export type User = Prisma.UserGetPayload<object>
 export type Profile = Prisma.UserProfileGetPayload<object>
 export type ImageRequest = Prisma.ImageRequestGetPayload<object>
 export type ImageRequest2 = Prisma.ImageRequestGetPayload<object>
 export type CryptoOrder = Prisma.CryptoOrderGetPayload<object>
-type user = inferProcedureOutput<AppRouter["user"]["get"]>
+
 // const usr:user= {createdAt}
 
 // export type FileUpload = Prisma.FileUploadGetPayload<{}>;

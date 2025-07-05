@@ -1,9 +1,34 @@
 <template lang="pug">
 //- div.bg-black(style="position:fixed").full-width.full-height.z-max
 //- ImageGallery(:images="images" ref="gallery" hidden  )
-router-view
-
+router-view(style="z-index:1")
+.bg-grid-overlay
+.bg-color-base
 </template>
+
+<style lang="sass">
+.bg-color-base
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  background-color: rgb(18,18,18)
+  z-index: -1
+
+.bg-grid-overlay
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  background-image: url('/bg-grain.png')
+  background-size: 128px
+  background-repeat: repeat
+  opacity: 0.05
+  pointer-events: none
+  z-index: 0
+</style>
 
 <script lang="ts">
 import { defineComponent } from "vue"

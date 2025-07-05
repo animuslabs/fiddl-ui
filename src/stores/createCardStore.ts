@@ -127,16 +127,19 @@ export const useCreateCardStore = defineStore("createCardStore", {
     },
     async createImage() {
       this.loading.create = true
+      console.log(this.req)
       LocalStorage.set("req", this.req)
       if (this.customModel) {
-        this.req.customModelId = this.customModel.id
-        this.req.customModelName = this.customModel.name
-        this.req.model = "custom"
+        console.log(this.customModel.id, this.req.customModelId)
+        console.log(this.customModel.name, this.req.customModelName)
+        // this.req.customModelId = this.customModel.id
+        // this.req.customModelName = this.customModel.name
+        // this.req.model = "custom"
       }
       if (typeof this.req.seed != "number") this.req.seed = undefined
       if (this.req.model == "custom" && !this.req.customModelId) this.req.model = "flux-dev"
       console.log("req", this.req)
-      await this.creations.generateImage(toObject(this.req)).catch(catchErr)
+      const result = await this.creations.generateImage(toObject(this.req)).catch(catchErr)
       this.loading.create = false
       void this.userAuth.loadUserData()
       umami.track("createImage")
