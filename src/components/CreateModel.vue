@@ -100,7 +100,7 @@
               p {{ totalCost }}
 
     q-dialog(v-model="state.dialogOpen")
-      PickTrainingSet(@select-set="onSelectSet")
+      PickTrainingSet(@select-set="onSelectSet" @create-set="router.push({name:'forge',params:{mode:'createSet'}})")
     q-dialog(v-model="state.showConfirmWindow"  )
       q-card.q-pa-md(style="min-height:300px; width:500px; max-width:100vw;")
         h3.text-secondary Confirm
