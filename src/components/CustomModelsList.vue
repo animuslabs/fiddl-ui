@@ -16,15 +16,18 @@
             .col-auto(style="width:100px;")
               p Status
               h4 {{ model.status }}
-            .col-auto(style="width:200px;")
+            .col-auto(style="min-width:100px;")
               p Created
               h5 {{ timeSince(new Date(model.createdAt)) }}
+            .col-auto(style="width:120px;")
+              p Base Model
+              h4(style="text-transform:capitalize") {{ model.modelType }}
             .col-auto(style="width:120px;")
               p Mode
               h4(style="text-transform:capitalize") {{ model.mode }}
             .col-auto(style="width:120px;")
               p Type
-              h4(style="text-transform:capitalize") {{ model.fineTuneType }}
+              h4(style="text-transform:capitalize") {{ transformType(model) }}
           .row.q-ml-md
             .col-auto(v-if="model.imageRequests.length")
               .full-width.q-mt-md
@@ -125,6 +128,10 @@ export default defineComponent({
     console.log("mounted customModelsList")
   },
   methods: {
+    transformType(model: CustomModel) {
+      if (model.fineTuneType == "lora") return "normal"
+      else return "advanced"
+    },
     async toggleModelPrivacy(model: CustomModel) {
       try {
         await modelsSetModelPrivacy({ id: model.id, public: !model.Public })

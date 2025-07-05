@@ -60,12 +60,7 @@ export default defineComponent({
       createStore: useCreateCardStore(),
     }
   },
-  computed: {
-    trainingProgress() {
-      if (!this.trainingData?.logs) return null
-      return parseTrainingLog(this.trainingData.logs)
-    },
-  },
+  computed: {},
   watch: {
     "$route.params": {
       handler() {
@@ -103,7 +98,7 @@ export default defineComponent({
     },
     targetModelId: {
       async handler(val) {
-        if (val) await this.$router.replace({ params: { mode: this.mode }, query: { faceForgeId: val } })
+        if (val) await this.$router.replace({ params: { mode: this.mode }, query: val ? { ...this.$route.query, customModelId: val } : { ...this.$route.query } })
         else await this.$router.replace({ params: { mode: this.mode }, query: {} })
       },
       immediate: false,

@@ -11,20 +11,17 @@ q-page.full-width
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { creationsImageData, creationsCreateRequest, modelsGetModel } from "src/lib/orval"
-import { useQuasar } from "quasar"
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { useCreateSession } from "stores/createSessionStore"
-import { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import ImageRequestCard from "components/ImageRequestCard.vue"
-import { toObject, timeSince, catchErr } from "lib/util"
-import { request } from "http"
-import { Dialog } from "quasar"
-import UploaderCard from "src/components/UploaderCard.vue"
+import { timeSince } from "lib/util"
+import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"
+import UploaderCard from "src/components/UploaderCard.vue"
+import { creationsCreateRequest, creationsImageData, modelsGetModel } from "src/lib/orval"
 import { useCreateCardStore } from "src/stores/createCardStore"
+import { defineComponent } from "vue"
+import { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 
 export default defineComponent({
   components: {
@@ -35,8 +32,8 @@ export default defineComponent({
     PromptTab,
   },
   setup() {
-    const $q = useQuasar()
-    return { $q }
+    const quasar = useQuasar()
+    return { quasar }
   },
   data() {
     return {
@@ -61,7 +58,7 @@ export default defineComponent({
           const requestMeta = requestResponse?.data as any
           if (!requestMeta) return
           // console.log(imageMeta, requestMeta)
-          console.log("width:", this.$q.screen.width)
+          console.log("width:", this.quasar.screen.width)
           const req = {
             customModelId: requestMeta.customModelId,
             aspectRatio: requestMeta.aspectRatio as any,
@@ -86,7 +83,7 @@ export default defineComponent({
               })
             }
           }
-          this.setReq(req, this.$q.screen.lt.md)
+          this.setReq(req, this.quasar.screen.lt.md)
 
           Dialog.create({
             title: "Image Parameters Applied",
@@ -96,7 +93,7 @@ export default defineComponent({
           })
         } else if (encodedRequestData && typeof encodedRequestData == "string") {
           const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
-          this.setReq(decoded, this.$q.screen.lt.md)
+          this.setReq(decoded, this.quasar.screen.lt.md)
           Dialog.create({
             title: "Image Parameters Applied",
             message: "The create panel has been updated with the details of the image request.",

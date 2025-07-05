@@ -1,5 +1,5 @@
 <template lang="pug">
-.centered.full-height.full-width.bg-black
+.centered.full-height.full-width
   .full-width
     .row.full-height.full-width.no-wrap
       .col-auto.q-ml-md( v-if="$q.screen.gt.sm")
@@ -167,6 +167,11 @@ export default defineComponent({
     },
     addImage(data: string) {
       if (this.createMode) this.createMode = false
+      console.log(data)
+      const latestCreation = this.createStore.creations[0]
+      if (!latestCreation) return
+      console.log(latestCreation)
+      if (this.gridMode) this.showDetails(latestCreation.id)
     },
   },
 })

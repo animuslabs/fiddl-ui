@@ -65,10 +65,10 @@ q-layout(view="lHh Lpr lFf" )
                   q-icon(name="logout" size="20px").q-mr-md
                   div  Logout
 
-  q-page-container.centered.bg-grey-10
-    .centered.bg-dark(style="width:100vw; height:100%" )
+  q-page-container.centered.bg-transparent
+    .centered(style="width:100vw; height:100%" )
       router-view.full-width(style="max-width:1500px;")
-      .full-width.q-pa-md.bg-grey-10
+      .full-width.q-pa-md
         .centered.items-center.q-gutter-md
           q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
           q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
