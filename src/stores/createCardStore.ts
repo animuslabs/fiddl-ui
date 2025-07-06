@@ -66,9 +66,14 @@ export const useCreateCardStore = defineStore("createCardStore", {
       return Object.values(state.loading).some((v) => v)
     },
     totalCost(state) {
-      const modelCost = imageModelDatas.find((m) => m.name === state.req.model)?.pointsCost
-      if (!modelCost) return 0
-      return state.req.quantity * modelCost
+      let modelName = state.req.model
+      if (state.req.model == "custom" && this.customModel) {
+        if (this.customModel.modelType == "fluxDev") modelName = "flux-dev"
+        else if (this.customModel.modelType == "fluxPro") modelName = "flux-pro"
+        else modelName = "flux-pro-ultra"
+      }
+      const modelCost = imageModelDatas.find((m) => m.name === modelName)?.pointsCost || 10
+      return state.req.quantity * modelCost + (state.req.model == "custom" ? 3 : 0)
     },
   },
   actions: {

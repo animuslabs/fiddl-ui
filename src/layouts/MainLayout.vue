@@ -85,7 +85,7 @@ q-layout(view="lHh Lpr lFf" )
         | create
       q-route-tab(:to="{ name: 'browse' }").text-white
         | browse
-      q-route-tab(:to="{ name: 'faceForge' }").text-white
+      q-route-tab(:to="{ name: 'forge' }").text-white
         |  Forge
       q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog

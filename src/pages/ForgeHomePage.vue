@@ -40,7 +40,7 @@ import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/store
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
 import CreateTrainingSet from "components/CreateTrainingSet.vue"
-type FaceForgeMode = "pick" | "createModel" | "train" | "createSet"
+type forgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
   components: {
     PickModel,
@@ -52,7 +52,7 @@ export default defineComponent({
   },
   data() {
     return {
-      mode: "create" as FaceForgeMode,
+      mode: "create" as forgeMode,
       targetModelId: null as string | null,
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
@@ -65,7 +65,7 @@ export default defineComponent({
     "$route.params": {
       handler() {
         console.log("route params changed", this.$route.params)
-        this.mode = (this.$route.params?.mode as FaceForgeMode) || "pick"
+        this.mode = (this.$route.params?.mode as forgeMode) || "pick"
       },
       immediate: true,
       deep: true,
@@ -104,7 +104,7 @@ export default defineComponent({
       immediate: false,
     },
     mode: {
-      async handler(val: FaceForgeMode) {
+      async handler(val: forgeMode) {
         console.log("mode changed", val, this.$route.query)
         setTimeout(() => {
           void this.$router.replace({ params: { mode: val }, query: { ...this.$route.query } })

@@ -216,7 +216,7 @@ export default configure(function (/* ctx */) {
     },
     ssg: {
       includeStaticRoutes: false,
-      exclude: ["/admin", "/faceForge", "/browse", "/addPoints", "/login", "/tos", "/create"],
+      exclude: ["/admin", "/forge", "/browse", "/addPoints", "/login", "/tos", "/create"],
     },
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
