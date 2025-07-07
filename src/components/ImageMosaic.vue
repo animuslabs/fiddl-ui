@@ -5,6 +5,7 @@ div(:class="containerClass")
     :key="item.id"
     :class="getItemClass(item)"
   )
+    div.relative-position
     CreatedImageCard.cursor-pointer.container-image(
       :imageId="getRandImg(item.imageIds)"
       :creatorId="item.creatorId"
@@ -12,6 +13,11 @@ div(:class="containerClass")
       @click="showGallery($event, item)"
     )
     .absolute-bottom
+      .row.items-center.q-ml-md(v-if="item.collections" style=" width:fit-content; border-radius: 24px; backdrop-filter: blur(3px); background-color: rgba(0, 0, 0, 0.4)")
+        .col-auto.q-mr-sm.q-ml-sm
+          p.text-white(v-if="item.collections") {{ item.collections }}
+        .col-auto.q-mr-sm
+          q-icon(name="favorite" size="15px" color="white")
       .centered
         div(v-for="img in item.imageIds.length").q-mb-xs
           div(style="width:4px;height:4px; margin:2px; border-radius:50%; outline: .5px solid black;").bg-grey-6

@@ -6,7 +6,7 @@ import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
 
 export const sortMethodIcon: Record<SortMethod, string> = {
   latest: "sym_o_overview",
-  // popular: "star",
+  popular: "star",
   shuffle: "shuffle",
 }
 
@@ -27,6 +27,7 @@ export interface BrowserItem {
   ratioGrade: AspectRatioGrade
   cssClass: string
   creatorId: string
+  collections?: number
 }
 
 export const useBrowserStore = defineStore("browserStore", {
@@ -114,7 +115,7 @@ export const useBrowserStore = defineStore("browserStore", {
         // Process the data (same as before)
         for (const creation of creations as any) {
           // console.log("Single creation object:", creation)
-
+          // console.log("creations: ", creation.images[0]?._count)
           this.addItem({
             id: creation.id,
             aspectRatio: creation.aspectRatio as AspectRatio,
@@ -122,7 +123,8 @@ export const useBrowserStore = defineStore("browserStore", {
             cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
             imageIds: creation.images.map((el: any) => el.id),
             createdAt: new Date(creation.createdAt),
-            creatorId: creation.user.id,
+            creatorId: creation.userId,
+            collections: creation.images[0]?._count?.Collections || 0,
           })
         }
       } catch (error) {
@@ -166,6 +168,7 @@ export const useBrowserStore = defineStore("browserStore", {
             imageIds: creation.images.map((el: any) => el.id),
             createdAt: new Date(creation.createdAt),
             creatorId: creation.user.id,
+            collections: creation._count.Collections,
           }
 
           // Check if the item already exists

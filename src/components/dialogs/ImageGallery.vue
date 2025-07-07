@@ -73,11 +73,11 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
         @touchend="onTouchEnd"
       )
         transition(name="fade")
-          q-linear-progress.absolute-top.full-width(
+          q-linear-progress.absolute-top.full-width.image-darken(
             style="top:-2px;"
             indeterminate
             v-if="imgLoading || loading"
-            color="teal-9"
+            color="primary"
             track-color="transparent"
           )
         // Image with transform binding
@@ -120,10 +120,10 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 .image-darken {
   background-color: transparent;
   color: transparent;
-  transition: filter 0.5s ease;
+  transition: filter 0.3s ease;
 }
 .image-darken.active {
-  filter: brightness(50%);
+  filter: blur(3px) brightness(50%) saturate(50%);
 }
 .indicator {
   display: inline-block;
@@ -407,6 +407,8 @@ export default defineComponent({
       })
     },
     async loadHdImage(val?: string) {
+      this.imgLoading = false
+      // this.loading = false
       if (!val) val = this.currentImageId
       if (!this.$userAuth.loggedIn) return
       this.userOwnsImage = false
@@ -425,7 +427,7 @@ export default defineComponent({
         console.log("hd image cached:", !!imageData)
         if (!imageData) {
           if (SessionStorage.getItem("noHdImage-" + val)) return
-          this.loading = true
+          // this.loading = true
           const hdResponse = await Promise.race([
             creationsHdImage({ imageId: val }).catch(() => {
               SessionStorage.setItem("noHdImage-" + val, true)

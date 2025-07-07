@@ -73,8 +73,8 @@ export default defineComponent({
   mounted() {
     void useUserAuth().attemptAutoLogin()
     LoadingBar.setDefaults({
-      color: "info",
-      size: "3px",
+      color: "primary",
+      size: "1px",
       position: "top",
       reverse: false,
     })
