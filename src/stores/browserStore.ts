@@ -28,6 +28,7 @@ export interface BrowserItem {
   cssClass: string
   creatorId: string
   collections?: number
+  purchases?: number
 }
 
 export const useBrowserStore = defineStore("browserStore", {
@@ -125,6 +126,7 @@ export const useBrowserStore = defineStore("browserStore", {
             createdAt: new Date(creation.createdAt),
             creatorId: creation.userId,
             collections: creation.images[0]?._count?.Collections || 0,
+            purchases: creation.images[0]?._count?.ImagePurchases || 0,
           })
         }
       } catch (error) {

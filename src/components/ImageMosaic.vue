@@ -13,9 +13,9 @@ div(:class="containerClass")
       @click="showGallery($event, item)"
     )
     .absolute-bottom
-      .row.items-center.q-ml-md(v-if="item.collections" style=" width:fit-content; border-radius: 24px; backdrop-filter: blur(3px); background-color: rgba(0, 0, 0, 0.4)")
+      .row.items-center.q-ml-md(v-if="item.purchases" style=" width:fit-content; border-radius: 24px; backdrop-filter: blur(3px); background-color: rgba(0, 0, 0, 0.4)")
         .col-auto.q-mr-sm.q-ml-sm
-          p.text-white(v-if="item.collections") {{ item.collections }}
+          p.text-white(v-if="item.purchases") {{ item.purchases }}
         .col-auto.q-mr-sm
           q-icon(name="favorite" size="15px" color="white")
       .centered
