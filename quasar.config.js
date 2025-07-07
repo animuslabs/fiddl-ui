@@ -94,6 +94,7 @@ export default configure(function (/* ctx */) {
           global: "globalThis",
           "process.env": {},
         }
+        viteConf.server.allowedHosts = ["51fb-2405-9800-b970-84dc-e8cd-730-96cf-b38.ngrok-free.app"]
 
         // Only keep essential polyfills that might be needed by other packages
         viteConf.resolve = {

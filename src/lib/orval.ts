@@ -387,6 +387,8 @@ promptIncludes?: string;
 model?: CreationsBrowseCreateRequestsModel;
 aspectRatio?: CreationsBrowseCreateRequestsAspectRatio;
 customModelId?: string;
+randomSeed?: number;
+sortMethod: CreationsBrowseCreateRequestsSortMethod;
 };
 
 export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
@@ -433,6 +435,16 @@ export const CreationsBrowseCreateRequestsAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+} as const;
+
+export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsBrowseCreateRequestsSortMethod = {
+  latest: 'latest',
+  shuffle: 'shuffle',
+  popular: 'popular',
 } as const;
 
 export type CreationsHdImageParams = {
@@ -1373,6 +1385,7 @@ export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetTrainingStatus200Status = {
+  processing: 'processing',
   trained: 'trained',
   succeeded: 'succeeded',
   failed: 'failed',
@@ -2202,7 +2215,7 @@ export function useCreationsCreateRequest<TData = Awaited<ReturnType<typeof crea
 
 
 export const creationsBrowseCreateRequests = (
-    params?: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: AxiosRequestConfig
+    params: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown[]>> => {
     params = unref(params);
     
@@ -2214,12 +2227,12 @@ export const creationsBrowseCreateRequests = (
   }
 
 
-export const getCreationsBrowseCreateRequestsQueryKey = (params?: MaybeRef<CreationsBrowseCreateRequestsParams>,) => {
+export const getCreationsBrowseCreateRequestsQueryKey = (params: MaybeRef<CreationsBrowseCreateRequestsParams>,) => {
     return ['creations','browseCreateRequests', ...(params ? [params]: [])] as const;
     }
 
     
-export const getCreationsBrowseCreateRequestsQueryOptions = <TData = Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+export const getCreationsBrowseCreateRequestsQueryOptions = <TData = Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
@@ -2243,7 +2256,7 @@ export type CreationsBrowseCreateRequestsQueryError = AxiosError<ErrorBADREQUEST
 
 
 export function useCreationsBrowseCreateRequests<TData = Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
- params?: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+ params: MaybeRef<CreationsBrowseCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsBrowseCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient 
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

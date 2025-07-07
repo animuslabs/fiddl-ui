@@ -357,6 +357,8 @@ promptIncludes?: string;
 model?: CreationsBrowseCreateRequestsModel;
 aspectRatio?: CreationsBrowseCreateRequestsAspectRatio;
 customModelId?: string;
+randomSeed?: number;
+sortMethod: CreationsBrowseCreateRequestsSortMethod;
 };
 
 export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
@@ -403,6 +405,16 @@ export const CreationsBrowseCreateRequestsAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+} as const;
+
+export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsBrowseCreateRequestsSortMethod = {
+  latest: 'latest',
+  shuffle: 'shuffle',
+  popular: 'popular',
 } as const;
 
 export type CreationsHdImageParams = {
@@ -1343,6 +1355,7 @@ export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetTrainingStatus200Status = {
+  processing: 'processing',
   trained: 'trained',
   succeeded: 'succeeded',
   failed: 'failed',
@@ -2276,7 +2289,7 @@ export type creationsBrowseCreateRequestsResponse = creationsBrowseCreateRequest
   headers: Headers;
 }
 
-export const getCreationsBrowseCreateRequestsUrl = (params?: CreationsBrowseCreateRequestsParams,) => {
+export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreateRequestsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2291,7 +2304,7 @@ export const getCreationsBrowseCreateRequestsUrl = (params?: CreationsBrowseCrea
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/browseCreateRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/browseCreateRequests`
 }
 
-export const creationsBrowseCreateRequests = async (params?: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<creationsBrowseCreateRequestsResponse> => {
+export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<creationsBrowseCreateRequestsResponse> => {
   
   const res = await fetch(getCreationsBrowseCreateRequestsUrl(params),
   {      

@@ -3,6 +3,15 @@
   .centered
     q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:100vw;")
       .row.no-wrap.items-center
+        //- q-btn(:label="browserStore.filter.sort" @click="browserStore.toggleSort")
+        q-btn-dropdown(:label="browserStore.filter.sort || 'Sort'" flat color="primary" :icon="sortMethodIcon[browserStore.filter.sort]")
+          q-list
+            .q-ma-md.cursor-pointer.relative-position(v-for="(icon,method) in sortMethodIcon" clickable @click="browserStore.setSort(method)" v-close-popup )
+              .absolute.bg-primary(style="left:-5px; height:100%; width:5px;" v-if="browserStore.filter.sort == method")
+              .row.items-center
+                q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
+                h5 {{ method }}
+
         div
           q-btn-toggle(v-model="viewMode.imageSize" flat :options="gridModeOptions")
         q-btn-dropdown(:label="browserStore.filter.aspectRatio ||'Aspect'" flat :color="browserStore.filter.aspectRatio ? 'primary' : 'white'")
@@ -31,8 +40,9 @@
 <script lang="ts">
 import { aspectRatios, imageModels } from "lib/imageModels"
 import { LocalStorage, useQuasar } from "quasar"
-import { useBrowserStore } from "stores/browserStore"
+import { useBrowserStore, sortMethodIcon } from "stores/browserStore"
 import { defineComponent } from "vue"
+
 let interval: any = null
 // const gridModeOptions =
 export default defineComponent({
@@ -41,6 +51,7 @@ export default defineComponent({
   },
   data() {
     return {
+      sortMethodIcon,
       quasar: useQuasar(),
       browserStore: useBrowserStore(),
       aspectRatios,

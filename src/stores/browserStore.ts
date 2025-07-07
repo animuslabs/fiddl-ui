@@ -2,6 +2,13 @@ import { defineStore } from "pinia"
 import { creationsBrowseCreateRequests } from "src/lib/orval"
 import { pickRand, toObject } from "lib/util"
 import { ratioRatings, type AspectRatio, type AspectRatioGrade, type ImageModel } from "lib/imageModels"
+import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
+
+export const sortMethodIcon: Record<SortMethod, string> = {
+  latest: "sym_o_overview",
+  // popular: "star",
+  shuffle: "shuffle",
+}
 
 function getImgClass(ratioGrade: AspectRatioGrade) {
   const squareSizes = ["small", "medium", "large"]
@@ -28,9 +35,11 @@ export const useBrowserStore = defineStore("browserStore", {
       items: [] as BrowserItem[],
       loading: false,
       search: null as string | null,
+      randomSeed: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
       filter: {
         aspectRatio: undefined as AspectRatio | undefined,
         model: undefined as ImageModel | undefined,
+        sort: "shuffle" as SortMethod,
       },
     }
   },
@@ -50,10 +59,14 @@ export const useBrowserStore = defineStore("browserStore", {
       if (index === -1) return
       item.imageIds.splice(index, 1)
     },
+    setSort(method: SortMethod) {
+      this.filter.sort = method
+    },
     resetFilters() {
       this.filter = {
         aspectRatio: undefined,
         model: undefined,
+        sort: "shuffle",
       }
     },
     searchCreations() {
@@ -81,7 +94,6 @@ export const useBrowserStore = defineStore("browserStore", {
       }
 
       try {
-        // Replace tRPC call with direct call to creationsBrowseCreateRequests
         const response = await creationsBrowseCreateRequests({
           order: "desc",
           endDateTime: lastItem?.createdAt ? lastItem.createdAt.toISOString() : undefined,
@@ -89,6 +101,8 @@ export const useBrowserStore = defineStore("browserStore", {
           promptIncludes: this.search?.length ? this.search : undefined,
           aspectRatio: this.filter.aspectRatio || undefined,
           model: this.filter.model || undefined,
+          randomSeed: this.filter.sort == "shuffle" ? this.randomSeed : undefined,
+          sortMethod: this.filter.sort,
         })
 
         // Extract data from response
@@ -118,6 +132,7 @@ export const useBrowserStore = defineStore("browserStore", {
       }
     },
     async loadRecentCreations() {
+      if (this.filter.sort != "latest") return
       this.loading = true
       const firstItem = this.items[0]
       let startDateTime
@@ -134,6 +149,7 @@ export const useBrowserStore = defineStore("browserStore", {
           promptIncludes: this.search?.length ? this.search : undefined,
           aspectRatio: this.filter.aspectRatio || undefined,
           model: this.filter.model || undefined,
+          sortMethod: this.filter.sort,
         })
 
         // Extract data from response
