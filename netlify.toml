@@ -14,12 +14,6 @@
   ]
 
 [[redirects]]
-  from = "/.netlify/images"
-  status = 404
-  force = true
-  conditions = { Query = ["url"] }
-
-[[redirects]]
   from = "/blog/*"
   to = "https://fiddl.art/blog/:splat"
   status = 200
