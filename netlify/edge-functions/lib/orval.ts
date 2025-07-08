@@ -555,6 +555,7 @@ export const PointsFinishBuyPackageBodyMethod = {
 export type PointsFinishBuyPackageBody = {
   orderId: string;
   method: PointsFinishBuyPackageBodyMethod;
+  trackingId?: string;
 };
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {

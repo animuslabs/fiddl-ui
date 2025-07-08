@@ -409,3 +409,10 @@ export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTu
   const fineTune = fineTuneTypePrice[fineTuneType] ?? throwErr("invalid fineTuneType")
   return (model + fineTune) * numImages + 100
 }
+
+export function getCookie(name: string): string | null {
+  const escapedName = name.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1")
+  const match = document.cookie.match(new RegExp(`(^| )${escapedName}=([^;]+)`))
+  if (!match) return null
+  return match[2] ? decodeURIComponent(match[2]) : null
+}

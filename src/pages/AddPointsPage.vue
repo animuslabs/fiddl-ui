@@ -71,16 +71,17 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage } from "src/lib/orval"
+import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage, userGet } from "src/lib/orval"
 import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
-import { catchErr, throwErr } from "lib/util"
+import { catchErr, throwErr, getCookie } from "lib/util"
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/pointsPackages"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
+
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string
 }
@@ -184,12 +185,14 @@ export default defineComponent({
         },
         onApprove: async (data, actions) => {
           try {
-            const res = await pointsFinishBuyPackage({ method: "payPal", orderId: data.orderID })
+            const datafastVisitorId = getCookie("datafast_visitor_id")
+
+            const res = await pointsFinishBuyPackage({ method: "payPal", orderId: data.orderID, trackingId: datafastVisitorId || undefined })
             if (!res?.data) {
               throwErr("Failed to capture order")
               return
             }
-            
+
             // Handle success case
             void this.userAuth.loadUserData()
             void this.userAuth.loadPointsHistory()
@@ -205,8 +208,8 @@ export default defineComponent({
             if (error?.response?.data?.details?.[0]?.issue === "INSTRUMENT_DECLINED") {
               return actions.restart()
             }
-            
-            const errorDetail = error?.response?.data?.details?.[0] || { description: 'Unknown error occurred' }
+
+            const errorDetail = error?.response?.data?.details?.[0] || { description: "Unknown error occurred" }
             console.error(errorDetail)
             Dialog.create({
               title: "Error",
@@ -214,7 +217,7 @@ export default defineComponent({
               ok: true,
             })
             // @ts-ignore
-            if (typeof umami !== 'undefined') {
+            if (typeof umami !== "undefined") {
               // @ts-ignore
               umami.track("buyPointsPkgFailure", errorDetail)
             }
