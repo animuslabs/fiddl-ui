@@ -161,6 +161,7 @@ export default configure(function (/* ctx */) {
     framework: {
       config: {
         dark: true,
+        ripple: false,
       },
 
       // iconSet: 'material-icons', // Quasar icon set

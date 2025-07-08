@@ -1,8 +1,8 @@
 <template lang="pug">
 .search-bar
   .centered
-    q-form(@submit="browserStore.searchCreations()" inline style="width:500px; max-width:100vw;")
-      .row.no-wrap.items-center
+    q-form(@submit="browserStore.searchCreations()" inline style="max-width:100vw;")
+      .row.no-wrap.items-center.hide-scrollbar(style="overflow: auto; width:fit-content; max-width:100vw;")
         //- q-btn(:label="browserStore.filter.sort" @click="browserStore.toggleSort")
         q-btn-dropdown(:label="browserStore.filter.sort || 'Sort'" flat color="primary" :icon="sortMethodIcon[browserStore.filter.sort]")
           q-list
@@ -10,7 +10,7 @@
               .absolute.bg-primary(style="left:-5px; height:100%; width:5px;" v-if="browserStore.filter.sort == method")
               .row.items-center
                 q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
-                h5 {{ method }}
+                p {{ method }}
 
         div
           q-btn-toggle(v-model="viewMode.imageSize" flat :options="gridModeOptions")
@@ -99,3 +99,15 @@ export default defineComponent({
   },
 })
 </script>
+
+<style>
+.hide-scrollbar {
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+</style>
