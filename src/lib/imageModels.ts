@@ -74,6 +74,35 @@ export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
   },
 ]
 
+export const videoModels = ["veo-2", "veo-3", "seedance-pro", "kling", "seedance-lite"] as const
+export interface VideoModelData {
+  name: (typeof videoModels)[number]
+  pointsCostPerSecond: number
+}
+
+export const videoModelDatas: VideoModelData[] = [
+  {
+    name: "veo-2",
+    pointsCostPerSecond: 45,
+  },
+  {
+    name: "veo-3",
+    pointsCostPerSecond: 75,
+  },
+  {
+    name: "seedance-pro",
+    pointsCostPerSecond: 70,
+  },
+  {
+    name: "seedance-pro",
+    pointsCostPerSecond: 55,
+  },
+  {
+    name: "kling",
+    pointsCostPerSecond: 65,
+  },
+]
+
 export const aspectRatios = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"] as const
 export type AspectRatio = (typeof aspectRatios)[number]
 export type AspectRatioGrade = "wide" | "square" | "extraWide" | "tall" | "extraTall"

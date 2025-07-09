@@ -392,22 +392,22 @@ export async function generateThumbnails(files: File[]): Promise<{ id: string; b
 }
 
 export const modelPrice: Record<CustomModelType, number> = {
-  fluxDev: 3,
-  fluxPro: 10,
-  fluxProUltra: 20,
+  fluxDev: 1,
+  fluxPro: 3,
+  fluxProUltra: 5,
   faceClone: 10,
-  faceForge: 20,
+  faceForge: 6,
 }
 
 export const fineTuneTypePrice: Record<FineTuneType, number> = {
   lora: 5,
-  full: 35,
+  full: 15,
 }
 
 export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTuneType, numImages: number): number {
   const model = modelPrice[modelType] ?? throwErr("invalid modelTypes")
   const fineTune = fineTuneTypePrice[fineTuneType] ?? throwErr("invalid fineTuneType")
-  return (model + fineTune) * numImages + 100
+  return (model + fineTune) * numImages + 600
 }
 
 export function getCookie(name: string): string | null {

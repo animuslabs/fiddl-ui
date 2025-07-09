@@ -104,12 +104,12 @@ export default {
       if (!id) return
       const index = item.imageIds.findIndex((el) => el === id)
       let creatorName = ""
-      try {
-        const response = await userGetUsername({ userId: item.creatorId })
-        creatorName = response.data || ""
-      } catch (error) {
-        console.error(error)
-      }
+      // try {
+      //   const response = await userGetUsername({ userId: item.creatorId })
+      //   creatorName = response.data || ""
+      // } catch (error) {
+      //   console.error(error)
+      // }
       const creatorMeta = { id: item.creatorId, username: creatorName }
       console.log("creatorMeta", creatorMeta)
       console.log("reqId", item.id)

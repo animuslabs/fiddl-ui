@@ -62,20 +62,17 @@ q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, Ref } from "vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import { catchErr, longIdToShort, timeSince } from "lib/util"
-import { creationsDeleteRequest, creationsSetRequestPrivacy, userGetUsername, modelsGetModel } from "src/lib/orval"
-import { PropType } from "vue"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
-import { img } from "lib/netlifyImg"
 import imageGallery from "lib/imageGallery"
-import { copyToClipboard, Dialog, Notify } from "quasar"
-import type { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
-import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
-import { useCreateSession } from "src/stores/createSessionStore"
+import { img } from "lib/netlifyImg"
+import { catchErr, longIdToShort, timeSince } from "lib/util"
+import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
+import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetModel, userGetUsername } from "src/lib/orval"
+import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useCreations } from "src/stores/creationsStore"
-import { useQuasar } from "quasar"
+import { defineComponent, PropType, ref, Ref } from "vue"
+import type { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 export default defineComponent({
   components: {
     CreatedImageCard,

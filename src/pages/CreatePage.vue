@@ -19,7 +19,7 @@ import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"
 import UploaderCard from "src/components/UploaderCard.vue"
 import { creationsCreateRequest, creationsImageData, modelsGetModel } from "src/lib/orval"
-import { useCreateCardStore } from "src/stores/createCardStore"
+import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
 import { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 
@@ -38,7 +38,7 @@ export default defineComponent({
   data() {
     return {
       timeSince,
-      createStore: useCreateCardStore(),
+      createStore: useCreateImageStore(),
       images: [] as string[],
       createMode: false,
     }
@@ -125,7 +125,7 @@ export default defineComponent({
         this.createMode = true
       }
 
-      this.createStore.setReq(request)
+      this.createStore.setReq({ ...request })
     },
     addImage(data: string) {
       console.log("add Image triggered")

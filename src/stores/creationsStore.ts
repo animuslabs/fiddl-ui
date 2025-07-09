@@ -4,7 +4,7 @@ import { creationsCreateRequests, creationsUserImagePurchases, collectionsFindCo
 import type { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
-import type { CreateImageRequestWithCustomModel } from "src/stores/createCardStore"
+import type { CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 import type { ImagePurchase, Image } from "lib/api"
 

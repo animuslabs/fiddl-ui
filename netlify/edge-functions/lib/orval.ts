@@ -162,12 +162,32 @@ export type CreateImage200 = {
   errors: string[];
 };
 
+export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateRandomPromptBodyType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
 export type CreateRandomPromptBody = {
   theme?: string;
+  type: CreateRandomPromptBodyType;
 };
+
+export type CreateImprovePromptBodyType = typeof CreateImprovePromptBodyType[keyof typeof CreateImprovePromptBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateImprovePromptBodyType = {
+  image: 'image',
+  video: 'video',
+} as const;
 
 export type CreateImprovePromptBody = {
   prompt: string;
+  type: CreateImprovePromptBodyType;
 };
 
 export type CreationsImageDataParams = {

@@ -54,6 +54,7 @@
     "stream-browserify": "^3.0.0",
     "strip-ansi": "^7.1.0",
     "superjson": "^2.2.1",
+    "ts-pattern": "^5.7.1",
     "util": "^0.12.5",
     "vite": "^6.0.7",
     "vue": "3.5.4",

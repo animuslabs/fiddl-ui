@@ -2,7 +2,7 @@
 .centered.full-height.full-width
   .full-width
     .row.full-height.full-width.no-wrap
-      .col-auto.q-ml-md( v-if="$q.screen.gt.sm")
+      .col-auto.q-ml-md( v-if="quasar.screen.gt.sm")
         .centered(style="width:450px; padding:0px;")
           CreateCard.q-mt-md.full-width(
             @created="addImage"
@@ -11,7 +11,7 @@
             :customModel="customModel"
           )
       .col-grow.q-mr-sm.full-height
-        q-scroll-area.full-width(:style="$q.screen.gt.sm?'height:calc(100vh - 60px);':'height:calc(100vh - 110px);'")
+        q-scroll-area.full-width(:style="quasar.screen.gt.sm?'height:calc(100vh - 60px);':'height:calc(100vh - 110px);'")
           .full-width(style="height:15px;")
           .full-width.relative-position
             .full-width(style="height:55px;")
@@ -21,7 +21,7 @@
                   //- small Model Filter:
                   q-btn-toggle(v-model="creationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
-                  q-btn(label="create" size="sm" color="primary" rounded v-if="$q.screen.lt.md" @click="createMode = true")
+                  q-btn(label="create" size="sm" color="primary" rounded v-if="quasar.screen.lt.md" @click="createMode = true")
 
             .centered
               div(v-if="!gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
@@ -40,8 +40,8 @@
       ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
-  q-dialog(v-model="createMode" maximized)
-    q-card(style="width:100vw; max-width:600px;")
+  q-dialog(v-model="createMode" maximized no-route-dismiss)
+    q-card(style="width:100vw; max-width:600px; overflow:hidden;")
       .centered.full-width
         CreateCard(
           show-back-btn
@@ -62,7 +62,7 @@ import type { CreateImageRequest, CreateImageRequestData } from "fiddl-server/di
 import { Dialog, LocalStorage } from "quasar"
 import { useCreations } from "stores/creationsStore"
 import { CustomModel } from "lib/api"
-import { useCreateCardStore } from "src/stores/createCardStore"
+import { useCreateImageStore } from "src/stores/createImageStore"
 import { toObject } from "lib/util"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useQuasar } from "quasar"
@@ -82,9 +82,9 @@ export default defineComponent({
   },
   data() {
     return {
-      $q: useQuasar(),
+      quasar: useQuasar(),
       creationsStore: useCreations(),
-      createStore: useCreateCardStore(),
+      createStore: useCreateImageStore(),
       createMode: false,
       selectedRequest: null as CreateImageRequestData | null,
       showRequest: false,
@@ -97,8 +97,8 @@ export default defineComponent({
   },
   computed: {
     dynamicModelOptions() {
-      let modelName = this.createStore.req.model
-      if (modelName == "custom") modelName = "custom: " + this.createStore.req.customModelName
+      let modelName = this.createStore.state.req.model
+      if (modelName == "custom") modelName = "custom: " + this.createStore.state.req.customModelName
       return [
         { label: "All", value: false },
         { label: modelName, value: true },
@@ -112,8 +112,8 @@ export default defineComponent({
     "creationsStore.dynamicModel": {
       handler(val: boolean) {
         if (val) {
-          this.creationsStore.filter.model = this.createStore.req.model
-          this.creationsStore.filter.customModelId = this.createStore.req.customModelId
+          this.creationsStore.filter.model = this.createStore.state.req.model
+          this.creationsStore.filter.customModelId = this.createStore.state.req.customModelId
         } else {
           this.creationsStore.filter.model = undefined
           this.creationsStore.filter.customModelId = undefined
@@ -147,7 +147,7 @@ export default defineComponent({
   },
   mounted() {
     console.log("mounted promptTab, customModel", this.customModel)
-    if (this.$q.screen.lt.md) this.createMode = true
+    if (this.quasar.screen.lt.md) this.createMode = true
     this.gridMode = LocalStorage.getItem("creatPageGridMode") || false
   },
   methods: {

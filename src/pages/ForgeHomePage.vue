@@ -36,7 +36,7 @@ import PickModel from "components/PickModel.vue"
 import CreateModel from "components/CreateModel.vue"
 import WatchTraining from "components/WatchTraining.vue"
 import UseModel from "components/UseModel.vue"
-import { CreateImageRequestWithCustomModel, useCreateCardStore } from "src/stores/createCardStore"
+import { CreateImageRequestWithCustomModel, useCreateImageStore } from "src/stores/createImageStore"
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
 import CreateTrainingSet from "components/CreateTrainingSet.vue"
@@ -57,7 +57,7 @@ export default defineComponent({
       trainingData: undefined as TrainingData | undefined,
       targetModelData: undefined as CustomModel | undefined,
       loadTrainingInterval: null as any,
-      createStore: useCreateCardStore(),
+      createStore: useCreateImageStore(),
     }
   },
   computed: {},
@@ -149,7 +149,7 @@ export default defineComponent({
       }
     },
     useModel(model: CustomModel) {
-      this.createStore.customModel = model
+      this.createStore.state.customModel = model
       const newReq: Partial<CreateImageRequestWithCustomModel> = {
         customModelId: model.id,
         customModelName: model.name,

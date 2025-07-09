@@ -206,7 +206,8 @@ input[type="number"]
   right: -16px
   font-size: 12px
   border: 1.5px solid transparent
-  background-image: linear-gradient(transparentize(black, .3), transparentize(black, .4)), linear-gradient(45deg, $secondary, $primary)
+
+  background-image: linear-gradient(color.adjust(black, $alpha: -0.3),color.adjust(black, $alpha: -0.4)), linear-gradient(45deg, $secondary, $primary)
   background-origin: border-box
   background-clip: padding-box, border-box
   display: flex
