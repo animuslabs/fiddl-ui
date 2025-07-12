@@ -192,6 +192,54 @@ export type CreateImage200 = {
   errors: string[];
 };
 
+export type CreateVideoBodyModel = typeof CreateVideoBodyModel[keyof typeof CreateVideoBodyModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateVideoBodyModel = {
+  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+} as const;
+
+export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateVideoBodyAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreateVideoBody = {
+  prompt: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateVideoBodyModel;
+  public: boolean;
+  aspectRatio: CreateVideoBodyAspectRatio;
+  duration: number;
+  startImageId?: string;
+};
+
+export type CreateVideo200 = {
+  requestId?: string;
+  errors?: string[];
+};
+
 export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
 
 
@@ -242,7 +290,7 @@ order?: CreationsUserImagePurchasesOrder;
 endDateTime?: string;
 includeMetadata?: boolean;
 customModelId?: string;
-model?: CreationsUserImagePurchasesModel;
+model?: typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel] ;
 aspectRatio?: CreationsUserImagePurchasesAspectRatio;
 promptIncludes?: string;
 };
@@ -256,11 +304,12 @@ export const CreationsUserImagePurchasesOrder = {
   desc: 'desc',
 } as const;
 
-export type CreationsUserImagePurchasesModel = typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel];
-
-
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsUserImagePurchasesModel = {
+export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -275,8 +324,7 @@ export const CreationsUserImagePurchasesModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
-} as const;
-
+} as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
 
@@ -300,34 +348,35 @@ export type CreationsUserImagePurchases200Item = {
   createdAt: string;
 };
 
-export type CreationsCreateRequestsParams = {
+export type CreationsUserVideoPurchasesParams = {
 userId?: string;
 startDateTime?: string;
 limit?: number;
 offset?: number;
-order?: CreationsCreateRequestsOrder;
+order?: CreationsUserVideoPurchasesOrder;
 endDateTime?: string;
 includeMetadata?: boolean;
 customModelId?: string;
-model?: CreationsCreateRequestsModel;
-aspectRatio?: CreationsCreateRequestsAspectRatio;
+model?: typeof CreationsUserVideoPurchasesModel[keyof typeof CreationsUserVideoPurchasesModel] ;
+aspectRatio?: CreationsUserVideoPurchasesAspectRatio;
 promptIncludes?: string;
 };
 
-export type CreationsCreateRequestsOrder = typeof CreationsCreateRequestsOrder[keyof typeof CreationsCreateRequestsOrder];
+export type CreationsUserVideoPurchasesOrder = typeof CreationsUserVideoPurchasesOrder[keyof typeof CreationsUserVideoPurchasesOrder];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsOrder = {
+export const CreationsUserVideoPurchasesOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
-export type CreationsCreateRequestsModel = typeof CreationsCreateRequestsModel[keyof typeof CreationsCreateRequestsModel];
-
-
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsModel = {
+export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -342,13 +391,12 @@ export const CreationsCreateRequestsModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
-} as const;
-
-export type CreationsCreateRequestsAspectRatio = typeof CreationsCreateRequestsAspectRatio[keyof typeof CreationsCreateRequestsAspectRatio];
+} as const
+export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsAspectRatio = {
+export const CreationsUserVideoPurchasesAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
   '21:9': '21:9',
@@ -360,7 +408,74 @@ export const CreationsCreateRequestsAspectRatio = {
   '9:21': '9:21',
 } as const;
 
-export type CreationsCreateRequests200Item = {
+export type CreationsUserVideoPurchases200Item = {
+  id: string;
+  userId: string;
+  videoId: string;
+  createdAt: string;
+};
+
+export type CreationsCreateImageRequestsParams = {
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateImageRequestsOrder;
+endDateTime?: string;
+includeMetadata?: boolean;
+customModelId?: string;
+model?: typeof CreationsCreateImageRequestsModel[keyof typeof CreationsCreateImageRequestsModel] ;
+aspectRatio?: CreationsCreateImageRequestsAspectRatio;
+promptIncludes?: string;
+};
+
+export type CreationsCreateImageRequestsOrder = typeof CreationsCreateImageRequestsOrder[keyof typeof CreationsCreateImageRequestsOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+} as const
+export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreationsCreateImageRequests200Item = {
   id: string;
   imageIds: string[];
   createdAt: string;
@@ -374,6 +489,80 @@ export type CreationsCreateRequests200Item = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+};
+
+export type CreationsCreateVideoRequestsParams = {
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateVideoRequestsOrder;
+endDateTime?: string;
+includeMetadata?: boolean;
+customModelId?: string;
+model?: typeof CreationsCreateVideoRequestsModel[keyof typeof CreationsCreateVideoRequestsModel] ;
+aspectRatio?: CreationsCreateVideoRequestsAspectRatio;
+promptIncludes?: string;
+};
+
+export type CreationsCreateVideoRequestsOrder = typeof CreationsCreateVideoRequestsOrder[keyof typeof CreationsCreateVideoRequestsOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+} as const
+export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreationsCreateVideoRequests200Item = {
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
 };
 
 export type CreationsCreateRequestParams = {
@@ -1217,6 +1406,42 @@ export type CollectionsGetCollectionImages200Item = {
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
 
+export type CollectionsGetCollectionVideosParams = {
+id: string;
+};
+
+export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionVideos200ItemStatus = {
+  processing: 'processing',
+  previewRendering: 'previewRendering',
+  ready: 'ready',
+  errored: 'errored',
+} as const;
+
+export type CollectionsGetCollectionVideos200ItemVideoRequest = {
+  userId: string;
+};
+
+export type CollectionsGetCollectionVideos200Item = {
+  status: CollectionsGetCollectionVideos200ItemStatus;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  seed: string | null;
+  errored: boolean;
+  deleted: boolean;
+  videoRequestId: string;
+  /** @nullable */
+  replicatePredictionId: string | null;
+  /** @nullable */
+  coconutJobId: string | null;
+  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
+};
+
 export type PromoCreatePromoCodeBody = {
   points: number;
 };
@@ -1891,6 +2116,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const createVideo = (
+    createVideoBody: MaybeRef<CreateVideoBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreateVideo200>> => {
+    createVideoBody = unref(createVideoBody);
+    
+    return axios.post(
+      `/create/video`,
+      createVideoBody,options
+    );
+  }
+
+
+
+export const getCreateVideoMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVideo>>, TError,{data: CreateVideoBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof createVideo>>, TError,{data: CreateVideoBody}, TContext> => {
+
+const mutationKey = ['createVideo'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVideo>>, {data: CreateVideoBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVideo(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVideoMutationResult = NonNullable<Awaited<ReturnType<typeof createVideo>>>
+    export type CreateVideoMutationBody = CreateVideoBody
+    export type CreateVideoMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCreateVideo = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVideo>>, TError,{data: CreateVideoBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof createVideo>>,
+        TError,
+        {data: CreateVideoBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateVideoMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const createRandomPrompt = (
     createRandomPromptBody: MaybeRef<CreateRandomPromptBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string>> => {
@@ -2119,53 +2400,169 @@ export function useCreationsUserImagePurchases<TData = Awaited<ReturnType<typeof
 
 
 
-export const creationsCreateRequests = (
-    params?: MaybeRef<CreationsCreateRequestsParams>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CreationsCreateRequests200Item[]>> => {
+export const creationsUserVideoPurchases = (
+    params?: MaybeRef<CreationsUserVideoPurchasesParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsUserVideoPurchases200Item[]>> => {
     params = unref(params);
     
     return axios.get(
-      `/creations/createRequests`,{
+      `/creations/userVideoPurchases`,{
     ...options,
         params: {...unref(params), ...options?.params},}
     );
   }
 
 
-export const getCreationsCreateRequestsQueryKey = (params?: MaybeRef<CreationsCreateRequestsParams>,) => {
-    return ['creations','createRequests', ...(params ? [params]: [])] as const;
+export const getCreationsUserVideoPurchasesQueryKey = (params?: MaybeRef<CreationsUserVideoPurchasesParams>,) => {
+    return ['creations','userVideoPurchases', ...(params ? [params]: [])] as const;
     }
 
     
-export const getCreationsCreateRequestsQueryOptions = <TData = Awaited<ReturnType<typeof creationsCreateRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+export const getCreationsUserVideoPurchasesQueryOptions = <TData = Awaited<ReturnType<typeof creationsUserVideoPurchases>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsUserVideoPurchasesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsUserVideoPurchases>>, TError, TData>>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
 
-  const queryKey =  getCreationsCreateRequestsQueryKey(params);
+  const queryKey =  getCreationsUserVideoPurchasesQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsCreateRequests>>> = ({ signal }) => creationsCreateRequests(params, { signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsUserVideoPurchases>>> = ({ signal }) => creationsUserVideoPurchases(params, { signal, ...axiosOptions });
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequests>>, TError, TData> 
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsUserVideoPurchases>>, TError, TData> 
 }
 
-export type CreationsCreateRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof creationsCreateRequests>>>
-export type CreationsCreateRequestsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+export type CreationsUserVideoPurchasesQueryResult = NonNullable<Awaited<ReturnType<typeof creationsUserVideoPurchases>>>
+export type CreationsUserVideoPurchasesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
 
 
 
-export function useCreationsCreateRequests<TData = Awaited<ReturnType<typeof creationsCreateRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
- params?: MaybeRef<CreationsCreateRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+export function useCreationsUserVideoPurchases<TData = Awaited<ReturnType<typeof creationsUserVideoPurchases>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CreationsUserVideoPurchasesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsUserVideoPurchases>>, TError, TData>>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient 
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getCreationsCreateRequestsQueryOptions(params,options)
+  const queryOptions = getCreationsUserVideoPurchasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const creationsCreateImageRequests = (
+    params?: MaybeRef<CreationsCreateImageRequestsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsCreateImageRequests200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/createImageRequests`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsCreateImageRequestsQueryKey = (params?: MaybeRef<CreationsCreateImageRequestsParams>,) => {
+    return ['creations','createImageRequests', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsCreateImageRequestsQueryOptions = <TData = Awaited<ReturnType<typeof creationsCreateImageRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsCreateImageRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateImageRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsCreateImageRequestsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsCreateImageRequests>>> = ({ signal }) => creationsCreateImageRequests(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsCreateImageRequests>>, TError, TData> 
+}
+
+export type CreationsCreateImageRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof creationsCreateImageRequests>>>
+export type CreationsCreateImageRequestsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsCreateImageRequests<TData = Awaited<ReturnType<typeof creationsCreateImageRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CreationsCreateImageRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateImageRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsCreateImageRequestsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const creationsCreateVideoRequests = (
+    params?: MaybeRef<CreationsCreateVideoRequestsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsCreateVideoRequests200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/createVideoRequests`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsCreateVideoRequestsQueryKey = (params?: MaybeRef<CreationsCreateVideoRequestsParams>,) => {
+    return ['creations','createVideoRequests', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsCreateVideoRequestsQueryOptions = <TData = Awaited<ReturnType<typeof creationsCreateVideoRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsCreateVideoRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateVideoRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsCreateVideoRequestsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsCreateVideoRequests>>> = ({ signal }) => creationsCreateVideoRequests(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsCreateVideoRequests>>, TError, TData> 
+}
+
+export type CreationsCreateVideoRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof creationsCreateVideoRequests>>>
+export type CreationsCreateVideoRequestsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsCreateVideoRequests<TData = Awaited<ReturnType<typeof creationsCreateVideoRequests>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CreationsCreateVideoRequestsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateVideoRequests>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsCreateVideoRequestsQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4724,6 +5121,64 @@ export function useCollectionsGetCollectionImages<TData = Awaited<ReturnType<typ
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCollectionsGetCollectionImagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const collectionsGetCollectionVideos = (
+    params: MaybeRef<CollectionsGetCollectionVideosParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CollectionsGetCollectionVideos200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/collections/getCollectionVideos`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCollectionsGetCollectionVideosQueryKey = (params: MaybeRef<CollectionsGetCollectionVideosParams>,) => {
+    return ['collections','getCollectionVideos', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCollectionsGetCollectionVideosQueryOptions = <TData = Awaited<ReturnType<typeof collectionsGetCollectionVideos>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CollectionsGetCollectionVideosParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionVideos>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCollectionsGetCollectionVideosQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof collectionsGetCollectionVideos>>> = ({ signal }) => collectionsGetCollectionVideos(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionVideos>>, TError, TData> 
+}
+
+export type CollectionsGetCollectionVideosQueryResult = NonNullable<Awaited<ReturnType<typeof collectionsGetCollectionVideos>>>
+export type CollectionsGetCollectionVideosQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCollectionsGetCollectionVideos<TData = Awaited<ReturnType<typeof collectionsGetCollectionVideos>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CollectionsGetCollectionVideosParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionVideos>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCollectionsGetCollectionVideosQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

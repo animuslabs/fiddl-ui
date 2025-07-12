@@ -51,7 +51,7 @@ import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import CreationsSearchBar from "src/components/CreationsSearchBar.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
-import { useCreations } from "src/stores/creationsStore"
+import { useCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
 
 export default defineComponent({

@@ -86,7 +86,7 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue"
 import { useCreateImageStore } from "src/stores/createImageStore"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import CustomModelsList from "./CustomModelsList.vue"
 import { type CustomModel } from "lib/api"
 import { useQuasar } from "quasar"
@@ -96,7 +96,7 @@ const props = defineProps<{ showBackBtn?: boolean }>()
 const quasar = useQuasar()
 
 const createStore = useCreateImageStore()
-const creationsStore = useCreations()
+const creationsStore = useImageCreations()
 
 const req = createStore.state.req
 const loading = createStore.state.loading
@@ -111,6 +111,7 @@ function setCustomModel(model: CustomModel) {
   showModelPicker.value = false
   req.customModelId = model.id
   req.customModelName = model.name
+  createStore.state.customModel = model
   void creationsStore.setCustomModelId(model.id)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id

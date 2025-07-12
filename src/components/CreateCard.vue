@@ -27,27 +27,28 @@ import { ref, watch, onMounted } from "vue"
 import { LocalStorage } from "quasar"
 import { useRouter, useRoute } from "vue-router"
 import { useCreateImageStore } from "src/stores/createImageStore"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import type { CustomModel } from "lib/api"
 import ImageForm from "components/ImageForm.vue"
 import VideoForm from "components/VideoForm.vue"
 import CustomModelsList from "./CustomModelsList.vue"
-
+type ActiveTabType = "image" | "video"
 const props = defineProps<{ showBackBtn?: boolean; customModel?: CustomModel | null }>()
-const emit = defineEmits(["created", "back"])
+const emit = defineEmits(["created", "back", "activeTab"])
 
 const router = useRouter()
 const route = useRoute()
 
 const createStore = useCreateImageStore()
-const creationsStore = useCreations()
+const creationsStore = useImageCreations()
 
-const activeTab = ref("image")
+const activeTab = ref<null | ActiveTabType>(null)
 const showModelPicker = ref(false)
 
 watch(activeTab, (val) => {
   LocalStorage.set("createMode", val)
   void router.replace({ params: { activeTab: val } })
+  emit("activeTab", activeTab.value)
 })
 
 onMounted(() => {
@@ -55,8 +56,9 @@ onMounted(() => {
   if (savedReq) createStore.setReq(savedReq as any)
   if (!route.params?.activeTab) {
     const savedMode = LocalStorage.getItem("createMode")
-    if (savedMode) activeTab.value = savedMode as string
-  } else activeTab.value = route.params?.activeTab as string
+    if (savedMode) activeTab.value = savedMode as ActiveTabType
+  } else activeTab.value = route.params?.activeTab as ActiveTabType
+  if (!activeTab.value) activeTab.value = "image"
 })
 
 watch(

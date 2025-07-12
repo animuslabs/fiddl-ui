@@ -75,8 +75,9 @@ export const imageModelDatas: { name: ImageModel; pointsCost: number }[] = [
 ]
 
 export const videoModels = ["veo-2", "veo-3", "seedance-pro", "kling", "seedance-lite"] as const
+export type VideoModel = (typeof videoModels)[number]
 export interface VideoModelData {
-  name: (typeof videoModels)[number]
+  name: VideoModel
   pointsCostPerSecond: number
 }
 
@@ -94,7 +95,7 @@ export const videoModelDatas: VideoModelData[] = [
     pointsCostPerSecond: 70,
   },
   {
-    name: "seedance-pro",
+    name: "seedance-lite",
     pointsCostPerSecond: 55,
   },
   {
@@ -103,7 +104,7 @@ export const videoModelDatas: VideoModelData[] = [
   },
 ]
 
-export const aspectRatios = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"] as const
+export const aspectRatios = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "4:3", "3:4", "5:4", "9:16", "9:21"] as const
 export type AspectRatio = (typeof aspectRatios)[number]
 export type AspectRatioGrade = "wide" | "square" | "extraWide" | "tall" | "extraTall"
 export const ratioRatings: Record<AspectRatio, AspectRatioGrade> = {
@@ -116,4 +117,6 @@ export const ratioRatings: Record<AspectRatio, AspectRatioGrade> = {
   "5:4": "square",
   "9:16": "extraTall",
   "9:21": "extraTall",
+  "4:3": "square",
+  "3:4": "square",
 }

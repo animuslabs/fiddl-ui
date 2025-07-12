@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 
-import { creationsCreateRequests, creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody } from "lib/orval"
+import { creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody, creationsCreateImageRequests } from "lib/orval"
 import type { CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
@@ -8,12 +8,40 @@ import type { CreateImageRequestWithCustomModel } from "src/stores/createImageSt
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 import type { ImagePurchase, Image } from "lib/api"
 
+interface SceneConfig {
+  number: number
+  duration: number
+}
+
+interface OutputConfig {
+  path?: string
+  url?: string
+  number?: number
+  duration?: number
+  interval?: number
+  if?: string
+  key?: string
+  scene?: SceneConfig
+  square?: boolean
+}
+
+type OutputValue = OutputConfig | Record<string, OutputConfig>
+
+interface CreateJobOptions {
+  sourceUrl: string
+  outputBasePath?: string
+  webhookUrl?: string
+  previewSize?: number
+  mediumSize?: string
+  outputs?: Record<string, OutputValue>
+}
+
 interface CreationImage {
-  imageId: string
+  id: string
   creationId: string
 }
 
-export const useCreations = defineStore("creationsStore", {
+export const useImageCreations = defineStore("imageCreationsStore", {
   state: () => ({
     creations: [] as CreateImageRequestData[],
     imagePurchases: [] as ImagePurchase[],
@@ -35,11 +63,11 @@ export const useCreations = defineStore("creationsStore", {
     filterActive(): boolean {
       return !!this.filter.aspectRatio || !!this.filter.model
     },
-    allCreationImages(): CreationImage[] {
+    allCreations(): CreationImage[] {
       const images: CreationImage[] = []
       for (const creation of this.creations) {
         for (const imageId of creation.imageIds) {
-          images.push({ imageId, creationId: creation.id })
+          images.push({ id: imageId, creationId: creation.id })
         }
       }
       return images
@@ -107,7 +135,7 @@ export const useCreations = defineStore("creationsStore", {
         this.activeUserId = userId
         const lastItem = this.creations[this.creations.length - 1]
 
-        const response = await creationsCreateRequests({
+        const response = await creationsCreateImageRequests({
           userId,
           includeMetadata: true,
           order: "desc",
@@ -115,7 +143,7 @@ export const useCreations = defineStore("creationsStore", {
           limit: 20,
           customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
           promptIncludes: this.search || undefined,
-          aspectRatio: this.filter.aspectRatio,
+          aspectRatio: this.filter.aspectRatio as any,
           model: this.filter.model,
         })
 

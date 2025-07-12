@@ -7,7 +7,7 @@ import { jwt } from "lib/jwt"
 import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
@@ -170,7 +170,7 @@ export const useUserAuth = defineStore("userAuth", {
       umami.identify({ userId: "logged-out" })
       void clearImageCache()
       useCreateImageStore().$reset()
-      useCreations().$reset()
+      useImageCreations().$reset()
     },
   },
 })

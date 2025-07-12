@@ -149,7 +149,7 @@ import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
 import LikeImage from "./LikeImage.vue"
 import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 
 export default defineComponent({
@@ -177,7 +177,7 @@ export default defineComponent({
   data() {
     return {
       dynamic: false,
-      creationStore: useCreations(),
+      creationStore: useImageCreations(),
       shareMenu: true,
       moreOptionsMenu: true,
       localImageIds: [] as string[],
@@ -315,7 +315,7 @@ export default defineComponent({
         }, 500)
         await this.loadRequestId()
         if (!this.loadedRequestId) return
-        useCreations().deleteImage(this.currentImageId, this.loadedRequestId)
+        useImageCreations().deleteImage(this.currentImageId, this.loadedRequestId)
         useBrowserStore().deleteImage(this.currentImageId, this.loadedRequestId)
       })
     },

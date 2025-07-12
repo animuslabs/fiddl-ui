@@ -77,15 +77,10 @@
   </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, watchEffect } from "vue"
-import { useCreateVideoStore } from "src/stores/createVideoStore"
-import { useCreations } from "src/stores/creationsStore"
-import CustomModelsList from "./CustomModelsList.vue"
-import { type CustomModel } from "lib/api"
+import { videoModels } from "lib/imageModels"
 import { useQuasar } from "quasar"
-import { toRefs, reactive } from "vue"
-import { toRef } from "vue"
-import { videoModelDatas, videoModels } from "lib/imageModels"
+import { useCreateVideoStore } from "src/stores/createVideoStore"
+import { computed, ref, toRef } from "vue"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -99,13 +94,12 @@ const quasar = useQuasar()
 const showImageDialog = ref(false)
 
 const vidStore = useCreateVideoStore()
-const creationsStore = useCreations()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
 const req = toRef(vidStore.state.req)
 
 function create() {
-  void vidStore.createVideo().then(() => emit("created"))
+  void vidStore.createVideoRequest().then(() => emit("created"))
 }
 const scrollWrapperComponent = computed(() => (quasar.screen.lt.md ? "q-scroll-area" : "div"))
 const showBackBtn = computed(() => quasar.screen.lt.md)

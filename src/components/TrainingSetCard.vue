@@ -1,7 +1,7 @@
 <template lang="pug">
 q-card.training-card.relative-position.overflow-hidden(style="width:550px; max-width:95vw;")
   .absolute.thumb-bg(style="z-index:0;")
-    .row.q-gutter-xs.no-wrap
+    .row.no-wrap
       div(v-for="id in trimmedThumbnails" :key="id" style="width:80px;")
         .thumb-wrap
           img.thumb-img(:src="s3Img(thumbnailKey(trainingSet.id,id))")
@@ -171,8 +171,8 @@ async function changeSetName() {
 }
 
 .thumb-bg {
-  filter: blur(6px);
-  opacity: 0.5;
+  filter: blur(14px);
+  opacity: 0.8;
   pointer-events: none;
   /* left: -80px; */
   flex-wrap: nowrap;

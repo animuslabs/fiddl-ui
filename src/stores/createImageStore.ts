@@ -3,10 +3,10 @@ import { defineStore } from "pinia"
 import { ref, computed, reactive, watch } from "vue"
 import { LocalStorage } from "quasar"
 import { useRouter } from "vue-router"
-import { aspectRatios, imageModelDatas } from "lib/imageModels"
+import { aspectRatios, imageModelDatas, type ImageModel } from "lib/imageModels"
 import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { createImprovePrompt, createRandomPrompt, modelsGetModel } from "lib/orval"
 import umami from "lib/umami"
@@ -45,7 +45,7 @@ function initState() {
 export const useCreateImageStore = defineStore("createImageStore", () => {
   const state = reactive(initState())
   const createSession = useCreateSession()
-  const creations = useCreations()
+  const creations = useImageCreations()
   const userAuth = useUserAuth()
   const router = useRouter()
 
@@ -59,16 +59,30 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   })
 
   const selectedModelPrice = computed(() => {
-    return imageModelDatas.find((m) => m.name === state.req.model)?.pointsCost || 0
+    let modelName: ImageModel = state.req.model
+    console.log(state.customModel?.modelType)
+    if (modelName === "custom" && state.customModel?.modelType) {
+      switch (state.customModel.modelType) {
+        case "fluxDev":
+          modelName = "flux-dev"
+          break
+        case "fluxPro":
+          modelName = "flux-pro"
+          break
+        case "fluxProUltra":
+          modelName = "flux-pro-ultra"
+          break
+        default:
+          modelName = "flux-dev"
+      }
+    }
+    const baseCost = imageModelDatas.find((m) => m.name === modelName)?.pointsCost || 10
+    return baseCost
   })
 
   const totalCost = computed(() => {
-    let modelName = state.req.model
-    if (modelName === "custom" && state.customModel?.modelType) {
-      modelName = state.customModel.modelType.includes("Pro") ? "flux-pro" : "flux-pro-ultra"
-    }
-    const baseCost = imageModelDatas.find((m) => m.name === modelName)?.pointsCost || 10
-    return (baseCost + (state.req.model === "custom" ? 3 : 0)) * state.req.quantity
+    const baseCost = selectedModelPrice
+    return baseCost.value * state.req.quantity
   })
 
   const anyLoading = computed(() => Object.values(state.loading).some(Boolean))

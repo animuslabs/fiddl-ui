@@ -2,9 +2,11 @@ import ax from "axios"
 import { jwt } from "lib/jwt"
 import type {
   CollectionsGetCollectionImagesQueryResult,
+  CollectionsGetCollectionVideosQueryResult,
   CreationsCreateRequestQueryResult,
   CreationsImageDataQueryResult,
   CreationsUserImagePurchasesQueryResult,
+  CreationsUserVideoPurchasesQueryResult,
   ModelsGetModelQueryResult,
   ModelsGetTrainingStatusQueryResult,
   ModelsGetUserModelsQueryResult,
@@ -60,10 +62,12 @@ export type UserData = UserGetQueryResult["data"]
 export type UserProfile = UserProfileQueryResult["data"]
 export type PointsTransfer = UserPointsHistoryQueryResult["data"][number]
 export type ImagePurchase = CreationsUserImagePurchasesQueryResult["data"][number]
+export type VideoPurchase = CreationsUserVideoPurchasesQueryResult["data"][number]
 export type ImageCreateRequest = CreationsCreateRequestQueryResult["data"]
 export type ImageData = CreationsImageDataQueryResult["data"]
 export type PromoCode = PromoGetPromoCodeDetailsQueryResult["data"]
 export type Image = CollectionsGetCollectionImagesQueryResult["data"][number]
+export type Video = CollectionsGetCollectionVideosQueryResult["data"][number]
 export type NotificationConfig = UserGetNotificationConfigQueryResult["data"]
 export type NotificationConfigSet = UserSetNotificationConfigMutationResult["data"]
 export type PublicProfile = UserPublicProfileQueryResult["data"]

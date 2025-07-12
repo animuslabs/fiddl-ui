@@ -70,7 +70,7 @@ import { catchErr, longIdToShort, timeSince } from "lib/util"
 import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
 import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetModel, userGetUsername } from "src/lib/orval"
 import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
-import { useCreations } from "src/stores/creationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
 import type { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
 export default defineComponent({
@@ -150,7 +150,7 @@ export default defineComponent({
               message: "Creation Deleted",
               color: "negative",
             })
-            useCreations().deleteCreation(this.creation.id)
+            useImageCreations().deleteCreation(this.creation.id)
             if (this.$route.name == "imageRequest") void this.$router.push({ name: "browse" })
           })
       })

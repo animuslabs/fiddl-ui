@@ -158,7 +158,7 @@ export default defineComponent({
         quantity: 4,
       }
       this.createStore.setReq(newReq)
-      void this.$router.push({ name: "create" })
+      void this.$router.push({ name: "create", params: { activeTab: "image" } })
     },
     async loadTrainingData() {
       if (!this.targetModelId) return

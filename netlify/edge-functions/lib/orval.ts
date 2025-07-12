@@ -162,6 +162,54 @@ export type CreateImage200 = {
   errors: string[];
 };
 
+export type CreateVideoBodyModel = typeof CreateVideoBodyModel[keyof typeof CreateVideoBodyModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateVideoBodyModel = {
+  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+} as const;
+
+export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateVideoBodyAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreateVideoBody = {
+  prompt: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateVideoBodyModel;
+  public: boolean;
+  aspectRatio: CreateVideoBodyAspectRatio;
+  duration: number;
+  startImageId?: string;
+};
+
+export type CreateVideo200 = {
+  requestId?: string;
+  errors?: string[];
+};
+
 export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
 
 
@@ -212,7 +260,7 @@ order?: CreationsUserImagePurchasesOrder;
 endDateTime?: string;
 includeMetadata?: boolean;
 customModelId?: string;
-model?: CreationsUserImagePurchasesModel;
+model?: typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel] ;
 aspectRatio?: CreationsUserImagePurchasesAspectRatio;
 promptIncludes?: string;
 };
@@ -226,11 +274,12 @@ export const CreationsUserImagePurchasesOrder = {
   desc: 'desc',
 } as const;
 
-export type CreationsUserImagePurchasesModel = typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel];
-
-
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsUserImagePurchasesModel = {
+export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -245,8 +294,7 @@ export const CreationsUserImagePurchasesModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
-} as const;
-
+} as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
 
@@ -270,34 +318,35 @@ export type CreationsUserImagePurchases200Item = {
   createdAt: string;
 };
 
-export type CreationsCreateRequestsParams = {
+export type CreationsUserVideoPurchasesParams = {
 userId?: string;
 startDateTime?: string;
 limit?: number;
 offset?: number;
-order?: CreationsCreateRequestsOrder;
+order?: CreationsUserVideoPurchasesOrder;
 endDateTime?: string;
 includeMetadata?: boolean;
 customModelId?: string;
-model?: CreationsCreateRequestsModel;
-aspectRatio?: CreationsCreateRequestsAspectRatio;
+model?: typeof CreationsUserVideoPurchasesModel[keyof typeof CreationsUserVideoPurchasesModel] ;
+aspectRatio?: CreationsUserVideoPurchasesAspectRatio;
 promptIncludes?: string;
 };
 
-export type CreationsCreateRequestsOrder = typeof CreationsCreateRequestsOrder[keyof typeof CreationsCreateRequestsOrder];
+export type CreationsUserVideoPurchasesOrder = typeof CreationsUserVideoPurchasesOrder[keyof typeof CreationsUserVideoPurchasesOrder];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsOrder = {
+export const CreationsUserVideoPurchasesOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
-export type CreationsCreateRequestsModel = typeof CreationsCreateRequestsModel[keyof typeof CreationsCreateRequestsModel];
-
-
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsModel = {
+export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -312,13 +361,12 @@ export const CreationsCreateRequestsModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
-} as const;
-
-export type CreationsCreateRequestsAspectRatio = typeof CreationsCreateRequestsAspectRatio[keyof typeof CreationsCreateRequestsAspectRatio];
+} as const
+export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateRequestsAspectRatio = {
+export const CreationsUserVideoPurchasesAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
   '21:9': '21:9',
@@ -330,7 +378,74 @@ export const CreationsCreateRequestsAspectRatio = {
   '9:21': '9:21',
 } as const;
 
-export type CreationsCreateRequests200Item = {
+export type CreationsUserVideoPurchases200Item = {
+  id: string;
+  userId: string;
+  videoId: string;
+  createdAt: string;
+};
+
+export type CreationsCreateImageRequestsParams = {
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateImageRequestsOrder;
+endDateTime?: string;
+includeMetadata?: boolean;
+customModelId?: string;
+model?: typeof CreationsCreateImageRequestsModel[keyof typeof CreationsCreateImageRequestsModel] ;
+aspectRatio?: CreationsCreateImageRequestsAspectRatio;
+promptIncludes?: string;
+};
+
+export type CreationsCreateImageRequestsOrder = typeof CreationsCreateImageRequestsOrder[keyof typeof CreationsCreateImageRequestsOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+} as const
+export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreationsCreateImageRequests200Item = {
   id: string;
   imageIds: string[];
   createdAt: string;
@@ -344,6 +459,80 @@ export type CreationsCreateRequests200Item = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+};
+
+export type CreationsCreateVideoRequestsParams = {
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateVideoRequestsOrder;
+endDateTime?: string;
+includeMetadata?: boolean;
+customModelId?: string;
+model?: typeof CreationsCreateVideoRequestsModel[keyof typeof CreationsCreateVideoRequestsModel] ;
+aspectRatio?: CreationsCreateVideoRequestsAspectRatio;
+promptIncludes?: string;
+};
+
+export type CreationsCreateVideoRequestsOrder = typeof CreationsCreateVideoRequestsOrder[keyof typeof CreationsCreateVideoRequestsOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+} as const
+export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+} as const;
+
+export type CreationsCreateVideoRequests200Item = {
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
 };
 
 export type CreationsCreateRequestParams = {
@@ -1187,6 +1376,42 @@ export type CollectionsGetCollectionImages200Item = {
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
 
+export type CollectionsGetCollectionVideosParams = {
+id: string;
+};
+
+export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionVideos200ItemStatus = {
+  processing: 'processing',
+  previewRendering: 'previewRendering',
+  ready: 'ready',
+  errored: 'errored',
+} as const;
+
+export type CollectionsGetCollectionVideos200ItemVideoRequest = {
+  userId: string;
+};
+
+export type CollectionsGetCollectionVideos200Item = {
+  status: CollectionsGetCollectionVideos200ItemStatus;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  seed: string | null;
+  errored: boolean;
+  deleted: boolean;
+  videoRequestId: string;
+  /** @nullable */
+  replicatePredictionId: string | null;
+  /** @nullable */
+  coconutJobId: string | null;
+  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
+};
+
 export type PromoCreatePromoCodeBody = {
   points: number;
 };
@@ -1876,6 +2101,65 @@ export const createImage = async (createImageBody: CreateImageBody, options?: Re
 
 
 
+export type createVideoResponse200 = {
+  data: CreateVideo200
+  status: 200
+}
+
+export type createVideoResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type createVideoResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type createVideoResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type createVideoResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type createVideoResponseComposite = createVideoResponse200 | createVideoResponse400 | createVideoResponse401 | createVideoResponse403 | createVideoResponse500;
+    
+export type createVideoResponse = createVideoResponseComposite & {
+  headers: Headers;
+}
+
+export const getCreateVideoUrl = () => {
+
+
+  
+
+  return `https://api.fiddl.art/api/create/video`
+}
+
+export const createVideo = async (createVideoBody: CreateVideoBody, options?: RequestInit): Promise<createVideoResponse> => {
+  
+  const res = await fetch(getCreateVideoUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createVideoBody,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: createVideoResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as createVideoResponse
+}
+
+
+
 export type createRandomPromptResponse200 = {
   data: string
   status: 200
@@ -2134,43 +2418,43 @@ export const creationsUserImagePurchases = async (params?: CreationsUserImagePur
 
 
 
-export type creationsCreateRequestsResponse200 = {
-  data: CreationsCreateRequests200Item[]
+export type creationsUserVideoPurchasesResponse200 = {
+  data: CreationsUserVideoPurchases200Item[]
   status: 200
 }
 
-export type creationsCreateRequestsResponse400 = {
+export type creationsUserVideoPurchasesResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type creationsCreateRequestsResponse401 = {
+export type creationsUserVideoPurchasesResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type creationsCreateRequestsResponse403 = {
+export type creationsUserVideoPurchasesResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type creationsCreateRequestsResponse404 = {
+export type creationsUserVideoPurchasesResponse404 = {
   data: ErrorNOTFOUND
   status: 404
 }
 
-export type creationsCreateRequestsResponse500 = {
+export type creationsUserVideoPurchasesResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type creationsCreateRequestsResponseComposite = creationsCreateRequestsResponse200 | creationsCreateRequestsResponse400 | creationsCreateRequestsResponse401 | creationsCreateRequestsResponse403 | creationsCreateRequestsResponse404 | creationsCreateRequestsResponse500;
+export type creationsUserVideoPurchasesResponseComposite = creationsUserVideoPurchasesResponse200 | creationsUserVideoPurchasesResponse400 | creationsUserVideoPurchasesResponse401 | creationsUserVideoPurchasesResponse403 | creationsUserVideoPurchasesResponse404 | creationsUserVideoPurchasesResponse500;
     
-export type creationsCreateRequestsResponse = creationsCreateRequestsResponseComposite & {
+export type creationsUserVideoPurchasesResponse = creationsUserVideoPurchasesResponseComposite & {
   headers: Headers;
 }
 
-export const getCreationsCreateRequestsUrl = (params?: CreationsCreateRequestsParams,) => {
+export const getCreationsUserVideoPurchasesUrl = (params?: CreationsUserVideoPurchasesParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2182,12 +2466,12 @@ export const getCreationsCreateRequestsUrl = (params?: CreationsCreateRequestsPa
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createRequests`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/userVideoPurchases?${stringifiedParams}` : `https://api.fiddl.art/api/creations/userVideoPurchases`
 }
 
-export const creationsCreateRequests = async (params?: CreationsCreateRequestsParams, options?: RequestInit): Promise<creationsCreateRequestsResponse> => {
+export const creationsUserVideoPurchases = async (params?: CreationsUserVideoPurchasesParams, options?: RequestInit): Promise<creationsUserVideoPurchasesResponse> => {
   
-  const res = await fetch(getCreationsCreateRequestsUrl(params),
+  const res = await fetch(getCreationsUserVideoPurchasesUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -2197,9 +2481,149 @@ export const creationsCreateRequests = async (params?: CreationsCreateRequestsPa
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsCreateRequestsResponse['data'] = body ? JSON.parse(body) : {}
+  const data: creationsUserVideoPurchasesResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as creationsCreateRequestsResponse
+  return { data, status: res.status, headers: res.headers } as creationsUserVideoPurchasesResponse
+}
+
+
+
+export type creationsCreateImageRequestsResponse200 = {
+  data: CreationsCreateImageRequests200Item[]
+  status: 200
+}
+
+export type creationsCreateImageRequestsResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type creationsCreateImageRequestsResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type creationsCreateImageRequestsResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type creationsCreateImageRequestsResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type creationsCreateImageRequestsResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type creationsCreateImageRequestsResponseComposite = creationsCreateImageRequestsResponse200 | creationsCreateImageRequestsResponse400 | creationsCreateImageRequestsResponse401 | creationsCreateImageRequestsResponse403 | creationsCreateImageRequestsResponse404 | creationsCreateImageRequestsResponse500;
+    
+export type creationsCreateImageRequestsResponse = creationsCreateImageRequestsResponseComposite & {
+  headers: Headers;
+}
+
+export const getCreationsCreateImageRequestsUrl = (params?: CreationsCreateImageRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createImageRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createImageRequests`
+}
+
+export const creationsCreateImageRequests = async (params?: CreationsCreateImageRequestsParams, options?: RequestInit): Promise<creationsCreateImageRequestsResponse> => {
+  
+  const res = await fetch(getCreationsCreateImageRequestsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: creationsCreateImageRequestsResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as creationsCreateImageRequestsResponse
+}
+
+
+
+export type creationsCreateVideoRequestsResponse200 = {
+  data: CreationsCreateVideoRequests200Item[]
+  status: 200
+}
+
+export type creationsCreateVideoRequestsResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type creationsCreateVideoRequestsResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type creationsCreateVideoRequestsResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type creationsCreateVideoRequestsResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type creationsCreateVideoRequestsResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type creationsCreateVideoRequestsResponseComposite = creationsCreateVideoRequestsResponse200 | creationsCreateVideoRequestsResponse400 | creationsCreateVideoRequestsResponse401 | creationsCreateVideoRequestsResponse403 | creationsCreateVideoRequestsResponse404 | creationsCreateVideoRequestsResponse500;
+    
+export type creationsCreateVideoRequestsResponse = creationsCreateVideoRequestsResponseComposite & {
+  headers: Headers;
+}
+
+export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideoRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createVideoRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createVideoRequests`
+}
+
+export const creationsCreateVideoRequests = async (params?: CreationsCreateVideoRequestsParams, options?: RequestInit): Promise<creationsCreateVideoRequestsResponse> => {
+  
+  const res = await fetch(getCreationsCreateVideoRequestsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: creationsCreateVideoRequestsResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as creationsCreateVideoRequestsResponse
 }
 
 
@@ -5104,6 +5528,76 @@ export const collectionsGetCollectionImages = async (params: CollectionsGetColle
   const data: collectionsGetCollectionImagesResponse['data'] = body ? JSON.parse(body) : {}
 
   return { data, status: res.status, headers: res.headers } as collectionsGetCollectionImagesResponse
+}
+
+
+
+export type collectionsGetCollectionVideosResponse200 = {
+  data: CollectionsGetCollectionVideos200Item[]
+  status: 200
+}
+
+export type collectionsGetCollectionVideosResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type collectionsGetCollectionVideosResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type collectionsGetCollectionVideosResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type collectionsGetCollectionVideosResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type collectionsGetCollectionVideosResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type collectionsGetCollectionVideosResponseComposite = collectionsGetCollectionVideosResponse200 | collectionsGetCollectionVideosResponse400 | collectionsGetCollectionVideosResponse401 | collectionsGetCollectionVideosResponse403 | collectionsGetCollectionVideosResponse404 | collectionsGetCollectionVideosResponse500;
+    
+export type collectionsGetCollectionVideosResponse = collectionsGetCollectionVideosResponseComposite & {
+  headers: Headers;
+}
+
+export const getCollectionsGetCollectionVideosUrl = (params: CollectionsGetCollectionVideosParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionVideos?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionVideos`
+}
+
+export const collectionsGetCollectionVideos = async (params: CollectionsGetCollectionVideosParams, options?: RequestInit): Promise<collectionsGetCollectionVideosResponse> => {
+  
+  const res = await fetch(getCollectionsGetCollectionVideosUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: collectionsGetCollectionVideosResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as collectionsGetCollectionVideosResponse
 }
 
 
