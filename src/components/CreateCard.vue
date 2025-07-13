@@ -2,9 +2,9 @@
   div
     q-card.column(style="overflow: hidden;")
       div
-        q-tabs(v-model="activeTab" class="text-primary" align="center" inline-label)
-          q-tab(name="image" label="Image" icon="image")
-          q-tab(name="video" label="Video" icon="movie")
+        //- q-tabs(v-model="activeTab" class="text-primary" align="center" inline-label)
+        //-   q-tab(name="image" label="Image" icon="image")
+        //-   q-tab(name="video" label="Video" icon="movie")
         q-separator
         q-tab-panels.bg-transparent(v-model="activeTab" animated swipeable)
           q-tab-panel(name="image" class="column fit" style="padding:0px;")
