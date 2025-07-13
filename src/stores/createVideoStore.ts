@@ -125,7 +125,7 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
 
   async function createVideoRequest() {
     state.loading.create = true
-    LocalStorage.set("req", state.req)
+    LocalStorage.set("videoReq", state.req)
     if (typeof state.req.seed !== "number") state.req.seed = undefined
     await creations.generateVideo(toObject(state.req)).catch(catchErr)
     state.loading.create = false

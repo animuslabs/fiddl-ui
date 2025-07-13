@@ -52,8 +52,8 @@ watch(activeTab, (val) => {
 })
 
 onMounted(() => {
-  const savedReq = LocalStorage.getItem("req")
-  if (savedReq) createStore.setReq(savedReq as any)
+  // const savedReq = LocalStorage.getItem("req")
+  // if (savedReq) createStore.setReq(savedReq as any)
   if (!route.params?.activeTab) {
     const savedMode = LocalStorage.getItem("createMode")
     if (savedMode) activeTab.value = savedMode as ActiveTabType
@@ -83,7 +83,7 @@ async function setCustomModel(model: CustomModel) {
   await creationsStore.setCustomModelId(model.id)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
-  LocalStorage.set("req", createStore.state.req)
+  // LocalStorage.set("req", createStore.state.req)
 }
 
 watch(
