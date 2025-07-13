@@ -1,4 +1,4 @@
-import { TranscriptLine } from "lib/types"
+import { TranscriptLine, type BaseCreationRequest, type UnifiedCreation, type UnifiedCreationRequest } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
 import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
@@ -7,6 +7,7 @@ import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 import stripAnsi from "strip-ansi"
 import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@prisma/client"
+import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 /**
  * Shares an image via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -415,4 +416,62 @@ export function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(^| )${escapedName}=([^;]+)`))
   if (!match) return null
   return match[2] ? decodeURIComponent(match[2]) : null
+}
+
+export function normalizeCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedCreationRequest {
+  const base: BaseCreationRequest = {
+    id: creation.id,
+    mediaIds: "imageIds" in creation ? creation.imageIds : creation.videoIds,
+    createdAt: creation.createdAt,
+    aspectRatio: creation.aspectRatio,
+    public: creation.public,
+    creatorId: creation.creatorId,
+    prompt: creation.prompt,
+    seed: creation.seed,
+    model: creation.model,
+    quantity: creation.quantity,
+  }
+
+  if ("imageIds" in creation) {
+    return {
+      ...base,
+      type: "image",
+      negativePrompt: creation.negativePrompt,
+      customModelId: creation.customModelId,
+      customModelName: creation.customModelName,
+    }
+  } else {
+    return {
+      ...base,
+      type: "video",
+      duration: creation.duration,
+    }
+  }
+}
+
+export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedCreation {
+  const isImage = "imageIds" in creation
+
+  return {
+    id: creation.id,
+    mediaIds: isImage ? creation.imageIds : creation.videoIds,
+    createdAt: creation.createdAt,
+    aspectRatio: creation.aspectRatio,
+    public: creation.public,
+    creatorId: creation.creatorId,
+    prompt: creation.prompt,
+    seed: creation.seed,
+    model: creation.model,
+    quantity: creation.quantity,
+    type: isImage ? "image" : "video",
+    ...(isImage
+      ? {
+          negativePrompt: creation.negativePrompt,
+          customModelId: creation.customModelId,
+          customModelName: creation.customModelName,
+        }
+      : {
+          duration: creation.duration,
+        }),
+  }
 }

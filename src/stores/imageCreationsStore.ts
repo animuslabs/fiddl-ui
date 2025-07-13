@@ -7,6 +7,7 @@ import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 import type { ImagePurchase, Image } from "lib/api"
+import type { UnifiedCreation } from "lib/types"
 
 interface SceneConfig {
   number: number
@@ -43,7 +44,7 @@ interface CreationImage {
 
 export const useImageCreations = defineStore("imageCreationsStore", {
   state: () => ({
-    creations: [] as CreateImageRequestData[],
+    creations: [] as UnifiedCreation[],
     imagePurchases: [] as ImagePurchase[],
     favorites: [] as Image[],
     favoritesCollectionId: null as string | null,
@@ -66,7 +67,7 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     allCreations(): CreationImage[] {
       const images: CreationImage[] = []
       for (const creation of this.creations) {
-        for (const imageId of creation.imageIds) {
+        for (const imageId of creation.mediaIds) {
           images.push({ id: imageId, creationId: creation.id })
         }
       }
@@ -94,15 +95,19 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     deleteImage(imageId: string, creationId: string) {
       const creation = this.creations.find((i) => i.id === creationId)
       if (!creation) return
-      const index = creation.imageIds.findIndex((id) => id === imageId)
+      const index = creation.mediaIds.findIndex((id) => id === imageId)
       console.log("deleted image index", index)
       if (index === -1) return
-      creation.imageIds.splice(index, 1)
+      creation.mediaIds.splice(index, 1)
     },
     addItem(item: CreateImageRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return
-      this.creations.push(item)
+      this.creations.push({
+        ...item,
+        type: "image",
+        mediaIds: item.imageIds,
+      })
     },
     reset() {
       this.creations = []
@@ -240,14 +245,15 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         }
       }
 
-      const createdItem: CreateImageRequestData = {
+      const createdItem: UnifiedCreation = {
         ...request,
-        imageIds: result.ids.reverse(),
+        mediaIds: result.ids.reverse(),
         id: result.id,
         createdAt: new Date(),
         creatorId,
         customModelId: request.customModelId,
         customModelName: request.customModelName,
+        type: "image",
       }
 
       this.creations.unshift(createdItem)

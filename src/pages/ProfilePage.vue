@@ -41,7 +41,7 @@ import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import ProfileCard from "src/components/ProfileCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
-import { useCreations } from "src/stores/imageCreationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
 import { userPublicProfile, userFindByUsername } from "src/lib/orval"
 
@@ -56,7 +56,7 @@ export default defineComponent({
     return {
       userId: null as null | string,
       publicProfile: null as PublicProfile | null,
-      creationsStore: useCreations(),
+      creationsStore: useImageCreations(),
       tab: "favorites",
       tabs: [
         { label: "Favorites", name: "favorites", icon: "sym_o_favorite" },

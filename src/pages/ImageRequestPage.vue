@@ -22,6 +22,7 @@ import { LocalStorage } from "quasar"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { useImageRequests } from "src/stores/imageRequestsStore"
 import { defineComponent } from "vue"
+import type { UnifiedCreation } from "lib/types"
 export default defineComponent({
   components: {
     ImageRequestCard,
@@ -33,7 +34,7 @@ export default defineComponent({
       // imageRequestId: null as string | null,
       imageRequests: useImageRequests(),
       shortId: null as string | null,
-      creation: null as CreateImageRequestData | null,
+      creation: null as UnifiedCreation | null,
     }
   },
   mounted() {
@@ -51,8 +52,9 @@ export default defineComponent({
       console.log("req", req)
       if (req) {
         this.creation = {
+          type: "image",
           id: req.id,
-          imageIds: req.imageIds,
+          mediaIds: req.imageIds,
           createdAt: new Date(req.createdAt),
           creatorId: req.creatorId,
           aspectRatio: req.aspectRatio,
@@ -71,7 +73,7 @@ export default defineComponent({
         console.log("targetIndex", targetIndex)
         if (targetIndex != undefined && typeof targetIndex == "string") {
           const creatorMeta = { id: req.creatorId, username: this.creatorUsername }
-          void imageGallery.show(this.creation.imageIds, parseInt(targetIndex), this.creation.id, creatorMeta)
+          void imageGallery.show(this.creation.mediaIds, parseInt(targetIndex), this.creation.id, creatorMeta)
           // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
         }
         const referrerAlreadySet = getReferredBy()

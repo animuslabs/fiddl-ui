@@ -22,8 +22,8 @@ q-page.full-height.full-width
       .centered(v-if="tab === 'creations'")
         div(v-if="!creationsStore.gridMode" v-for="creation in creationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
           ImageRequestCard(:creation="creation" @setRequest="editOnCreatePage" @deleted="handleDeleted" )
-        .centered.q-gutter-md(v-else v-for="image in creationsStore.allCreationImages"  :key="image.imageId+'1'")
-          CreatedImageCard.q-ma-md.relative-position(:imageId="image.imageId" style="width:160px; height:160px;" @click="showDetails(image.creationId)").cursor-pointer
+        .centered.q-gutter-md(v-else v-for="image in creationsStore.allCreations"  :key="image.creationId+'1'")
+          CreatedImageCard.q-ma-md.relative-position(:imageId="image.creationId" style="width:160px; height:160px;" @click="showDetails(image.creationId)").cursor-pointer
       .centered.q-gutter-md(v-if="tab === 'purchased'")
         div(v-for="purchase in creationsStore.imagePurchases"  :key="purchase.id")
           CreatedImageCard(:imageId="purchase.imageId" style="width:300px; height:300px;" @click="showGallery(purchase.imageId)").cursor-pointer
@@ -51,9 +51,10 @@ import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import CreationsSearchBar from "src/components/CreationsSearchBar.vue"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { BrowserItem } from "src/stores/browserStore"
-import { useCreations } from "src/stores/imageCreationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
-
+import { toUnifiedCreation } from "lib/util"
+import { UnifiedCreation } from "lib/types"
 export default defineComponent({
   components: {
     ImageRequestCard,
@@ -62,10 +63,10 @@ export default defineComponent({
   },
   data() {
     return {
-      creationsStore: useCreations(),
+      creationsStore: useImageCreations(),
       tab: "creations",
       showRequest: false,
-      selectedRequest: null as CreateImageRequestData | null,
+      selectedRequest: null as UnifiedCreation | null,
       tabs: [
         { label: "My Creations", name: "creations", icon: "sym_o_create" },
         { label: "unlocked Images", name: "purchased", icon: "sym_o_lock_open" },

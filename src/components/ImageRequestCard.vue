@@ -3,12 +3,12 @@ q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
   //- div custom model id: {{ creation.customModelId }}
   //- div custom model name: {{ creation.customModelName }}
   .centered.full-width.q-pt-md(:style="quasar.screen.lt.md? `overflow:auto;`:'' ")
-    div(v-if="creation.imageIds.length < 1").full-width
+    div(v-if="creation.mediaIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent No images in this creation
-    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm.q-pa-sm
+    .col( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm.q-pa-sm
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
-    .col( v-for="(imageId,index) in creation.imageIds" :key="imageId" style="max-width:50vw; max-width:300px; min-width:100px; ").lt-md.q-pa-sm
+    .col( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:50vw; max-width:300px; min-width:100px; ").lt-md.q-pa-sm
       CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" style="max-width:30vw;" )
   div(v-if="!minimized.value")
     q-separator(color="grey-9" spaced="20px")
@@ -72,7 +72,8 @@ import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetModel, use
 import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
-import type { CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequestData, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import type { UnifiedCreation } from "lib/types"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -85,7 +86,7 @@ export default defineComponent({
       default: () => ref(false),
     },
     creation: {
-      type: Object as PropType<CreateImageRequestData>,
+      type: Object as PropType<UnifiedCreation>,
       required: true,
     },
     creatorUsername: {
@@ -173,7 +174,7 @@ export default defineComponent({
     async showGallery(startIndex: number) {
       const root = this.$root
       if (!root) return
-      const images = this.creation.imageIds
+      const images = this.creation.mediaIds
       let creatorName = this.creatorUsername
       if (creatorName.length == 0) {
         try {
@@ -204,7 +205,7 @@ export default defineComponent({
           })
         }
       } else {
-        // void this.$router.push({ name: "create", query: { imageId: this.creation.imageIds[0] } })
+        // void this.$router.push({ name: "create", query: { imageId: this.creation.mediaIds[0] } })
         console.log("set request", this.creation)
         const req: CreateImageRequestWithCustomModel = {
           aspectRatio: (this.creation.aspectRatio as any) || "1:1",

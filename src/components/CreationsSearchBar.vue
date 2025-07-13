@@ -31,14 +31,14 @@
 <script lang="ts">
 import { aspectRatios, imageModels } from "lib/imageModels"
 import { LocalStorage, useQuasar } from "quasar"
-import { useCreations } from "src/stores/imageCreationsStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
 
 export default defineComponent({
   data() {
     return {
       quasar: useQuasar(),
-      creationsStore: useCreations(),
+      creationsStore: useImageCreations(),
       aspectRatios,
       imageModels,
       gridModeOptions: [

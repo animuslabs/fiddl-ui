@@ -98,3 +98,52 @@ export interface TranscriptionLineEvent {
   type: "transcriptLine" | "tempTranscriptLine"
   data: TranscriptLine | TranscriptLine[]
 }
+
+export type BaseCreationRequest = {
+  id: string
+  mediaIds: string[]
+  createdAt: Date
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  prompt?: string
+  seed?: number
+  model?: string
+  quantity: number
+}
+type ImageCreationExtension = {
+  type: "image"
+  negativePrompt?: string
+  customModelId?: string
+  customModelName?: string
+}
+
+type VideoCreationExtension = {
+  type: "video"
+  duration?: number
+}
+export type UnifiedCreationRequest = (BaseCreationRequest & ImageCreationExtension) | (BaseCreationRequest & VideoCreationExtension)
+
+export type UnifiedCreation = {
+  id: string
+  mediaIds: string[]
+  createdAt: Date
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  prompt?: string
+  seed?: number
+  model?: string
+  quantity: number
+
+  // Image-only optional fields
+  negativePrompt?: string
+  customModelId?: string
+  customModelName?: string
+
+  // Video-only optional fields
+  duration?: number
+
+  // Helpful for filtering or UI branching
+  type: "image" | "video"
+}

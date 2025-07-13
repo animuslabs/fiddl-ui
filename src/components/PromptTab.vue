@@ -78,6 +78,7 @@ import { useCreateVideoStore } from "src/stores/createVideoStore"
 import imageGallery from "lib/imageGallery"
 import MediaGallery from "src/components/MediaGallery.vue"
 import { img } from "lib/netlifyImg"
+import type { UnifiedCreation } from "lib/types"
 export default defineComponent({
   name: "PromptTab",
   components: {
@@ -100,7 +101,7 @@ export default defineComponent({
       createImageStore: useCreateImageStore(),
       createVideoStore: useCreateVideoStore(),
       createMode: false,
-      selectedRequest: null as CreateImageRequestData | null,
+      selectedRequest: null as UnifiedCreation | null,
       showRequest: false,
       gridMode: "mosaic" as "list" | "grid" | "mosaic",
       currentTab: "image" as "image" | "video",

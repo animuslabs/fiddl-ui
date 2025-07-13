@@ -9,6 +9,7 @@ import type { CreateImageRequestWithCustomModel } from "src/stores/createImageSt
 import type { AspectRatio, ImageModel, VideoModel, VideoModelData } from "lib/imageModels"
 import type { VideoPurchase, Image, Video } from "lib/api"
 import { catchErr } from "lib/util"
+import type { UnifiedCreation } from "lib/types"
 
 interface SceneConfig {
   number: number
@@ -34,7 +35,7 @@ interface CreationVideo {
 
 export const useVideoCreations = defineStore("videoCreationsStore", {
   state: () => ({
-    creations: [] as CreateVideoRequestData[],
+    creations: [] as UnifiedCreation[],
     imagePurchases: [] as VideoPurchase[],
     favorites: [] as Video[],
     favoritesCollectionId: null as string | null,
@@ -53,13 +54,13 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
       return !!this.filter.aspectRatio || !!this.filter.model
     },
     allCreations(): CreationVideo[] {
-      const images: CreationVideo[] = []
+      const videos: CreationVideo[] = []
       for (const creation of this.creations) {
-        for (const videoId of creation.videoIds) {
-          images.push({ id: videoId, creationId: creation.id })
+        for (const videoId of creation.mediaIds) {
+          videos.push({ id: videoId, creationId: creation.id })
         }
       }
-      return images
+      return videos
     },
   },
   actions: {
@@ -82,15 +83,19 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
     deleteImage(imageId: string, creationId: string) {
       const creation = this.creations.find((i) => i.id === creationId)
       if (!creation) return
-      const index = creation.videoIds.findIndex((id) => id === imageId)
+      const index = creation.mediaIds.findIndex((id) => id === imageId)
       console.log("deleted image index", index)
       if (index === -1) return
-      creation.videoIds.splice(index, 1)
+      creation.mediaIds.splice(index, 1)
     },
     addItem(item: CreateVideoRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return
-      this.creations.push(item)
+      this.creations.push({
+        ...item,
+        type: "video",
+        mediaIds: item.videoIds,
+      })
     },
     reset() {
       this.creations = []
@@ -210,12 +215,13 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
 
       if (!result) return
 
-      const createdItem: CreateVideoRequestData = {
+      const createdItem: UnifiedCreation = {
         ...request,
-        videoIds: result.videos.map((el) => el.id).reverse(),
+        mediaIds: result.videos.map((el) => el.id).reverse(),
         id: result.id,
         createdAt: new Date(),
         creatorId,
+        type: "video",
       }
 
       this.creations.unshift(createdItem)

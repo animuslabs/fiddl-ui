@@ -101,7 +101,7 @@ export const useBrowserStore = defineStore("browserStore", {
           endDateTime: lastItem?.createdAt ? lastItem.createdAt.toISOString() : undefined,
           limit: 100,
           promptIncludes: this.search?.length ? this.search : undefined,
-          aspectRatio: this.filter.aspectRatio || undefined,
+          aspectRatio: (this.filter.aspectRatio as any) || undefined,
           model: this.filter.model || undefined,
           randomSeed: this.filter.sort == "shuffle" ? this.randomSeed : undefined,
           sortMethod: this.filter.sort,
@@ -151,7 +151,7 @@ export const useBrowserStore = defineStore("browserStore", {
           startDateTime: startDateTime ? startDateTime.toISOString() : undefined,
           limit: 100,
           promptIncludes: this.search?.length ? this.search : undefined,
-          aspectRatio: this.filter.aspectRatio || undefined,
+          aspectRatio: (this.filter.aspectRatio as any) || undefined,
           model: this.filter.model || undefined,
           sortMethod: this.filter.sort,
         })
