@@ -2,7 +2,7 @@ import { openDB, IDBPDatabase } from "idb"
 
 const CACHE_DB_NAME = "ImageCacheDB"
 const CACHE_STORE_NAME = "ImageStore"
-const MAX_CACHE_SIZE = 30 * 1024 * 1024
+const MAX_CACHE_SIZE = 256 * 1024 * 1024
 
 /**
  * Open or initialize the IndexedDB.

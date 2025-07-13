@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
 
 export interface MediaGalleryMeta {
   id: string
   url: string
-  aspectRatio?: number // optional, used for mosaic layout
+  aspectRatio?: number
 }
 
 const props = withDefaults(
@@ -34,11 +34,11 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "select", id: string): void
+  (e: "selectedIndex", id: number): void
 }>()
 
 const $q = useQuasar()
 const isMobile = computed(() => $q.screen.lt.md)
-// const cols = computed(() => (isMobile.value ? props.colsMobile : props.colsDesktop))
 const cols = computed(() => {
   if ($q.screen.lt.sm) return 2
   if ($q.screen.lt.md) return 5
@@ -59,38 +59,38 @@ const wrapperStyles = computed(() => ({
     : {}),
 }))
 
-const imgStyles = computed(() => {
-  const base = {
-    width: "100%",
-    objectFit: "cover" as const,
-  }
-
-  if (props.layout === "grid") {
-    return {
-      ...base,
-      height: `${thumbSize.value}px`,
-      width: `${thumbSize.value}px`,
-    }
-  }
-
-  // Let mosaic layout expand based on grid row height
-  return {
-    ...base,
-    height: "100%",
-  }
-})
+const imgStyles = computed(() =>
+  props.layout === "grid"
+    ? {
+        width: `${thumbSize.value}px`,
+        height: `${thumbSize.value}px`,
+        objectFit: "cover",
+      }
+    : {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      },
+)
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
 
-onMounted(async () => {
+async function buildItems(src: MediaGalleryMeta[]) {
   galleryItems.value = await Promise.all(
-    props.mediaObjects.map(async (item) => {
-      const ratio = await getImageAspectRatio(item.url)
-      console.log(ratio)
-      return { ...item, aspectRatio: ratio }
-    }),
+    src.map(async (item) => ({
+      ...item,
+      aspectRatio: await getImageAspectRatio(item.url),
+    })),
   )
-})
+}
+
+watch(
+  () => props.mediaObjects,
+  (val) => {
+    void buildItems(val)
+  },
+  { immediate: true, deep: true },
+)
 
 async function getImageAspectRatio(url: string): Promise<number> {
   return new Promise((resolve) => {
@@ -100,6 +100,7 @@ async function getImageAspectRatio(url: string): Promise<number> {
     img.src = url
   })
 }
+
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
   const aspect = m.aspectRatio ?? 1
@@ -113,15 +114,15 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
 <template lang="pug">
 .full-width(:style="wrapperStyles")
   div(
-    v-for="m in galleryItems"
+    v-for="(m, index) in galleryItems"
     :key="m.id"
     :style="getItemStyle(m)"
   )
     q-img(
       :src="m.url"
       :style="imgStyles"
-      @click="emit('select', m.id)"
+      @click="emit('select', m.id); emit('selectedIndex', index)"
       spinner-color="white"
-      :class="selectable ? 'cursor-pointer':''"
+      :class="props.selectable ? 'cursor-pointer' : ''"
     )
 </template>

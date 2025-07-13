@@ -19,16 +19,19 @@
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
                 .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
+                  q-separator(vertical)
                   //- small Model Filter:
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
                   q-btn(label="create" size="sm" color="primary" rounded v-if="quasar.screen.lt.md" @click="createMode = true")
 
             .centered
-              div(v-if="!gridMode" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
+              div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
                 ImageRequestCard.bg-black(:creation="creation")
-              div(v-else v-for="creation in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
-                CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId)")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="7" :thumb-size-desktop="160"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" style="width:400px;" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
+              //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
+              //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")
             q-btn(
               label="Load More"
@@ -66,18 +69,22 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateImageStore } from "src/stores/createImageStore"
-import { toObject } from "lib/util"
+import { toObject, sleep } from "lib/util"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
 import { useCreateVideo } from "lib/orval"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
+import imageGallery from "lib/imageGallery"
+import MediaGallery from "src/components/MediaGallery.vue"
+import { img } from "lib/netlifyImg"
 export default defineComponent({
   name: "PromptTab",
   components: {
     CreateCard,
     ImageRequestCard,
     CreatedImageCard,
+    MediaGallery,
   },
   props: {
     customModel: {
@@ -88,23 +95,32 @@ export default defineComponent({
   },
   data() {
     return {
+      img,
       quasar: useQuasar(),
       createImageStore: useCreateImageStore(),
       createVideoStore: useCreateVideoStore(),
       createMode: false,
       selectedRequest: null as CreateImageRequestData | null,
       showRequest: false,
-      gridMode: false,
+      gridMode: "list" as "list" | "grid" | "mosaic",
       currentTab: "image" as "image" | "video",
       gridModeOptions: [
-        { icon: "grid_view", value: true },
-        { icon: "list", value: false },
+        { icon: "dashboard", value: "mosaic" },
+        { icon: "grid_view", value: "grid" },
+        { icon: "list", value: "list" },
       ],
       imageCreations: useImageCreations(),
       videoCreations: useVideoCreations(),
     }
   },
   computed: {
+    allMediaObjects() {
+      const data = this.activeCreationsStore.allCreations.map((el) => {
+        return { id: el.id, url: img(el.id, "md") }
+      })
+      console.log(data)
+      return data
+    },
     activeCreateStore() {
       return match(this.currentTab)
         .with("image", () => this.createImageStore)
@@ -135,28 +151,40 @@ export default defineComponent({
     },
   },
   watch: {
+    "activeCreateStore.state.req.model": {
+      handler(val: string) {
+        this.activeCreationsStore.filter.model = val as any
+        this.activeCreationsStore.dynamicModel = true
+        // this.activeCreationsStore.searchCreations()
+      },
+      immediate: true,
+    },
     "$q.screen.lt.md"(val) {
       this.createMode = val
     },
-    // "activeCreationsStore.dynamicModel": {
-    //   handler(val: boolean) {
-    //     if (val) {
-    //       this.activeCreationsStore.filter.model = this.activeCreationsStore.state.req.model
-    //       if (this.activeImageStore) this.activeImageStore.filter.customModelId = this.createStore.state.req.customModelId
-    //     } else {
-    //       this.activeCreationsStore.filter.model = undefined
-    //       if (this.activeImageStore) this.activeImageStore.filter.customModelId = undefined
-    //     }
-    //     this.activeCreationsStore.searchCreations()
-    //   },
-    //   immediate: true,
-    // },
+    "activeCreationsStore.dynamicModel": {
+      handler(val: boolean) {
+        console.log("activeCreationsStore.dynamicModel toggled", val)
+        if (val) {
+          this.activeCreationsStore.filter.model = this.activeCreateStore.state.req.model
+          // if (this.activeImageStore) this.activeImageStore.filter.customModelId = this.createImageStore.state.req.customModelId
+          if (this.currentTab == "image") this.imageCreations.filter.customModelId = this.createImageStore.state.req.customModelId
+        } else {
+          this.activeCreationsStore.filter.model = undefined
+          if (this.currentTab == "image") this.imageCreations.filter.customModelId = undefined
+        }
+        this.activeCreationsStore.searchCreations()
+      },
+      immediate: true,
+      deep: true,
+    },
+
     gridMode(val) {
       // for (const creation of this.creationsStore.creations) {
       //   const card = this.$refs[creation.id] as InstanceType<typeof ImageRequestCard>[] | undefined
       //   if (card && card[0]) card[0].minimized.value = val
       // }
-      LocalStorage.set("creatPageGridMode", this.gridMode)
+      LocalStorage.set("createPageGridMode2", this.gridMode)
     },
     customModel: {
       immediate: true,
@@ -179,10 +207,14 @@ export default defineComponent({
       },
     },
   },
-  mounted() {
+  async mounted() {
     console.log("mounted promptTab, customModel", this.customModel)
     if (this.quasar.screen.lt.md) this.createMode = true
-    this.gridMode = LocalStorage.getItem("creatPageGridMode") || false
+    console.log("grid mode", LocalStorage.getItem("createPageGridMode2"))
+    // await sleep(1000)
+    void this.$nextTick(() => {
+      this.gridMode = LocalStorage.getItem("createPageGridMode2") || "grid"
+    })
   },
   methods: {
     isImageCreations(store: any): store is ReturnType<typeof useImageCreations> {
@@ -192,11 +224,15 @@ export default defineComponent({
       console.log("set active creations store:", activeTab)
       this.currentTab = activeTab
     },
-    showDetails(creationId: string) {
-      const creation = this.activeCreationsStore.creations.find((el) => el.id === creationId)
+    showDetails(imageIndex: number) {
+      const creation = this.activeCreationsStore.allCreations[0]
       if (!creation) return
-      this.selectedRequest = creation
-      this.showRequest = true
+      // this.selectedRequest = creation
+      // this.showRequest = true
+      void imageGallery.show(
+        this.activeCreationsStore.allCreations.map((el) => el.id),
+        imageIndex,
+      )
     },
     setReq(request: CreateImageRequest | CreateVideoRequest, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
