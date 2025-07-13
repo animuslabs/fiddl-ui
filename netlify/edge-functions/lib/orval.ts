@@ -205,9 +205,52 @@ export type CreateVideoBody = {
   startImageId?: string;
 };
 
+export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateVideo200VideosItemStatus = {
+  processing: 'processing',
+  previewRendering: 'previewRendering',
+  ready: 'ready',
+  errored: 'errored',
+} as const;
+
+export type CreateVideo200VideosItem = {
+  status: CreateVideo200VideosItemStatus;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  seed: string | null;
+  errored: boolean;
+  deleted: boolean;
+  videoRequestId: string;
+  /** @nullable */
+  replicatePredictionId: string | null;
+  /** @nullable */
+  coconutJobId: string | null;
+};
+
 export type CreateVideo200 = {
-  requestId?: string;
-  errors?: string[];
+  id: string;
+  userId: string;
+  prompt: string;
+  model: string;
+  aspectRatio: string;
+  duration: number;
+  /** @nullable */
+  seed: string | null;
+  /** @nullable */
+  negativePrompt: string | null;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+  public: boolean;
+  deleted: boolean;
+  /** @nullable */
+  error: string | null;
+  videos: CreateVideo200VideosItem[];
 };
 
 export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];

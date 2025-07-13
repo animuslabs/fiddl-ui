@@ -1,13 +1,14 @@
 import { defineStore } from "pinia"
 
-import { creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody, creationsCreateVideoRequests, creationsUserVideoPurchases, collectionsGetCollectionVideos } from "lib/orval"
-import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody, creationsCreateVideoRequests, creationsUserVideoPurchases, collectionsGetCollectionVideos, createVideo, type CreateVideo200 } from "lib/orval"
+import type { CreateImageRequestData, CreateVideoRequest, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import type { VideoRequest } from "fiddl-server/node_modules/@prisma/client"
 import { useUserAuth } from "src/stores/userAuth"
 import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import type { AspectRatio, ImageModel, VideoModel, VideoModelData } from "lib/imageModels"
 import type { VideoPurchase, Image, Video } from "lib/api"
+import { catchErr } from "lib/util"
 
 interface SceneConfig {
   number: number
@@ -193,30 +194,25 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
         throw error
       }
     },
-    async generateImage(request: CreateImageRequestWithCustomModel) {
+    async generateVideo(request: CreateVideoRequest) {
       const creatorId = useUserAuth().userId
       if (!creatorId) throw new Error("User not authenticated")
       if (!request.prompt) throw new Error("Prompt is required")
       if (typeof request.prompt !== "string") throw new Error("Prompt must be a string")
+      let response
+      try {
+        response = await createVideo(request as any)
+      } catch (err: any) {
+        catchErr(err)
+      }
 
-      const response = await createImage(request as CreateImageBody)
-      const result = response.data
+      const result: CreateVideo200 = response.data
 
       if (!result) return
-      if (result.errors && result.errors.length > 0) {
-        for (const err of result.errors) {
-          Dialog.create({
-            title: "Error",
-            message: err,
-            ok: true,
-            color: "negative",
-          })
-        }
-      }
 
       const createdItem: CreateVideoRequestData = {
         ...request,
-        videoIds: result.ids.reverse(),
+        videoIds: result.videos.map((el) => el.id).reverse(),
         id: result.id,
         createdAt: new Date(),
         creatorId,

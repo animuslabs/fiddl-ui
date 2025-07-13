@@ -9,6 +9,8 @@ import umami from "lib/umami"
 import { catchErr, toObject } from "lib/util"
 import { LocalStorage } from "quasar"
 import z from "zod"
+import { match } from "ts-pattern"
+import { useVideoCreations } from "src/stores/videoCreationsStore"
 
 export const createVideoRequestSchema = z
   .object({
@@ -54,6 +56,7 @@ const getDefaultState = () => {
 export const useCreateVideoStore = defineStore("createVideoStore", () => {
   const state = reactive(getDefaultState())
   const userAuth = useUserAuth()
+  const creations = useVideoCreations()
 
   watch(
     () => state.req.model,
@@ -95,11 +98,11 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
   })
 
   const availableDurations = computed(() => {
-    const model = state.req.model
-    if (model === "veo-3") return [8]
-    if (model === "kling" || model === "seedance-pro") return [5, 10]
-    if (model === "veo-2") return [5, 6, 7, 8]
-    return []
+    return match(state.req.model)
+      .with("veo-3", () => [8])
+      .with("kling", "seedance-pro", "seedance-lite", () => [5, 10])
+      .with("veo-2", () => [5, 6, 7, 8])
+      .exhaustive()
   })
 
   const selectedModelPrice = computed(() => {
@@ -112,11 +115,22 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
     return cost.value * duration * state.req.quantity
   })
 
+  // async function createVideoRequest() {
+  //   console.log("create video", state.req)
+  //   const result = await createVideo({ ...state.req })
+  //   console.log(result)
+  //   creations.addItem
+  //   // addCre
+  // }
+
   async function createVideoRequest() {
-    console.log("create video", state.req)
-    // implement video creation logic here
-    const result = await createVideo({ ...state.req })
-    console.log(result)
+    state.loading.create = true
+    LocalStorage.set("req", state.req)
+    if (typeof state.req.seed !== "number") state.req.seed = undefined
+    await creations.generateVideo(toObject(state.req)).catch(catchErr)
+    state.loading.create = false
+    await userAuth.loadUserData()
+    umami.track("createImage")
   }
 
   async function newPrompt() {

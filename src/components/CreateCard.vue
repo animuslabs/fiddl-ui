@@ -8,7 +8,7 @@
         q-separator
         q-tab-panels.bg-transparent(v-model="activeTab" animated swipeable)
           q-tab-panel(name="image" class="column fit" style="padding:0px;")
-            ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')" @created="emit('created')")
+            ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
           q-tab-panel(name="video")
             VideoForm(@back="$emit('back')" @created="emit('created')")
     q-dialog(v-model="showModelPicker")

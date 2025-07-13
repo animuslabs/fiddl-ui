@@ -28,7 +28,7 @@
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
                 ImageRequestCard.bg-black(:creation="creation")
-              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="7" :thumb-size-desktop="160"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="6" :thumb-size-desktop="165"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
               MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" style="width:400px;" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
@@ -102,7 +102,7 @@ export default defineComponent({
       createMode: false,
       selectedRequest: null as CreateImageRequestData | null,
       showRequest: false,
-      gridMode: "list" as "list" | "grid" | "mosaic",
+      gridMode: "mosaic" as "list" | "grid" | "mosaic",
       currentTab: "image" as "image" | "video",
       gridModeOptions: [
         { icon: "dashboard", value: "mosaic" },
@@ -154,8 +154,9 @@ export default defineComponent({
     "activeCreateStore.state.req.model": {
       handler(val: string) {
         this.activeCreationsStore.filter.model = val as any
-        this.activeCreationsStore.dynamicModel = true
-        // this.activeCreationsStore.searchCreations()
+        if (!this.activeCreationsStore.dynamicModel) {
+          this.activeCreationsStore.dynamicModel = true
+        } else this.activeCreationsStore.searchCreations()
       },
       immediate: true,
     },
@@ -248,7 +249,7 @@ export default defineComponent({
       const latestCreation = this.activeCreationsStore.creations[0]
       if (!latestCreation) return
       console.log(latestCreation)
-      if (this.gridMode) this.showDetails(latestCreation.id)
+      // if (this.gridMode) this.showDetails(latestCreation.id)
     },
   },
 })
