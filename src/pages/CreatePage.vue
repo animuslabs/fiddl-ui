@@ -18,7 +18,7 @@ import { timeSince } from "lib/util"
 import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"
 import UploaderCard from "src/components/UploaderCard.vue"
-import { creationsCreateRequest, creationsImageData, modelsGetModel } from "src/lib/orval"
+import { creationsCreateRequest, creationsGetCreationData, modelsGetModel } from "src/lib/orval"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
 import { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
@@ -49,12 +49,11 @@ export default defineComponent({
         const targetImageId = this.$route.query?.imageId
         const encodedRequestData = this.$route.query?.requestData
         if (targetImageId && typeof targetImageId == "string") {
-          const imageResponse = await creationsImageData({ imageId: targetImageId })
+          const imageResponse = await creationsGetCreationData({ imageId: targetImageId })
           const imageMeta = imageResponse?.data
           console.log("imageMeta", imageMeta)
           if (!imageMeta) return
-
-          const requestResponse = await creationsCreateRequest({ requestId: imageMeta.imageRequestId })
+          const requestResponse = await creationsCreateRequest({ requestId: imageMeta.requestId })
           const requestMeta = requestResponse?.data as any
           if (!requestMeta) return
           // console.log(imageMeta, requestMeta)

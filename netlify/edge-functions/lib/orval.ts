@@ -139,6 +139,8 @@ export const CreateImageBodyAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreateImageBody = {
@@ -188,6 +190,8 @@ export const CreateVideoBodyAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreateVideoBody = {
@@ -264,7 +268,7 @@ export const CreateRandomPromptBodyType = {
 
 export type CreateRandomPromptBody = {
   theme?: string;
-  type: CreateRandomPromptBodyType;
+  type?: CreateRandomPromptBodyType;
 };
 
 export type CreateImprovePromptBodyType = typeof CreateImprovePromptBodyType[keyof typeof CreateImprovePromptBodyType];
@@ -278,17 +282,18 @@ export const CreateImprovePromptBodyType = {
 
 export type CreateImprovePromptBody = {
   prompt: string;
-  type: CreateImprovePromptBodyType;
+  type?: CreateImprovePromptBodyType;
 };
 
-export type CreationsImageDataParams = {
-imageId: string;
+export type CreationsGetCreationDataParams = {
+imageId?: string;
+videoId?: string;
 };
 
-export type CreationsImageData200 = {
+export type CreationsGetCreationData200 = {
   id: string;
   createdAt: string;
-  imageRequestId: string;
+  requestId: string;
   seed?: number;
   creatorId: string;
   numCollections: number;
@@ -352,6 +357,8 @@ export const CreationsUserImagePurchasesAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreationsUserImagePurchases200Item = {
@@ -419,6 +426,8 @@ export const CreationsUserVideoPurchasesAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreationsUserVideoPurchases200Item = {
@@ -486,6 +495,8 @@ export const CreationsCreateImageRequestsAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreationsCreateImageRequests200Item = {
@@ -562,6 +573,8 @@ export const CreationsCreateVideoRequestsAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreationsCreateVideoRequests200Item = {
@@ -657,6 +670,8 @@ export const CreationsBrowseCreateRequestsAspectRatio = {
   '5:4': '5:4',
   '9:16': '9:16',
   '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
 } as const;
 
 export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
@@ -671,6 +686,10 @@ export const CreationsBrowseCreateRequestsSortMethod = {
 
 export type CreationsHdImageParams = {
 imageId: string;
+};
+
+export type CreationsHdVideoParams = {
+videoId: string;
 };
 
 export type CreationsOriginalImageParams = {
@@ -692,8 +711,9 @@ export type CreationsPurchaseImage200 = {
   createdAt: string;
 };
 
-export type CreationsDeleteImageBody = {
-  imageId: string;
+export type CreationsDeleteMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
 export type CreationsDeleteRequestBody = {
@@ -1359,9 +1379,10 @@ export type StatsPayments200 = {
   paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
 };
 
-export type CollectionsImageInUsersCollectionParams = {
+export type CollectionsMediaInUsersCollectionParams = {
+imageId?: string;
+videoId?: string;
 name: string;
-imageId: string;
 };
 
 export type CollectionsLikeImageBody = {
@@ -2321,43 +2342,43 @@ export const createImprovePrompt = async (createImprovePromptBody: CreateImprove
 
 
 
-export type creationsImageDataResponse200 = {
-  data: CreationsImageData200
+export type creationsGetCreationDataResponse200 = {
+  data: CreationsGetCreationData200
   status: 200
 }
 
-export type creationsImageDataResponse400 = {
+export type creationsGetCreationDataResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type creationsImageDataResponse401 = {
+export type creationsGetCreationDataResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type creationsImageDataResponse403 = {
+export type creationsGetCreationDataResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type creationsImageDataResponse404 = {
+export type creationsGetCreationDataResponse404 = {
   data: ErrorNOTFOUND
   status: 404
 }
 
-export type creationsImageDataResponse500 = {
+export type creationsGetCreationDataResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type creationsImageDataResponseComposite = creationsImageDataResponse200 | creationsImageDataResponse400 | creationsImageDataResponse401 | creationsImageDataResponse403 | creationsImageDataResponse404 | creationsImageDataResponse500;
+export type creationsGetCreationDataResponseComposite = creationsGetCreationDataResponse200 | creationsGetCreationDataResponse400 | creationsGetCreationDataResponse401 | creationsGetCreationDataResponse403 | creationsGetCreationDataResponse404 | creationsGetCreationDataResponse500;
     
-export type creationsImageDataResponse = creationsImageDataResponseComposite & {
+export type creationsGetCreationDataResponse = creationsGetCreationDataResponseComposite & {
   headers: Headers;
 }
 
-export const getCreationsImageDataUrl = (params: CreationsImageDataParams,) => {
+export const getCreationsGetCreationDataUrl = (params?: CreationsGetCreationDataParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2369,12 +2390,12 @@ export const getCreationsImageDataUrl = (params: CreationsImageDataParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/imageData?${stringifiedParams}` : `https://api.fiddl.art/api/creations/imageData`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getCreationData?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getCreationData`
 }
 
-export const creationsImageData = async (params: CreationsImageDataParams, options?: RequestInit): Promise<creationsImageDataResponse> => {
+export const creationsGetCreationData = async (params?: CreationsGetCreationDataParams, options?: RequestInit): Promise<creationsGetCreationDataResponse> => {
   
-  const res = await fetch(getCreationsImageDataUrl(params),
+  const res = await fetch(getCreationsGetCreationDataUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -2384,9 +2405,9 @@ export const creationsImageData = async (params: CreationsImageDataParams, optio
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsImageDataResponse['data'] = body ? JSON.parse(body) : {}
+  const data: creationsGetCreationDataResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as creationsImageDataResponse
+  return { data, status: res.status, headers: res.headers } as creationsGetCreationDataResponse
 }
 
 
@@ -2881,6 +2902,76 @@ export const creationsHdImage = async (params: CreationsHdImageParams, options?:
 
 
 
+export type creationsHdVideoResponse200 = {
+  data: string
+  status: 200
+}
+
+export type creationsHdVideoResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type creationsHdVideoResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type creationsHdVideoResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type creationsHdVideoResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type creationsHdVideoResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type creationsHdVideoResponseComposite = creationsHdVideoResponse200 | creationsHdVideoResponse400 | creationsHdVideoResponse401 | creationsHdVideoResponse403 | creationsHdVideoResponse404 | creationsHdVideoResponse500;
+    
+export type creationsHdVideoResponse = creationsHdVideoResponseComposite & {
+  headers: Headers;
+}
+
+export const getCreationsHdVideoUrl = (params: CreationsHdVideoParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/hdVideo?${stringifiedParams}` : `https://api.fiddl.art/api/creations/hdVideo`
+}
+
+export const creationsHdVideo = async (params: CreationsHdVideoParams, options?: RequestInit): Promise<creationsHdVideoResponse> => {
+  
+  const res = await fetch(getCreationsHdVideoUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: creationsHdVideoResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as creationsHdVideoResponse
+}
+
+
+
 export type creationsOriginalImageResponse200 = {
   data: string
   status: 200
@@ -3080,61 +3171,61 @@ export const creationsPurchaseImage = async (creationsPurchaseImageBody: Creatio
 
 
 
-export type creationsDeleteImageResponse200 = {
+export type creationsDeleteMediaResponse200 = {
   data: boolean
   status: 200
 }
 
-export type creationsDeleteImageResponse400 = {
+export type creationsDeleteMediaResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type creationsDeleteImageResponse401 = {
+export type creationsDeleteMediaResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type creationsDeleteImageResponse403 = {
+export type creationsDeleteMediaResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type creationsDeleteImageResponse500 = {
+export type creationsDeleteMediaResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type creationsDeleteImageResponseComposite = creationsDeleteImageResponse200 | creationsDeleteImageResponse400 | creationsDeleteImageResponse401 | creationsDeleteImageResponse403 | creationsDeleteImageResponse500;
+export type creationsDeleteMediaResponseComposite = creationsDeleteMediaResponse200 | creationsDeleteMediaResponse400 | creationsDeleteMediaResponse401 | creationsDeleteMediaResponse403 | creationsDeleteMediaResponse500;
     
-export type creationsDeleteImageResponse = creationsDeleteImageResponseComposite & {
+export type creationsDeleteMediaResponse = creationsDeleteMediaResponseComposite & {
   headers: Headers;
 }
 
-export const getCreationsDeleteImageUrl = () => {
+export const getCreationsDeleteMediaUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/creations/deleteImage`
+  return `https://api.fiddl.art/api/creations/deleteMedia`
 }
 
-export const creationsDeleteImage = async (creationsDeleteImageBody: CreationsDeleteImageBody, options?: RequestInit): Promise<creationsDeleteImageResponse> => {
+export const creationsDeleteMedia = async (creationsDeleteMediaBody: CreationsDeleteMediaBody, options?: RequestInit): Promise<creationsDeleteMediaResponse> => {
   
-  const res = await fetch(getCreationsDeleteImageUrl(),
+  const res = await fetch(getCreationsDeleteMediaUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      creationsDeleteImageBody,)
+      creationsDeleteMediaBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsDeleteImageResponse['data'] = body ? JSON.parse(body) : {}
+  const data: creationsDeleteMediaResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as creationsDeleteImageResponse
+  return { data, status: res.status, headers: res.headers } as creationsDeleteMediaResponse
 }
 
 
@@ -5177,43 +5268,43 @@ export const statsApiMetrics = async ( options?: RequestInit): Promise<statsApiM
 
 
 
-export type collectionsImageInUsersCollectionResponse200 = {
+export type collectionsMediaInUsersCollectionResponse200 = {
   data: boolean
   status: 200
 }
 
-export type collectionsImageInUsersCollectionResponse400 = {
+export type collectionsMediaInUsersCollectionResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type collectionsImageInUsersCollectionResponse401 = {
+export type collectionsMediaInUsersCollectionResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type collectionsImageInUsersCollectionResponse403 = {
+export type collectionsMediaInUsersCollectionResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type collectionsImageInUsersCollectionResponse404 = {
+export type collectionsMediaInUsersCollectionResponse404 = {
   data: ErrorNOTFOUND
   status: 404
 }
 
-export type collectionsImageInUsersCollectionResponse500 = {
+export type collectionsMediaInUsersCollectionResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type collectionsImageInUsersCollectionResponseComposite = collectionsImageInUsersCollectionResponse200 | collectionsImageInUsersCollectionResponse400 | collectionsImageInUsersCollectionResponse401 | collectionsImageInUsersCollectionResponse403 | collectionsImageInUsersCollectionResponse404 | collectionsImageInUsersCollectionResponse500;
+export type collectionsMediaInUsersCollectionResponseComposite = collectionsMediaInUsersCollectionResponse200 | collectionsMediaInUsersCollectionResponse400 | collectionsMediaInUsersCollectionResponse401 | collectionsMediaInUsersCollectionResponse403 | collectionsMediaInUsersCollectionResponse404 | collectionsMediaInUsersCollectionResponse500;
     
-export type collectionsImageInUsersCollectionResponse = collectionsImageInUsersCollectionResponseComposite & {
+export type collectionsMediaInUsersCollectionResponse = collectionsMediaInUsersCollectionResponseComposite & {
   headers: Headers;
 }
 
-export const getCollectionsImageInUsersCollectionUrl = (params: CollectionsImageInUsersCollectionParams,) => {
+export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -5225,12 +5316,12 @@ export const getCollectionsImageInUsersCollectionUrl = (params: CollectionsImage
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/imageInUsersCollection?${stringifiedParams}` : `https://api.fiddl.art/api/collections/imageInUsersCollection`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/mediaInUsersCollection?${stringifiedParams}` : `https://api.fiddl.art/api/collections/mediaInUsersCollection`
 }
 
-export const collectionsImageInUsersCollection = async (params: CollectionsImageInUsersCollectionParams, options?: RequestInit): Promise<collectionsImageInUsersCollectionResponse> => {
+export const collectionsMediaInUsersCollection = async (params: CollectionsMediaInUsersCollectionParams, options?: RequestInit): Promise<collectionsMediaInUsersCollectionResponse> => {
   
-  const res = await fetch(getCollectionsImageInUsersCollectionUrl(params),
+  const res = await fetch(getCollectionsMediaInUsersCollectionUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -5240,9 +5331,9 @@ export const collectionsImageInUsersCollection = async (params: CollectionsImage
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsImageInUsersCollectionResponse['data'] = body ? JSON.parse(body) : {}
+  const data: collectionsMediaInUsersCollectionResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as collectionsImageInUsersCollectionResponse
+  return { data, status: res.status, headers: res.headers } as collectionsMediaInUsersCollectionResponse
 }
 
 

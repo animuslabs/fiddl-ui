@@ -6,6 +6,7 @@ export interface MediaGalleryMeta {
   id: string
   url: string
   aspectRatio?: number
+  type?: "image" | "video"
 }
 
 const props = withDefaults(
@@ -59,28 +60,47 @@ const wrapperStyles = computed(() => ({
     : {}),
 }))
 
-const imgStyles = computed(() =>
-  props.layout === "grid"
-    ? {
-        width: `${thumbSize.value}px`,
-        height: `${thumbSize.value}px`,
-        objectFit: "cover",
-      }
-    : {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      },
-)
+const mediaStyles = computed(() => {
+  const style =
+    props.layout === "grid"
+      ? {
+          width: `${thumbSize.value}px`,
+          height: `${thumbSize.value}px`,
+          "object-fit": "cover",
+          display: "block",
+        }
+      : {
+          width: "100%",
+          height: "100%",
+          "object-fit": "cover",
+          display: "block",
+        }
+
+  return Object.entries(style)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(";")
+})
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
 
+async function getVideoAspectRatio(url: string): Promise<number> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video")
+    video.onloadedmetadata = () => {
+      resolve(video.videoWidth / video.videoHeight || 1)
+    }
+    video.onerror = () => resolve(1)
+    video.src = url
+  })
+}
+
 async function buildItems(src: MediaGalleryMeta[]) {
   galleryItems.value = await Promise.all(
-    src.map(async (item) => ({
-      ...item,
-      aspectRatio: await getImageAspectRatio(item.url),
-    })),
+    src.map(async (item) => {
+      const type = item.type ?? getMediaType(item.url)
+      const aspectRatio = item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url))
+      return { ...item, type, aspectRatio }
+    }),
   )
 }
 
@@ -91,6 +111,10 @@ watch(
   },
   { immediate: true, deep: true },
 )
+
+function getMediaType(url: string): "image" | "video" {
+  return url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) ? "video" : "image"
+}
 
 async function getImageAspectRatio(url: string): Promise<number> {
   return new Promise((resolve) => {
@@ -119,10 +143,22 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
     :style="getItemStyle(m)"
   )
     q-img(
+      v-if="m.type === 'image'"
       :src="m.url"
-      :style="imgStyles"
+      :style="mediaStyles"
       @click="emit('select', m.id); emit('selectedIndex', index)"
       spinner-color="white"
+      :class="props.selectable ? 'cursor-pointer' : ''"
+    )
+    video(
+      v-else
+      :src="m.url"
+      :style="mediaStyles"
+      loop
+      autoplay
+      muted
+      plays-inline
+      @click="emit('select', m.id); emit('selectedIndex', index)"
       :class="props.selectable ? 'cursor-pointer' : ''"
     )
 </template>

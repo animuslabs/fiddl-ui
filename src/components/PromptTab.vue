@@ -27,7 +27,7 @@
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
-                ImageRequestCard.bg-black(:creation="creation")
+                ImageRequestCard(:creation="creation")
               MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="6" :thumb-size-desktop="165"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
               MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" style="width:400px;" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
@@ -77,7 +77,7 @@ import { useCreateVideo } from "lib/orval"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import imageGallery from "lib/imageGallery"
 import MediaGallery from "src/components/MediaGallery.vue"
-import { img } from "lib/netlifyImg"
+import { img, s3Video } from "lib/netlifyImg"
 import type { UnifiedCreation } from "lib/types"
 export default defineComponent({
   name: "PromptTab",
@@ -117,7 +117,8 @@ export default defineComponent({
   computed: {
     allMediaObjects() {
       const data = this.activeCreationsStore.allCreations.map((el) => {
-        return { id: el.id, url: img(el.id, "md") }
+        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md") }
+        else return { id: el.id, url: s3Video(`previewVideos/${el.id}/preview.webm`) }
       })
       console.log(data)
       return data

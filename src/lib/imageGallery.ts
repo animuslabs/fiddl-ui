@@ -1,8 +1,9 @@
 import { Dialog } from "quasar"
 import ImageGallery from "src/components/dialogs/ImageGallery.vue"
+import MediaViewer from "src/components/MediaViewer/MediaViewer.vue"
 
 const imageGallery = {
-  show(imageIds: string[], startIndex = 0, imageRequestId?: string, creatorMeta?: { id: string; username: string }) {
+  show(mediaIds: string[], startIndex = 0, type = "image" as "image" | "video", imageRequestId?: string) {
     return new Promise<void>((res) => {
       Dialog.create({
         component: ImageGallery,
@@ -10,10 +11,10 @@ const imageGallery = {
         // fullWidth: true,
         maximized: true,
         componentProps: {
-          imageIds,
+          mediaIds,
           startIndex,
+          type,
           imageRequestId,
-          creatorMeta,
         },
       }).onDismiss(() => {
         // void router.replace({ query: {} })

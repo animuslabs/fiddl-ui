@@ -4,7 +4,7 @@ import type {
   CollectionsGetCollectionImagesQueryResult,
   CollectionsGetCollectionVideosQueryResult,
   CreationsCreateRequestQueryResult,
-  CreationsImageDataQueryResult,
+  CreationsGetCreationDataQueryResult,
   CreationsUserImagePurchasesQueryResult,
   CreationsUserVideoPurchasesQueryResult,
   ModelsGetModelQueryResult,
@@ -64,7 +64,7 @@ export type PointsTransfer = UserPointsHistoryQueryResult["data"][number]
 export type ImagePurchase = CreationsUserImagePurchasesQueryResult["data"][number]
 export type VideoPurchase = CreationsUserVideoPurchasesQueryResult["data"][number]
 export type ImageCreateRequest = CreationsCreateRequestQueryResult["data"]
-export type ImageData = CreationsImageDataQueryResult["data"]
+export type ImageData = CreationsGetCreationDataQueryResult["data"]
 export type PromoCode = PromoGetPromoCodeDetailsQueryResult["data"]
 export type Image = CollectionsGetCollectionImagesQueryResult["data"][number]
 export type Video = CollectionsGetCollectionVideosQueryResult["data"][number]

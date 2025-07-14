@@ -73,7 +73,7 @@ export default defineComponent({
         console.log("targetIndex", targetIndex)
         if (targetIndex != undefined && typeof targetIndex == "string") {
           const creatorMeta = { id: req.creatorId, username: this.creatorUsername }
-          void imageGallery.show(this.creation.mediaIds, parseInt(targetIndex), this.creation.id, creatorMeta)
+          void imageGallery.show(this.creation.mediaIds, parseInt(targetIndex), "image", this.creation.id)
           // setSocialMetadata("Dynamic Page Title", "This is a dynamic description for social sharing.", img(this.creation.imageIds[parseInt(targetIndex)] as string, "md"))
         }
         const referrerAlreadySet = getReferredBy()

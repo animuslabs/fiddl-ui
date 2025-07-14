@@ -1,15 +1,18 @@
 <template lang="pug">
-q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
+q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-md.q-pl-md.q-pb-lg.bg-translucent
   //- div custom model id: {{ creation.customModelId }}
   //- div custom model name: {{ creation.customModelName }}
   .centered.full-width.q-pt-md(:style="quasar.screen.lt.md? `overflow:auto;`:'' ")
     div(v-if="creation.mediaIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent No images in this creation
-    .col( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:300px; min-width:200px;").gt-sm.q-pa-sm
-      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" )
-    .col( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:50vw; max-width:300px; min-width:100px; ").lt-md.q-pa-sm
-      CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" style="max-width:30vw;" )
+    .centered(v-if="creation.type == 'image'")
+      .col.gt-sm.q-pa-sm( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:300px; min-width:200px;")
+        CreatedImageCard.cursor-pointer(:imageId="imageId" @click="showGallery(index)" )
+      .col.lt-md.q-pa-sm( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:50vw; max-width:300px; min-width:100px; ")
+        CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" style="max-width:30vw;" )
+    .centered(v-else)
+      video.cursor-pointer(v-for="(videoId,index) in creation.mediaIds" autoplay loop muted playsinline :src="s3Video(s3Video(`previewVideos/${videoId}/preview.webm`))" @click="showGallery(index)")
   div(v-if="!minimized.value")
     q-separator(color="grey-9" spaced="20px")
     .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
@@ -65,7 +68,7 @@ q-card(style="overflow:auto;").q-mb-md.q-pr-md.q-pl-md.q-pb-lg
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import ImageGallery from "components/dialogs/ImageGallery.vue"
 import imageGallery from "lib/imageGallery"
-import { img } from "lib/netlifyImg"
+import { img, s3Video } from "lib/netlifyImg"
 import { catchErr, longIdToShort, timeSince } from "lib/util"
 import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
 import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetModel, userGetUsername } from "src/lib/orval"
@@ -106,6 +109,7 @@ export default defineComponent({
       timeSince,
       img,
       localCreatorUsername: this.creatorUsername,
+      s3Video,
     }
   },
   computed: {
@@ -175,19 +179,7 @@ export default defineComponent({
       const root = this.$root
       if (!root) return
       const images = this.creation.mediaIds
-      let creatorName = this.creatorUsername
-      if (creatorName.length == 0) {
-        try {
-          const response = await userGetUsername({ userId: this.creation.creatorId })
-          creatorName = response?.data || ""
-        } catch (error) {
-          console.error(error)
-          creatorName = ""
-        }
-      }
-
-      const creatorMeta = { id: this.creation.creatorId, username: creatorName }
-      await imageGallery.show(images, startIndex, this.creation.id, creatorMeta)
+      await imageGallery.show(images, startIndex, this.creation.type, this.creation.id)
       console.log("gallery closed,trigger reload event")
       this.$emit("reload")
     },
