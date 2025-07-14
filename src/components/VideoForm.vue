@@ -69,8 +69,8 @@
     q-card
       .q-ma-md
         .centered
-          h4.q-mb-md Create an video from any creation on Fiddl.art
-          p this feature is coming soon!
+          h4.q-mb-md Create a video from any creation on Fiddl.art
+          p This feature is coming soon!
         //-   p When viewing an image, select the video create button to turn the image into a video
         //- .centered.q-mt-md.q-gutter-md
         //-   q-btn(label="< back" outline color="secondary" @click="showImageDialog = false")
