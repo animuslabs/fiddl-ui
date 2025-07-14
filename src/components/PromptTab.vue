@@ -228,13 +228,14 @@ export default defineComponent({
       this.currentTab = activeTab
     },
     showDetails(imageIndex: number) {
-      const creation = this.activeCreationsStore.allCreations[0]
-      if (!creation) return
+      // const creation = this.activeCreationsStore.allCreations[0]
+      // if (!creation) return
       // this.selectedRequest = creation
       // this.showRequest = true
       void imageGallery.show(
         this.activeCreationsStore.allCreations.map((el) => el.id),
         imageIndex,
+        this.currentTab,
       )
     },
     setReq(request: CreateImageRequest | CreateVideoRequest, toggleCreateMode = false) {
