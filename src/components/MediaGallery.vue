@@ -32,7 +32,7 @@ const props = withDefaults(
     rowHeightRatio: 1.2,
   },
 )
-
+const videoLoading = ref<Record<string, boolean>>({})
 const emit = defineEmits<{
   (e: "select", id: string): void
   (e: "selectedIndex", id: number): void
@@ -94,10 +94,19 @@ async function getVideoAspectRatio(url: string): Promise<number> {
   })
 }
 
+function markVideoLoaded(id: string) {
+  delete videoLoading.value[id]
+}
+
+function markVideoErrored(id: string) {
+  videoLoading.value[id] = true
+}
+
 async function buildItems(src: MediaGalleryMeta[]) {
   galleryItems.value = await Promise.all(
     src.map(async (item) => {
       const type = item.type ?? getMediaType(item.url)
+      if (type == "video") videoLoading.value[item.id] = true
       const aspectRatio = item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url))
       return { ...item, type, aspectRatio }
     }),
@@ -133,6 +142,15 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
     gridColumnEnd: aspect > 1.5 ? "span 2" : undefined,
   }
 }
+const videoReloadKey = ref<Record<string, number>>({})
+
+setInterval(() => {
+  for (const id of Object.keys(videoLoading.value)) {
+    if (videoLoading.value[id]) {
+      videoReloadKey.value[id] = Date.now()
+    }
+  }
+}, 10000)
 </script>
 
 <template lang="pug">
@@ -150,15 +168,25 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
       spinner-color="white"
       :class="props.selectable ? 'cursor-pointer' : ''"
     )
-    video(
-      v-else
-      :src="m.url"
-      :style="mediaStyles"
-      loop
-      autoplay
-      muted
-      plays-inline
-      @click="emit('select', m.id); emit('selectedIndex', index)"
-      :class="props.selectable ? 'cursor-pointer' : ''"
-    )
+    template(v-else)
+      div(:style="mediaStyles" style="position: relative")
+        .full-width.full-height(v-if="videoLoading[m.id]")
+          .absolute-center
+            h4 Loading
+          q-spinner(
+            color="white"
+            size="lg"
+            class="absolute full-width full-height flex flex-center"
+          )
+        video(
+          :src="m.url"
+          :style="mediaStyles"
+          :key="videoReloadKey[m.id]"
+          loop
+          autoplay
+          muted
+          playsinline
+          @canplay="markVideoLoaded(m.id)"
+          @click="emit('select', m.id); emit('selectedIndex', index)"
+          :class="props.selectable ? 'cursor-pointer' : ''")
 </template>
