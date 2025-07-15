@@ -8,7 +8,7 @@ import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useUserAuth } from "src/stores/userAuth"
-import { createImprovePrompt, createRandomPrompt, modelsGetModel } from "lib/orval"
+import { createImprovePrompt, createRandomPrompt, modelsGetCustomModel } from "lib/orval"
 import umami from "lib/umami"
 import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { CustomModel } from "lib/api"
@@ -88,7 +88,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const anyLoading = computed(() => Object.values(state.loading).some(Boolean))
 
   async function loadCustomModel(modelId: string) {
-    const response = await modelsGetModel({ id: modelId })
+    const response = await modelsGetCustomModel({ id: modelId })
     state.customModel = response.data
     state.req.customModelName = response.data.name
     state.req.customModelId = response.data.id

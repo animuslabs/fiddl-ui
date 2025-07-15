@@ -1,16 +1,18 @@
 import { Context } from "@netlify/edge-functions"
-import { setSocialMetadata, shortIdToLong } from "./lib/util.ts"
-import { creationsCreateRequest } from "./lib/orval.ts"
+import { normalizeCanonicalUrl, setSocialMetadata, shortIdToLong } from "./lib/util.ts"
+import { creationsGetImageRequest, creationsGetVideoRequest } from "./lib/orval.ts"
 
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
   const response = await context.next()
   const text = await response.text()
-  for (const [key] of url.searchParams) {
-    if (key !== "index") {
-      url.searchParams.delete(key)
-    }
-  }
+  const type = (url.searchParams.get("type") as "image" | "video") || "image"
+  const index = parseInt(url.searchParams.get("index") || "0")
+  // for (const [key] of url.searchParams) {
+  //   if (key !== "index" || ) {
+  //     url.searchParams.delete(key)
+  //   }
+  // }
 
   const segments = url.pathname.split("/")
   const id = segments[2]
@@ -20,13 +22,14 @@ export default async (request: Request, context: Context) => {
   // const requestData = await fetch(`https://api.fiddl.art/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
   // const requestData = await fetch(`http://localhost:4444/trpc/creations.createRequest?input="${encodeURIComponent(longId)}"`)
 
-  const requestData = await creationsCreateRequest({ requestId: longId })
-  if (requestData.status != 200) throw Error("request error:" + JSON.stringify(requestData.data, null, 2))
-  const jsonData = requestData.data
-  const images = jsonData.imageIds
-  const imageId = images[url.searchParams.get("index") || 0]
-  const imageUrl = `https://api.fiddl.art/images/${imageId}-md.webp`
+  const requestData = type == "image" ? (await creationsGetImageRequest({ imageRequestId: longId })).data : (await creationsGetVideoRequest({ videoRequestId: longId })).data
+
+  if ("code" in requestData) throw Error("request error:" + JSON.stringify(requestData, null, 2))
+  const mediaIds = "imageIds" in requestData ? requestData.imageIds : requestData.videoIds
+  const mediaId = mediaIds[index]
+  const mediaUrl = type == "image" ? `https://api.fiddl.art/images/${mediaId}-md.webp` : `https://fiddl-art.sfo3.cdn.digitaloceanspaces.com/previewVideos/${mediaId}/thumbnail.webp`
+
   // const imageUrl = `http://localhost:4444/images/${imageId}-md.webp`
-  const updatedHtml = setSocialMetadata(text, id || "image id", "A creation on Fiddl.art", imageUrl, url.toString(), "summary_large_image")
+  const updatedHtml = setSocialMetadata(text, id, "A creation on Fiddl.art", mediaUrl, normalizeCanonicalUrl(url.toString(), ["type", "index"]), "summary_large_image")
   return new Response(updatedHtml, response)
 }

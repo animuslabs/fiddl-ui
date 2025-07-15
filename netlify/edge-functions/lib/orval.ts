@@ -254,6 +254,8 @@ export type CreateVideo200 = {
   deleted: boolean;
   /** @nullable */
   error: string | null;
+  /** @nullable */
+  startImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -589,13 +591,14 @@ export type CreationsCreateVideoRequests200Item = {
   prompt?: string;
   duration?: number;
   quantity: number;
+  startImageId?: string;
 };
 
-export type CreationsCreateRequestParams = {
-requestId: string;
+export type CreationsGetImageRequestParams = {
+imageRequestId: string;
 };
 
-export type CreationsCreateRequest200 = {
+export type CreationsGetImageRequest200 = {
   id: string;
   imageIds: string[];
   createdAt: string;
@@ -609,6 +612,25 @@ export type CreationsCreateRequest200 = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+};
+
+export type CreationsGetVideoRequestParams = {
+videoRequestId: string;
+};
+
+export type CreationsGetVideoRequest200 = {
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
+  startImageId?: string;
 };
 
 export type CreationsBrowseCreateRequestsParams = {
@@ -1385,12 +1407,14 @@ videoId?: string;
 name: string;
 };
 
-export type CollectionsLikeImageBody = {
-  imageId: string;
+export type CollectionsLikeMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
-export type CollectionsUnlikeImageBody = {
-  imageId: string;
+export type CollectionsUnlikeMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
 export type CollectionsGetCollectionMetaParams = {
@@ -1688,26 +1712,26 @@ export type ModelsDeleteModelBody = {
   id: string;
 };
 
-export type ModelsGetModelParams = {
+export type ModelsGetCustomModelParams = {
 id: string;
 };
 
-export type ModelsGetModel200Status = typeof ModelsGetModel200Status[keyof typeof ModelsGetModel200Status];
+export type ModelsGetCustomModel200Status = typeof ModelsGetCustomModel200Status[keyof typeof ModelsGetCustomModel200Status];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200Status = {
+export const ModelsGetCustomModel200Status = {
   training: 'training',
   trained: 'trained',
   error: 'error',
   waitingForImageUpload: 'waitingForImageUpload',
 } as const;
 
-export type ModelsGetModel200ModelType = typeof ModelsGetModel200ModelType[keyof typeof ModelsGetModel200ModelType];
+export type ModelsGetCustomModel200ModelType = typeof ModelsGetCustomModel200ModelType[keyof typeof ModelsGetCustomModel200ModelType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200ModelType = {
+export const ModelsGetCustomModel200ModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
   fluxDev: 'fluxDev',
@@ -1718,32 +1742,32 @@ export const ModelsGetModel200ModelType = {
 /**
  * @nullable
  */
-export type ModelsGetModel200FineTuneType = typeof ModelsGetModel200FineTuneType[keyof typeof ModelsGetModel200FineTuneType] | null;
+export type ModelsGetCustomModel200FineTuneType = typeof ModelsGetCustomModel200FineTuneType[keyof typeof ModelsGetCustomModel200FineTuneType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200FineTuneType = {
+export const ModelsGetCustomModel200FineTuneType = {
   lora: 'lora',
   full: 'full',
 } as const;
 
-export type ModelsGetModel200Mode = typeof ModelsGetModel200Mode[keyof typeof ModelsGetModel200Mode];
+export type ModelsGetCustomModel200Mode = typeof ModelsGetCustomModel200Mode[keyof typeof ModelsGetCustomModel200Mode];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200Mode = {
+export const ModelsGetCustomModel200Mode = {
   subject: 'subject',
   style: 'style',
   object: 'object',
   general: 'general',
 } as const;
 
-export type ModelsGetModel200 = {
-  status: ModelsGetModel200Status;
-  modelType: ModelsGetModel200ModelType;
+export type ModelsGetCustomModel200 = {
+  status: ModelsGetCustomModel200Status;
+  modelType: ModelsGetCustomModel200ModelType;
   /** @nullable */
-  fineTuneType: ModelsGetModel200FineTuneType;
-  mode: ModelsGetModel200Mode;
+  fineTuneType: ModelsGetCustomModel200FineTuneType;
+  mode: ModelsGetCustomModel200Mode;
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -2692,43 +2716,43 @@ export const creationsCreateVideoRequests = async (params?: CreationsCreateVideo
 
 
 
-export type creationsCreateRequestResponse200 = {
-  data: CreationsCreateRequest200
+export type creationsGetImageRequestResponse200 = {
+  data: CreationsGetImageRequest200
   status: 200
 }
 
-export type creationsCreateRequestResponse400 = {
+export type creationsGetImageRequestResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type creationsCreateRequestResponse401 = {
+export type creationsGetImageRequestResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type creationsCreateRequestResponse403 = {
+export type creationsGetImageRequestResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type creationsCreateRequestResponse404 = {
+export type creationsGetImageRequestResponse404 = {
   data: ErrorNOTFOUND
   status: 404
 }
 
-export type creationsCreateRequestResponse500 = {
+export type creationsGetImageRequestResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type creationsCreateRequestResponseComposite = creationsCreateRequestResponse200 | creationsCreateRequestResponse400 | creationsCreateRequestResponse401 | creationsCreateRequestResponse403 | creationsCreateRequestResponse404 | creationsCreateRequestResponse500;
+export type creationsGetImageRequestResponseComposite = creationsGetImageRequestResponse200 | creationsGetImageRequestResponse400 | creationsGetImageRequestResponse401 | creationsGetImageRequestResponse403 | creationsGetImageRequestResponse404 | creationsGetImageRequestResponse500;
     
-export type creationsCreateRequestResponse = creationsCreateRequestResponseComposite & {
+export type creationsGetImageRequestResponse = creationsGetImageRequestResponseComposite & {
   headers: Headers;
 }
 
-export const getCreationsCreateRequestUrl = (params: CreationsCreateRequestParams,) => {
+export const getCreationsGetImageRequestUrl = (params: CreationsGetImageRequestParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2740,12 +2764,12 @@ export const getCreationsCreateRequestUrl = (params: CreationsCreateRequestParam
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createRequest`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getImageRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getImageRequest`
 }
 
-export const creationsCreateRequest = async (params: CreationsCreateRequestParams, options?: RequestInit): Promise<creationsCreateRequestResponse> => {
+export const creationsGetImageRequest = async (params: CreationsGetImageRequestParams, options?: RequestInit): Promise<creationsGetImageRequestResponse> => {
   
-  const res = await fetch(getCreationsCreateRequestUrl(params),
+  const res = await fetch(getCreationsGetImageRequestUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -2755,9 +2779,79 @@ export const creationsCreateRequest = async (params: CreationsCreateRequestParam
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsCreateRequestResponse['data'] = body ? JSON.parse(body) : {}
+  const data: creationsGetImageRequestResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as creationsCreateRequestResponse
+  return { data, status: res.status, headers: res.headers } as creationsGetImageRequestResponse
+}
+
+
+
+export type creationsGetVideoRequestResponse200 = {
+  data: CreationsGetVideoRequest200
+  status: 200
+}
+
+export type creationsGetVideoRequestResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type creationsGetVideoRequestResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type creationsGetVideoRequestResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type creationsGetVideoRequestResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type creationsGetVideoRequestResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type creationsGetVideoRequestResponseComposite = creationsGetVideoRequestResponse200 | creationsGetVideoRequestResponse400 | creationsGetVideoRequestResponse401 | creationsGetVideoRequestResponse403 | creationsGetVideoRequestResponse404 | creationsGetVideoRequestResponse500;
+    
+export type creationsGetVideoRequestResponse = creationsGetVideoRequestResponseComposite & {
+  headers: Headers;
+}
+
+export const getCreationsGetVideoRequestUrl = (params: CreationsGetVideoRequestParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getVideoRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getVideoRequest`
+}
+
+export const creationsGetVideoRequest = async (params: CreationsGetVideoRequestParams, options?: RequestInit): Promise<creationsGetVideoRequestResponse> => {
+  
+  const res = await fetch(getCreationsGetVideoRequestUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: creationsGetVideoRequestResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as creationsGetVideoRequestResponse
 }
 
 
@@ -5338,120 +5432,120 @@ export const collectionsMediaInUsersCollection = async (params: CollectionsMedia
 
 
 
-export type collectionsLikeImageResponse200 = {
+export type collectionsLikeMediaResponse200 = {
   data: boolean
   status: 200
 }
 
-export type collectionsLikeImageResponse400 = {
+export type collectionsLikeMediaResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type collectionsLikeImageResponse401 = {
+export type collectionsLikeMediaResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type collectionsLikeImageResponse403 = {
+export type collectionsLikeMediaResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type collectionsLikeImageResponse500 = {
+export type collectionsLikeMediaResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type collectionsLikeImageResponseComposite = collectionsLikeImageResponse200 | collectionsLikeImageResponse400 | collectionsLikeImageResponse401 | collectionsLikeImageResponse403 | collectionsLikeImageResponse500;
+export type collectionsLikeMediaResponseComposite = collectionsLikeMediaResponse200 | collectionsLikeMediaResponse400 | collectionsLikeMediaResponse401 | collectionsLikeMediaResponse403 | collectionsLikeMediaResponse500;
     
-export type collectionsLikeImageResponse = collectionsLikeImageResponseComposite & {
+export type collectionsLikeMediaResponse = collectionsLikeMediaResponseComposite & {
   headers: Headers;
 }
 
-export const getCollectionsLikeImageUrl = () => {
+export const getCollectionsLikeMediaUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/collections/likeImage`
+  return `https://api.fiddl.art/api/collections/likeMedia`
 }
 
-export const collectionsLikeImage = async (collectionsLikeImageBody: CollectionsLikeImageBody, options?: RequestInit): Promise<collectionsLikeImageResponse> => {
+export const collectionsLikeMedia = async (collectionsLikeMediaBody: CollectionsLikeMediaBody, options?: RequestInit): Promise<collectionsLikeMediaResponse> => {
   
-  const res = await fetch(getCollectionsLikeImageUrl(),
+  const res = await fetch(getCollectionsLikeMediaUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      collectionsLikeImageBody,)
+      collectionsLikeMediaBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsLikeImageResponse['data'] = body ? JSON.parse(body) : {}
+  const data: collectionsLikeMediaResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as collectionsLikeImageResponse
+  return { data, status: res.status, headers: res.headers } as collectionsLikeMediaResponse
 }
 
 
 
-export type collectionsUnlikeImageResponse200 = {
+export type collectionsUnlikeMediaResponse200 = {
   data: boolean
   status: 200
 }
 
-export type collectionsUnlikeImageResponse400 = {
+export type collectionsUnlikeMediaResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type collectionsUnlikeImageResponse401 = {
+export type collectionsUnlikeMediaResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type collectionsUnlikeImageResponse403 = {
+export type collectionsUnlikeMediaResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type collectionsUnlikeImageResponse500 = {
+export type collectionsUnlikeMediaResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type collectionsUnlikeImageResponseComposite = collectionsUnlikeImageResponse200 | collectionsUnlikeImageResponse400 | collectionsUnlikeImageResponse401 | collectionsUnlikeImageResponse403 | collectionsUnlikeImageResponse500;
+export type collectionsUnlikeMediaResponseComposite = collectionsUnlikeMediaResponse200 | collectionsUnlikeMediaResponse400 | collectionsUnlikeMediaResponse401 | collectionsUnlikeMediaResponse403 | collectionsUnlikeMediaResponse500;
     
-export type collectionsUnlikeImageResponse = collectionsUnlikeImageResponseComposite & {
+export type collectionsUnlikeMediaResponse = collectionsUnlikeMediaResponseComposite & {
   headers: Headers;
 }
 
-export const getCollectionsUnlikeImageUrl = () => {
+export const getCollectionsUnlikeMediaUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/collections/unlikeImage`
+  return `https://api.fiddl.art/api/collections/unlikeMedia`
 }
 
-export const collectionsUnlikeImage = async (collectionsUnlikeImageBody: CollectionsUnlikeImageBody, options?: RequestInit): Promise<collectionsUnlikeImageResponse> => {
+export const collectionsUnlikeMedia = async (collectionsUnlikeMediaBody: CollectionsUnlikeMediaBody, options?: RequestInit): Promise<collectionsUnlikeMediaResponse> => {
   
-  const res = await fetch(getCollectionsUnlikeImageUrl(),
+  const res = await fetch(getCollectionsUnlikeMediaUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      collectionsUnlikeImageBody,)
+      collectionsUnlikeMediaBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsUnlikeImageResponse['data'] = body ? JSON.parse(body) : {}
+  const data: collectionsUnlikeMediaResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as collectionsUnlikeImageResponse
+  return { data, status: res.status, headers: res.headers } as collectionsUnlikeMediaResponse
 }
 
 
@@ -6363,43 +6457,43 @@ export const modelsDeleteModel = async (modelsDeleteModelBody: ModelsDeleteModel
 
 
 
-export type modelsGetModelResponse200 = {
-  data: ModelsGetModel200
+export type modelsGetCustomModelResponse200 = {
+  data: ModelsGetCustomModel200
   status: 200
 }
 
-export type modelsGetModelResponse400 = {
+export type modelsGetCustomModelResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type modelsGetModelResponse401 = {
+export type modelsGetCustomModelResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type modelsGetModelResponse403 = {
+export type modelsGetCustomModelResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type modelsGetModelResponse404 = {
+export type modelsGetCustomModelResponse404 = {
   data: ErrorNOTFOUND
   status: 404
 }
 
-export type modelsGetModelResponse500 = {
+export type modelsGetCustomModelResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type modelsGetModelResponseComposite = modelsGetModelResponse200 | modelsGetModelResponse400 | modelsGetModelResponse401 | modelsGetModelResponse403 | modelsGetModelResponse404 | modelsGetModelResponse500;
+export type modelsGetCustomModelResponseComposite = modelsGetCustomModelResponse200 | modelsGetCustomModelResponse400 | modelsGetCustomModelResponse401 | modelsGetCustomModelResponse403 | modelsGetCustomModelResponse404 | modelsGetCustomModelResponse500;
     
-export type modelsGetModelResponse = modelsGetModelResponseComposite & {
+export type modelsGetCustomModelResponse = modelsGetCustomModelResponseComposite & {
   headers: Headers;
 }
 
-export const getModelsGetModelUrl = (params: ModelsGetModelParams,) => {
+export const getModelsGetCustomModelUrl = (params: ModelsGetCustomModelParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -6411,12 +6505,12 @@ export const getModelsGetModelUrl = (params: ModelsGetModelParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getModel?${stringifiedParams}` : `https://api.fiddl.art/api/models/getModel`
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getCustomModel?${stringifiedParams}` : `https://api.fiddl.art/api/models/getCustomModel`
 }
 
-export const modelsGetModel = async (params: ModelsGetModelParams, options?: RequestInit): Promise<modelsGetModelResponse> => {
+export const modelsGetCustomModel = async (params: ModelsGetCustomModelParams, options?: RequestInit): Promise<modelsGetCustomModelResponse> => {
   
-  const res = await fetch(getModelsGetModelUrl(params),
+  const res = await fetch(getModelsGetCustomModelUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -6426,9 +6520,9 @@ export const modelsGetModel = async (params: ModelsGetModelParams, options?: Req
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetModelResponse['data'] = body ? JSON.parse(body) : {}
+  const data: modelsGetCustomModelResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as modelsGetModelResponse
+  return { data, status: res.status, headers: res.headers } as modelsGetCustomModelResponse
 }
 
 

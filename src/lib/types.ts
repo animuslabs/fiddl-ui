@@ -1,5 +1,5 @@
 import { Base64URLString, CredentialDeviceType } from "@simplewebauthn/types"
-
+export type MediaType = "image" | "video"
 export type OutputFormat = "jpeg" | "png" | "webp"
 export type StabilityAIContentResponse = {
   filepath: string

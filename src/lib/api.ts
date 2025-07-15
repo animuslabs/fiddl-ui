@@ -3,11 +3,11 @@ import { jwt } from "lib/jwt"
 import type {
   CollectionsGetCollectionImagesQueryResult,
   CollectionsGetCollectionVideosQueryResult,
-  CreationsCreateRequestQueryResult,
+  CreationsGetImageRequestQueryResult,
+  CreationsGetVideoRequestQueryResult,
   CreationsGetCreationDataQueryResult,
   CreationsUserImagePurchasesQueryResult,
   CreationsUserVideoPurchasesQueryResult,
-  ModelsGetModelQueryResult,
   ModelsGetTrainingStatusQueryResult,
   ModelsGetUserModelsQueryResult,
   PromoGetPromoCodeDetailsQueryResult,
@@ -19,6 +19,7 @@ import type {
   UserProfileQueryResult,
   UserPublicProfileQueryResult,
   UserSetNotificationConfigMutationResult,
+  ModelsGetCustomModel200,
 } from "lib/orval"
 import { ref, Ref } from "vue"
 
@@ -63,7 +64,6 @@ export type UserProfile = UserProfileQueryResult["data"]
 export type PointsTransfer = UserPointsHistoryQueryResult["data"][number]
 export type ImagePurchase = CreationsUserImagePurchasesQueryResult["data"][number]
 export type VideoPurchase = CreationsUserVideoPurchasesQueryResult["data"][number]
-export type ImageCreateRequest = CreationsCreateRequestQueryResult["data"]
 export type ImageData = CreationsGetCreationDataQueryResult["data"]
 export type PromoCode = PromoGetPromoCodeDetailsQueryResult["data"]
 export type Image = CollectionsGetCollectionImagesQueryResult["data"][number]
@@ -72,7 +72,7 @@ export type NotificationConfig = UserGetNotificationConfigQueryResult["data"]
 export type NotificationConfigSet = UserSetNotificationConfigMutationResult["data"]
 export type PublicProfile = UserPublicProfileQueryResult["data"]
 export type CustomModelWithRequests = ModelsGetUserModelsQueryResult["data"][number]
-export type CustomModel = ModelsGetModelQueryResult["data"]
+export type CustomModel = ModelsGetCustomModel200
 export type TrainingData = ModelsGetTrainingStatusQueryResult["data"]
 export type User = UserAllUsersQueryResult["data"][number]
 export type TrainingSet = TrainingSetsGetSetQueryResult["data"]

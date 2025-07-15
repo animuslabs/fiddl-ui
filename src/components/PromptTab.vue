@@ -238,7 +238,7 @@ export default defineComponent({
         this.currentTab,
       )
     },
-    setReq(request: CreateImageRequest | CreateVideoRequest, toggleCreateMode = false) {
+    setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
       void this.$nextTick(() => {
         // const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>

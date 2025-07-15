@@ -1,4 +1,4 @@
-import { TranscriptLine, type BaseCreationRequest, type UnifiedCreation, type UnifiedCreationRequest } from "lib/types"
+import { TranscriptLine, type BaseCreationRequest, type MediaType, type UnifiedCreation, type UnifiedCreationRequest } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
 import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
@@ -8,6 +8,8 @@ import umami from "lib/umami"
 import stripAnsi from "strip-ansi"
 import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@prisma/client"
 import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
+import { match } from "ts-pattern"
+import { creationsGetImageRequest, creationsGetVideoRequest, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
 /**
  * Shares an image via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -474,4 +476,38 @@ export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideo
           duration: creation.duration,
         }),
   }
+}
+
+export async function getCreationRequest(requestId: string, type: MediaType) {
+  const { data } = await match(type)
+    .with("image", () => creationsGetImageRequest({ imageRequestId: requestId }))
+    .with("video", () => creationsGetVideoRequest({ videoRequestId: requestId }))
+    .exhaustive()
+  const mediaIds = "imageIds" in data ? data.imageIds : data.videoIds
+  return { ...data, mediaIds }
+}
+
+export async function preloadHdVideo(url: string): Promise<HTMLVideoElement> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video")
+    video.src = url
+    video.preload = "auto"
+    video.muted = true
+    video.playsInline = true
+
+    const timeout = setTimeout(() => reject(new Error("HD preload timeout")), 18000)
+
+    video.oncanplay = async () => {
+      clearTimeout(timeout)
+      await sleep(2000)
+      resolve(video)
+    }
+
+    video.onerror = () => {
+      clearTimeout(timeout)
+      reject(new Error("HD video failed to load"))
+    }
+
+    video.load()
+  })
 }

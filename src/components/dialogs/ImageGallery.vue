@@ -12,33 +12,33 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                   round
                   flat
                   color="grey-5"
-                  @click.native.stop="shareMenu = true"
+                  @click.stop="shareMenu = true"
                 )
                   q-menu(
                     v-if="shareMenu"
                     anchor="bottom left"
                     self="top left"
-                    @click.native.stop="shareMenu = false"
+                    @click.stop="shareMenu = false"
                   )
                     q-list
-                      q-item(clickable @click.native.stop="mobileShare()" v-close-popup)
+                      q-item(clickable @click.stop="mobileShare()" v-close-popup)
                         q-item-section
                           .row.items-center
-                            q-icon(name="image" size="20px").q-mr-md
-                            div Share Image
+                            q-icon(:name="type=='image'?'image':'smart_display'" size="20px").q-mr-md
+                            div Share Creation
                       q-item(clickable @click="share()" v-close-popup)
                         q-item-section
                           .row.items-center
                             q-icon(name="content_copy" size="20px").q-mr-md
                             div Copy Link
-              q-btn(icon="sym_o_info" flat round @click.native.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
+              q-btn(icon="sym_o_info" flat round @click.stop="goToRequestPage()" color="grey-5" v-if="loadedRequestId")
               div
-                q-btn(icon="download" flat @click.native.stop="showDownloadWindow()" round :class="downloadClass")
+                q-btn(icon="download" flat @click.stop="showDownloadWindow()" round :class="downloadClass")
                   q-tooltip
-                    p(v-if="userOwnsImage") You own the 4k download
+                    p(v-if="userOwnsMedia") Download full resolution original and upscaled versions
                     p(v-else).text-capitalize Download {{ type }}
-              q-btn(icon="edit" flat round @click.native.stop="editImage()" :color="editBtnColor")
-              q-btn(icon="sym_o_favorite" flat round @click.native.stop="toggleLike()" :color="favoriteBtnColor" :loading="loadingLike")
+              q-btn(icon="edit" flat round @click.stop="editMedia()" :color="editBtnColor")
+              q-btn(icon="sym_o_favorite" flat round @click.stop="toggleLike()" :color="favoriteBtnColor" :loading="loadingLike")
               div.relative-position
                 q-btn(
                   icon="more_vert"
@@ -51,7 +51,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                     v-if="moreOptionsMenu"
                     anchor="bottom right"
                     self="top right"
-                    @click.native.stop="moreOptionsMenu = false"
+                    @click.stop="moreOptionsMenu = false"
                   )
                     q-list
                       q-item( v-if="type=='image'" clickable @click="setProfileImage()" v-close-popup)
@@ -65,7 +65,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                             q-icon(name="delete" size="20px").q-mr-md
                             div Delete
               div
-                q-btn(icon="close" flat @click.native.stop="hide" round color="grey-5")
+                q-btn(icon="close" flat @click.stop="hide" round color="grey-5")
     .centered
       div.relative-position(
         @touchstart="onTouchStart"
@@ -80,32 +80,21 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             color="primary"
             track-color="transparent"
           )
-        // Image with transform binding
-        //- img.image-darken(
-        //-   :src="currentImageUrl"
-        //-   @click.native.stop="onImageClick"
-        //-   ref="overlayImage"
-        //-   @load="imgLoaded"
-        //-   alt="user created image"
-        //-   style="width:100%; max-height: 75vh; object-fit: contain;"
-        //-   :class="imgClass"
-        //-   :style="{ transform: 'translateX(' + touchMoveX + 'px)' }"
-        //- )
-        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs")
+        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" )
         img.image-darken.absolute-center(
-          :src="nextImageUrl"
-          @click.native.stop="onImageClick"
+          :src="nextMediaUrl"
+          @click.stop="onImageClick"
           alt="user created image"
           style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
         ).lt-md
-        .row(v-if="!creatorMeta.userName.length && !userOwnsImage" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
+        .row(v-if="!creatorMeta.userName.length && !userOwnsMedia" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
             .row.items-center.q-mb-xs
               q-img(placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id||'')" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
               h6.q-mr-sm @{{creatorMeta.userName}}
     .centered
       div.q-mt-md(v-if="localMediaIds.length > 1 && !downloadMode && localMediaIds.length < 11")
-        span.indicator(v-for="(image, index) in localMediaIds" :key="index" :class="{ active: index === currentIndex }" @click.native.stop="goTo(index)")
+        span.indicator(v-for="(image, index) in localMediaIds" :key="index" :class="{ active: index === currentIndex }" @click.stop="goTo(index)")
 </template>
 
 <style scoped>
@@ -142,9 +131,9 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 <script lang="ts">
 import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
-import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeImage, collectionsUnlikeImage, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsCreateRequest } from "src/lib/orval"
+import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsGetImageRequest, creationsGetVideoRequest } from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
-import { catchErr, copyToClipboard, longIdToShort, shareImage, updateQueryParams } from "lib/util"
+import { catchErr, copyToClipboard, longIdToShort, preloadHdVideo, shareImage, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
@@ -154,6 +143,8 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { s3Video } from "lib/netlifyImg"
 import { useUserAuth } from "src/stores/userAuth"
+import { match } from "ts-pattern"
+import EditVideo from "components/dialogs/EditVideo.vue"
 
 export default defineComponent({
   props: {
@@ -165,7 +156,7 @@ export default defineComponent({
       type: String as () => "image" | "video",
       required: true,
     },
-    imageRequestId: {
+    requestId: {
       type: String,
       default: "",
       required: false,
@@ -191,7 +182,7 @@ export default defineComponent({
       preloaded: false,
       downloadMode: false,
       imgLoading: true,
-      userOwnsImage: false,
+      userOwnsMedia: false,
       loading: false,
       currentIndex: 0,
       isFullScreen: false,
@@ -201,10 +192,10 @@ export default defineComponent({
       threshold: 50, // Minimum swipe distance to trigger navigation
       firstImageLoaded: false,
       upscaling: false,
-      userLikedImage: false,
+      userLikedMedia: false,
       loadingLike: false,
       loadedRequestId: null as string | null,
-      hdImageLoaded: false, // Added flag
+      hdMediaLoaded: false, // Added flag
       creatorMeta: {
         userName: "",
         id: "",
@@ -212,6 +203,9 @@ export default defineComponent({
     }
   },
   computed: {
+    mediaParams() {
+      return this.buildMediaParam()
+    },
     currentMediaUrl() {
       return this.getMediaUrl(this.currentMediaId)
     },
@@ -239,7 +233,7 @@ export default defineComponent({
       if (this.type === "video") {
         return {
           ...base,
-          src: this.currentImageUrl,
+          src: this.currentMediaUrl,
           playsinline: true,
           autoplay: true,
           muted: true,
@@ -251,42 +245,29 @@ export default defineComponent({
 
       return {
         ...base,
-        src: this.currentImageUrl,
+        src: this.currentMediaUrl,
         ref: "overlayImage",
         onLoad: (e: Event) => this.mediaLoaded(e),
         alt: "user created image",
-        class: this.imgClass,
+        class: this.mediaClass,
       }
-    },
-    nextImageUrl() {
-      if (this.localMediaIds.length === 1) return this.currentImageUrl
-      if (!this.touchMoveX) return this.currentImageUrl
-      // if touchMoveX is positive, show previous image
-      // if touchMoveX is negative, show next image
-      const nextIndex = this.touchMoveX > 0 ? (this.currentIndex - 1 + this.localMediaIds.length) % this.localMediaIds.length : (this.currentIndex + 1) % this.localMediaIds.length
-      const nextImage = this.localMediaIds[nextIndex]
-      if (!nextImage) return this.currentImageUrl
-      return this.getMediaUrl(nextImage)
-    },
-    currentImageUrl() {
-      return this.getMediaUrl(this.currentMediaId)
     },
     userCreatedImage() {
       if (!this.creatorMeta) return false
       return this.creatorMeta.id == this.userAuth.userId
     },
-    imgClass() {
+    mediaClass() {
       if (!this.firstImageLoaded) return ""
       else return this.loading || this.imgLoading ? "image-darken active" : "image-darken"
     },
     favoriteBtnColor() {
-      return this.userLikedImage ? "accent" : this.userOwnsImage ? "grey-5" : "grey-6"
+      return this.userLikedMedia ? "accent" : this.userOwnsMedia ? "grey-5" : "grey-6"
     },
     editBtnColor() {
-      return this.userOwnsImage ? "primary" : "grey-6"
+      return this.userOwnsMedia ? "primary" : "grey-6"
     },
     downloadClass() {
-      return this.userOwnsImage ? "text-primary" : "text-grey-6"
+      return this.userOwnsMedia ? "text-primary" : "text-grey-6"
     },
     currentMediaId() {
       if (this.localMediaIds.length === 0) return ""
@@ -309,12 +290,14 @@ export default defineComponent({
     },
     currentMediaId: {
       async handler(val: string) {
+        console.log("currentMediaId watcher")
         if (!this.userAuth.loggedIn) return
-        this.hdImageLoaded = false // Reset HD image loaded flag
-        this.userLikedImage = false
+        this.hdMediaLoaded = false // Reset HD image loaded flag
+        this.userLikedMedia = false
         this.loadingLike = true
-        const response = await collectionsMediaInUsersCollection({ ...this.buildMediaParam(val), name: "likes" })
-        this.userLikedImage = response?.data
+        const response = await collectionsMediaInUsersCollection({ ...this.mediaParams, name: "likes" })
+        console.log(response.data)
+        this.userLikedMedia = response?.data
         this.loadingLike = false
         if (this.$route.name == "imageRequest") {
           const query = { index: this.currentIndex }
@@ -324,7 +307,7 @@ export default defineComponent({
           })
         }
       },
-      immediate: true,
+      immediate: false,
     },
   },
   beforeUnmount() {
@@ -335,7 +318,7 @@ export default defineComponent({
     this.currentIndex = this.startIndex
     this.preloadMedia()
     window.addEventListener("keydown", this.handleKeyDown)
-    if (!this.creatorMeta.userName.length || !this.imageRequestId) {
+    if (!this.creatorMeta.userName.length || !this.requestId) {
       this.dynamic = true
     }
     void this.loadRequestId()
@@ -345,7 +328,7 @@ export default defineComponent({
       this.imgLoading = false
       if (!val) val = this.currentMediaId
       if (!this.userAuth.loggedIn) return
-      this.userOwnsImage = false
+      this.userOwnsMedia = false
 
       let timer: any | null = null
       const timeoutPromise = new Promise<null>((_, reject) => {
@@ -371,21 +354,33 @@ export default defineComponent({
             if (imageData) await storeImageInCache(val, imageData)
           }
           if (imageData) {
-            this.userOwnsImage = true
+            this.userOwnsMedia = true
             const dataUrl = `data:image/webp;base64,${imageData}`
             await this.$nextTick()
             const img = this.$refs.overlayImage as HTMLImageElement
             if (img) img.src = dataUrl
           }
         } else if (this.type === "video") {
-          const hdUrl = await Promise.race([creationsHdVideo({ videoId: val }).catch(() => null), timeoutPromise])
-          if (hdUrl?.data) {
-            this.userOwnsImage = true
-            await this.$nextTick()
-            const video = this.$el.querySelector("video") as HTMLVideoElement
-            console.log("found video element:", video)
-            if (video) video.src = hdUrl.data
-          }
+          const hdUrlResp = await creationsHdVideo({ videoId: val })
+          const hdUrl = hdUrlResp?.data
+          if (!hdUrl) return
+
+          // const preloadEl = await preloadHdVideo(hdUrl)
+
+          // const player = this.$refs.mediaElement as HTMLVideoElement
+          // const currentTime = player.currentTime
+          // const wasPlaying = !player.paused
+
+          // player.src = hdUrl
+          // player.load()
+
+          // player.onloadedmetadata = () => {
+          //   player.currentTime = currentTime
+          //   if (wasPlaying) player.play().catch(() => {})
+          // }
+
+          // this.hdMediaLoaded = true
+          this.userOwnsMedia = true
         }
       } catch (err) {
         console.error("Failed to load HD media:", err)
@@ -394,8 +389,10 @@ export default defineComponent({
         this.loading = false
       }
     },
-    buildMediaParam(id: string) {
-      return this.type === "video" ? { videoId: id } : { imageId: id }
+    buildMediaParam(id?: string) {
+      let val = id
+      if (!val) val = this.currentMediaId
+      return this.type === "video" ? { videoId: val } : { imageId: val }
     },
     getMediaUrl(id: string): string {
       return this.type === "video" ? s3Video(`previewVideos/${id}/watermarked.webm`) : img(id, "lg")
@@ -434,7 +431,7 @@ export default defineComponent({
     },
     async loadRequestId() {
       // return
-      if (!this.dynamic && this.imageRequestId && this.creatorMeta.userName.length) return
+      if (!this.dynamic && this.requestId && this.creatorMeta.userName.length) return
       const imageResponse = await creationsGetCreationData(this.buildMediaParam(this.currentMediaId)).catch(catchErr)
       const imageMeta = imageResponse?.data
       if (!imageMeta) return
@@ -448,12 +445,12 @@ export default defineComponent({
       void this.$router.push({ name: "profile", params: { username: this.creatorMeta.userName } })
     },
     setProfileImage() {
-      Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentMediaId } })
+      Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId } })
     },
     goToRequestPage() {
       if (!this.loadedRequestId || this.loadedRequestId.length == 0) return
       this.hide()
-      void this.$router.push({ name: "imageRequest", params: { requestShortId: longIdToShort(this.loadedRequestId) } })
+      void this.$router.push({ name: "mediaRequest", params: { requestShortId: longIdToShort(this.loadedRequestId), type: this.type } })
     },
     async toggleLike() {
       if (!this.userAuth.loggedIn) {
@@ -468,54 +465,53 @@ export default defineComponent({
         return
       }
 
-      if (!this.userOwnsImage) {
+      if (!this.userOwnsMedia) {
         // Show LikeImage dialog for users who don't own the image
         Dialog.create({
           component: LikeImage,
-          componentProps: {
-            userOwnsImage: this.userOwnsImage,
-            currentImageId: this.currentMediaId,
-          },
+          componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId },
         }).onOk(() => {
           // When the user completes the purchase in LikeImage dialog
           // Refresh image ownership status and like the image
-          void this.loadHdMedia(this.currentMediaId)
-          this.userLikedImage = true
-          collectionsLikeImage({ imageId: this.currentMediaId }).catch(catchErr)
+          void this.loadHdMedia()
+          this.userLikedMedia = true
+          collectionsLikeMedia(this.buildMediaParam()).catch(catchErr)
         })
         return
       }
 
       // Toggle like status for owned images
-      this.userLikedImage = !this.userLikedImage
+      this.userLikedMedia = !this.userLikedMedia
 
       try {
-        if (this.userLikedImage) {
-          await collectionsLikeImage({ imageId: this.currentMediaId })
+        if (this.userLikedMedia) {
+          await collectionsLikeMedia(this.mediaParams)
         } else {
-          await collectionsUnlikeImage({ imageId: this.currentMediaId })
+          await collectionsUnlikeMedia(this.mediaParams)
         }
       } catch (error) {
         // Revert UI state if API call fails
-        this.userLikedImage = !this.userLikedImage
+        this.userLikedMedia = !this.userLikedMedia
         catchErr(error)
       }
     },
-    editImage() {
-      if (this.userOwnsImage) {
-        void this.$router.push({ name: "create", query: { imageId: this.currentMediaId } })
+    editMedia() {
+      if (this.userOwnsMedia) {
+        void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
         this.hide()
       } else {
-        Dialog.create({ component: EditImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentMediaId } }).onOk(() => {
-          void this.$router.push({ name: "create", query: { imageId: this.currentMediaId } })
+        const component = this.type == "image" ? EditImage : EditVideo
+        const componentProps = this.type == "image" ? { userOwnsImage: this.userOwnsMedia, imageId: this.currentMediaId } : { userOwnsVideo: this.userOwnsMedia, videoId: this.currentMediaId }
+        Dialog.create({ component, componentProps }).onOk(() => {
+          void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
           this.hide()
         })
       }
     },
     showDownloadWindow() {
-      Dialog.create({ component: DownloadImage, componentProps: { userOwnsImage: this.userOwnsImage, currentImageId: this.currentMediaId } }).onDismiss(() => {
+      Dialog.create({ component: DownloadImage, componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId } }).onDismiss(() => {
         // After purchase or download
-        this.hdImageLoaded = false // Reset HD image loaded flag
+        this.hdMediaLoaded = false // Reset HD image loaded flag
 
         this.imgLoading = true
         void this.loadHdMedia()
@@ -535,31 +531,38 @@ export default defineComponent({
             const video = document.createElement("video")
             video.preload = "auto"
             video.src = url
+            video.load()
           }
         }
       })
     },
     async mediaLoaded(event: Event) {
-      const el = event.target as HTMLImageElement | HTMLVideoElement
-      const isImage = this.type === "image"
+      if (this.hdMediaLoaded || this.loading) return // 🔒 prevent loop
 
-      console.log("media loaded:", el)
+      const isImage = this.type === "image"
+      const el = event.target as HTMLImageElement | HTMLVideoElement
 
       if (isImage) {
         const imgEl = el as HTMLImageElement
         if (imgEl.src.startsWith("data:image/")) {
-          this.hdImageLoaded = true
-          this.imgLoading = false
+          this.hdMediaLoaded = true
         } else {
-          if (!this.hdImageLoaded) {
-            await this.loadHdMedia()
-          }
+          await this.loadHdMedia()
+        }
+        this.imgLoading = false
+      } else {
+        const video = el as HTMLVideoElement
+        const isPreview = video.src.includes("watermarked")
+
+        if (isPreview) {
+          this.imgLoading = false
+          // Start async HD load without awaiting (silent upgrade)
+          void this.loadHdMedia()
+        } else {
+          // HD video is now playing
+          this.hdMediaLoaded = true
           this.imgLoading = false
         }
-      } else {
-        // type === 'video'
-        this.imgLoading = false
-        this.hdImageLoaded = true
       }
 
       this.firstImageLoaded = true
@@ -571,30 +574,32 @@ export default defineComponent({
       }
     },
     async mobileShare() {
-      await shareImage("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentImageUrl, `${this.currentMediaId}-fiddl-art.${this.type === "video" ? "webm" : "webp"}`)
+      await shareImage("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentMediaUrl, `${this.currentMediaId}-fiddl-art.${this.type === "video" ? "webm" : "webp"}`)
     },
     async share() {
       let params: any = { requestShortId: "" }
       let query: any = { index: this.currentIndex }
-      let imageRequestId = this.imageRequestId
-      if (!imageRequestId) {
-        const imageResponse = await creationsGetCreationData(this.buildMediaParam(this.currentMediaId)).catch(catchErr)
-        const imageMeta = imageResponse?.data
-        if (!imageMeta) return
-        imageRequestId = imageMeta.requestId
-        params.requestShortId = longIdToShort(imageRequestId)
+      let localRequestId = this.requestId
+      if (!localRequestId) {
+        const creationData = await creationsGetCreationData(this.mediaParams).catch(catchErr)
+        const creationMeta = creationData?.data
+        if (!creationMeta) return
+        localRequestId = creationMeta.requestId
+        params.requestShortId = longIdToShort(localRequestId)
       } else {
-        params.requestShortId = longIdToShort(imageRequestId)
+        params.requestShortId = longIdToShort(localRequestId)
       }
-      const requestResponse = await creationsCreateRequest({ requestId: imageRequestId })
-      const request = requestResponse?.data as any
-      if (!request) return
-      const imageIndex = request.imageIds?.findIndex((el: string) => el == this.currentMediaId) || 0
-      query.index = imageIndex
+      const requestData = await match(this.type)
+        .with("image", async () => (await creationsGetImageRequest({ imageRequestId: localRequestId })).data)
+        .with("video", async () => (await creationsGetVideoRequest({ videoRequestId: localRequestId })).data)
+        .exhaustive()
+      const mediaIds = "imageIds" in requestData ? requestData.imageIds : requestData.videoIds
+      const mediaIndex = mediaIds.findIndex((el: string) => el == this.currentMediaId) || 0
+      query.index = mediaIndex
       await this.userAuth.loadUserProfile()
       const hasUsername = !!(this.userAuth.loggedIn && this.userAuth.userProfile?.username)
       if (hasUsername) query.referredBy = this.userAuth.userProfile?.username
-      const url = this.$router.resolve({ name: "imageRequest", params, query }).href
+      const url = this.$router.resolve({ name: "mediaRequest", params, query }).href
       const fullUrl = window.location.origin + url
       copyToClipboard(fullUrl)
       Dialog.create({

@@ -284,6 +284,8 @@ export type CreateVideo200 = {
   deleted: boolean;
   /** @nullable */
   error: string | null;
+  /** @nullable */
+  startImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -619,13 +621,14 @@ export type CreationsCreateVideoRequests200Item = {
   prompt?: string;
   duration?: number;
   quantity: number;
+  startImageId?: string;
 };
 
-export type CreationsCreateRequestParams = {
-requestId: string;
+export type CreationsGetImageRequestParams = {
+imageRequestId: string;
 };
 
-export type CreationsCreateRequest200 = {
+export type CreationsGetImageRequest200 = {
   id: string;
   imageIds: string[];
   createdAt: string;
@@ -639,6 +642,25 @@ export type CreationsCreateRequest200 = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+};
+
+export type CreationsGetVideoRequestParams = {
+videoRequestId: string;
+};
+
+export type CreationsGetVideoRequest200 = {
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
+  startImageId?: string;
 };
 
 export type CreationsBrowseCreateRequestsParams = {
@@ -1415,12 +1437,14 @@ videoId?: string;
 name: string;
 };
 
-export type CollectionsLikeImageBody = {
-  imageId: string;
+export type CollectionsLikeMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
-export type CollectionsUnlikeImageBody = {
-  imageId: string;
+export type CollectionsUnlikeMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
 export type CollectionsGetCollectionMetaParams = {
@@ -1718,26 +1742,26 @@ export type ModelsDeleteModelBody = {
   id: string;
 };
 
-export type ModelsGetModelParams = {
+export type ModelsGetCustomModelParams = {
 id: string;
 };
 
-export type ModelsGetModel200Status = typeof ModelsGetModel200Status[keyof typeof ModelsGetModel200Status];
+export type ModelsGetCustomModel200Status = typeof ModelsGetCustomModel200Status[keyof typeof ModelsGetCustomModel200Status];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200Status = {
+export const ModelsGetCustomModel200Status = {
   training: 'training',
   trained: 'trained',
   error: 'error',
   waitingForImageUpload: 'waitingForImageUpload',
 } as const;
 
-export type ModelsGetModel200ModelType = typeof ModelsGetModel200ModelType[keyof typeof ModelsGetModel200ModelType];
+export type ModelsGetCustomModel200ModelType = typeof ModelsGetCustomModel200ModelType[keyof typeof ModelsGetCustomModel200ModelType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200ModelType = {
+export const ModelsGetCustomModel200ModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
   fluxDev: 'fluxDev',
@@ -1748,32 +1772,32 @@ export const ModelsGetModel200ModelType = {
 /**
  * @nullable
  */
-export type ModelsGetModel200FineTuneType = typeof ModelsGetModel200FineTuneType[keyof typeof ModelsGetModel200FineTuneType] | null;
+export type ModelsGetCustomModel200FineTuneType = typeof ModelsGetCustomModel200FineTuneType[keyof typeof ModelsGetCustomModel200FineTuneType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200FineTuneType = {
+export const ModelsGetCustomModel200FineTuneType = {
   lora: 'lora',
   full: 'full',
 } as const;
 
-export type ModelsGetModel200Mode = typeof ModelsGetModel200Mode[keyof typeof ModelsGetModel200Mode];
+export type ModelsGetCustomModel200Mode = typeof ModelsGetCustomModel200Mode[keyof typeof ModelsGetCustomModel200Mode];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelsGetModel200Mode = {
+export const ModelsGetCustomModel200Mode = {
   subject: 'subject',
   style: 'style',
   object: 'object',
   general: 'general',
 } as const;
 
-export type ModelsGetModel200 = {
-  status: ModelsGetModel200Status;
-  modelType: ModelsGetModel200ModelType;
+export type ModelsGetCustomModel200 = {
+  status: ModelsGetCustomModel200Status;
+  modelType: ModelsGetCustomModel200ModelType;
   /** @nullable */
-  fineTuneType: ModelsGetModel200FineTuneType;
-  mode: ModelsGetModel200Mode;
+  fineTuneType: ModelsGetCustomModel200FineTuneType;
+  mode: ModelsGetCustomModel200Mode;
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -2638,53 +2662,111 @@ export function useCreationsCreateVideoRequests<TData = Awaited<ReturnType<typeo
 
 
 
-export const creationsCreateRequest = (
-    params: MaybeRef<CreationsCreateRequestParams>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CreationsCreateRequest200>> => {
+export const creationsGetImageRequest = (
+    params: MaybeRef<CreationsGetImageRequestParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsGetImageRequest200>> => {
     params = unref(params);
     
     return axios.get(
-      `/creations/createRequest`,{
+      `/creations/getImageRequest`,{
     ...options,
         params: {...unref(params), ...options?.params},}
     );
   }
 
 
-export const getCreationsCreateRequestQueryKey = (params: MaybeRef<CreationsCreateRequestParams>,) => {
-    return ['creations','createRequest', ...(params ? [params]: [])] as const;
+export const getCreationsGetImageRequestQueryKey = (params: MaybeRef<CreationsGetImageRequestParams>,) => {
+    return ['creations','getImageRequest', ...(params ? [params]: [])] as const;
     }
 
     
-export const getCreationsCreateRequestQueryOptions = <TData = Awaited<ReturnType<typeof creationsCreateRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsCreateRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
+export const getCreationsGetImageRequestQueryOptions = <TData = Awaited<ReturnType<typeof creationsGetImageRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsGetImageRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetImageRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
 
-  const queryKey =  getCreationsCreateRequestQueryKey(params);
+  const queryKey =  getCreationsGetImageRequestQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsCreateRequest>>> = ({ signal }) => creationsCreateRequest(params, { signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsGetImageRequest>>> = ({ signal }) => creationsGetImageRequest(params, { signal, ...axiosOptions });
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequest>>, TError, TData> 
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsGetImageRequest>>, TError, TData> 
 }
 
-export type CreationsCreateRequestQueryResult = NonNullable<Awaited<ReturnType<typeof creationsCreateRequest>>>
-export type CreationsCreateRequestQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+export type CreationsGetImageRequestQueryResult = NonNullable<Awaited<ReturnType<typeof creationsGetImageRequest>>>
+export type CreationsGetImageRequestQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
 
 
 
-export function useCreationsCreateRequest<TData = Awaited<ReturnType<typeof creationsCreateRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
- params: MaybeRef<CreationsCreateRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsCreateRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
+export function useCreationsGetImageRequest<TData = Awaited<ReturnType<typeof creationsGetImageRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CreationsGetImageRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetImageRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient 
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getCreationsCreateRequestQueryOptions(params,options)
+  const queryOptions = getCreationsGetImageRequestQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const creationsGetVideoRequest = (
+    params: MaybeRef<CreationsGetVideoRequestParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsGetVideoRequest200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/getVideoRequest`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsGetVideoRequestQueryKey = (params: MaybeRef<CreationsGetVideoRequestParams>,) => {
+    return ['creations','getVideoRequest', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsGetVideoRequestQueryOptions = <TData = Awaited<ReturnType<typeof creationsGetVideoRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsGetVideoRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetVideoRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsGetVideoRequestQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsGetVideoRequest>>> = ({ signal }) => creationsGetVideoRequest(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsGetVideoRequest>>, TError, TData> 
+}
+
+export type CreationsGetVideoRequestQueryResult = NonNullable<Awaited<ReturnType<typeof creationsGetVideoRequest>>>
+export type CreationsGetVideoRequestQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsGetVideoRequest<TData = Awaited<ReturnType<typeof creationsGetVideoRequest>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CreationsGetVideoRequestParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetVideoRequest>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsGetVideoRequestQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4968,24 +5050,24 @@ export function useCollectionsMediaInUsersCollection<TData = Awaited<ReturnType<
 
 
 
-export const collectionsLikeImage = (
-    collectionsLikeImageBody: MaybeRef<CollectionsLikeImageBody>, options?: AxiosRequestConfig
+export const collectionsLikeMedia = (
+    collectionsLikeMediaBody: MaybeRef<CollectionsLikeMediaBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<boolean>> => {
-    collectionsLikeImageBody = unref(collectionsLikeImageBody);
+    collectionsLikeMediaBody = unref(collectionsLikeMediaBody);
     
     return axios.post(
-      `/collections/likeImage`,
-      collectionsLikeImageBody,options
+      `/collections/likeMedia`,
+      collectionsLikeMediaBody,options
     );
   }
 
 
 
-export const getCollectionsLikeImageMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeImage>>, TError,{data: CollectionsLikeImageBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeImage>>, TError,{data: CollectionsLikeImageBody}, TContext> => {
+export const getCollectionsLikeMediaMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeMedia>>, TError,{data: CollectionsLikeMediaBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeMedia>>, TError,{data: CollectionsLikeMediaBody}, TContext> => {
 
-const mutationKey = ['collectionsLikeImage'];
+const mutationKey = ['collectionsLikeMedia'];
 const {mutation: mutationOptions, axios: axiosOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4995,10 +5077,10 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectionsLikeImage>>, {data: CollectionsLikeImageBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectionsLikeMedia>>, {data: CollectionsLikeMediaBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  collectionsLikeImage(data,axiosOptions)
+          return  collectionsLikeMedia(data,axiosOptions)
         }
 
         
@@ -5006,42 +5088,42 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CollectionsLikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof collectionsLikeImage>>>
-    export type CollectionsLikeImageMutationBody = CollectionsLikeImageBody
-    export type CollectionsLikeImageMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+    export type CollectionsLikeMediaMutationResult = NonNullable<Awaited<ReturnType<typeof collectionsLikeMedia>>>
+    export type CollectionsLikeMediaMutationBody = CollectionsLikeMediaBody
+    export type CollectionsLikeMediaMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
 
-    export const useCollectionsLikeImage = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeImage>>, TError,{data: CollectionsLikeImageBody}, TContext>, axios?: AxiosRequestConfig}
+    export const useCollectionsLikeMedia = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsLikeMedia>>, TError,{data: CollectionsLikeMediaBody}, TContext>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient): UseMutationReturnType<
-        Awaited<ReturnType<typeof collectionsLikeImage>>,
+        Awaited<ReturnType<typeof collectionsLikeMedia>>,
         TError,
-        {data: CollectionsLikeImageBody},
+        {data: CollectionsLikeMediaBody},
         TContext
       > => {
 
-      const mutationOptions = getCollectionsLikeImageMutationOptions(options);
+      const mutationOptions = getCollectionsLikeMediaMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
-export const collectionsUnlikeImage = (
-    collectionsUnlikeImageBody: MaybeRef<CollectionsUnlikeImageBody>, options?: AxiosRequestConfig
+export const collectionsUnlikeMedia = (
+    collectionsUnlikeMediaBody: MaybeRef<CollectionsUnlikeMediaBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<boolean>> => {
-    collectionsUnlikeImageBody = unref(collectionsUnlikeImageBody);
+    collectionsUnlikeMediaBody = unref(collectionsUnlikeMediaBody);
     
     return axios.post(
-      `/collections/unlikeImage`,
-      collectionsUnlikeImageBody,options
+      `/collections/unlikeMedia`,
+      collectionsUnlikeMediaBody,options
     );
   }
 
 
 
-export const getCollectionsUnlikeImageMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeImage>>, TError,{data: CollectionsUnlikeImageBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeImage>>, TError,{data: CollectionsUnlikeImageBody}, TContext> => {
+export const getCollectionsUnlikeMediaMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeMedia>>, TError,{data: CollectionsUnlikeMediaBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeMedia>>, TError,{data: CollectionsUnlikeMediaBody}, TContext> => {
 
-const mutationKey = ['collectionsUnlikeImage'];
+const mutationKey = ['collectionsUnlikeMedia'];
 const {mutation: mutationOptions, axios: axiosOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5051,10 +5133,10 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectionsUnlikeImage>>, {data: CollectionsUnlikeImageBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectionsUnlikeMedia>>, {data: CollectionsUnlikeMediaBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  collectionsUnlikeImage(data,axiosOptions)
+          return  collectionsUnlikeMedia(data,axiosOptions)
         }
 
         
@@ -5062,20 +5144,20 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CollectionsUnlikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof collectionsUnlikeImage>>>
-    export type CollectionsUnlikeImageMutationBody = CollectionsUnlikeImageBody
-    export type CollectionsUnlikeImageMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+    export type CollectionsUnlikeMediaMutationResult = NonNullable<Awaited<ReturnType<typeof collectionsUnlikeMedia>>>
+    export type CollectionsUnlikeMediaMutationBody = CollectionsUnlikeMediaBody
+    export type CollectionsUnlikeMediaMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
 
-    export const useCollectionsUnlikeImage = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeImage>>, TError,{data: CollectionsUnlikeImageBody}, TContext>, axios?: AxiosRequestConfig}
+    export const useCollectionsUnlikeMedia = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectionsUnlikeMedia>>, TError,{data: CollectionsUnlikeMediaBody}, TContext>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient): UseMutationReturnType<
-        Awaited<ReturnType<typeof collectionsUnlikeImage>>,
+        Awaited<ReturnType<typeof collectionsUnlikeMedia>>,
         TError,
-        {data: CollectionsUnlikeImageBody},
+        {data: CollectionsUnlikeMediaBody},
         TContext
       > => {
 
-      const mutationOptions = getCollectionsUnlikeImageMutationOptions(options);
+      const mutationOptions = getCollectionsUnlikeMediaMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -5878,53 +5960,53 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
-export const modelsGetModel = (
-    params: MaybeRef<ModelsGetModelParams>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<ModelsGetModel200>> => {
+export const modelsGetCustomModel = (
+    params: MaybeRef<ModelsGetCustomModelParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<ModelsGetCustomModel200>> => {
     params = unref(params);
     
     return axios.get(
-      `/models/getModel`,{
+      `/models/getCustomModel`,{
     ...options,
         params: {...unref(params), ...options?.params},}
     );
   }
 
 
-export const getModelsGetModelQueryKey = (params: MaybeRef<ModelsGetModelParams>,) => {
-    return ['models','getModel', ...(params ? [params]: [])] as const;
+export const getModelsGetCustomModelQueryKey = (params: MaybeRef<ModelsGetCustomModelParams>,) => {
+    return ['models','getCustomModel', ...(params ? [params]: [])] as const;
     }
 
     
-export const getModelsGetModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsGetModel>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<ModelsGetModelParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetModel>>, TError, TData>>, axios?: AxiosRequestConfig}
+export const getModelsGetCustomModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsGetCustomModel>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<ModelsGetCustomModelParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetCustomModel>>, TError, TData>>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
 
-  const queryKey =  getModelsGetModelQueryKey(params);
+  const queryKey =  getModelsGetCustomModelQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsGetModel>>> = ({ signal }) => modelsGetModel(params, { signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsGetCustomModel>>> = ({ signal }) => modelsGetCustomModel(params, { signal, ...axiosOptions });
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsGetModel>>, TError, TData> 
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsGetCustomModel>>, TError, TData> 
 }
 
-export type ModelsGetModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsGetModel>>>
-export type ModelsGetModelQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+export type ModelsGetCustomModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsGetCustomModel>>>
+export type ModelsGetCustomModelQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
 
 
 
-export function useModelsGetModel<TData = Awaited<ReturnType<typeof modelsGetModel>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
- params: MaybeRef<ModelsGetModelParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetModel>>, TError, TData>>, axios?: AxiosRequestConfig}
+export function useModelsGetCustomModel<TData = Awaited<ReturnType<typeof modelsGetCustomModel>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<ModelsGetCustomModelParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetCustomModel>>, TError, TData>>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient 
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getModelsGetModelQueryOptions(params,options)
+  const queryOptions = getModelsGetCustomModelQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

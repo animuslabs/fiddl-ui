@@ -61,7 +61,12 @@
   ],
   [
     "imageRequest",
-    "/r/:requestShortId?",
+    "/r/:type/:requestShortId/:index?",
+    "ImageRequestPage"
+  ],
+  [
+    "mediaRequest",
+    "/request/:type/:requestShortId/:index?",
     "ImageRequestPage"
   ],
   [

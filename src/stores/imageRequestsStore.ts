@@ -1,24 +1,25 @@
-import type { ImageCreateRequest } from "lib/api"
-import { creationsCreateRequest } from "lib/orval"
-import { shortIdToLong } from "lib/util"
+import { type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
+import type { MediaType } from "lib/types"
+import { getCreationRequest, shortIdToLong } from "lib/util"
 import { defineStore } from "pinia"
 
 export const useImageRequests = defineStore("imageRequests", {
   state() {
     return {
-      imageRequests: {} as Record<string, ImageCreateRequest>,
+      imageRequests: {} as Record<string, CreationsGetImageRequest200>,
+      videoRequests: {} as Record<string, CreationsGetVideoRequest200>,
     }
   },
   actions: {
-    async loadRequest(shortId: string) {
+    async loadRequest(shortId: string, type: MediaType = "image") {
       const longId = shortIdToLong(shortId)
       console.log("longId", longId)
-
-      const response = await creationsCreateRequest({ requestId: longId })
-      const request = response.data
+      // const response = await creationsCreateRequest({ requestId: longId })
+      const request = await getCreationRequest(longId, type as any)
 
       console.log("Loaded request", request)
-      this.imageRequests[shortId] = request
+      if ("imageIds" in request) this.imageRequests[shortId] = request
+      else this.videoRequests[shortId] = request
       console.log(this.imageRequests)
     },
     async getRequest(shortId: string) {

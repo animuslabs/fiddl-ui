@@ -71,7 +71,7 @@ import imageGallery from "lib/imageGallery"
 import { img, s3Video } from "lib/netlifyImg"
 import { catchErr, longIdToShort, timeSince } from "lib/util"
 import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
-import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetModel, userGetUsername } from "src/lib/orval"
+import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetCustomModel, userGetUsername } from "src/lib/orval"
 import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
@@ -213,7 +213,7 @@ export default defineComponent({
         if (this.creation.model == "custom" && this.creation.customModelId) {
           let customModel: any = null
           try {
-            const response = await modelsGetModel({ id: this.creation.customModelId })
+            const response = await modelsGetCustomModel({ id: this.creation.customModelId })
             customModel = response?.data
           } catch (error) {
             console.error(error)

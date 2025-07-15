@@ -27,19 +27,17 @@ q-page.q-mb-xl.q-px-lg
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { modelsGetModel, modelsGetTrainingStatus, modelsCreateModel } from "src/lib/orval"
-import { Dialog, Loading, Notify } from "quasar"
-import { CustomModel, TrainingSet, uploadTrainingImages, type TrainingData } from "lib/api"
-import { parseTrainingLog } from "lib/modelTraining"
-import PickModel from "components/PickModel.vue"
 import CreateModel from "components/CreateModel.vue"
-import WatchTraining from "components/WatchTraining.vue"
+import CreateTrainingSet from "components/CreateTrainingSet.vue"
+import PickModel from "components/PickModel.vue"
 import UseModel from "components/UseModel.vue"
-import { CreateImageRequestWithCustomModel, useCreateImageStore } from "src/stores/createImageStore"
+import WatchTraining from "components/WatchTraining.vue"
+import { CustomModel, TrainingSet, type TrainingData } from "lib/api"
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
-import CreateTrainingSet from "components/CreateTrainingSet.vue"
+import { modelsGetCustomModel, modelsGetTrainingStatus } from "src/lib/orval"
+import { CreateImageRequestWithCustomModel, useCreateImageStore } from "src/stores/createImageStore"
+import { defineComponent } from "vue"
 type forgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
   components: {
@@ -75,7 +73,7 @@ export default defineComponent({
         const customModelId = this.$route.query?.customModelId
         if (this.mode == "pick") return
         if (typeof customModelId == "string") {
-          const modelResponse = await modelsGetModel({ id: customModelId }).catch(catchErr)
+          const modelResponse = await modelsGetCustomModel({ id: customModelId }).catch(catchErr)
           const customModel = modelResponse?.data
           if (!customModel) {
             this.mode = "pick"

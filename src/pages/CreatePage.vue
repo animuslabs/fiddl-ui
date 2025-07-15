@@ -14,14 +14,15 @@ q-page.full-width
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import ImageRequestCard from "components/ImageRequestCard.vue"
-import { timeSince } from "lib/util"
+import { getCreationRequest, timeSince } from "lib/util"
 import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"
 import UploaderCard from "src/components/UploaderCard.vue"
-import { creationsCreateRequest, creationsGetCreationData, modelsGetModel } from "src/lib/orval"
+import { creationsGetCreationData, modelsGetCustomModel } from "src/lib/orval"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
-import { CreateImageRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import { CreateImageRequest, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import { MediaType } from "lib/types"
 
 export default defineComponent({
   components: {
@@ -46,31 +47,26 @@ export default defineComponent({
   watch: {
     "$route.query": {
       async handler(val) {
-        const targetImageId = this.$route.query?.imageId
+        const targetMediaId = this.$route.query?.mediaId
         const encodedRequestData = this.$route.query?.requestData
-        if (targetImageId && typeof targetImageId == "string") {
-          const imageResponse = await creationsGetCreationData({ imageId: targetImageId })
-          const imageMeta = imageResponse?.data
-          console.log("imageMeta", imageMeta)
-          if (!imageMeta) return
-          const requestResponse = await creationsCreateRequest({ requestId: imageMeta.requestId })
-          const requestMeta = requestResponse?.data as any
-          if (!requestMeta) return
-          // console.log(imageMeta, requestMeta)
-          console.log("width:", this.quasar.screen.width)
-          const req = {
-            customModelId: requestMeta.customModelId,
-            aspectRatio: requestMeta.aspectRatio as any,
-            model: requestMeta.model as any,
-            prompt: requestMeta.prompt || "",
-            public: requestMeta.public,
+        const mediaType = this.$route.query?.type as MediaType
+        if (targetMediaId && typeof targetMediaId == "string") {
+          const { data: mediaData } = await creationsGetCreationData({ videoId: mediaType == "video" ? targetMediaId : undefined, imageId: mediaType == "image" ? targetMediaId : undefined })
+          const request = await getCreationRequest(mediaData.requestId, mediaType)
+          let req: Partial<CreateVideoRequest | CreateImageRequest> = {
+            aspectRatio: request.aspectRatio as any,
+            model: (request.model as unknown as any) || "",
+            prompt: request.prompt || "",
+            public: request.public,
             quantity: 1,
-            negativePrompt: requestMeta.negativePrompt,
-            seed: imageMeta.seed,
+            seed: request.seed,
+            duration: 0,
           }
+          if ("imageIds" in request) req = { ...req, customModelId: request.customModelId, negativePrompt: request.negativePrompt }
+          else if ("startImageId" in request) req = { ...req, duration: request.duration, startImageId: request.startImageId } as CreateVideoRequest
           if (req.model == "custom" && req.customModelId) {
-            const modelResponse = await modelsGetModel({ id: req.customModelId }).catch(console.error)
-            const customModel = modelResponse?.data
+            const modelData = await modelsGetCustomModel({ id: req.customModelId }).catch(console.error)
+            const customModel = modelData?.data
             if (!customModel) {
               req.customModelId = undefined
               // req.customModelName = undefined
@@ -116,15 +112,15 @@ export default defineComponent({
     console.log()
   },
   methods: {
-    setReq(request: CreateImageRequest, toggleCreateMode = false) {
+    setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       console.log("setReq", toggleCreateMode)
+      const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
       if (toggleCreateMode) {
-        const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
         if (promptTab) promptTab.createMode = true
         this.createMode = true
       }
-
-      this.createStore.setReq({ ...request })
+      promptTab.setReq(request)
+      // this.createStore.setReq({ ...request })
     },
     addImage(data: string) {
       console.log("add Image triggered")

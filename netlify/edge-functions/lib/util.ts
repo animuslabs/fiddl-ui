@@ -78,3 +78,14 @@ export const apiFetch = async <T>(url: string, options: RequestInit = {}): Promi
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
+
+export const normalizeCanonicalUrl = (url: string, keep: string[] = []): string => {
+  const parsed = new URL(url)
+  const filteredParams = new URLSearchParams()
+  for (const param of keep) {
+    const val = parsed.searchParams.get(param)
+    if (val !== null) filteredParams.set(param, val)
+  }
+  parsed.search = filteredParams.toString()
+  return parsed.toString()
+}
