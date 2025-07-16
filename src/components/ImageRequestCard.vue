@@ -12,7 +12,7 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
       .col.lt-md.q-pa-sm( v-for="(imageId,index) in creation.mediaIds" :key="imageId" style="max-width:50vw; max-width:300px; min-width:100px; ")
         CreatedImageCard.cursor-pointer( :imageId="imageId" @click="showGallery(index)" style="max-width:30vw;" )
     .centered(v-else)
-      video.cursor-pointer(v-for="(videoId,index) in creation.mediaIds" autoplay loop muted playsinline :src="s3Video(s3Video(`previewVideos/${videoId}/preview.webm`))" @click="showGallery(index)")
+      video.cursor-pointer(v-for="(videoId,index) in creation.mediaIds" autoplay loop muted playsinline :src="s3Video(videoId,'preview-md')" @click="showGallery(index)")
   div(v-if="!minimized.value")
     q-separator(color="grey-9" spaced="20px")
     .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")

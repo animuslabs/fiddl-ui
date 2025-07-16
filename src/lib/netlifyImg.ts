@@ -4,6 +4,7 @@ const imageApiUrl = import.meta.env.VITE_API_URL + "/images/" || "http://localho
 const avatarsApiUrl = import.meta.env.VITE_API_URL + "/avatars/" || "http://localhost:4444/avatars/"
 const netlifyImgPath = "/.netlify/images?url=" + imageApiUrl
 const netlifyAvatarsPath = "/.netlify/images?url=" + avatarsApiUrl
+import { originalFileKey, previewFiles, previewVideoFileKey, type PreviewFileName } from "fiddl-server/src/lib/types/serverTypes"
 
 export function img(id: string, size: ImageSize, width?: number | false, format?: string | false, quality?: number | false): string {
   let params = ""
@@ -23,14 +24,9 @@ export function s3Img(s3Key: string, size?: ImageSize, width?: number | false, f
   // else return import.meta.env.VITE_S3_URL + `s3Key`
   return import.meta.env.VITE_S3_URL + `/${s3Key}`
 }
-export function s3Video(s3Key: string, size?: ImageSize, width?: number | false, format?: string | false, quality?: number | false): string {
-  let params = ""
-  if (width) params += `&w=${width}`
-  if (format) params += `&fm=${format}`
-  if (quality) params += `&q=${quality}`
-  // if (window.location.hostname === "localhost") return `${imageApiUrl}${s3Key}-${size}.webp`
-  // else return import.meta.env.VITE_S3_URL + `s3Key`
-  return import.meta.env.VITE_S3_URL + `/${s3Key}`
+export function s3Video(videoId: string, type: PreviewFileName): string {
+  const key = previewVideoFileKey(videoId, type)
+  return import.meta.env.VITE_S3_URL + `/${key}`
 }
 
 export function avatarImg(userId: string, width?: number | false, format?: string | false, quality?: number | false) {

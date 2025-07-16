@@ -118,7 +118,7 @@ export default defineComponent({
     allMediaObjects() {
       const data = this.activeCreationsStore.allCreations.map((el) => {
         if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md") }
-        else return { id: el.id, url: s3Video(`previewVideos/${el.id}/preview.webm`) }
+        else return { id: el.id, url: s3Video(el.id, "preview-sm") }
       })
       console.log(data)
       return data

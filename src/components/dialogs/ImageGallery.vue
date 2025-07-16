@@ -80,7 +80,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             color="primary"
             track-color="transparent"
           )
-        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" )
+        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:50vw;" )
         img.image-darken.absolute-center(
           :src="nextMediaUrl"
           @click.stop="onImageClick"
@@ -236,7 +236,7 @@ export default defineComponent({
           src: this.currentMediaUrl,
           playsinline: true,
           autoplay: true,
-          muted: true,
+          muted: false,
           loop: true,
           controls: true,
           onCanplay: (e: Event) => this.mediaLoaded(e),
@@ -395,7 +395,7 @@ export default defineComponent({
       return this.type === "video" ? { videoId: val } : { imageId: val }
     },
     getMediaUrl(id: string): string {
-      return this.type === "video" ? s3Video(`previewVideos/${id}/watermarked.webm`) : img(id, "lg")
+      return this.type === "video" ? s3Video(id, "preview-lg") : img(id, "lg")
     },
     deleteImage() {
       Dialog.create({
