@@ -96,6 +96,12 @@ async function getVideoAspectRatio(url: string): Promise<number> {
 
 function markVideoLoaded(id: string) {
   delete videoLoading.value[id]
+  const el = document.querySelector(`video[data-id="${id}"]`) as HTMLVideoElement | null
+  if (el && el.videoWidth && el.videoHeight) {
+    const realAspect = el.videoWidth / el.videoHeight
+    const item = galleryItems.value.find((i) => i.id === id)
+    if (item) item.aspectRatio = realAspect
+  }
 }
 
 function markVideoErrored(id: string) {
@@ -182,6 +188,7 @@ setInterval(() => {
           :src="m.url"
           :style="mediaStyles"
           :key="videoReloadKey[m.id]"
+          :data-id="m.id"
           loop
           autoplay
           muted
