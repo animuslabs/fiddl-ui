@@ -4,7 +4,17 @@ const imageApiUrl = import.meta.env.VITE_API_URL + "/images/" || "http://localho
 const avatarsApiUrl = import.meta.env.VITE_API_URL + "/avatars/" || "http://localhost:4444/avatars/"
 const netlifyImgPath = "/.netlify/images?url=" + imageApiUrl
 const netlifyAvatarsPath = "/.netlify/images?url=" + avatarsApiUrl
-import { originalFileKey, previewFiles, previewVideoFileKey, type PreviewFileName } from "fiddl-server/src/lib/types/serverTypes"
+
+export const previewFiles = {
+  thumbnail: "webp",
+  "preview-lg": "mp4",
+  "preview-sm": "mp4",
+  "preview-md": "mp4",
+} as const
+export type PreviewFileName = keyof typeof previewFiles
+
+export const previewVideoFileKey = (videoId: string, type: PreviewFileName) => `previewVideos/${videoId}/${videoId}-${type}.${previewFiles[type]}`
+export const originalFileKey = (videoId: string) => `originalVideos/${videoId}-original.mp4`
 
 export function img(id: string, size: ImageSize, width?: number | false, format?: string | false, quality?: number | false): string {
   let params = ""
