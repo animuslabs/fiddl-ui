@@ -60,10 +60,11 @@ export default defineComponent({
             public: request.public,
             quantity: 1,
             seed: request.seed,
-            duration: 0,
+            duration: request.duration,
+            customModelId: request.customModelId,
+            negativePrompt: request.negativePrompt,
+            startImageId: request.startImageId,
           }
-          if ("imageIds" in request) req = { ...req, customModelId: request.customModelId, negativePrompt: request.negativePrompt }
-          else if ("startImageId" in request) req = { ...req, duration: request.duration, startImageId: request.startImageId } as CreateVideoRequest
           if (req.model == "custom" && req.customModelId) {
             const modelData = await modelsGetCustomModel({ id: req.customModelId }).catch(console.error)
             const customModel = modelData?.data
