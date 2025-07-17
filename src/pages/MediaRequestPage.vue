@@ -22,6 +22,7 @@ export default defineComponent({
       mediaRequests: useMediaRequests(),
       shortId: null as string | null,
       creation: null as UnifiedRequest | null,
+      galleryAutoOpened: false,
     }
   },
   mounted() {
@@ -30,19 +31,20 @@ export default defineComponent({
   methods: {
     async load() {
       const { requestShortId, type, index }: { requestShortId: string; type: MediaType; index?: string } = this.$route.params as any
-      if (index) Loading.show()
+      if (index && !this.galleryAutoOpened) Loading.show()
       // if (!requestShortId || typeof requestShortId != "string" || !type || typeof type != "string") return void this.$router.push({ name: "browse" })
       this.shortId = requestShortId
       this.creation = await this.mediaRequests.getRequest(this.shortId, type)
       if (!this.creation) return
       void this.loadCreatorProfile()
-      if (index != undefined && typeof index == "string") {
+      if (!this.galleryAutoOpened && index && typeof index == "string") {
+        console.log(index)
         setTimeout(async () => {
           if (!this.creation) return
           Loading.hide()
+          this.galleryAutoOpened = true
           await imageGallery.show(this.creation.mediaIds, parseInt(index), this.creation.type, this.creation.id)
         }, 2)
-        // await imageGallery.show(images, startIndex, this.creation.type, this.creation.id)
       }
     },
     async loadCreatorProfile() {
