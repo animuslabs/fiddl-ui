@@ -6,6 +6,7 @@ import { setSocialMetadata } from "lib/socialMeta"
 
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { getReferredBy, setReferredBy } from "lib/util"
+import { Loading } from "quasar"
 import ImageRequestCard from "src/components/ImageRequestCard.vue"
 import { useMediaRequests } from "src/stores/mediaRequestsStore"
 import { defineComponent } from "vue"
@@ -28,15 +29,21 @@ export default defineComponent({
   },
   methods: {
     async load() {
-      const { requestShortId, type, index }: { requestShortId: string; type: MediaType; index?: number } = this.$route.params as any
+      const { requestShortId, type, index }: { requestShortId: string; type: MediaType; index?: string } = this.$route.params as any
+      if (index) Loading.show()
       // if (!requestShortId || typeof requestShortId != "string" || !type || typeof type != "string") return void this.$router.push({ name: "browse" })
       this.shortId = requestShortId
       this.creation = await this.mediaRequests.getRequest(this.shortId, type)
       if (!this.creation) return
-      if (index != undefined && typeof index == "string") {
-        void imageGallery.show(this.creation.mediaIds, parseInt(index), this.creation.type, this.creation.id)
-      }
       void this.loadCreatorProfile()
+      if (index != undefined && typeof index == "string") {
+        setTimeout(async () => {
+          if (!this.creation) return
+          Loading.hide()
+          await imageGallery.show(this.creation.mediaIds, parseInt(index), this.creation.type, this.creation.id)
+        }, 2)
+        // await imageGallery.show(images, startIndex, this.creation.type, this.creation.id)
+      }
     },
     async loadCreatorProfile() {
       if (!this.creation) return console.error("tried to load user profile before creation was loaded")

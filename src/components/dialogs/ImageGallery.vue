@@ -80,7 +80,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             color="primary"
             track-color="transparent"
           )
-        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:50vw;" )
+        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;" )
         img.image-darken.absolute-center(
           :src="nextMediaUrl"
           @click.stop="onImageClick"
@@ -133,7 +133,7 @@ import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
 import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsGetImageRequest, creationsGetVideoRequest } from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
-import { catchErr, copyToClipboard, longIdToShort, preloadHdVideo, shareLink, shareMedia, updateQueryParams } from "lib/util"
+import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, preloadHdVideo, shareLink, shareMedia, sleep, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
@@ -313,7 +313,7 @@ export default defineComponent({
   beforeUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown)
   },
-  mounted() {
+  async mounted() {
     this.localMediaIds = [...this.mediaIds]
     this.currentIndex = this.startIndex
     this.preloadMedia()
@@ -322,6 +322,15 @@ export default defineComponent({
       this.dynamic = true
     }
     void this.loadRequestId()
+    await sleep(100)
+    if (this.type == "video") {
+      const video = this.$refs.mediaElement as HTMLVideoElement
+      void video.play().catch((err) => {
+        console.info(err)
+        video.muted = true
+        void video.play()
+      })
+    }
   },
   methods: {
     async loadHdMedia(val?: string) {
@@ -577,38 +586,35 @@ export default defineComponent({
       await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentMediaUrl, `${this.currentMediaId}-fiddl-art.${this.type === "video" ? "mp4" : "webp"}`)
     },
     async share() {
-      let params: any = { requestShortId: "" }
-      let query: any = { index: this.currentIndex }
-      let localRequestId = this.requestId
-      console.log("sharing", localRequestId)
-      if (!localRequestId) {
-        const creationData = await creationsGetCreationData(this.mediaParams).catch(catchErr)
-        const creationMeta = creationData?.data
-        console.log("creationMeta", creationMeta)
-        if (!creationMeta) return
-        localRequestId = creationMeta.requestId
+      try {
+        let params: any = { requestShortId: "", type: this.type, index: 0 }
+        let query: any = {}
+        let localRequestId = this.requestId
+        console.log("sharing", localRequestId)
+        if (!localRequestId) {
+          const { data } = await creationsGetCreationData(this.mediaParams)
+          localRequestId = data.requestId
+        }
+        params.requestShortId = longIdToShort(localRequestId)
+        params.type = this.type
+        const requestData = await getCreationRequest(localRequestId, this.type)
+        const mediaIndex = requestData.mediaIds.findIndex((el: string) => el == this.currentMediaId) || 0
+        params.index = mediaIndex
+        let hasUsername = !!(this.userAuth.loggedIn && this.userAuth.userProfile?.username)
+        if (!hasUsername && this.userAuth.loggedIn) await this.userAuth.loadUserProfile()
+        hasUsername = !!this.userAuth.userProfile?.username
+        if (hasUsername) query.referredBy = this.userAuth.userProfile?.username
+        const url = this.$router.resolve({ name: "mediaRequest", params, query }).href
+        const fullUrl = window.location.origin + url
+        copyToClipboard(fullUrl)
+        Dialog.create({
+          title: "Image URL Copied",
+          message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your referral link is also included in the URL.",
+          position: "top",
+        })
+      } catch (err: any) {
+        catchErr(err)
       }
-      params.requestShortId = longIdToShort(localRequestId)
-      params.type = this.type
-      const requestData = await match(this.type)
-        .with("image", async () => (await creationsGetImageRequest({ imageRequestId: localRequestId })).data)
-        .with("video", async () => (await creationsGetVideoRequest({ videoRequestId: localRequestId })).data)
-        .exhaustive()
-      const mediaIds = "imageIds" in requestData ? requestData.imageIds : requestData.videoIds
-      const mediaIndex = mediaIds.findIndex((el: string) => el == this.currentMediaId) || 0
-      query.index = mediaIndex
-      await this.userAuth.loadUserProfile()
-      const hasUsername = !!(this.userAuth.loggedIn && this.userAuth.userProfile?.username)
-      if (hasUsername) query.referredBy = this.userAuth.userProfile?.username
-      const url = this.$router.resolve({ name: "mediaRequest", params, query }).href
-      const fullUrl = window.location.origin + url
-      copyToClipboard(fullUrl)
-      // await shareLink("Fiddl.art Creation", "Check this out", fullUrl)
-      Dialog.create({
-        title: "Image URL Copied",
-        message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your referral link is also included in the URL.",
-        position: "top",
-      })
     },
     openDialog(startingIndex = 0) {
       this.currentIndex = startingIndex
