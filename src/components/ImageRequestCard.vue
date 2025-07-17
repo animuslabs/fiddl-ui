@@ -76,7 +76,7 @@ import { type CreateImageRequestWithCustomModel } from "src/stores/createImageSt
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
 import type { CreateImageRequestData, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
-import type { UnifiedCreation } from "lib/types"
+import type { UnifiedRequest } from "lib/types"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -89,7 +89,7 @@ export default defineComponent({
       default: () => ref(false),
     },
     creation: {
-      type: Object as PropType<UnifiedCreation>,
+      type: Object as PropType<UnifiedRequest>,
       required: true,
     },
     creatorUsername: {

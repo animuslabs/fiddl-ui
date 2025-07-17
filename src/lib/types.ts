@@ -1,4 +1,5 @@
 import { Base64URLString, CredentialDeviceType } from "@simplewebauthn/types"
+import type { CreationsGetImageRequest200, CreationsGetVideoRequest200 } from "lib/orval"
 export type MediaType = "image" | "video"
 export type OutputFormat = "jpeg" | "png" | "webp"
 export type StabilityAIContentResponse = {
@@ -124,7 +125,7 @@ type VideoCreationExtension = {
 }
 export type UnifiedCreationRequest = (BaseCreationRequest & ImageCreationExtension) | (BaseCreationRequest & VideoCreationExtension)
 
-export type UnifiedCreation = {
+export type UnifiedRequest = {
   id: string
   mediaIds: string[]
   createdAt: Date

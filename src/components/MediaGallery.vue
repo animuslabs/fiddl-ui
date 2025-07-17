@@ -179,21 +179,9 @@ setInterval(() => {
         .full-width.full-height(v-if="videoLoading[m.id]")
           .absolute-center
             h4 Loading
-          q-spinner(
-            color="white"
-            size="lg"
-            class="absolute full-width full-height flex flex-center"
-          )
-        video(
-          :src="m.url"
-          :style="mediaStyles"
-          :key="videoReloadKey[m.id]"
-          :data-id="m.id"
-          loop
-          autoplay
-          muted
-          playsinline
-          @canplay="markVideoLoaded(m.id)"
-          @click="emit('select', m.id); emit('selectedIndex', index)"
-          :class="props.selectable ? 'cursor-pointer' : ''")
+          q-spinner.absolute.full-width.full-height.flex.flex-center(color="white" size="lg")
+        video( :src="m.url" :style="mediaStyles" :key="videoReloadKey[m.id]" :data-id="m.id" loop autoplay muted playsinline
+        @canplay="markVideoLoaded(m.id)"
+        @click="emit('select', m.id); emit('selectedIndex', index)"
+        :class="props.selectable && !videoLoading[m.id]? 'cursor-pointer' : ''")
 </template>

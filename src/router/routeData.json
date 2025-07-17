@@ -62,12 +62,12 @@
   [
     "imageRequest",
     "/r/:type/:requestShortId/:index?",
-    "ImageRequestPage"
+    "MediaRequestPage"
   ],
   [
     "mediaRequest",
     "/request/:type/:requestShortId/:index?",
-    "ImageRequestPage"
+    "MediaRequestPage"
   ],
   [
     "admin",

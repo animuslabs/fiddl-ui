@@ -7,7 +7,7 @@ import { Dialog } from "quasar"
 import type { CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 import type { ImagePurchase, Image } from "lib/api"
-import type { UnifiedCreation } from "lib/types"
+import type { UnifiedRequest } from "lib/types"
 
 interface SceneConfig {
   number: number
@@ -44,7 +44,7 @@ interface CreationImage {
 
 export const useImageCreations = defineStore("imageCreationsStore", {
   state: () => ({
-    creations: [] as UnifiedCreation[],
+    creations: [] as UnifiedRequest[],
     imagePurchases: [] as ImagePurchase[],
     favorites: [] as Image[],
     favoritesCollectionId: null as string | null,
@@ -245,7 +245,7 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         }
       }
 
-      const createdItem: UnifiedCreation = {
+      const createdItem: UnifiedRequest = {
         ...request,
         mediaIds: result.ids.reverse(),
         id: result.id,

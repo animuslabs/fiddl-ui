@@ -54,7 +54,7 @@ import { BrowserItem } from "src/stores/browserStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
 import { toUnifiedCreation } from "lib/util"
-import { UnifiedCreation } from "lib/types"
+import { UnifiedRequest } from "lib/types"
 export default defineComponent({
   components: {
     ImageRequestCard,
@@ -66,7 +66,7 @@ export default defineComponent({
       creationsStore: useImageCreations(),
       tab: "creations",
       showRequest: false,
-      selectedRequest: null as UnifiedCreation | null,
+      selectedRequest: null as UnifiedRequest | null,
       tabs: [
         { label: "My Creations", name: "creations", icon: "sym_o_create" },
         { label: "unlocked Images", name: "purchased", icon: "sym_o_lock_open" },

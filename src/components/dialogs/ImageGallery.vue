@@ -133,7 +133,7 @@ import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
 import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsGetImageRequest, creationsGetVideoRequest } from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
-import { catchErr, copyToClipboard, longIdToShort, preloadHdVideo, shareImage, updateQueryParams } from "lib/util"
+import { catchErr, copyToClipboard, longIdToShort, preloadHdVideo, shareLink, shareMedia, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
@@ -281,7 +281,7 @@ export default defineComponent({
       },
       immediate: false,
     },
-    imageRequestId: {
+    mediaRequestId: {
       handler(val: string) {
         if (!val) return
         this.loadedRequestId = val
@@ -574,21 +574,22 @@ export default defineComponent({
       }
     },
     async mobileShare() {
-      await shareImage("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentMediaUrl, `${this.currentMediaId}-fiddl-art.${this.type === "video" ? "webm" : "webp"}`)
+      await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", this.currentMediaUrl, `${this.currentMediaId}-fiddl-art.${this.type === "video" ? "mp4" : "webp"}`)
     },
     async share() {
       let params: any = { requestShortId: "" }
       let query: any = { index: this.currentIndex }
       let localRequestId = this.requestId
+      console.log("sharing", localRequestId)
       if (!localRequestId) {
         const creationData = await creationsGetCreationData(this.mediaParams).catch(catchErr)
         const creationMeta = creationData?.data
+        console.log("creationMeta", creationMeta)
         if (!creationMeta) return
         localRequestId = creationMeta.requestId
-        params.requestShortId = longIdToShort(localRequestId)
-      } else {
-        params.requestShortId = longIdToShort(localRequestId)
       }
+      params.requestShortId = longIdToShort(localRequestId)
+      params.type = this.type
       const requestData = await match(this.type)
         .with("image", async () => (await creationsGetImageRequest({ imageRequestId: localRequestId })).data)
         .with("video", async () => (await creationsGetVideoRequest({ videoRequestId: localRequestId })).data)
@@ -602,6 +603,7 @@ export default defineComponent({
       const url = this.$router.resolve({ name: "mediaRequest", params, query }).href
       const fullUrl = window.location.origin + url
       copyToClipboard(fullUrl)
+      // await shareLink("Fiddl.art Creation", "Check this out", fullUrl)
       Dialog.create({
         title: "Image URL Copied",
         message: "The image URL has been copied to your clipboard. If you are logged in with a username set then your referral link is also included in the URL.",

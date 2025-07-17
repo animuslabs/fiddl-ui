@@ -1,4 +1,4 @@
-import { TranscriptLine, type BaseCreationRequest, type MediaType, type UnifiedCreation, type UnifiedCreationRequest } from "lib/types"
+import { TranscriptLine, type BaseCreationRequest, type MediaType, type UnifiedRequest, type UnifiedCreationRequest } from "lib/types"
 import { formatDistanceToNow } from "date-fns"
 import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
@@ -11,42 +11,59 @@ import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-serve
 import { match } from "ts-pattern"
 import { creationsGetImageRequest, creationsGetVideoRequest, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
 /**
- * Shares an image via the native share feature, with a fallback for unsupported devices.
+ * Shares an image or video via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
  * @param text - The text description of the content being shared.
- * @param imageUrl - The URL of the image to be shared.
- * @param filename - The desired filename for the shared or downloaded image.
+ * @param mediaUrl - The URL of the media (image or video) to be shared.
+ * @param filename - The desired filename for the shared or downloaded media.
  */
-export async function shareImage(title: string, text: string, imageUrl: string, filename: string): Promise<void> {
+export async function shareMedia(title: string, text: string, mediaUrl: string, filename: string): Promise<void> {
   if (navigator.share && navigator.canShare) {
     try {
-      // Fetch the image and convert it into a File object
-      const response = await fetch(imageUrl)
+      const response = await fetch(mediaUrl)
       const blob = await response.blob()
       const file = new File([blob], filename, { type: blob.type })
 
-      // Check if the file can be shared
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
           title,
           text,
           files: [file],
         })
-        console.log("Image shared successfully!")
+        console.log("Media shared successfully!")
       } else {
-        console.error("This device cannot share the provided image.")
-        fallbackShare(imageUrl, filename)
+        console.error("This device cannot share the provided media.")
+        fallbackShare(mediaUrl, filename)
       }
     } catch (error) {
-      console.error("Error sharing the image:", error)
-      fallbackShare(imageUrl, filename)
+      console.error("Error sharing the media:", error)
+      fallbackShare(mediaUrl, filename)
     }
   } else {
     console.warn("Web Share API is not supported or file sharing is unavailable on this device.")
-    fallbackShare(imageUrl, filename)
+    fallbackShare(mediaUrl, filename)
   }
 }
-
+export async function shareLink(title: string, text: string, url: string) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url })
+    } catch (err) {
+      console.error("Error sharing link", err)
+      copyToClipboard(url)
+      Dialog.create({
+        title: "Link Copied",
+        message: "Link copied to clipboard instead.",
+      })
+    }
+  } else {
+    copyToClipboard(url)
+    Dialog.create({
+      title: "Link Copied",
+      message: "Link copied to clipboard.",
+    })
+  }
+}
 /**
  * Fallback for sharing: Downloads or opens the image in a new tab.
  * @param imageUrl - The URL of the image to be shared.
@@ -451,7 +468,7 @@ export function normalizeCreation(creation: CreateImageRequestData | CreateVideo
   }
 }
 
-export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedCreation {
+export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedRequest {
   const isImage = "imageIds" in creation
 
   return {
@@ -483,8 +500,7 @@ export async function getCreationRequest(requestId: string, type: MediaType) {
     .with("image", () => creationsGetImageRequest({ imageRequestId: requestId }))
     .with("video", () => creationsGetVideoRequest({ videoRequestId: requestId }))
     .exhaustive()
-  const mediaIds = "imageIds" in data ? data.imageIds : data.videoIds
-  return { ...data, mediaIds }
+  return unifiyRequest(data)
 }
 
 export async function preloadHdVideo(url: string): Promise<HTMLVideoElement> {
@@ -510,4 +526,8 @@ export async function preloadHdVideo(url: string): Promise<HTMLVideoElement> {
 
     video.load()
   })
+}
+export function unifiyRequest(request: CreationsGetImageRequest200 | CreationsGetVideoRequest200): UnifiedRequest {
+  const mediaIds = "imageIds" in request ? request.imageIds : request.videoIds
+  return { ...request, mediaIds, type: "imageIds" in request ? "image" : "video", createdAt: new Date(request.createdAt) }
 }

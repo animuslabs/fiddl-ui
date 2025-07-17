@@ -9,7 +9,7 @@ import type { CreateImageRequestWithCustomModel } from "src/stores/createImageSt
 import type { AspectRatio, ImageModel, VideoModel, VideoModelData } from "lib/imageModels"
 import type { VideoPurchase, Image, Video } from "lib/api"
 import { catchErr } from "lib/util"
-import type { UnifiedCreation } from "lib/types"
+import type { UnifiedRequest } from "lib/types"
 
 interface SceneConfig {
   number: number
@@ -35,7 +35,7 @@ interface CreationVideo {
 
 export const useVideoCreations = defineStore("videoCreationsStore", {
   state: () => ({
-    creations: [] as UnifiedCreation[],
+    creations: [] as UnifiedRequest[],
     imagePurchases: [] as VideoPurchase[],
     favorites: [] as Video[],
     favoritesCollectionId: null as string | null,
@@ -215,7 +215,7 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
 
       if (!result) return
 
-      const createdItem: UnifiedCreation = {
+      const createdItem: UnifiedRequest = {
         ...request,
         mediaIds: result.videos.map((el) => el.id).reverse(),
         id: result.id,

@@ -2,7 +2,7 @@ import { Dialog } from "quasar"
 import ImageGallery from "src/components/dialogs/ImageGallery.vue"
 
 const imageGallery = {
-  show(mediaIds: string[], startIndex = 0, type = "image" as "image" | "video", imageRequestId?: string) {
+  show(mediaIds: string[], startIndex = 0, type = "image" as "image" | "video", mediaRequestId?: string) {
     return new Promise<void>((res) => {
       Dialog.create({
         component: ImageGallery,
@@ -13,7 +13,7 @@ const imageGallery = {
           mediaIds,
           startIndex,
           type,
-          imageRequestId,
+          mediaRequestId,
         },
       }).onDismiss(() => {
         // void router.replace({ query: {} })
