@@ -55,11 +55,14 @@ export const useBrowserStore = defineStore("browserStore", {
   },
   actions: {
     deleteImage(imageId: string, requestId: string) {
+      console.log("delete image in browser store", imageId, requestId)
       const item = this.items.find((item) => item.id === requestId)
+      console.log(item)
       if (!item) return
       const index = item.imageIds.indexOf(imageId)
       if (index === -1) return
       item.imageIds.splice(index, 1)
+      console.log("deleted from browser store", index)
     },
     setSort(method: SortMethod) {
       this.filter.sort = method

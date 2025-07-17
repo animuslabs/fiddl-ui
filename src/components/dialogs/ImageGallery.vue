@@ -59,7 +59,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
                           .row.items-center
                             q-icon(name="account_circle" size="20px").q-mr-md
                             div Use as Profile Image
-                      q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage")
+                      q-item(clickable @click="deleteImage()" v-close-popup v-if="userCreatedImage && allowDelete")
                         q-item-section
                           .row.items-center
                             q-icon(name="delete" size="20px").q-mr-md
@@ -133,7 +133,7 @@ import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
 import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsGetImageRequest, creationsGetVideoRequest } from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
-import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, preloadHdVideo, shareLink, shareMedia, sleep, updateQueryParams } from "lib/util"
+import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, preloadHdVideo, shareLink, shareMedia, sleep, throwErr, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import DownloadImage from "./DownloadImage.vue"
 import EditImage from "./EditImage.vue"
@@ -145,6 +145,7 @@ import { s3Video } from "lib/netlifyImg"
 import { useUserAuth } from "src/stores/userAuth"
 import { match } from "ts-pattern"
 import EditVideo from "components/dialogs/EditVideo.vue"
+import { useVideoCreations } from "src/stores/videoCreationsStore"
 
 export default defineComponent({
   props: {
@@ -165,6 +166,10 @@ export default defineComponent({
       type: Number,
       default: 0,
       required: false,
+    },
+    allowDelete: {
+      type: Boolean,
+      default: true,
     },
   },
   emits: ["ok", "hide"],
@@ -402,6 +407,7 @@ export default defineComponent({
     buildMediaParam(id?: string) {
       let val = id
       if (!val) val = this.currentMediaId
+      // console.log("building media param:", val)
       return this.type === "video" ? { videoId: val } : { imageId: val }
     },
     getMediaUrl(id: string): string {
@@ -409,40 +415,57 @@ export default defineComponent({
     },
     deleteImage() {
       Dialog.create({
-        title: "Delete Image",
-        message: "Are you sure you want to delete this image?",
-        ok: {
-          label: "Delete",
-          color: "negative",
-        },
-        cancel: {
-          label: "Cancel",
-          color: "primary",
-        },
+        title: "Delete Creation",
+        message: "Are you sure you want to delete this creation?",
+        ok: { label: "Delete", color: "negative" },
+        cancel: { label: "Cancel", color: "primary" },
       }).onOk(async () => {
         this.loading = true
         this.imageDeleted = true
+        await this.loadRequestId()
+        const requestId = this.loadedRequestId
+        const deletedId = this.currentMediaId
         try {
-          await creationsDeleteMedia(this.buildMediaParam(this.currentMediaId))
+          await creationsDeleteMedia(this.buildMediaParam())
         } catch (error) {
           catchErr(error)
         }
-        if (this.localMediaIds.length == 1) this.hide()
-        this.localMediaIds = this.localMediaIds.filter((el) => el !== this.currentMediaId)
-        if (this.currentIndex >= this.localMediaIds.length - 2) this.currentIndex--
+
+        // Remove deleted media
+        this.localMediaIds = this.localMediaIds.filter((el) => el !== deletedId)
+
+        // 🚨 If no media left, exit early
+        if (this.localMediaIds.length === 0) {
+          this.hide()
+          // return
+        }
+
+        // ✅ Adjust index safely
+        if (this.currentIndex >= this.localMediaIds.length) {
+          this.currentIndex = this.localMediaIds.length - 1
+        }
+
         setTimeout(() => {
           this.loading = false
         }, 500)
-        await this.loadRequestId()
-        if (!this.loadedRequestId) return
-        useImageCreations().deleteImage(this.currentMediaId, this.loadedRequestId)
-        useBrowserStore().deleteImage(this.currentMediaId, this.loadedRequestId)
+
+        if (requestId) {
+          console.log("req id")
+          if (this.type == "image") {
+            useImageCreations().deleteImage(deletedId, requestId)
+            useBrowserStore().deleteImage(deletedId, requestId)
+          } else {
+            useVideoCreations().deleteVideo(deletedId, requestId)
+          }
+        } else {
+          // await this.loadRequestId()
+        }
       })
     },
     async loadRequestId() {
       // return
       if (!this.dynamic && this.requestId && this.creatorMeta.userName.length) return
-      const imageResponse = await creationsGetCreationData(this.buildMediaParam(this.currentMediaId)).catch(catchErr)
+      const imageResponse = await creationsGetCreationData(this.buildMediaParam()).catch(catchErr)
       const imageMeta = imageResponse?.data
       if (!imageMeta) return
       this.loadedRequestId = imageMeta.requestId

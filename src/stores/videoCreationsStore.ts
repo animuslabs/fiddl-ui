@@ -80,11 +80,13 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
       if (index === -1) return
       this.creations.splice(index, 1)
     },
-    deleteImage(imageId: string, creationId: string) {
+    deleteVideo(videoId: string, creationId: string) {
+      console.log("deleting", videoId, creationId)
       const creation = this.creations.find((i) => i.id === creationId)
       if (!creation) return
-      const index = creation.mediaIds.findIndex((id) => id === imageId)
-      console.log("deleted image index", index)
+      console.log(creation)
+      const index = creation.mediaIds.findIndex((id) => id === videoId)
+      console.log("deleted video index", index)
       if (index === -1) return
       creation.mediaIds.splice(index, 1)
     },
