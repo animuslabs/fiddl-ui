@@ -742,6 +742,7 @@ imageId: string;
 
 export type CreationsHdVideoParams = {
 videoId: string;
+download?: boolean;
 };
 
 export type CreationsOriginalImageParams = {
@@ -4925,62 +4926,6 @@ export function useStatsPayments<TData = Awaited<ReturnType<typeof statsPayments
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStatsPaymentsQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
-
-  return query;
-}
-
-
-
-
-export const statsApiMetrics = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.get(
-      `/stats/apiMetrics`,options
-    );
-  }
-
-
-export const getStatsApiMetricsQueryKey = () => {
-    return ['stats','apiMetrics'] as const;
-    }
-
-    
-export const getStatsApiMetricsQueryOptions = <TData = Awaited<ReturnType<typeof statsApiMetrics>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsApiMetrics>>, TError, TData>>, axios?: AxiosRequestConfig}
-) => {
-
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
-
-  const queryKey =  getStatsApiMetricsQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof statsApiMetrics>>> = ({ signal }) => statsApiMetrics({ signal, ...axiosOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof statsApiMetrics>>, TError, TData> 
-}
-
-export type StatsApiMetricsQueryResult = NonNullable<Awaited<ReturnType<typeof statsApiMetrics>>>
-export type StatsApiMetricsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
-
-
-
-export function useStatsApiMetrics<TData = Awaited<ReturnType<typeof statsApiMetrics>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsApiMetrics>>, TError, TData>>, axios?: AxiosRequestConfig}
- , queryClient?: QueryClient 
- ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStatsApiMetricsQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

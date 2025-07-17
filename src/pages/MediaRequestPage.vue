@@ -37,7 +37,7 @@ export default defineComponent({
       this.creation = await this.mediaRequests.getRequest(this.shortId, type)
       if (!this.creation) return
       void this.loadCreatorProfile()
-      if (!this.galleryAutoOpened && index && typeof index == "string") {
+      if (!this.galleryAutoOpened && index) {
         console.log(index)
         setTimeout(async () => {
           if (!this.creation) return

@@ -321,8 +321,9 @@ export default defineComponent({
     if (!this.creatorMeta.userName.length || !this.requestId) {
       this.dynamic = true
     }
-    void this.loadRequestId()
-    await sleep(100)
+    await this.loadRequestId()
+    void this.loadHdMedia()
+
     if (this.type == "video") {
       const video = this.$refs.mediaElement as HTMLVideoElement
       void video.play().catch((err) => {
@@ -518,7 +519,7 @@ export default defineComponent({
       }
     },
     showDownloadWindow() {
-      Dialog.create({ component: DownloadImage, componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId } }).onDismiss(() => {
+      Dialog.create({ component: DownloadImage, componentProps: { userOwnsMedia: this.userOwnsMedia, currentMediaId: this.currentMediaId, type: this.type } }).onDismiss(() => {
         // After purchase or download
         this.hdMediaLoaded = false // Reset HD image loaded flag
 

@@ -3,15 +3,16 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
   q-card.q-dialog-plugin(style="width:500px; max-width:90vw;")
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
-        h4 Download Image
-      div(v-if="!userOwnsImage && !imageUnlocked")
+        h4.text-capitalize Download {{type}}
+      div(v-if="!userOwnsMedia && !mediaUnlocked")
         .centered
-          h5.q-ma-md You have not unlocked this image.
-        p.q-mb-md.q-ml-lg Unlock this image to access:
+          h5.q-ma-md You have not unlocked this {{type}}.
+        p.q-mb-md.q-ml-lg Unlock this {{type}} to access:
         ul.q-ma-md
           li.q-ma-sm Full resolution display on fiddl.art without a watermark.
-          li.q-ma-sm Download the original source image as well as a 4k upscale, suitable for printing.
-          li.q-ma-sm Access the original prompt and model details, including the seed, necessary for creating similar images.
+          li.q-ma-sm Download the original art
+          li.q-ma-sm For images: download a 4k upscale, suitable for printing.
+          li.q-ma-sm Access the original prompt and model details, including the seed, necessary for creating similar creations.
         .centered.q-pt-md
           q-btn(color="accent" label="Unlock Image" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
@@ -20,57 +21,71 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
       div(v-else style="height:30vh")
         .centered
-          p.q-ma-md You own this image.
+          p.q-ma-md You own this {{ type }}.
         .centered
           div
             .row
               p.q-ma-md Downloads
             .col-auto
               q-btn(label="original" icon="image" @click="downloadOriginal()")
-            .col-auto
+            .col-auto(v-if="type == 'image'")
               q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()")
-            small Upscaling can take 30+ seconds the first time
+            small(v-if="type == 'image'") Upscaling can take 30+ seconds the first time
       .centered.q-pt-md.q-pb-md
         q-btn(label="< back" color="grey" flat @click="hide()")
 
 </template>
 
 <script lang="ts">
-import { catchErr, downloadFile } from "lib/util"
+import { catchErr, downloadFile, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseImage } from "src/lib/orval"
+import { MediaType } from "lib/types"
+import { originalFileKey } from "lib/netlifyImg"
+import { creationsHdVideo } from "src/lib/orval"
+import { sleep } from "lib/util"
 
 export default defineComponent({
   props: {
-    userOwnsImage: Boolean,
-    currentImageId: {
+    userOwnsMedia: Boolean,
+    currentMediaId: {
       type: String as PropType<string | null>,
       default: null,
+    },
+    type: {
+      type: String as PropType<MediaType>,
     },
   },
 
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
-      imageUnlocked: false,
+      mediaUnlocked: false,
     }
   },
   watch: {},
 
   methods: {
     async downloadOriginal() {
-      if (!this.userOwnsImage && !this.imageUnlocked) return
-      if (!this.currentImageId) return
+      if (!this.userOwnsMedia && !this.mediaUnlocked) return
+      if (!this.currentMediaId) return
       try {
         Loading.show({
           message: "Downloading Image",
         })
-        const response = await creationsOriginalImage({ imageId: this.currentImageId }).catch(catchErr)
-        const imageData = response?.data
-        const imageDataUrl = `data:image/png;base64,${imageData}`
+        if (this.type == "image") {
+          const response = await creationsOriginalImage({ imageId: this.currentMediaId }).catch(catchErr)
+          const imageData = response?.data
+          const imageDataUrl = `data:image/png;base64,${imageData}`
+          downloadFile(imageDataUrl, this.currentMediaId + "-original.png")
+        } else {
+          const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
+          void triggerDownload(data)
+          await sleep(3000)
+        }
         Loading.hide()
-        downloadFile(imageDataUrl, this.currentImageId + "-original.png")
+        this.hide()
       } catch (error: any) {
         console.error(error)
         Loading.hide()
@@ -81,19 +96,19 @@ export default defineComponent({
       }
     },
     async downloadUpscaled() {
-      if (!this.userOwnsImage && !this.imageUnlocked) return
-      if (!this.currentImageId) return
+      if (!this.userOwnsMedia && !this.mediaUnlocked) return
+      if (!this.currentMediaId) return
       Loading.show({
         message: "Upscaling Image",
       })
-      const response = await creationsUpscaledImage({ imageId: this.currentImageId }).catch(catchErr)
+      const response = await creationsUpscaledImage({ imageId: this.currentMediaId }).catch(catchErr)
       const imageData = response?.data
       if (!imageData) {
         Loading.hide()
         return console.error("No image data")
       }
       const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentImageId + "-upscaled.png")
+      downloadFile(imageDataUrl, this.currentMediaId + "-upscaled.png")
       Loading.hide()
     },
     goToLogin() {
@@ -101,16 +116,16 @@ export default defineComponent({
       this.hide()
     },
     async unlock() {
-      if (!this.currentImageId) return
-      const response = await creationsPurchaseImage({ imageId: this.currentImageId }).catch(catchErr)
+      if (!this.currentMediaId) return
+      const response = await creationsPurchaseImage({ imageId: this.currentMediaId }).catch(catchErr)
       const result = response?.data
       if (!result) return
       try {
-        SessionStorage.removeItem("noHdImage-" + this.currentImageId)
+        SessionStorage.removeItem("noHdImage-" + this.currentMediaId)
       } catch (err: any) {
         catchErr(err)
       }
-      this.imageUnlocked = true
+      this.mediaUnlocked = true
       this.$emit("unlocked")
     },
     show() {

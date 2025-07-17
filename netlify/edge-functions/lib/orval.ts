@@ -712,6 +712,7 @@ imageId: string;
 
 export type CreationsHdVideoParams = {
 videoId: string;
+download?: boolean;
 };
 
 export type CreationsOriginalImageParams = {
@@ -5295,69 +5296,6 @@ export const statsPayments = async ( options?: RequestInit): Promise<statsPaymen
   const data: statsPaymentsResponse['data'] = body ? JSON.parse(body) : {}
 
   return { data, status: res.status, headers: res.headers } as statsPaymentsResponse
-}
-
-
-
-export type statsApiMetricsResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type statsApiMetricsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type statsApiMetricsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type statsApiMetricsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type statsApiMetricsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type statsApiMetricsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type statsApiMetricsResponseComposite = statsApiMetricsResponse200 | statsApiMetricsResponse400 | statsApiMetricsResponse401 | statsApiMetricsResponse403 | statsApiMetricsResponse404 | statsApiMetricsResponse500;
-    
-export type statsApiMetricsResponse = statsApiMetricsResponseComposite & {
-  headers: Headers;
-}
-
-export const getStatsApiMetricsUrl = () => {
-
-
-  
-
-  return `https://api.fiddl.art/api/stats/apiMetrics`
-}
-
-export const statsApiMetrics = async ( options?: RequestInit): Promise<statsApiMetricsResponse> => {
-  
-  const res = await fetch(getStatsApiMetricsUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: statsApiMetricsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as statsApiMetricsResponse
 }
 
 
