@@ -4,6 +4,13 @@
     q-form(@submit="browserStore.searchCreations()" inline style="max-width:100vw;")
       .row.no-wrap.items-center.hide-scrollbar(style="overflow: auto; width:fit-content; max-width:100vw;")
         //- q-btn(:label="browserStore.filter.sort" @click="browserStore.toggleSort")
+        q-btn-dropdown(:label="browserStore.filter.mediaType || 'Media Type'" flat color="primary" :icon="mediaTypeIcon[browserStore.filter.mediaType]")
+          q-list
+            .q-ma-md.cursor-pointer.relative-position(v-for="(icon,method) in mediaTypeIcon" clickable @click="browserStore.setMediaType(method)" v-close-popup )
+              .absolute.bg-primary(style="left:-5px; height:100%; width:5px;" v-if="browserStore.filter.mediaType == method")
+              .row.items-center
+                q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
+                p {{ method }}
         q-btn-dropdown(:label="browserStore.filter.sort || 'Sort'" flat color="primary" :icon="sortMethodIcon[browserStore.filter.sort]")
           q-list
             .q-ma-md.cursor-pointer.relative-position(v-for="(icon,method) in sortMethodIcon" clickable @click="browserStore.setSort(method)" v-close-popup )
@@ -12,8 +19,10 @@
                 q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
                 p {{ method }}
 
+        q-separator(vertical)
         div
-          q-btn-toggle(v-model="viewMode.imageSize" flat :options="gridModeOptions")
+          q-btn-toggle(v-model="viewMode" flat :options="gridModeOptions")
+        q-separator(vertical)
         q-btn-dropdown(:label="browserStore.filter.aspectRatio ||'Aspect'" flat :color="browserStore.filter.aspectRatio ? 'primary' : 'white'")
           q-list
             q-item(clickable @click="browserStore.filter.aspectRatio = undefined" v-close-popup) Any
@@ -40,30 +49,28 @@
 <script lang="ts">
 import { aspectRatios, imageModels } from "lib/imageModels"
 import { LocalStorage, useQuasar } from "quasar"
-import { useBrowserStore, sortMethodIcon } from "stores/browserStore"
+import { useBrowserStore, sortMethodIcon, mediaTypeIcon } from "stores/browserStore"
 import { defineComponent } from "vue"
 
 let interval: any = null
 // const gridModeOptions =
 export default defineComponent({
   emits: {
-    setImageSize: (size: "small" | "medium" | "large" | null) => true,
+    setViewMode: (size: "grid" | "mosaic") => true,
   },
   data() {
     return {
+      mediaTypeIcon,
       sortMethodIcon,
       quasar: useQuasar(),
       browserStore: useBrowserStore(),
       aspectRatios,
       imageModels,
       expandSearch: false,
-      viewMode: {
-        gridMode: null,
-        imageSize: null as "small" | "medium" | "large" | null,
-      },
+      viewMode: "mosaic" as "mosaic" | "grid",
       gridModeOptions: [
-        { icon: "grid_view", value: useQuasar().screen.lt.md ? "small" : "medium" },
-        { icon: "dashboard", value: null },
+        { icon: "grid_view", value: "grid" },
+        { icon: "dashboard", value: "mosaic" },
       ],
     }
   },
@@ -74,21 +81,18 @@ export default defineComponent({
         this.browserStore.reset()
       },
     },
-    "viewMode.imageSize": {
+    viewMode: {
       handler(val) {
         console.log("emit imageSize event", val)
-        LocalStorage.set("browserImageSize", val)
-        this.$emit("setImageSize", val)
+        LocalStorage.set("browserViewMode", val)
+        this.$emit("setViewMode", val)
       },
       immediate: false,
     },
   },
   mounted() {
-    const savedImageSize = LocalStorage.getItem("browserImageSize")
-    console.log("savedSize", savedImageSize, typeof savedImageSize)
-    if (savedImageSize == "null" || !savedImageSize) this.viewMode.imageSize = null
-    else this.viewMode.imageSize = this.quasar.screen.gt.sm ? "medium" : "small"
-    console.log("viewMode", this.viewMode.imageSize)
+    const savedViewMode = LocalStorage.getItem("browserViewMode")
+    if (savedViewMode) this.viewMode = savedViewMode as any
   },
   methods: {
     exitTextSearch() {

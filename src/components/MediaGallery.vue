@@ -32,10 +32,13 @@ const props = withDefaults(
     rowHeightRatio: 1.2,
   },
 )
+
 const videoLoading = ref<Record<string, boolean>>({})
+const videoReloadKey = ref<Record<string, number>>({})
+
 const emit = defineEmits<{
-  (e: "select", id: string): void
-  (e: "selectedIndex", id: number): void
+  (e: "select", payload: { id: string; type: "image" | "video" }): void
+  (e: "selectedIndex", index: number): void
 }>()
 
 const $q = useQuasar()
@@ -64,8 +67,11 @@ const mediaStyles = computed(() => {
   const style =
     props.layout === "grid"
       ? {
-          width: `${thumbSize.value}px`,
-          height: `${thumbSize.value}px`,
+          height: "100%",
+          width: "100%",
+          // maxHeight: "100px",
+          // maxWidth: "100px",
+          aspectRatio: "1 / 1",
           "object-fit": "cover",
           display: "block",
         }
@@ -83,42 +89,6 @@ const mediaStyles = computed(() => {
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
 
-async function getVideoAspectRatio(url: string): Promise<number> {
-  return new Promise((resolve) => {
-    const video = document.createElement("video")
-    video.onloadedmetadata = () => {
-      resolve(video.videoWidth / video.videoHeight || 1)
-    }
-    video.onerror = () => resolve(1)
-    video.src = url
-  })
-}
-
-function markVideoLoaded(id: string) {
-  delete videoLoading.value[id]
-  const el = document.querySelector(`video[data-id="${id}"]`) as HTMLVideoElement | null
-  if (el && el.videoWidth && el.videoHeight) {
-    const realAspect = el.videoWidth / el.videoHeight
-    const item = galleryItems.value.find((i) => i.id === id)
-    if (item) item.aspectRatio = realAspect
-  }
-}
-
-function markVideoErrored(id: string) {
-  videoLoading.value[id] = true
-}
-
-async function buildItems(src: MediaGalleryMeta[]) {
-  galleryItems.value = await Promise.all(
-    src.map(async (item) => {
-      const type = item.type ?? getMediaType(item.url)
-      if (type == "video") videoLoading.value[item.id] = true
-      const aspectRatio = item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url))
-      return { ...item, type, aspectRatio }
-    }),
-  )
-}
-
 watch(
   () => props.mediaObjects,
   (val) => {
@@ -126,6 +96,31 @@ watch(
   },
   { immediate: true, deep: true },
 )
+
+watch(
+  () => props.layout,
+  () => {
+    void buildItems(props.mediaObjects)
+  },
+)
+
+async function buildItems(src: MediaGalleryMeta[]) {
+  galleryItems.value = await Promise.all(
+    src.map(async (item) => {
+      const type = item.type ?? getMediaType(item.url)
+      if (type === "video" && !videoLoading.value[item.id]) {
+        const videoEl = document.querySelector(`video[data-id="${item.id}"]`) as HTMLVideoElement | null
+        if (!videoEl || videoEl.readyState < 2) {
+          videoLoading.value[item.id] = true
+        }
+      }
+
+      const aspectRatio = props.layout === "grid" ? 1 : (item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url)))
+
+      return { ...item, type, aspectRatio }
+    }),
+  )
+}
 
 function getMediaType(url: string): "image" | "video" {
   return url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) ? "video" : "image"
@@ -140,6 +135,35 @@ async function getImageAspectRatio(url: string): Promise<number> {
   })
 }
 
+async function getVideoAspectRatio(url: string): Promise<number> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video")
+    video.onloadedmetadata = () => resolve(video.videoWidth / video.videoHeight || 1)
+    video.onerror = () => resolve(1)
+    video.src = url
+  })
+}
+
+function markVideoLoaded(id: string) {
+  const el = document.querySelector(`video[data-id="${id}"]`) as HTMLVideoElement | null
+  if (!el) return
+
+  // Only mark as loaded if we have metadata and some readiness
+  if (el.readyState >= 2) {
+    delete videoLoading.value[id]
+
+    if (el.videoWidth && el.videoHeight) {
+      const realAspect = el.videoWidth / el.videoHeight
+      const item = galleryItems.value.find((i) => i.id === id)
+      if (item) item.aspectRatio = realAspect
+    }
+  }
+}
+
+function markVideoErrored(id: string) {
+  videoLoading.value[id] = true
+}
+
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
   const aspect = m.aspectRatio ?? 1
@@ -148,7 +172,6 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
     gridColumnEnd: aspect > 1.5 ? "span 2" : undefined,
   }
 }
-const videoReloadKey = ref<Record<string, number>>({})
 
 setInterval(() => {
   for (const id of Object.keys(videoLoading.value)) {
@@ -157,6 +180,13 @@ setInterval(() => {
     }
   }
 }, 10000)
+
+function videoClass(media: MediaGalleryMeta) {
+  return {
+    "cursor-pointer": props.selectable && !videoLoading[media.id],
+    display: videoLoading[media.id] ? "none" : "block",
+  }
+}
 </script>
 
 <template lang="pug">
@@ -170,18 +200,43 @@ setInterval(() => {
       v-if="m.type === 'image'"
       :src="m.url"
       :style="mediaStyles"
-      @click="emit('select', m.id); emit('selectedIndex', index)"
       spinner-color="white"
       :class="props.selectable ? 'cursor-pointer' : ''"
+      @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
     )
     template(v-else)
-      div(:style="mediaStyles" style="position: relative")
-        .full-width.full-height(v-if="videoLoading[m.id]")
+      div(v-if="videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
+        .full-width.full-height()
           .absolute-center
             h4 Loading
           q-spinner.absolute.full-width.full-height.flex.flex-center(color="white" size="lg")
-        video( :src="m.url" :style="mediaStyles" :key="videoReloadKey[m.id]" :data-id="m.id" loop autoplay muted playsinline
-        @canplay="markVideoLoaded(m.id)"
-        @click="emit('select', m.id); emit('selectedIndex', index)"
-        :class="props.selectable && !videoLoading[m.id]? 'cursor-pointer' : ''")
+      div(:style="mediaStyles" style="position: relative; overflow: hidden")
+        video(
+          :src="m.url"
+          :key="videoReloadKey[m.id]"
+          :data-id="m.id"
+          loop autoplay muted playsinline
+          @canplay="markVideoLoaded(m.id)"
+          @loadeddata="markVideoLoaded(m.id)"
+          @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
+          style="width: 100%; height: 100%; object-fit: cover; display: block"
+          :class="videoClass(m)"
+        )
 </template>
+
+<style>
+.media-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.media-container img,
+.media-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+</style>

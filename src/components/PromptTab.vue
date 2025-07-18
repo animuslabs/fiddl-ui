@@ -78,7 +78,7 @@ import { useCreateVideoStore } from "src/stores/createVideoStore"
 import imageGallery from "lib/imageGallery"
 import MediaGallery from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
-import type { UnifiedRequest } from "lib/types"
+import type { MediaType, UnifiedRequest } from "lib/types"
 export default defineComponent({
   name: "PromptTab",
   components: {
@@ -117,8 +117,8 @@ export default defineComponent({
   computed: {
     allMediaObjects() {
       const data = this.activeCreationsStore.allCreations.map((el) => {
-        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md") }
-        else return { id: el.id, url: s3Video(el.id, "preview-sm") }
+        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
+        else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType }
       })
       console.log(data)
       return data

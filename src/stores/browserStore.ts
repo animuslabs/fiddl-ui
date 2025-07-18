@@ -1,8 +1,19 @@
 import { defineStore } from "pinia"
 import { creationsBrowseCreateRequests } from "src/lib/orval"
-import { pickRand, toObject } from "lib/util"
-import { ratioRatings, type AspectRatio, type AspectRatioGrade, type ImageModel } from "lib/imageModels"
+import { img, s3Video } from "lib/netlifyImg"
 import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
+import type { MediaGalleryMeta } from "components/MediaGallery.vue"
+import type { MediaType } from "lib/types"
+
+function aspectRatioToNumber(raw?: string | null): number | undefined {
+  if (!raw) return undefined
+  if (raw.includes(":")) {
+    const [w, h] = raw.split(":").map(parseFloat)
+    return h && w ? w / h : undefined
+  }
+  const n = parseFloat(raw)
+  return Number.isFinite(n) ? n : undefined
+}
 
 export const sortMethodIcon: Record<SortMethod, string> = {
   latest: "sym_o_overview",
@@ -10,185 +21,182 @@ export const sortMethodIcon: Record<SortMethod, string> = {
   shuffle: "shuffle",
 }
 
-function getImgClass(ratioGrade: AspectRatioGrade) {
-  const squareSizes = ["small", "medium", "large"]
-  if (ratioGrade == "square") return squareSizes[Math.floor(Math.random() * squareSizes.length)]
-  const tallSizes = ["tall", "tall-lg"]
-  const wideSizes = ["wide", "wide-lg"]
-  if (ratioGrade == "tall") return pickRand(tallSizes)
-  if (ratioGrade == "wide") return pickRand(wideSizes)
-  return ratioGrade
+export const mediaTypeIcon: Record<MediaTypeFilter, string> = {
+  all: "all_inclusive",
+  image: "sym_o_image",
+  video: "sym_o_video_library",
 }
-export interface BrowserItem {
-  imageIds: string[]
-  id: string
+
+/** Internal store item */
+export interface MediaItem extends MediaGalleryMeta {
   createdAt: Date
-  aspectRatio: AspectRatio
-  ratioGrade: AspectRatioGrade
-  cssClass: string
-  creatorId: string
-  collections?: number
-  purchases?: number
 }
+
+/** Row returned from creationsBrowseCreateRequests */
+interface BrowseRow {
+  mediaType: "image" | "video"
+  id: string
+  createdAt: string // ISO string
+  aspectRatio: string
+  media: { id: string }[] | null
+}
+type MediaTypeFilter = MediaType | "all"
 
 export const useBrowserStore = defineStore("browserStore", {
-  state() {
-    return {
-      items: [] as BrowserItem[],
-      loading: false,
-      search: null as string | null,
-      randomSeed: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
-      filter: {
-        aspectRatio: undefined as AspectRatio | undefined,
-        model: undefined as ImageModel | undefined,
-        sort: "shuffle" as SortMethod,
-      },
+  state: (): {
+    media: MediaItem[]
+    loading: boolean
+    search: string | null
+    randomSeed: number
+    filter: {
+      aspectRatio?: string
+      model?: string
+      sort: SortMethod
+      mediaType: MediaTypeFilter
     }
-  },
+  } => ({
+    media: [],
+    loading: false,
+    search: null,
+    randomSeed: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
+    filter: { sort: "shuffle", mediaType: "all" },
+  }),
+
   getters: {
-    reverse(): BrowserItem[] {
-      return this.items.slice().reverse()
+    /** legacy alias – other pages still reference items */
+    items(state): MediaItem[] {
+      return state.media
     },
-    filterActive(): boolean {
-      return !!this.filter.aspectRatio || !!this.filter.model
+    newestFirst(state): MediaItem[] {
+      return [...state.media].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    },
+    filterActive(state): boolean {
+      return !!state.filter.aspectRatio || !!state.filter.model
     },
   },
+
   actions: {
-    deleteImage(imageId: string, requestId: string) {
-      console.log("delete image in browser store", imageId, requestId)
-      const item = this.items.find((item) => item.id === requestId)
-      console.log(item)
-      if (!item) return
-      const index = item.imageIds.indexOf(imageId)
-      if (index === -1) return
-      item.imageIds.splice(index, 1)
-      console.log("deleted from browser store", index)
-    },
+    /* ---------- misc helpers ---------- */
     setSort(method: SortMethod) {
       this.filter.sort = method
+      this.reset() // refresh list
+    },
+    setMediaType(type: MediaTypeFilter) {
+      this.filter.mediaType = type
+      this.filter.model = undefined
+      this.reset()
     },
     resetFilters() {
-      this.filter = {
-        aspectRatio: undefined,
-        model: undefined,
-        sort: "shuffle",
-      }
-    },
-    searchCreations() {
-      this.items = []
-      void this.loadCreations()
-    },
-    addItem(item: BrowserItem) {
-      const idExists = this.items.some((i) => i.id === item.id)
-      if (idExists) return
-      this.items.push(item)
+      this.filter.aspectRatio = undefined
+      this.filter.model = undefined
+      this.filter.sort = "shuffle"
+      this.reset()
     },
     reset() {
-      console.log("reset", this.search)
-      this.items = []
+      this.media = []
       void this.loadCreations()
-      // const rev = this.reverse
     },
+    searchCreations() {
+      this.media = []
+      void this.loadCreations()
+    },
+    deleteMedia(id: string) {
+      this.media = this.media.filter((m) => m.id !== id)
+    },
+
+    /* ---------- main loaders ---------- */
     async loadCreations() {
       this.loading = true
-      const lastItem = this.items[this.items.length - 1]
-      console.log("lastItem", lastItem?.createdAt)
-      let endDateTime
-      if (lastItem?.createdAt) {
-        endDateTime = lastItem.createdAt
-      }
+      const last = this.media[this.media.length - 1]
 
       try {
-        const response = await creationsBrowseCreateRequests({
+        const { data } = await creationsBrowseCreateRequests({
           order: "desc",
-          endDateTime: lastItem?.createdAt ? lastItem.createdAt.toISOString() : undefined,
+          endDateTime: last?.createdAt.toISOString(),
           limit: 100,
-          promptIncludes: this.search?.length ? this.search : undefined,
-          aspectRatio: (this.filter.aspectRatio as any) || undefined,
-          model: this.filter.model || undefined,
-          randomSeed: this.filter.sort == "shuffle" ? this.randomSeed : undefined,
+          promptIncludes: this.search || undefined,
+          aspectRatio: this.filter.aspectRatio as any,
+          model: this.filter.model as any,
+          randomSeed: this.filter.sort === "shuffle" ? this.randomSeed : undefined,
           sortMethod: this.filter.sort,
+          mediaType: this.filter.mediaType,
         })
+        console.log(data)
 
-        // Extract data from response
-        const creations = response.data
-        console.log("Full response:", response)
-        console.log("Response data type:", typeof response.data)
-        console.log("Is response.data an array?", Array.isArray(response.data))
-
-        // Process the data (same as before)
-        for (const creation of creations as any) {
-          // console.log("Single creation object:", creation)
-          // console.log("creations: ", creation.images[0]?._count)
-          this.addItem({
-            id: creation.id,
-            aspectRatio: creation.aspectRatio as AspectRatio,
-            ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
-            cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
-            imageIds: creation.images.map((el: any) => el.id),
-            createdAt: new Date(creation.createdAt),
-            creatorId: creation.userId,
-            collections: creation.images[0]?._count?.Collections || 0,
-            purchases: creation.images[0]?._count?.ImagePurchases || 0,
-          })
-        }
-      } catch (error) {
-        console.error("Error loading creations:", error)
+        this.addBatch(data as BrowseRow[])
+      } catch (err) {
+        console.error("loadCreations failed", err)
       } finally {
         this.loading = false
       }
     },
+
     async loadRecentCreations() {
-      if (this.filter.sort != "latest") return
+      if (this.filter.sort !== "latest") return
       this.loading = true
-      const firstItem = this.items[0]
-      let startDateTime
-      if (firstItem?.createdAt) {
-        startDateTime = firstItem.createdAt
-      }
+      const first = this.media[0]
 
       try {
-        // Replace tRPC call with direct call to creationsBrowseCreateRequests
-        const response = await creationsBrowseCreateRequests({
+        const { data } = await creationsBrowseCreateRequests({
           order: "asc",
-          startDateTime: startDateTime ? startDateTime.toISOString() : undefined,
+          startDateTime: first?.createdAt.toISOString(),
           limit: 100,
-          promptIncludes: this.search?.length ? this.search : undefined,
-          aspectRatio: (this.filter.aspectRatio as any) || undefined,
-          model: this.filter.model || undefined,
+          promptIncludes: this.search || undefined,
+          aspectRatio: this.filter.aspectRatio as any,
+          model: this.filter.model as any,
           sortMethod: this.filter.sort,
+          mediaType: this.filter.mediaType,
         })
 
-        // Extract data from response
-        const creations = response.data
-        console.log("recent creations", creations)
-
-        // Process the data (same as before)
-        for (const creation of creations as any) {
-          const newItem = {
-            id: creation.id,
-            aspectRatio: creation.aspectRatio as AspectRatio,
-            ratioGrade: ratioRatings[creation.aspectRatio as AspectRatio] || "square",
-            cssClass: getImgClass(ratioRatings[creation.aspectRatio as AspectRatio]) || "small",
-            imageIds: creation.images.map((el: any) => el.id),
-            createdAt: new Date(creation.createdAt),
-            creatorId: creation.user.id,
-            collections: creation._count.Collections,
-          }
-
-          // Check if the item already exists
-          const exists = this.items.some((item) => item.id === newItem.id)
-          if (!exists) {
-            // Add the new item at the beginning
-            this.items.unshift(newItem)
-          }
-        }
-      } catch (error) {
-        console.error("Error loading recent creations:", error)
+        this.addBatch(data as BrowseRow[], true)
+      } catch (err) {
+        console.error("loadRecentCreations failed", err)
       } finally {
         this.loading = false
+      }
+    },
+
+    /* ---------- internal util ---------- */
+    addBatch(rows: BrowseRow[], prepend = false) {
+      for (const row of rows) {
+        // Normalize media to a proper array
+        let medias: { id: string }[] = []
+
+        if (Array.isArray(row.media)) {
+          medias = row.media
+        } else if (typeof row.media === "string") {
+          try {
+            const parsed = JSON.parse(row.media) as unknown
+            if (Array.isArray(parsed)) medias = parsed as { id: string }[]
+          } catch {
+            /* ignore parse errors */
+          }
+        }
+
+        if (medias.length === 0) continue
+
+        const t = row.mediaType
+
+        for (const m of medias) {
+          if (this.media.find((e) => e.id === m.id)) continue
+
+          const item: MediaItem = {
+            id: m.id,
+            url: t === "image" ? img(m.id, "md") : s3Video(m.id, "preview-md"),
+            type: t,
+            aspectRatio: aspectRatioToNumber(row.aspectRatio),
+            createdAt: new Date(row.createdAt),
+          }
+
+          if (prepend) {
+            this.media.unshift(item)
+          } else {
+            this.media.push(item)
+          }
+        }
       }
     },
   },
+
   persist: false,
 })

@@ -68,7 +68,7 @@ const thumbnailObjects = computed<MediaGalleryMeta[]>(() => {
   const set = state.selectedSet
   console.log(set)
   if (!set) return []
-  else return set.thumbnailIds.map((el) => ({ id: el, url: s3Img(trainingSetThumbnailKey(set.id, el)) }))
+  else return set.thumbnailIds.map((el) => ({ type: "image", id: el, url: s3Img(trainingSetThumbnailKey(set.id, el)) }))
 })
 
 console.log(toValue(thumbnailObjects))

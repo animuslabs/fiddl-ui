@@ -646,6 +646,7 @@ aspectRatio?: CreationsBrowseCreateRequestsAspectRatio;
 customModelId?: string;
 randomSeed?: number;
 sortMethod: CreationsBrowseCreateRequestsSortMethod;
+mediaType?: CreationsBrowseCreateRequestsMediaType;
 };
 
 export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
@@ -704,6 +705,16 @@ export const CreationsBrowseCreateRequestsSortMethod = {
   latest: 'latest',
   shuffle: 'shuffle',
   popular: 'popular',
+} as const;
+
+export type CreationsBrowseCreateRequestsMediaType = typeof CreationsBrowseCreateRequestsMediaType[keyof typeof CreationsBrowseCreateRequestsMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsBrowseCreateRequestsMediaType = {
+  image: 'image',
+  video: 'video',
+  all: 'all',
 } as const;
 
 export type CreationsHdImageParams = {
