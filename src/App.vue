@@ -34,7 +34,7 @@ router-view(style="z-index:1")
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import { Loading, LoadingBar, LocalStorage } from "quasar"
-import ImageGallery from "components/dialogs/ImageGallery.vue"
+import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { toObject } from "lib/util"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {

@@ -135,17 +135,18 @@ import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMed
 import { avatarImg, img } from "lib/netlifyImg"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, preloadHdVideo, shareLink, shareMedia, sleep, throwErr, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
-import DownloadImage from "./DownloadImage.vue"
-import EditImage from "./EditImage.vue"
-import LikeImage from "./LikeImage.vue"
+import DownloadImage from "./DownloadMedia.vue"
+import EditImage from "./EditMedia.vue"
+import LikeImage from "./LikeMedia.vue"
 import CreateAvatar from "src/components/dialogs/CreateAvatar.vue"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { s3Video } from "lib/netlifyImg"
 import { useUserAuth } from "src/stores/userAuth"
 import { match } from "ts-pattern"
-import EditVideo from "components/dialogs/EditVideo.vue"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
+import EditMedia from "components/dialogs/EditMedia.vue"
+import LikeMedia from "./LikeMedia.vue"
 
 export default defineComponent({
   props: {
@@ -208,6 +209,9 @@ export default defineComponent({
     }
   },
   computed: {
+    dialogParams() {
+      return { userOwnsMedia: this.userOwnsMedia, currentMediaId: this.currentMediaId, type: this.type }
+    },
     mediaParams() {
       return this.buildMediaParam()
     },
@@ -478,7 +482,7 @@ export default defineComponent({
       void this.$router.push({ name: "profile", params: { username: this.creatorMeta.userName } })
     },
     setProfileImage() {
-      Dialog.create({ component: CreateAvatar, componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId } })
+      Dialog.create({ component: CreateAvatar, componentProps: this.dialogParams })
     },
     goToRequestPage() {
       if (!this.loadedRequestId || this.loadedRequestId.length == 0) return
@@ -501,8 +505,8 @@ export default defineComponent({
       if (!this.userOwnsMedia) {
         // Show LikeImage dialog for users who don't own the image
         Dialog.create({
-          component: LikeImage,
-          componentProps: { userOwnsImage: this.userOwnsMedia, currentImageId: this.currentMediaId },
+          component: LikeMedia,
+          componentProps: this.dialogParams,
         }).onOk(() => {
           // When the user completes the purchase in LikeImage dialog
           // Refresh image ownership status and like the image
@@ -533,16 +537,14 @@ export default defineComponent({
         void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
         this.hide()
       } else {
-        const component = this.type == "image" ? EditImage : EditVideo
-        const componentProps = this.type == "image" ? { userOwnsImage: this.userOwnsMedia, imageId: this.currentMediaId } : { userOwnsVideo: this.userOwnsMedia, videoId: this.currentMediaId }
-        Dialog.create({ component, componentProps }).onOk(() => {
+        Dialog.create({ component: EditMedia, componentProps: this.dialogParams }).onOk(() => {
           void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
           this.hide()
         })
       }
     },
     showDownloadWindow() {
-      Dialog.create({ component: DownloadImage, componentProps: { userOwnsMedia: this.userOwnsMedia, currentMediaId: this.currentMediaId, type: this.type } }).onDismiss(() => {
+      Dialog.create({ component: DownloadImage, componentProps: this.dialogParams }).onDismiss(() => {
         // After purchase or download
         this.hdMediaLoaded = false // Reset HD image loaded flag
 

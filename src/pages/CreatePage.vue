@@ -13,7 +13,7 @@ q-page.full-width
 <script lang="ts">
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import ImageRequestCard from "components/ImageRequestCard.vue"
+import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import { getCreationRequest, timeSince } from "lib/util"
 import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"

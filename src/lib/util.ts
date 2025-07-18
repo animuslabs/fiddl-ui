@@ -3,13 +3,13 @@ import { formatDistanceToNow } from "date-fns"
 import cryptoJs from "crypto-js"
 import type { TRPCClientError } from "@trpc/client"
 import type { AppRouter } from "lib/server"
-import { Dialog, LocalStorage } from "quasar"
+import { Dialog, LocalStorage, SessionStorage } from "quasar"
 import umami from "lib/umami"
 import stripAnsi from "strip-ansi"
 import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@prisma/client"
 import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { match } from "ts-pattern"
-import { creationsGetImageRequest, creationsGetVideoRequest, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
+import { creationsGetImageRequest, creationsGetVideoRequest, creationsPurchaseMedia, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
 /**
  * Shares an image or video via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -539,4 +539,9 @@ export function triggerDownload(url: string, filename?: string) {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+export async function purchaseMedia(mediaId: string, type: MediaType) {
+  await creationsPurchaseMedia({ [type == "image" ? "imageId" : "videoId"]: mediaId })
+  SessionStorage.removeItem(`noHd${type}-` + mediaId)
 }

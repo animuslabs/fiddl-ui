@@ -30,13 +30,13 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 </template>
 
 <script lang="ts">
-import { img } from "lib/netlifyImg"
-import { catchErr, downloadFile } from "lib/util"
-import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
-import { defineComponent, PropType } from "vue"
-import { userSetAvatar, creationsPurchaseImage } from "src/lib/orval"
 import ImageCropper, { CropData } from "components/ImageCropper.vue"
+import { img } from "lib/netlifyImg"
 import reloadAvatar from "lib/reloadAvatar"
+import { catchErr, purchaseMedia } from "lib/util"
+import { Loading, Notify, QDialog, SessionStorage } from "quasar"
+import { creationsPurchaseMedia, userSetAvatar } from "src/lib/orval"
+import { PropType } from "vue"
 export default {
   components: {
     ImageCropper,
@@ -91,14 +91,7 @@ export default {
     },
     async unlock() {
       if (!this.currentImageId) return
-      try {
-        const response = await creationsPurchaseImage({ imageId: this.currentImageId })
-        if (!response?.data) return
-        SessionStorage.removeItem("noHdImage-" + this.currentImageId)
-        this.imageUnlocked = true
-      } catch (err) {
-        catchErr(err)
-      }
+      await purchaseMedia(this.currentImageId, "image")
       this.$emit("unlocked")
     },
     show() {

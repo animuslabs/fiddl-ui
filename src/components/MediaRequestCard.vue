@@ -66,7 +66,7 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
 
 <script lang="ts">
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import ImageGallery from "components/dialogs/ImageGallery.vue"
+import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import imageGallery from "lib/imageGallery"
 import { img, s3Video } from "lib/netlifyImg"
 import { catchErr, longIdToShort, timeSince } from "lib/util"
@@ -75,7 +75,7 @@ import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetCustomMode
 import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
-import type { CreateImageRequestData, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { UnifiedRequest } from "lib/types"
 export default defineComponent({
   components: {
@@ -147,7 +147,7 @@ export default defineComponent({
           color: "primary",
         },
       }).onOk(() => {
-        void creationsDeleteRequest({ requestId: this.creation.id })
+        void creationsDeleteRequest({ [this.creation.type == "image" ? "imageRequestId" : "videoRequestId"]: this.creation.id })
           .catch(catchErr)
           .then((response) => {
             this.$emit("deleted", this.creation.id)
@@ -162,7 +162,8 @@ export default defineComponent({
     },
     updatePrivacy() {
       console.log("update privacy", this.creation.public)
-      void creationsSetRequestPrivacy({ requestId: this.creation.id, public: this.creation.public })
+
+      void creationsSetRequestPrivacy({ [this.creation.type == "image" ? "imageRequestId" : "videoRequestId"]: this.creation.id, public: this.creation.public })
         .catch(catchErr)
         .then((response) => {
           // Notify.create({

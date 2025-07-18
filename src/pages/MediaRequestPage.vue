@@ -7,7 +7,7 @@ import { setSocialMetadata } from "lib/socialMeta"
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { getReferredBy, setReferredBy } from "lib/util"
 import { Loading } from "quasar"
-import ImageRequestCard from "src/components/ImageRequestCard.vue"
+import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import { useMediaRequests } from "src/stores/mediaRequestsStore"
 import { defineComponent } from "vue"
 export default defineComponent({

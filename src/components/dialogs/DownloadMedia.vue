@@ -37,7 +37,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 </template>
 
 <script lang="ts">
-import { catchErr, downloadFile, triggerDownload } from "lib/util"
+import { catchErr, downloadFile, purchaseMedia, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia } from "src/lib/orval"
@@ -118,14 +118,7 @@ export default defineComponent({
     },
     async unlock() {
       if (!this.currentMediaId) return
-      const response = await creationsPurchaseMedia({ [this.type == "image" ? "imageId" : "videoId"]: this.currentMediaId }).catch(catchErr)
-      const result = response?.data
-      if (!result) return
-      try {
-        SessionStorage.removeItem(`noHd${this.type}-` + this.currentMediaId)
-      } catch (err: any) {
-        catchErr(err)
-      }
+      await purchaseMedia(this.currentMediaId, this.type!)
       this.mediaUnlocked = true
       this.$emit("unlocked")
     },

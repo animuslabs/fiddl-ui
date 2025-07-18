@@ -1,5 +1,5 @@
 import { Dialog } from "quasar"
-import ImageGallery from "src/components/dialogs/ImageGallery.vue"
+import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 
 const imageGallery = {
   show(mediaIds: string[], startIndex = 0, type = "image" as "image" | "video", mediaRequestId?: string, allowDelete = true) {
