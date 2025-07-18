@@ -20,9 +20,9 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
         .row(style="max-width:600px;")
           .col-auto
             .row
-              q-btn(icon="edit" flat round @click="setRequest()" size="sm")
-                q-tooltip
-                  p Create using the creation details
+              //- q-btn(icon="edit" flat round @click="setRequest()" size="sm")
+              //-   q-tooltip
+              //-     p Create using the creation details
             .row
               q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
                 q-tooltip
