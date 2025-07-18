@@ -23,6 +23,7 @@ import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
 import { CreateImageRequest, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { MediaType } from "lib/types"
+import { createCardStore } from "src/stores/createCardStore"
 
 export default defineComponent({
   components: {
@@ -80,6 +81,9 @@ export default defineComponent({
             }
           }
           this.setReq(req, this.quasar.screen.lt.md)
+          createCardStore.activeTab = mediaType
+          // const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
+          // promptTab.setMediaMode(mediaType)
 
           Dialog.create({
             title: "Image Parameters Applied",

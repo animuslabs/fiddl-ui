@@ -2,11 +2,11 @@
   div
     q-card.column(style="overflow: hidden;")
       div
-        q-tabs(v-model="activeTab" class="text-primary" align="center" inline-label)
+        q-tabs(v-model="store.activeTab" class="text-primary" align="center" inline-label)
           q-tab(name="image" label="Image" icon="image")
           q-tab(name="video" label="Video" icon="movie")
         q-separator
-        q-tab-panels.bg-transparent(v-model="activeTab" animated swipeable)
+        q-tab-panels.bg-transparent(v-model="store.activeTab" animated swipeable)
           q-tab-panel(name="image" class="column fit" style="padding:0px;")
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
           q-tab-panel(name="video")
@@ -32,33 +32,36 @@ import type { CustomModel } from "lib/api"
 import ImageForm from "components/ImageForm.vue"
 import VideoForm from "components/VideoForm.vue"
 import CustomModelsList from "./CustomModelsList.vue"
-type ActiveTabType = "image" | "video"
+import type { MediaType } from "lib/types"
+import { createCardStore } from "src/stores/createCardStore"
 const props = defineProps<{ showBackBtn?: boolean; customModel?: CustomModel | null }>()
 const emit = defineEmits(["created", "back", "activeTab"])
 
 const router = useRouter()
 const route = useRoute()
-
+const store = createCardStore
 const createStore = useCreateImageStore()
 const creationsStore = useImageCreations()
 
-const activeTab = ref<null | ActiveTabType>(null)
 const showModelPicker = ref(false)
 
-watch(activeTab, (val) => {
-  LocalStorage.set("createMode", val)
-  void router.replace({ params: { activeTab: val } })
-  emit("activeTab", activeTab.value)
-})
+watch(
+  () => store.activeTab,
+  (val) => {
+    LocalStorage.set("createMode", val)
+    void router.replace({ params: { activeTab: val } })
+    emit("activeTab", store.activeTab)
+  },
+)
 
 onMounted(() => {
   // const savedReq = LocalStorage.getItem("req")
   // if (savedReq) createStore.setReq(savedReq as any)
   if (!route.params?.activeTab) {
     const savedMode = LocalStorage.getItem("createMode")
-    if (savedMode) activeTab.value = savedMode as ActiveTabType
-  } else activeTab.value = route.params?.activeTab as ActiveTabType
-  if (!activeTab.value) activeTab.value = "image"
+    if (savedMode) store.activeTab = savedMode as MediaType
+  } else store.activeTab = route.params?.activeTab as MediaType
+  if (!store.activeTab) store.activeTab = "image"
 })
 
 watch(

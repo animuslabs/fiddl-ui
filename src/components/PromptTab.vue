@@ -104,7 +104,7 @@ export default defineComponent({
       selectedRequest: null as UnifiedRequest | null,
       showRequest: false,
       gridMode: "mosaic" as "list" | "grid" | "mosaic",
-      currentTab: "image" as "image" | "video",
+      currentTab: "image" as MediaType,
       gridModeOptions: [
         { icon: "dashboard", value: "mosaic" },
         { icon: "grid_view", value: "grid" },
@@ -241,10 +241,13 @@ export default defineComponent({
     setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
       void this.$nextTick(() => {
-        // const createCard = this.$refs.createCard as InstanceType<typeof CreateCard>
         // console.log("createCard setReq Triggered", createCard)
         this.activeCreateStore.setReq(request as any)
       })
+    },
+    setMediaMode(mode: MediaType) {
+      const createCard = this.$refs.createCard as typeof CreateCard
+      console.log("set mode on prompttab:", createCard)
     },
     addImage(data: string) {
       if (this.createMode) this.createMode = false
