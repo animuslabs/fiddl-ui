@@ -121,7 +121,7 @@ export const useBrowserStore = defineStore("browserStore", {
           sortMethod: this.filter.sort,
           mediaType: this.filter.mediaType,
         })
-        console.log(data)
+        // console.log(data)
 
         this.addBatch(data as BrowseRow[])
       } catch (err) {
