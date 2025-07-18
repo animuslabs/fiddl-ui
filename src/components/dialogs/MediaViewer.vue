@@ -392,9 +392,9 @@ export default defineComponent({
             }
           }
         } else if (this.type === "video") {
-          // const hdUrlResp = await creationsHdVideo({ videoId: val })
-          // const hdUrl = hdUrlResp?.data
-          // if (!hdUrl) return
+          const hdUrlResp = await creationsHdVideo({ videoId: val })
+          const hdUrl = hdUrlResp?.data
+          if (!hdUrl) return
 
           // const preloadEl = await preloadHdVideo(hdUrl)
 
