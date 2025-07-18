@@ -453,7 +453,7 @@ export default defineComponent({
           console.log("req id")
           if (this.type == "image") {
             useImageCreations().deleteImage(deletedId, requestId)
-            useBrowserStore().deleteImage(deletedId, requestId)
+            useBrowserStore().removeMedia(deletedId)
           } else {
             useVideoCreations().deleteVideo(deletedId, requestId)
           }

@@ -1,4 +1,4 @@
-<template lang="pug">
+<!-- <template lang="pug">
 div(:class="containerClass")
   div(
     v-for="item in computedItems"
@@ -27,7 +27,6 @@ div(:class="containerClass")
 import { userGetUsername } from "lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
 import { extractImageId, pickRand } from "lib/util"
-import { BrowserItem } from "src/stores/browserStore"
 import { PropType } from "vue"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
 import imageGallery from "lib/imageGallery"
@@ -198,4 +197,4 @@ export default {
   grid-column: span 1;
   grid-row: span 1;
 }
-</style>
+</style> -->

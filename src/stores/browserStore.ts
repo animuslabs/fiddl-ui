@@ -104,6 +104,10 @@ export const useBrowserStore = defineStore("browserStore", {
       this.media = this.media.filter((m) => m.id !== id)
     },
 
+    removeMedia(id: string) {
+      this.media = this.media.filter((item) => item.id !== id)
+    },
+
     /* ---------- main loaders ---------- */
     async loadCreations() {
       this.loading = true

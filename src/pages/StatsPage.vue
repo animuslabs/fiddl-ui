@@ -20,11 +20,6 @@ q-page.full-height.full-width
       .col(style="overflow: auto; min-width:400px;")
         h2 Payments
         pre(style="font-size: 20px;") {{ stats.payments }}
-    .centered.q-ma-md
-      .col
-        h2 API Metrics
-        div(style="font-size: 15px; word-wrap: break-word; max-width:90vw;")
-          pre {{ stats.apiMetrics }}
 
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
@@ -39,7 +34,7 @@ q-page.full-height.full-width
 import { jwt } from "lib/jwt"
 import { copyToClipboard, Dialog } from "quasar"
 import { defineComponent } from "vue"
-import { statsUsers, statsImages, statsCollections, statsPayments, statsApiMetrics } from "src/lib/orval"
+import { statsUsers, statsImages, statsCollections, statsPayments } from "src/lib/orval"
 
 export default defineComponent({
   components: {},
@@ -83,8 +78,8 @@ export default defineComponent({
       const paymentsResponse = await statsPayments()
       this.stats.payments = paymentsResponse.data
 
-      const apiMetricsResponse = await statsApiMetrics()
-      this.stats.apiMetrics = apiMetricsResponse.data
+      // const apiMetricsResponse = await statsApiMetrics()
+      // this.stats.apiMetrics = apiMetricsResponse.data
     },
   },
 })
