@@ -311,6 +311,7 @@ export default defineComponent({
         if (!this.userAuth.loggedIn) return
         this.hdMediaLoaded = false // Reset HD image loaded flag
         this.userLikedMedia = false
+        this.userOwnsMedia = false
         this.loadingLike = true
         const response = await collectionsMediaInUsersCollection({ ...this.mediaParams, name: "likes" })
         console.log(response.data)
@@ -395,6 +396,7 @@ export default defineComponent({
           const hdUrlResp = await creationsHdVideo({ videoId: val })
           const hdUrl = hdUrlResp?.data
           if (!hdUrl) return
+          // this.hdVideoUrl =
 
           // const preloadEl = await preloadHdVideo(hdUrl)
 
