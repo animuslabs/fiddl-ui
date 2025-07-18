@@ -764,15 +764,9 @@ export type CreationsUpscaledImageParams = {
 imageId: string;
 };
 
-export type CreationsPurchaseImageBody = {
-  imageId: string;
-};
-
-export type CreationsPurchaseImage200 = {
-  id: string;
-  userId: string;
-  imageId: string;
-  createdAt: string;
+export type CreationsPurchaseMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
 export type CreationsDeleteMediaBody = {
@@ -781,11 +775,13 @@ export type CreationsDeleteMediaBody = {
 };
 
 export type CreationsDeleteRequestBody = {
-  requestId: string;
+  videoRequestId?: string;
+  imageRequestId?: string;
 };
 
 export type CreationsSetRequestPrivacyBody = {
-  requestId: string;
+  videoRequestId?: string;
+  imageRequestId?: string;
   public: boolean;
 };
 
@@ -3080,24 +3076,24 @@ export function useCreationsUpscaledImage<TData = Awaited<ReturnType<typeof crea
 
 
 
-export const creationsPurchaseImage = (
-    creationsPurchaseImageBody: MaybeRef<CreationsPurchaseImageBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CreationsPurchaseImage200>> => {
-    creationsPurchaseImageBody = unref(creationsPurchaseImageBody);
+export const creationsPurchaseMedia = (
+    creationsPurchaseMediaBody: MaybeRef<CreationsPurchaseMediaBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<unknown>> => {
+    creationsPurchaseMediaBody = unref(creationsPurchaseMediaBody);
     
     return axios.post(
-      `/creations/purchaseImage`,
-      creationsPurchaseImageBody,options
+      `/creations/purchaseMedia`,
+      creationsPurchaseMediaBody,options
     );
   }
 
 
 
-export const getCreationsPurchaseImageMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseImage>>, TError,{data: CreationsPurchaseImageBody}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseImage>>, TError,{data: CreationsPurchaseImageBody}, TContext> => {
+export const getCreationsPurchaseMediaMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseMedia>>, TError,{data: CreationsPurchaseMediaBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseMedia>>, TError,{data: CreationsPurchaseMediaBody}, TContext> => {
 
-const mutationKey = ['creationsPurchaseImage'];
+const mutationKey = ['creationsPurchaseMedia'];
 const {mutation: mutationOptions, axios: axiosOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3107,10 +3103,10 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creationsPurchaseImage>>, {data: CreationsPurchaseImageBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creationsPurchaseMedia>>, {data: CreationsPurchaseMediaBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  creationsPurchaseImage(data,axiosOptions)
+          return  creationsPurchaseMedia(data,axiosOptions)
         }
 
         
@@ -3118,20 +3114,20 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreationsPurchaseImageMutationResult = NonNullable<Awaited<ReturnType<typeof creationsPurchaseImage>>>
-    export type CreationsPurchaseImageMutationBody = CreationsPurchaseImageBody
-    export type CreationsPurchaseImageMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+    export type CreationsPurchaseMediaMutationResult = NonNullable<Awaited<ReturnType<typeof creationsPurchaseMedia>>>
+    export type CreationsPurchaseMediaMutationBody = CreationsPurchaseMediaBody
+    export type CreationsPurchaseMediaMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
 
-    export const useCreationsPurchaseImage = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseImage>>, TError,{data: CreationsPurchaseImageBody}, TContext>, axios?: AxiosRequestConfig}
+    export const useCreationsPurchaseMedia = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPurchaseMedia>>, TError,{data: CreationsPurchaseMediaBody}, TContext>, axios?: AxiosRequestConfig}
  , queryClient?: QueryClient): UseMutationReturnType<
-        Awaited<ReturnType<typeof creationsPurchaseImage>>,
+        Awaited<ReturnType<typeof creationsPurchaseMedia>>,
         TError,
-        {data: CreationsPurchaseImageBody},
+        {data: CreationsPurchaseMediaBody},
         TContext
       > => {
 
-      const mutationOptions = getCreationsPurchaseImageMutationOptions(options);
+      const mutationOptions = getCreationsPurchaseMediaMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -3194,7 +3190,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const creationsDeleteRequest = (
     creationsDeleteRequestBody: MaybeRef<CreationsDeleteRequestBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<boolean>> => {
+ ): Promise<AxiosResponse<unknown>> => {
     creationsDeleteRequestBody = unref(creationsDeleteRequestBody);
     
     return axios.post(
@@ -3250,7 +3246,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
     
 export const creationsSetRequestPrivacy = (
     creationsSetRequestPrivacyBody: MaybeRef<CreationsSetRequestPrivacyBody>, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<boolean>> => {
+ ): Promise<AxiosResponse<unknown>> => {
     creationsSetRequestPrivacyBody = unref(creationsSetRequestPrivacyBody);
     
     return axios.post(

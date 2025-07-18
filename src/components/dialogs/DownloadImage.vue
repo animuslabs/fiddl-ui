@@ -14,7 +14,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
           li.q-ma-sm For images: download a 4k upscale, suitable for printing.
           li.q-ma-sm Access the original prompt and model details, including the seed, necessary for creating similar creations.
         .centered.q-pt-md
-          q-btn(color="accent" label="Unlock Image" @click="unlock()" :disable="!$userAuth.loggedIn")
+          q-btn.text-capitalize(color="accent" :label="`Unlock ${type}`" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
               p 10
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
@@ -40,7 +40,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { catchErr, downloadFile, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
-import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseImage } from "src/lib/orval"
+import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
 import { creationsHdVideo } from "src/lib/orval"
@@ -98,6 +98,7 @@ export default defineComponent({
     async downloadUpscaled() {
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
       if (!this.currentMediaId) return
+      if (this.type == "video") catchErr("video upscaling not yet supported")
       Loading.show({
         message: "Upscaling Image",
       })
@@ -117,11 +118,11 @@ export default defineComponent({
     },
     async unlock() {
       if (!this.currentMediaId) return
-      const response = await creationsPurchaseImage({ imageId: this.currentMediaId }).catch(catchErr)
+      const response = await creationsPurchaseMedia({ [this.type == "image" ? "imageId" : "videoId"]: this.currentMediaId }).catch(catchErr)
       const result = response?.data
       if (!result) return
       try {
-        SessionStorage.removeItem("noHdImage-" + this.currentMediaId)
+        SessionStorage.removeItem(`noHd${this.type}-` + this.currentMediaId)
       } catch (err: any) {
         catchErr(err)
       }

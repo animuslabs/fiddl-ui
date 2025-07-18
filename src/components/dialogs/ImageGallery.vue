@@ -357,10 +357,10 @@ export default defineComponent({
       try {
         if (this.type === "image") {
           let imageData = await getImageFromCache(val)
-          if (!imageData && !SessionStorage.getItem("noHdImage-" + val)) {
+          if (!imageData && !SessionStorage.getItem(`noHd${this.type}-` + val)) {
             const hdResponse = await Promise.race([
               creationsHdImage({ imageId: val }).catch(() => {
-                SessionStorage.setItem("noHdImage-" + val, true)
+                SessionStorage.setItem(`noHd${this.type}-` + val, true)
                 return undefined
               }),
               timeoutPromise,

@@ -734,15 +734,9 @@ export type CreationsUpscaledImageParams = {
 imageId: string;
 };
 
-export type CreationsPurchaseImageBody = {
-  imageId: string;
-};
-
-export type CreationsPurchaseImage200 = {
-  id: string;
-  userId: string;
-  imageId: string;
-  createdAt: string;
+export type CreationsPurchaseMediaBody = {
+  imageId?: string;
+  videoId?: string;
 };
 
 export type CreationsDeleteMediaBody = {
@@ -751,11 +745,13 @@ export type CreationsDeleteMediaBody = {
 };
 
 export type CreationsDeleteRequestBody = {
-  requestId: string;
+  videoRequestId?: string;
+  imageRequestId?: string;
 };
 
 export type CreationsSetRequestPrivacyBody = {
-  requestId: string;
+  videoRequestId?: string;
+  imageRequestId?: string;
   public: boolean;
 };
 
@@ -3218,61 +3214,61 @@ export const creationsUpscaledImage = async (params: CreationsUpscaledImageParam
 
 
 
-export type creationsPurchaseImageResponse200 = {
-  data: CreationsPurchaseImage200
+export type creationsPurchaseMediaResponse200 = {
+  data: unknown
   status: 200
 }
 
-export type creationsPurchaseImageResponse400 = {
+export type creationsPurchaseMediaResponse400 = {
   data: ErrorBADREQUEST
   status: 400
 }
 
-export type creationsPurchaseImageResponse401 = {
+export type creationsPurchaseMediaResponse401 = {
   data: ErrorUNAUTHORIZED
   status: 401
 }
 
-export type creationsPurchaseImageResponse403 = {
+export type creationsPurchaseMediaResponse403 = {
   data: ErrorFORBIDDEN
   status: 403
 }
 
-export type creationsPurchaseImageResponse500 = {
+export type creationsPurchaseMediaResponse500 = {
   data: ErrorINTERNALSERVERERROR
   status: 500
 }
     
-export type creationsPurchaseImageResponseComposite = creationsPurchaseImageResponse200 | creationsPurchaseImageResponse400 | creationsPurchaseImageResponse401 | creationsPurchaseImageResponse403 | creationsPurchaseImageResponse500;
+export type creationsPurchaseMediaResponseComposite = creationsPurchaseMediaResponse200 | creationsPurchaseMediaResponse400 | creationsPurchaseMediaResponse401 | creationsPurchaseMediaResponse403 | creationsPurchaseMediaResponse500;
     
-export type creationsPurchaseImageResponse = creationsPurchaseImageResponseComposite & {
+export type creationsPurchaseMediaResponse = creationsPurchaseMediaResponseComposite & {
   headers: Headers;
 }
 
-export const getCreationsPurchaseImageUrl = () => {
+export const getCreationsPurchaseMediaUrl = () => {
 
 
   
 
-  return `https://api.fiddl.art/api/creations/purchaseImage`
+  return `https://api.fiddl.art/api/creations/purchaseMedia`
 }
 
-export const creationsPurchaseImage = async (creationsPurchaseImageBody: CreationsPurchaseImageBody, options?: RequestInit): Promise<creationsPurchaseImageResponse> => {
+export const creationsPurchaseMedia = async (creationsPurchaseMediaBody: CreationsPurchaseMediaBody, options?: RequestInit): Promise<creationsPurchaseMediaResponse> => {
   
-  const res = await fetch(getCreationsPurchaseImageUrl(),
+  const res = await fetch(getCreationsPurchaseMediaUrl(),
   {      
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      creationsPurchaseImageBody,)
+      creationsPurchaseMediaBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsPurchaseImageResponse['data'] = body ? JSON.parse(body) : {}
+  const data: creationsPurchaseMediaResponse['data'] = body ? JSON.parse(body) : {}
 
-  return { data, status: res.status, headers: res.headers } as creationsPurchaseImageResponse
+  return { data, status: res.status, headers: res.headers } as creationsPurchaseMediaResponse
 }
 
 
@@ -3337,7 +3333,7 @@ export const creationsDeleteMedia = async (creationsDeleteMediaBody: CreationsDe
 
 
 export type creationsDeleteRequestResponse200 = {
-  data: boolean
+  data: unknown
   status: 200
 }
 
@@ -3396,7 +3392,7 @@ export const creationsDeleteRequest = async (creationsDeleteRequestBody: Creatio
 
 
 export type creationsSetRequestPrivacyResponse200 = {
-  data: boolean
+  data: unknown
   status: 200
 }
 

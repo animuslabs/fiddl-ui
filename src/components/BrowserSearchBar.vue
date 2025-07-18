@@ -8,14 +8,14 @@
           q-list
             .q-ma-md.cursor-pointer.relative-position(v-for="(icon,method) in mediaTypeIcon" clickable @click="browserStore.setMediaType(method)" v-close-popup )
               .absolute.bg-primary(style="left:-5px; height:100%; width:5px;" v-if="browserStore.filter.mediaType == method")
-              .row.items-center
+              .row.items-center.no-wrap
                 q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
                 p {{ method }}
         q-btn-dropdown(:label="browserStore.filter.sort || 'Sort'" flat color="primary" :icon="sortMethodIcon[browserStore.filter.sort]")
           q-list
             .q-ma-md.cursor-pointer.relative-position(v-for="(icon,method) in sortMethodIcon" clickable @click="browserStore.setSort(method)" v-close-popup )
               .absolute.bg-primary(style="left:-5px; height:100%; width:5px;" v-if="browserStore.filter.sort == method")
-              .row.items-center
+              .row.items-center.no-wrap
                 q-icon.q-mr-md.q-ml-sm(:name="icon" size="md" )
                 p {{ method }}
 
