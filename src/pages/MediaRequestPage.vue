@@ -1,5 +1,5 @@
 <script lang="ts">
-import imageGallery from "lib/imageGallery"
+import mediaViwer from "lib/mediaViewer"
 import { avatarImg } from "lib/netlifyImg"
 import { userGetUsername } from "lib/orval"
 import { setSocialMetadata } from "lib/socialMeta"
@@ -7,6 +7,7 @@ import { setSocialMetadata } from "lib/socialMeta"
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { getReferredBy, setReferredBy } from "lib/util"
 import { Loading } from "quasar"
+import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import { useMediaRequests } from "src/stores/mediaRequestsStore"
 import { defineComponent } from "vue"
@@ -43,7 +44,13 @@ export default defineComponent({
           if (!this.creation) return
           Loading.hide()
           this.galleryAutoOpened = true
-          await imageGallery.show(this.creation.mediaIds, parseInt(index), this.creation.type, this.creation.id)
+          const mediaObjects: MediaGalleryMeta[] = this.creation.mediaIds.map((el) => {
+            return {
+              id: el,
+              type: this.creation?.type,
+            }
+          })
+          await mediaViwer.show(mediaObjects, parseInt(index))
         }, 2)
       }
     },

@@ -44,7 +44,7 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { CreateImageRequest, CreateImageRequestData } from "../../../fiddl-server/dist/lib/types/serverTypes"
-import imageGallery from "lib/imageGallery"
+import mediaViwer from "lib/mediaViewer"
 import { img } from "lib/netlifyImg"
 import { extractImageId, toObject } from "lib/util"
 import CreatedImageCard from "src/components/CreatedImageCard.vue"
@@ -54,6 +54,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent } from "vue"
 import { toUnifiedCreation } from "lib/util"
 import { UnifiedRequest } from "lib/types"
+import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 export default defineComponent({
   components: {
     ImageRequestCard,
@@ -130,13 +131,14 @@ export default defineComponent({
       void this.$router.push({ name: "create", query: { requestData: encodedRequest } })
     },
     async showGallery(imageId: string) {
-      let allImages: string[] = []
-      if (this.tab == "purchased") allImages = this.creationsStore.imagePurchases.map((el) => el.imageId)
-      else if (this.tab == "favorites") allImages = this.creationsStore.favorites.map((el) => el.id)
+      let allImages: MediaGalleryMeta[] = []
+      if (this.tab == "purchased") allImages = this.creationsStore.imagePurchases.map((el) => ({ id: el.id, type: "image" }))
+      else if (this.tab == "favorites") allImages = this.creationsStore.favorites.map((el) => ({ id: el.id, type: "image" }))
       else return
-      const index = allImages.findIndex((el) => el === imageId)
+      const index = allImages.findIndex((el) => el.id === imageId)
       // const creatorName = (await this.$api.user.getUsername.query(creatorId).catch(console.error)) || ""
-      await imageGallery.show(allImages, index)
+      await mediaViwer.show(allImages, index)
+
       this.load()
     },
   },

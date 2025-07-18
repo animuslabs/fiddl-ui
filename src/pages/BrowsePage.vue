@@ -31,7 +31,7 @@ import SearchBar from "src/components/BrowserSearchBar.vue"
 import MediaGallery from "components/MediaGallery.vue"
 import { img } from "lib/netlifyImg"
 import { pickRand } from "lib/util"
-import imageGallery from "lib/imageGallery"
+import mediaViwer from "lib/mediaViewer"
 
 type MediaGalleryMeta = {
   id: string
@@ -53,9 +53,10 @@ export default defineComponent({
     const onScrollUp = throttle(() => void browserStore.loadRecentCreations(), 1000)
 
     const handleSelect = (p: { id: string; type: "image" | "video" }) => {
-      const ids = browserStore.media.map((m: any) => m.id)
-      const index = ids.indexOf(p.id)
-      void imageGallery.show(ids, index, p.type, p.id, false)
+      const objs = browserStore.media
+      const index = objs.findIndex((el) => el.id == p.id)
+      // void mediaViwer.show(ids, index, p.type, p.id, false)
+      void mediaViwer.show(objs, index)
     }
 
     const handleScroll = (data: any) => {

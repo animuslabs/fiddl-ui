@@ -67,7 +67,7 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
 <script lang="ts">
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
-import imageGallery from "lib/imageGallery"
+import mediaViwer from "lib/mediaViewer"
 import { img, s3Video } from "lib/netlifyImg"
 import { catchErr, longIdToShort, timeSince } from "lib/util"
 import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
@@ -77,6 +77,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { defineComponent, PropType, ref, Ref } from "vue"
 import type { CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { UnifiedRequest } from "lib/types"
+import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 export default defineComponent({
   components: {
     CreatedImageCard,
@@ -180,7 +181,9 @@ export default defineComponent({
       const root = this.$root
       if (!root) return
       const images = this.creation.mediaIds
-      await imageGallery.show(images, startIndex, this.creation.type, this.creation.id)
+      // await mediaViwer.show(images, startIndex, this.creation.type, this.creation.id)
+      const mediaObjects: MediaGalleryMeta[] = this.creation.mediaIds.map((el) => ({ id: el, type: this.creation?.type }))
+      await mediaViwer.show(mediaObjects, startIndex)
       console.log("gallery closed,trigger reload event")
       this.$emit("reload")
     },

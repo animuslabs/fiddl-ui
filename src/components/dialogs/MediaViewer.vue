@@ -93,8 +93,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
               q-img(placeholder-src="/blankAvatar.webp" :src="avatarImg(creatorMeta.id||'')" style="width:30px; height:30px; border-radius:50%;").q-mr-sm
               h6.q-mr-sm @{{creatorMeta.userName}}
     .centered
-      div.q-mt-md(v-if="localMediaIds.length > 1 && !downloadMode && localMediaIds.length < 11")
-        span.indicator(v-for="(image, index) in localMediaIds" :key="index" :class="{ active: index === currentIndex }" @click.stop="goTo(index)")
+      div.q-mt-md(v-if="localMediaObjects.length > 1 && !downloadMode && localMediaObjects.length < 11")
+        span.indicator(v-for="(image, index) in localMediaObjects" :key="index" :class="{ active: index === currentIndex }" @click.stop="goTo(index)")
 </template>
 
 <style scoped>
@@ -110,7 +110,13 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 .image-darken {
   background-color: transparent;
   color: transparent;
-  transition: filter 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    transform 0.3s ease;
+  will-change: transform;
+}
+.image-darken.hd-loaded {
+  transform: scale(1.01);
 }
 .image-darken.active {
   filter: blur(3px) brightness(50%) saturate(50%);
@@ -147,15 +153,12 @@ import { match } from "ts-pattern"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import EditMedia from "components/dialogs/EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
+import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 
 export default defineComponent({
   props: {
-    mediaIds: {
-      type: Array as () => string[],
-      required: true,
-    },
-    type: {
-      type: String as () => "image" | "video",
+    mediaObjects: {
+      type: Array as () => MediaGalleryMeta[],
       required: true,
     },
     requestId: {
@@ -181,7 +184,7 @@ export default defineComponent({
       creationStore: useImageCreations(),
       shareMenu: true,
       moreOptionsMenu: true,
-      localMediaIds: [] as string[],
+      localMediaObjects: [] as MediaGalleryMeta[],
       avatarImg,
       imageDeleted: false,
       isPersistent: false,
@@ -209,6 +212,11 @@ export default defineComponent({
     }
   },
   computed: {
+    type() {
+      const val = this.mediaObjects[this.currentIndex]
+      let type = val!.type || "image"
+      return type
+    },
     dialogParams() {
       return { userOwnsMedia: this.userOwnsMedia, currentMediaId: this.currentMediaId, type: this.type }
     },
@@ -219,9 +227,9 @@ export default defineComponent({
       return this.getMediaUrl(this.currentMediaId)
     },
     nextMediaUrl() {
-      if (this.localMediaIds.length === 1) return this.currentMediaUrl
-      const nextIndex = this.touchMoveX > 0 ? (this.currentIndex - 1 + this.localMediaIds.length) % this.localMediaIds.length : (this.currentIndex + 1) % this.localMediaIds.length
-      const id = this.localMediaIds[nextIndex] as string
+      if (this.localMediaObjects.length === 1) return this.currentMediaUrl
+      const nextIndex = this.touchMoveX > 0 ? (this.currentIndex - 1 + this.localMediaObjects.length) % this.localMediaObjects.length : (this.currentIndex + 1) % this.localMediaObjects.length
+      const id = this.localMediaObjects[nextIndex]!.id as string
       return this.getMediaUrl(id)
     },
     mediaAttrs() {
@@ -279,8 +287,8 @@ export default defineComponent({
       return this.userOwnsMedia ? "text-primary" : "text-grey-6"
     },
     currentMediaId() {
-      if (this.localMediaIds.length === 0) return ""
-      return this.localMediaIds[this.currentIndex] as string
+      if (this.localMediaObjects.length === 0) return ""
+      return this.localMediaObjects[this.currentIndex]!.id as string
     },
   },
   watch: {
@@ -323,7 +331,7 @@ export default defineComponent({
     window.removeEventListener("keydown", this.handleKeyDown)
   },
   async mounted() {
-    this.localMediaIds = [...this.mediaIds]
+    this.localMediaObjects = [...this.mediaObjects]
     this.currentIndex = this.startIndex
     this.preloadMedia()
     window.addEventListener("keydown", this.handleKeyDown)
@@ -376,27 +384,31 @@ export default defineComponent({
             this.userOwnsMedia = true
             const dataUrl = `data:image/webp;base64,${imageData}`
             await this.$nextTick()
-            const img = this.$refs.overlayImage as HTMLImageElement
-            if (img) img.src = dataUrl
+            const mediaEl = this.$refs.mediaElement as HTMLImageElement
+            mediaEl.classList.add("hd-loaded")
+
+            if (mediaEl && mediaEl.tagName.toLowerCase() === "img") {
+              mediaEl.src = dataUrl
+            }
           }
         } else if (this.type === "video") {
           const hdUrlResp = await creationsHdVideo({ videoId: val })
           const hdUrl = hdUrlResp?.data
           if (!hdUrl) return
 
-          // const preloadEl = await preloadHdVideo(hdUrl)
+          const preloadEl = await preloadHdVideo(hdUrl)
 
-          // const player = this.$refs.mediaElement as HTMLVideoElement
-          // const currentTime = player.currentTime
-          // const wasPlaying = !player.paused
+          const player = this.$refs.mediaElement as HTMLVideoElement
+          const currentTime = player.currentTime
+          const wasPlaying = !player.paused
 
-          // player.src = hdUrl
-          // player.load()
+          player.src = hdUrl
+          player.load()
 
-          // player.onloadedmetadata = () => {
-          //   player.currentTime = currentTime
-          //   if (wasPlaying) player.play().catch(() => {})
-          // }
+          player.onloadedmetadata = () => {
+            player.currentTime = currentTime
+            if (wasPlaying) player.play().catch(() => {})
+          }
 
           // this.hdMediaLoaded = true
           this.userOwnsMedia = true
@@ -436,17 +448,17 @@ export default defineComponent({
         }
 
         // Remove deleted media
-        this.localMediaIds = this.localMediaIds.filter((el) => el !== deletedId)
+        this.localMediaObjects = this.localMediaObjects.filter((el) => el.id !== deletedId)
 
         // 🚨 If no media left, exit early
-        if (this.localMediaIds.length === 0) {
+        if (this.localMediaObjects.length === 0) {
           this.hide()
           // return
         }
 
         // ✅ Adjust index safely
-        if (this.currentIndex >= this.localMediaIds.length) {
-          this.currentIndex = this.localMediaIds.length - 1
+        if (this.currentIndex >= this.localMediaObjects.length) {
+          this.currentIndex = this.localMediaObjects.length - 1
         }
 
         setTimeout(() => {
@@ -555,10 +567,10 @@ export default defineComponent({
     preloadMedia() {
       const preloadIndices = [this.currentIndex - 1, this.currentIndex + 1]
       preloadIndices.forEach((index) => {
-        if (index >= 0 && index < this.localMediaIds.length) {
-          const id = this.localMediaIds[index]
-          if (!id) return
-          const url = this.getMediaUrl(id)
+        if (index >= 0 && index < this.localMediaObjects.length) {
+          const mediaObj = this.localMediaObjects[index]
+          if (!mediaObj) return
+          const url = this.getMediaUrl(mediaObj.id)
           if (this.type === "image") {
             const imgElement = new Image()
             imgElement.src = url
@@ -647,17 +659,17 @@ export default defineComponent({
       this.isFullScreen = true
     },
     next() {
-      if (this.localMediaIds.length === 1) return
+      if (this.localMediaObjects.length === 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
-      this.currentIndex = (this.currentIndex + 1) % this.localMediaIds.length
+      this.currentIndex = (this.currentIndex + 1) % this.localMediaObjects.length
       this.touchMoveX = 0 // Reset movement
     },
     prev() {
-      if (this.localMediaIds.length === 1) return
+      if (this.localMediaObjects.length === 1) return
       if (this.loading || this.imgLoading) return
       this.imgLoading = true
-      this.currentIndex = (this.currentIndex - 1 + this.localMediaIds.length) % this.localMediaIds.length
+      this.currentIndex = (this.currentIndex - 1 + this.localMediaObjects.length) % this.localMediaObjects.length
       this.touchMoveX = 0 // Reset movement
     },
     goTo(index: number) {
@@ -705,7 +717,7 @@ export default defineComponent({
     onTouchMove(e: TouchEvent) {
       if (!e.changedTouches[0]) return
       if (!this.isSwiping) return
-      if (this.mediaIds.length === 1) return (this.touchMoveX = 0)
+      if (this.mediaObjects.length === 1) return (this.touchMoveX = 0)
       const currentX = e.changedTouches[0].clientX
       const deltaX = currentX - this.touchStartX
       this.touchMoveX = deltaX

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
+import { img, s3Video } from "lib/netlifyImg"
 
 export interface MediaGalleryMeta {
   id: string
-  url: string
+  url?: string
   aspectRatio?: number
   type?: "image" | "video"
 }
@@ -107,6 +108,7 @@ watch(
 async function buildItems(src: MediaGalleryMeta[]) {
   galleryItems.value = await Promise.all(
     src.map(async (item) => {
+      if (!item.url) item.url = item.type === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
       const type = item.type ?? getMediaType(item.url)
       if (type === "video" && !videoLoading.value[item.id]) {
         const videoEl = document.querySelector(`video[data-id="${item.id}"]`) as HTMLVideoElement | null

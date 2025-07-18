@@ -75,8 +75,8 @@ import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
 import { useCreateVideo } from "lib/orval"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
-import imageGallery from "lib/imageGallery"
-import MediaGallery from "src/components/MediaGallery.vue"
+import mediaViwer from "lib/mediaViewer"
+import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
 import type { MediaType, UnifiedRequest } from "lib/types"
 export default defineComponent({
@@ -232,11 +232,13 @@ export default defineComponent({
       // if (!creation) return
       // this.selectedRequest = creation
       // this.showRequest = true
-      void imageGallery.show(
-        this.activeCreationsStore.allCreations.map((el) => el.id),
-        imageIndex,
-        this.currentTab,
-      )
+      // void mediaViwer.show(
+      //   this.activeCreationsStore.allCreations.map((el) => el.id),
+      //   imageIndex,
+      //   this.currentTab,
+      // )
+      const mediaObjects: MediaGalleryMeta[] = this.activeCreationsStore.allCreations.map((el) => ({ id: el.id, type: this.currentTab }))
+      void mediaViwer.show(mediaObjects, imageIndex)
     },
     setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true
