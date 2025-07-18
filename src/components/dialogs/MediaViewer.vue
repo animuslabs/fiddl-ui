@@ -392,23 +392,23 @@ export default defineComponent({
             }
           }
         } else if (this.type === "video") {
-          const hdUrlResp = await creationsHdVideo({ videoId: val })
-          const hdUrl = hdUrlResp?.data
-          if (!hdUrl) return
+          // const hdUrlResp = await creationsHdVideo({ videoId: val })
+          // const hdUrl = hdUrlResp?.data
+          // if (!hdUrl) return
 
-          const preloadEl = await preloadHdVideo(hdUrl)
+          // const preloadEl = await preloadHdVideo(hdUrl)
 
-          const player = this.$refs.mediaElement as HTMLVideoElement
-          const currentTime = player.currentTime
-          const wasPlaying = !player.paused
+          // const player = this.$refs.mediaElement as HTMLVideoElement
+          // const currentTime = player.currentTime
+          // const wasPlaying = !player.paused
 
-          player.src = hdUrl
-          player.load()
+          // player.src = hdUrl
+          // player.load()
 
-          player.onloadedmetadata = () => {
-            player.currentTime = currentTime
-            if (wasPlaying) player.play().catch(() => {})
-          }
+          // player.onloadedmetadata = () => {
+          //   player.currentTime = currentTime
+          //   if (wasPlaying) player.play().catch(() => {})
+          // }
 
           // this.hdMediaLoaded = true
           this.userOwnsMedia = true
