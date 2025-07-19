@@ -158,7 +158,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
   margin: auto;
 }
 .video-wrapper video {
-  /* background-color: transparent !important; */
+  /* background-color: black !important; */
   width: 100%;
   height: auto;
   object-fit: contain;
