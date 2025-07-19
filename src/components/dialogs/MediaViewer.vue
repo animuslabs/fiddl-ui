@@ -80,7 +80,21 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             color="primary"
             track-color="transparent"
           )
-        component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;" )
+        div( v-if="type === 'video'" class="video-wrapper")
+          video(
+            ref="mediaElement"
+            :src="currentMediaUrl"
+            class="image-darken"
+            style="width:100%; max-height:75vh; object-fit:contain; transform:`translateX(${touchMoveX}px)`"
+            playsinline
+            autoplay
+            muted="false"
+            loop
+            @canplay="mediaLoaded"
+            @click.stop="onImageClick"
+            controls
+          )
+        component(v-else :is="'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;")
         .q-linear-progress.full-width.absolute-bottom(indeterminate color="primary")
         .absolute-top.full-width(style="width:100vw")
           .centered(v-if="hdVideoLoading")
@@ -137,9 +151,33 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 .active {
   background-color: rgba(255, 255, 255, 1);
 }
+/* Ensure videos render at a minimum of 720p and scale up to 1080p where screen space allows */
+.video-wrapper {
+  max-width: 1920px;
+  max-height: 1080px;
+  margin: auto;
+}
+.video-wrapper video {
+  /* background-color: transparent !important; */
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  max-width: 1920px;
+  max-height: 1080px;
+  margin: auto;
+  display: block;
+  /* aspect-ratio: 16 / 9; */
+}
+
+@media (min-width: 1400px) and (min-height: 800px) {
+  .video-wrapper video {
+    min-width: 1280px;
+    min-height: 720px;
+  }
+}
 </style>
 <script lang="ts">
-import { Dialog, QDialog, SessionStorage } from "quasar"
+import { Dialog, LocalStorage, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
 import {
   collectionsMediaInUsersCollection,
@@ -170,6 +208,7 @@ import { useVideoCreations } from "src/stores/videoCreationsStore"
 import EditMedia from "components/dialogs/EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
 import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { getVideoFromCache } from "lib/hdVideoCache"
 
 export default defineComponent({
   props: {
@@ -273,7 +312,7 @@ export default defineComponent({
           autoplay: true,
           muted: false,
           loop: true,
-          controls: true,
+          controls: false,
           onCanplay: (e: Event) => this.mediaLoaded(e),
         }
       }
@@ -418,6 +457,7 @@ export default defineComponent({
         } else if (this.type === "video") {
           const { data: hdUrl } = await creationsHdVideo({ videoId: val })
           if (!hdUrl) return
+          LocalStorage.setItem("hdVideoUrl-" + val, hdUrl)
           const player = this.$refs.mediaElement as HTMLVideoElement | undefined
           if (!player) return
 
@@ -454,7 +494,15 @@ export default defineComponent({
       return this.type === "video" ? { videoId: val } : { imageId: val }
     },
     getMediaUrl(id: string): string {
-      return this.type === "video" ? s3Video(id, "preview-lg") : img(id, "lg")
+      if (this.type == "image") return img(id, "lg")
+      const cached = LocalStorage.getItem<string>("hdVideoUrl-" + id)
+      if (cached) {
+        this.hdMediaLoaded = true
+        this.userOwnsMedia = true
+        this.triedHdLoad = true
+        return cached
+      } else return s3Video(id, "preview-lg")
+      // return this.type === "video" ? s3Video(id, "preview"hdVideoUrl-" + id-lg") : img(id, "lg")
     },
     deleteImage() {
       Dialog.create({
