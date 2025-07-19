@@ -45,19 +45,10 @@ import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
 import { creationsHdVideo } from "src/lib/orval"
 import { sleep } from "lib/util"
+import { dialogProps } from "src/components/dialogs/dialogUtil"
 
 export default defineComponent({
-  props: {
-    userOwnsMedia: Boolean,
-    currentMediaId: {
-      type: String as PropType<string | null>,
-      default: null,
-    },
-    type: {
-      type: String as PropType<MediaType>,
-    },
-  },
-
+  props: dialogProps,
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {

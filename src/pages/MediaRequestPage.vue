@@ -30,12 +30,12 @@ export default defineComponent({
     void this.load()
   },
   methods: {
-    async load() {
+    async load(force: boolean = false) {
       const { requestShortId, type, index }: { requestShortId: string; type: MediaType; index?: string } = this.$route.params as any
       if (index && !this.galleryAutoOpened) Loading.show()
       // if (!requestShortId || typeof requestShortId != "string" || !type || typeof type != "string") return void this.$router.push({ name: "browse" })
       this.shortId = requestShortId
-      this.creation = await this.mediaRequests.getRequest(this.shortId, type)
+      this.creation = await this.mediaRequests.getRequest(this.shortId, type, force)
       if (!this.creation) return
       void this.loadCreatorProfile()
       if (!this.galleryAutoOpened && index) {
@@ -78,7 +78,7 @@ export default defineComponent({
 <template lang="pug">
 q-page
   .q-ma-md
-    ImageRequestCard(v-if="creation" :creation="creation" hideLinkBtn @reload="load" )
+    ImageRequestCard(v-if="creation" :creation="creation" hideLinkBtn @reload="load(true)" )
     p.q-mb-xs Author
     div
       .row(v-if="creation").q-gutter-md.items-center

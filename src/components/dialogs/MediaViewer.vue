@@ -76,17 +76,21 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
           q-linear-progress.absolute-top.full-width.image-darken(
             style="top:-2px;"
             indeterminate
-            v-if="imgLoading || loading"
+            v-if="imgLoading || loading || hdVideoLoading"
             color="primary"
             track-color="transparent"
           )
         component( :is="type === 'video' ? 'video' : 'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;" )
-        img.image-darken.absolute-center(
-          :src="nextMediaUrl"
-          @click.stop="onImageClick"
-          alt="user created image"
-          style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
-        ).lt-md
+        .q-linear-progress.full-width.absolute-bottom(indeterminate color="primary")
+        .absolute-top.full-width(style="width:100vw")
+          .centered(v-if="hdVideoLoading")
+            h6.text-white HD Loading
+        //- img.image-darken.absolute-center(
+        //-   :src="nextMediaUrl"
+        //-   @click.stop="onImageClick"
+        //-   alt="user created image"
+        //-   style="width:85%; max-height: 75vh; object-fit: contain; z-index: -1;"
+        //- ).lt-md
         .row(v-if="!creatorMeta.userName.length && !userOwnsMedia" style="bottom:-0px" @click="goToCreator()").items-center.absolute-bottom
           .col-auto.q-pa-sm.cursor-pointer(style="background-color:rgba(0,0,0,0.5);")
             .row.items-center.q-mb-xs
@@ -137,7 +141,19 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
 <script lang="ts">
 import { Dialog, QDialog, SessionStorage } from "quasar"
 import { defineComponent, PropType, Ref, ref } from "vue"
-import { collectionsMediaInUsersCollection, creationsHdVideo, collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData, userGetUsername, creationsHdImage, creationsGetImageRequest, creationsGetVideoRequest } from "src/lib/orval"
+import {
+  collectionsMediaInUsersCollection,
+  creationsHdVideo,
+  collectionsLikeMedia,
+  collectionsUnlikeMedia,
+  creationsDeleteMedia,
+  creationsGetCreationData,
+  userGetUsername,
+  creationsHdImage,
+  creationsGetImageRequest,
+  creationsGetVideoRequest,
+  useCreationsHdVideo,
+} from "src/lib/orval"
 import { avatarImg, img } from "lib/netlifyImg"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, preloadHdVideo, shareLink, shareMedia, sleep, throwErr, updateQueryParams } from "lib/util"
 import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
@@ -179,11 +195,13 @@ export default defineComponent({
   emits: ["ok", "hide"],
   data() {
     return {
+      hdVideoLoading: false,
+      triedHdLoad: false,
       dynamic: false,
       userAuth: useUserAuth(),
       creationStore: useImageCreations(),
-      shareMenu: true,
-      moreOptionsMenu: true,
+      shareMenu: false,
+      moreOptionsMenu: false,
       localMediaObjects: [] as MediaGalleryMeta[],
       avatarImg,
       imageDeleted: false,
@@ -309,7 +327,9 @@ export default defineComponent({
       async handler(val: string) {
         console.log("currentMediaId watcher")
         if (!this.userAuth.loggedIn) return
-        this.hdMediaLoaded = false // Reset HD image loaded flag
+        this.hdVideoLoading = false
+        this.hdMediaLoaded = false
+        this.triedHdLoad = false
         this.userLikedMedia = false
         this.userOwnsMedia = false
         this.loadingLike = true
@@ -317,6 +337,7 @@ export default defineComponent({
         console.log(response.data)
         this.userLikedMedia = response?.data
         this.loadingLike = false
+        await this.loadHdMedia()
         if (this.$route.name == "imageRequest") {
           const query = { index: this.currentIndex }
           const newQuery = { ...this.$route.query, ...query }
@@ -340,7 +361,7 @@ export default defineComponent({
       this.dynamic = true
     }
     await this.loadRequestId()
-    void this.loadHdMedia()
+    await this.loadHdMedia()
 
     if (this.type == "video") {
       const video = this.$refs.mediaElement as HTMLVideoElement
@@ -356,6 +377,8 @@ export default defineComponent({
       this.imgLoading = false
       if (!val) val = this.currentMediaId
       if (!this.userAuth.loggedIn) return
+      if (this.triedHdLoad || this.hdMediaLoaded) return
+      this.triedHdLoad = true
       this.userOwnsMedia = false
 
       let timer: any | null = null
@@ -393,26 +416,28 @@ export default defineComponent({
             }
           }
         } else if (this.type === "video") {
-          const hdUrlResp = await creationsHdVideo({ videoId: val })
-          const hdUrl = hdUrlResp?.data
+          const { data: hdUrl } = await creationsHdVideo({ videoId: val })
           if (!hdUrl) return
-          // this.hdVideoUrl =
+          const player = this.$refs.mediaElement as HTMLVideoElement | undefined
+          if (!player) return
 
-          // const preloadEl = await preloadHdVideo(hdUrl)
+          const resumeAt = player.currentTime
+          const wasPlaying = !player.paused
 
-          // const player = this.$refs.mediaElement as HTMLVideoElement
-          // const currentTime = player.currentTime
-          // const wasPlaying = !player.paused
-
-          // player.src = hdUrl
-          // player.load()
-
-          // player.onloadedmetadata = () => {
-          //   player.currentTime = currentTime
-          //   if (wasPlaying) player.play().catch(() => {})
-          // }
-
-          // this.hdMediaLoaded = true
+          const tempVideo = document.createElement("video")
+          this.hdVideoLoading = true
+          tempVideo.src = hdUrl
+          tempVideo.preload = "auto"
+          tempVideo.muted = true // Required for autoplay on some browsers
+          tempVideo.oncanplaythrough = () => {
+            player.src = hdUrl
+            player.load()
+            this.hdVideoLoading = false
+            // player.currentTime = resumeAt
+            if (wasPlaying) player.play().catch(() => {})
+          }
+          // tempVideo.on
+          this.hdMediaLoaded = true
           this.userOwnsMedia = true
         }
       } catch (err) {
@@ -524,6 +549,7 @@ export default defineComponent({
         }).onOk(() => {
           // When the user completes the purchase in LikeImage dialog
           // Refresh image ownership status and like the image
+          this.triedHdLoad = false
           void this.loadHdMedia()
           this.userLikedMedia = true
           collectionsLikeMedia(this.buildMediaParam()).catch(catchErr)
@@ -559,8 +585,8 @@ export default defineComponent({
     },
     showDownloadWindow() {
       Dialog.create({ component: DownloadImage, componentProps: this.dialogParams }).onDismiss(() => {
-        // After purchase or download
-        this.hdMediaLoaded = false // Reset HD image loaded flag
+        this.triedHdLoad = false
+        this.hdMediaLoaded = false
 
         this.imgLoading = true
         void this.loadHdMedia()
@@ -572,21 +598,22 @@ export default defineComponent({
         if (index >= 0 && index < this.localMediaObjects.length) {
           const mediaObj = this.localMediaObjects[index]
           if (!mediaObj) return
-          const url = this.getMediaUrl(mediaObj.id)
-          if (this.type === "image") {
-            const imgElement = new Image()
-            imgElement.src = url
-          } else {
+          const isVideo = mediaObj.type === "video"
+          const url = isVideo ? s3Video(mediaObj.id, "preview-lg") : img(mediaObj.id, "lg")
+          if (isVideo) {
             const video = document.createElement("video")
             video.preload = "auto"
             video.src = url
             video.load()
+          } else {
+            const imgElement = new Image()
+            imgElement.src = url
           }
         }
       })
     },
     async mediaLoaded(event: Event) {
-      if (this.hdMediaLoaded || this.loading) return // 🔒 prevent loop
+      // if (this.hdMediaLoaded || this.loading) return // 🔒 prevent loop
 
       const isImage = this.type === "image"
       const el = event.target as HTMLImageElement | HTMLVideoElement
@@ -600,18 +627,10 @@ export default defineComponent({
         }
         this.imgLoading = false
       } else {
-        const video = el as HTMLVideoElement
-        const isPreview = video.src.includes("watermarked")
-
-        if (isPreview) {
-          this.imgLoading = false
-          // Start async HD load without awaiting (silent upgrade)
-          void this.loadHdMedia()
-        } else {
-          // HD video is now playing
-          this.hdMediaLoaded = true
-          this.imgLoading = false
+        if (!this.hdMediaLoaded) {
+          await this.loadHdMedia()
         }
+        this.imgLoading = false
       }
 
       this.firstImageLoaded = true

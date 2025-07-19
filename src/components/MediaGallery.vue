@@ -71,7 +71,7 @@ const mediaStyles = computed(() => {
           height: "100%",
           width: "100%",
           // maxHeight: "100px",
-          // maxWidth: "100px",
+          maxWidth: "400px",
           aspectRatio: "1 / 1",
           "object-fit": "cover",
           display: "block",
@@ -79,6 +79,7 @@ const mediaStyles = computed(() => {
       : {
           width: "100%",
           height: "100%",
+          maxWidth: "400px",
           "object-fit": "cover",
           display: "block",
         }

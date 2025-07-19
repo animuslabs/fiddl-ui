@@ -4,7 +4,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
         h4 Set Account Avatar
-      div(v-if="!userOwnsImage && !imageUnlocked")
+      div(v-if="!userOwnsMedia && !imageUnlocked")
         .centered
           h5.q-ma-md You have not unlocked this image.
         p.q-mb-md.q-ml-lg Unlock this image to access:
@@ -23,7 +23,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         //- .centered
         //-   p.q-ma-md You own this image.
         .centered.q-mt-lg.q-pb-lg
-          ImageCropper(v-if="currentImageId" :imageId="currentImageId" @cropAccepted="setAvatar" @cancel="hide")
+          ImageCropper(v-if="currentMediaId" :imageId="currentMediaId" @cropAccepted="setAvatar" @cancel="hide")
       //- .centered.q-pt-md.q-pb-md
       //-   q-btn(label="< back" color="grey" flat @click="hide()")
 
@@ -35,19 +35,14 @@ import { img } from "lib/netlifyImg"
 import reloadAvatar from "lib/reloadAvatar"
 import { catchErr, purchaseMedia } from "lib/util"
 import { Loading, Notify, QDialog, SessionStorage } from "quasar"
+import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { creationsPurchaseMedia, userSetAvatar } from "src/lib/orval"
 import { PropType } from "vue"
 export default {
   components: {
     ImageCropper,
   },
-  props: {
-    userOwnsImage: Boolean,
-    currentImageId: {
-      type: String as PropType<string | null>,
-      default: null,
-    },
-  },
+  props: dialogProps,
 
   emits: ["unlocked", "hide", "ok"],
   data() {
@@ -58,19 +53,19 @@ export default {
   },
   watch: {},
   mounted() {
-    if (this.currentImageId) {
-      this.imageSrc = img(this.currentImageId, "lg")
+    if (this.currentMediaId) {
+      this.imageSrc = img(this.currentMediaId, "lg")
     }
   },
 
   methods: {
     async setAvatar(cropData: CropData) {
       console.log("setAvatar", cropData)
-      if (!this.currentImageId) return
+      if (!this.currentMediaId) return
       const { position, scale } = cropData
       Loading.show({ message: "Updating avatar" })
       try {
-        await userSetAvatar({ imageId: this.currentImageId, position, scale })
+        await userSetAvatar({ imageId: this.currentMediaId, position, scale })
         reloadAvatar.value = Date.now()
         this.$root?.$forceUpdate()
         Notify.create({
@@ -90,8 +85,8 @@ export default {
       this.hide()
     },
     async unlock() {
-      if (!this.currentImageId) return
-      await purchaseMedia(this.currentImageId, "image")
+      if (!this.currentMediaId) return
+      await purchaseMedia(this.currentMediaId, "image")
       this.$emit("unlocked")
     },
     show() {

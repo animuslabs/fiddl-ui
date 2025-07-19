@@ -38,21 +38,10 @@ import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage } from "src/lib/orval"
 import { MediaType } from "lib/types"
+import { dialogProps } from "src/components/dialogs/dialogUtil"
 
 export default defineComponent({
-  props: {
-    type: {
-      type: String as PropType<MediaType>,
-      required: true,
-    },
-    userOwnsMedia: Boolean,
-    currentMediaId: {
-      type: String as PropType<string>,
-      default: null,
-      required: true,
-    },
-  },
-
+  props: dialogProps,
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {

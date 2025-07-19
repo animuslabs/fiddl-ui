@@ -17,9 +17,9 @@ export const useMediaRequests = defineStore("mediaRequests", {
       console.log("Loaded request", request)
       this.requests[shortId] = request
     },
-    async getRequest(shortId: string, type: MediaType): Promise<UnifiedCreationRequest> {
+    async getRequest(shortId: string, type: MediaType, force: boolean = false): Promise<UnifiedCreationRequest> {
       const val = this.requests[shortId]
-      if (val) return val
+      if (!force && val) return val
       await this.loadRequest(shortId, type)
       return this.getRequest(shortId, type)
     },
