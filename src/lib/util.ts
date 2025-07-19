@@ -532,10 +532,11 @@ export function unifiyRequest(request: CreationsGetImageRequest200 | CreationsGe
   return { ...request, mediaIds, type: "imageIds" in request ? "image" : "video", createdAt: new Date(request.createdAt) }
 }
 
-export function triggerDownload(url: string, filename?: string) {
+export function triggerDownload(url: string, filename: string) {
   const a = document.createElement("a")
   a.href = url
-  if (filename) a.download = filename
+  a.download = filename
+  a.style.display = "none"
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

@@ -37,7 +37,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 </template>
 
 <script lang="ts">
-import { catchErr, downloadFile, purchaseMedia, triggerDownload } from "lib/util"
+import { catchErr, downloadFile, longIdToShort, purchaseMedia, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia } from "src/lib/orval"
@@ -72,7 +72,7 @@ export default defineComponent({
           downloadFile(imageDataUrl, this.currentMediaId + "-original.png")
         } else {
           const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
-          void triggerDownload(data)
+          void triggerDownload(data, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.mp4`)
           await sleep(3000)
         }
         Loading.hide()
