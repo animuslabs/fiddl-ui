@@ -24,8 +24,8 @@
                   //- small Model Filter:
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
-                .centered.q-mt-md
-                  q-btn(label="create" size="md" color="primary" rounded v-if="quasar.screen.lt.md" @click="createMode = true")
+                .centered.q-mt-md(v-if="quasar.screen.lt.md")
+                  q-btn(label="create" size="md" color="primary" rounded  @click="createMode = true")
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
