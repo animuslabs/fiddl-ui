@@ -16,7 +16,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered.q-pt-md
           q-btn(color="accent" :label="`Unlock ${type}`" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
-              p 10
+              p prices[type].unlock
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
       .centered.q-pt-md.q-pb-md
@@ -29,12 +29,14 @@ import { MediaType } from "lib/types"
 import { purchaseMedia } from "lib/util"
 import { QDialog } from "quasar"
 import { defineComponent, PropType } from "vue"
+import { prices } from "stores/pricesStore"
 
 export default defineComponent({
   props: {
     type: {
       type: String as PropType<MediaType>,
       required: true,
+      prices,
     },
     userOwnsMedia: Boolean,
     currentMediaId: {

@@ -13,7 +13,8 @@
           )
       .col-grow.q-mr-sm.full-height
         q-scroll-area.full-width(:style="quasar.screen.gt.sm?'height:calc(100vh - 60px);':'height:calc(100vh - 110px);'")
-          .full-width(style="height:15px;")
+          .full-width(style="height:15px;").gt-sm
+          .full-width(style="height:75px;").lt-md
           .full-width.relative-position
             .full-width(style="height:55px;")
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px;")

@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-form.create-form.col.fit(@submit.prevent="create")
+  q-form.create-form.col.fit(@submit.prevent="create" style="padding-bottom: env(safe-area-inset-bottom, 24px);")
     component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md}")
       .centered.q-pb-md.relative-position
         q-input.full-width( v-model="vidStore.state.req.prompt" style="resize:none;" :disable="anyLoading" @keydown.enter.prevent="create" color="primary" filled type="textarea" placeholder="Enter a description of the video to create")

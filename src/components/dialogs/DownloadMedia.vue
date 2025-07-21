@@ -16,7 +16,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered.q-pt-md
           q-btn.text-capitalize(color="accent" :label="`Unlock ${type}`" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
-              p 10
+              p {{ prices[type].unlock }}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
       div(v-else style="height:30vh")
@@ -46,13 +46,14 @@ import { originalFileKey } from "lib/netlifyImg"
 import { creationsHdVideo } from "src/lib/orval"
 import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
-
+import { prices } from "stores/pricesStore"
 export default defineComponent({
   props: dialogProps,
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
       mediaUnlocked: false,
+      prices,
     }
   },
   watch: {},

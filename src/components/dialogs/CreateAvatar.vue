@@ -16,7 +16,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered.q-pt-md.q-pb-lg
           q-btn(color="accent" label="Unlock Image" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
-              p 10
+              p {{ prices.image.unlock }}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
       div(v-else)
@@ -37,7 +37,9 @@ import { catchErr, purchaseMedia } from "lib/util"
 import { Loading, Notify, QDialog, SessionStorage } from "quasar"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { creationsPurchaseMedia, userSetAvatar } from "src/lib/orval"
+import { prices } from "src/stores/pricesStore"
 import { PropType } from "vue"
+
 export default {
   components: {
     ImageCropper,
@@ -47,6 +49,7 @@ export default {
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
+      prices,
       imageUnlocked: false,
       imageSrc: "",
     }

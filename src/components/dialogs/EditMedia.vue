@@ -15,7 +15,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered.q-pt-md
           q-btn(color="accent" :label="`Unlock ${type}`" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
-              p 10
+              p {{prices[type].unlock}}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase media")
       div(v-else style="height:30vh")
@@ -39,12 +39,14 @@ import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
+import { prices } from "stores/pricesStore"
 
 export default defineComponent({
   props: dialogProps,
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
+      prices,
       mediaUnlocked: false,
     }
   },
