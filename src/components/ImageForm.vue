@@ -11,6 +11,7 @@
           filled
           type="textarea"
           placeholder="Enter a description of the image to create"
+          autogrow
         ).full-width
         .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
           q-btn(icon="clear" flat @click="req.prompt = ''" :disable="createStore.anyLoading" round)
@@ -63,7 +64,7 @@
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
     .full-width(style="height:30px;").gt-sm
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
+    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData")
       div(style="position:absolute; left:15px; top:0px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
       div(style="position:absolute; top:0px;")
@@ -136,7 +137,8 @@ textarea::-webkit-resizer {
 }
 @media (max-width: 1000px) {
   .form-scroll {
-    height: calc(100vh - 125px);
+    height: calc(100vh - 150px);
+    overflow: hidden;
   }
 }
 </style>
