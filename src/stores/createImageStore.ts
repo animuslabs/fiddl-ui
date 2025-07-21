@@ -3,7 +3,7 @@ import { defineStore } from "pinia"
 import { ref, computed, reactive, watch } from "vue"
 import { LocalStorage } from "quasar"
 import { useRouter } from "vue-router"
-import { aspectRatios, imageModelDatas, type ImageModel } from "lib/imageModels"
+import { aspectRatios, imageModels, type ImageModel } from "lib/imageModels"
 import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
@@ -13,6 +13,7 @@ import umami from "lib/umami"
 import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { CustomModel } from "lib/api"
 import { useLoadingStates } from "lib/composables/useLoadingStates"
+import { prices } from "src/stores/pricesStore"
 const defaultImageRequest: CreateImageRequest = {
   prompt: "",
   model: "flux-dev",
@@ -26,7 +27,6 @@ export type CreateImageRequestWithCustomModel = CreateImageRequest & {
   customModelId?: string
 }
 
-const availableModels = Object.freeze(imageModelDatas.map((el) => el.name))
 const availableAspectRatios = Object.freeze(aspectRatios)
 
 function initState() {
@@ -76,7 +76,8 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
           modelName = "flux-dev"
       }
     }
-    const baseCost = imageModelDatas.find((m) => m.name === modelName)?.pointsCost || 10
+    let baseCost = prices.image.model[modelName] || 10
+    if (state.req.model == "custom") baseCost += prices.forge.customModelCharge
     return baseCost
   })
 
@@ -169,7 +170,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     createSession,
     creations,
     userAuth,
-    availableModels,
+    availableModels: imageModels,
     availableAspectRatios: availableAspectRatiosComputed,
     selectedModelPrice,
     totalCost,

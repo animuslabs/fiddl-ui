@@ -264,6 +264,8 @@ export type CreateVideo200VideosItem = {
   replicatePredictionId: string | null;
   /** @nullable */
   coconutJobId: string | null;
+  /** @nullable */
+  errorMessage: string | null;
 };
 
 export type CreateVideo200 = {
@@ -791,8 +793,83 @@ export type PointsPackagesAvailable200Item = {
   usd: number;
 };
 
-export type PointsPrices200 = {
+export type PointsPrices200ImageModel = {
+  ultra: number;
+  'sd3-lg': number;
+  core: number;
+  'dall-e-3': number;
+  'flux-pro-ultra': number;
+  'flux-dev': number;
+  'flux-pro': number;
+  custom: number;
+  imagen4: number;
+  'imagen4-ultra': number;
+  photon: number;
+  recraft3: number;
+  'recraft3-svg': number;
+  'gpt-image-1': number;
+};
+
+export type PointsPrices200Image = {
+  unlock: number;
+  unlockCommission: number;
+  model: PointsPrices200ImageModel;
+};
+
+export type PointsPrices200ForgeTrainBaseModel = {
+  fluxDev: number;
+  fluxPro: number;
+  fluxProUltra: number;
+  faceClone: number;
+  faceForge: number;
+};
+
+export type PointsPrices200ForgeFineTuneType = {
+  lora: number;
+  full: number;
+};
+
+export type PointsPrices200Forge = {
   createTrainingSet: number;
+  trainBaseModel: PointsPrices200ForgeTrainBaseModel;
+  fineTuneType: PointsPrices200ForgeFineTuneType;
+  customModelCharge: number;
+  customModelOwnerComission: number;
+};
+
+export type PointsPrices200VideoModel = {
+  'veo-2': number;
+  'veo-3': number;
+  'seedance-pro': number;
+  'seedance-lite': number;
+  kling: number;
+};
+
+export type PointsPrices200Video = {
+  unlock: number;
+  unlockCommission: number;
+  model: PointsPrices200VideoModel;
+};
+
+export type PointsPrices200SocialRewards = {
+  linkEmail: number;
+  linkTwitter: number;
+  linkGoogle: number;
+  linkPhone: number;
+  linkTelegram: number;
+};
+
+export type PointsPrices200PromptTools = {
+  improvePrompt: number;
+  randomPrompt: number;
+};
+
+export type PointsPrices200 = {
+  image: PointsPrices200Image;
+  forge: PointsPrices200Forge;
+  video: PointsPrices200Video;
+  socialRewards: PointsPrices200SocialRewards;
+  promptTools: PointsPrices200PromptTools;
 };
 
 export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
@@ -1535,6 +1612,8 @@ export type CollectionsGetCollectionVideos200Item = {
   replicatePredictionId: string | null;
   /** @nullable */
   coconutJobId: string | null;
+  /** @nullable */
+  errorMessage: string | null;
   VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
 };
 

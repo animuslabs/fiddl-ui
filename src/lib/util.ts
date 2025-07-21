@@ -10,6 +10,7 @@ import type { CustomModelType, FineTuneType } from "fiddl-server/node_modules/@p
 import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { match } from "ts-pattern"
 import { creationsGetImageRequest, creationsGetVideoRequest, creationsPurchaseMedia, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
+import { prices } from "src/stores/pricesStore"
 /**
  * Shares an image or video via the native share feature, with a fallback for unsupported devices.
  * @param title - The title of the content being shared.
@@ -411,23 +412,8 @@ export async function generateThumbnails(files: File[]): Promise<{ id: string; b
   )
 }
 
-export const modelPrice: Record<CustomModelType, number> = {
-  fluxDev: 1,
-  fluxPro: 3,
-  fluxProUltra: 5,
-  faceClone: 10,
-  faceForge: 6,
-}
-
-export const fineTuneTypePrice: Record<FineTuneType, number> = {
-  lora: 5,
-  full: 15,
-}
-
-export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTuneType, numImages: number): number {
-  const model = modelPrice[modelType] ?? throwErr("invalid modelTypes")
-  const fineTune = fineTuneTypePrice[fineTuneType] ?? throwErr("invalid fineTuneType")
-  return (model + fineTune) * numImages + 600
+export function trainModelPrice(modelType: CustomModelType, fineTuneType: FineTuneType): number {
+  return prices.forge.trainBaseModel[modelType] + prices.forge.fineTuneType[fineTuneType]
 }
 
 export function getCookie(name: string): string | null {

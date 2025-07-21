@@ -18,15 +18,15 @@
 
       .centered.q-ma-md
         q-btn(icon="lightbulb" flat @click="createStore.newPrompt()" :loading="loading.new" :disable="createStore.anyLoading").q-mr-md
-          .badge-sm 1
+          .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
             p Generate a new prompt
         q-btn(icon="shuffle" flat @click="createStore.randomizePrompt()" :loading="loading.randomize" :disable="createStore.anyLoading || req.prompt?.length < 10").q-mr-md
-          .badge-sm 1
+          .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
             p Randomize an element of the prompt
         q-btn(icon="arrow_upward" flat @click="createStore.improvePrompt()" :loading="loading.improve" :disable="createStore.anyLoading || req.prompt?.length < 10")
-          .badge-sm 2
+          .badge-sm {{ prices.promptTools.improvePrompt }}
           q-tooltip
             p Improve the prompt
 
@@ -62,14 +62,14 @@
               .row.q-gutter-md
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
-
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData")
-      div(style="position:absolute; left:15px; top:15px;")
+    .full-width(style="height:30px;").gt-sm
+    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
+      div(style="position:absolute; left:15px; top:0px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div
+      div(style="position:absolute; top:0px;")
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || createStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
           .badge {{ createStore.totalCost }}
-      div(style="position:absolute; right:15px; top:15px;")
+      div(style="position:absolute; right:15px; top:0px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="createStore.anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   q-dialog(v-model="showModelPicker")
@@ -90,7 +90,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import CustomModelsList from "./CustomModelsList.vue"
 import { type CustomModel } from "lib/api"
 import { useQuasar } from "quasar"
-
+import { prices } from "stores/pricesStore"
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
 const quasar = useQuasar()
@@ -134,7 +134,7 @@ textarea::-webkit-resizer {
   overflow-y: auto;
   height: 700px;
 }
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
   .form-scroll {
     height: calc(100vh - 125px);
   }

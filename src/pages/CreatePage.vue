@@ -101,6 +101,7 @@ export default defineComponent({
             await this.$router.replace({ query: {} })
           })
         }
+        console.log("current tab?:", createCardStore.activeTab)
         // }
       },
       immediate: true,

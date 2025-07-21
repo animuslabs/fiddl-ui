@@ -16,14 +16,15 @@
           .full-width(style="height:15px;")
           .full-width.relative-position
             .full-width(style="height:55px;")
-              q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:16px;")
+              q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px;")
                 .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   q-separator(vertical)
                   //- small Model Filter:
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
-                  q-btn(label="create" size="sm" color="primary" rounded v-if="quasar.screen.lt.md" @click="createMode = true")
+                .centered.q-mt-md
+                  q-btn(label="create" size="md" color="primary" rounded v-if="quasar.screen.lt.md" @click="createMode = true")
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md

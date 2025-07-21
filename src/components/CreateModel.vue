@@ -23,7 +23,7 @@
             p.q-mt-md Base Model
             q-btn.q-mt-md(rounded :label="state.baseModel.name" color="primary" outline size="lg" no-caps)
               .badge
-                p {{ modelPrice[state.baseModel.value] }}
+                p {{ prices.forge.trainBaseModel[state.baseModel.value] }}
               q-menu
                 q-list(padding style="max-width:300px")
                   .q-ma-lg.cursor-pointer.relative-position(
@@ -37,7 +37,7 @@
                     .row
                       h4.relative-position.q-pr-lg {{ model.name }}
                         .badge(style="")
-                          p {{ modelPrice[model.value] }}
+                          p {{ prices.forge.trainBaseModel[model.value] }}
                     .row
                       p {{ model.description }}
           .col
@@ -63,7 +63,7 @@
             p.q-mt-md Model Type
             q-btn.q-mt-md.relative-position(rounded :label="state.fineTuneType.label" color="primary" outline size="lg" no-caps)
               .badge
-                p {{ fineTuneTypePrice[state.fineTuneType.value] }}
+                p {{ prices.forge.fineTuneType[state.fineTuneType.value] }}
               q-menu
                 q-list(padding style="max-width:300px")
                   .q-ma-lg.cursor-pointer.relative-position(
@@ -78,7 +78,7 @@
                     .row
                       h4.relative-position.q-pr-lg {{ type.label }}
                         .badge
-                          p {{ fineTuneTypePrice[type.value] }}
+                          p {{ prices.forge.fineTuneType[type.value] }}
                     .row
                       p {{ type.description }}
 
@@ -126,9 +126,10 @@ import TrainingSetCard from "./TrainingSetCard.vue"
 import type { TrainingSet } from "lib/api"
 import { modelsCreateModel, trainingSetsGetSet } from "lib/orval"
 import { useRoute, useRouter } from "vue-router"
-import { trainModelPrice, modelPrice, fineTuneTypePrice, throwErr, catchErr } from "lib/util"
+import { trainModelPrice, catchErr } from "lib/util"
 import { baseModels, fineTuneTypeData, trainingModes } from "lib/createModelConfigs"
 import { Loading } from "quasar"
+import { prices } from "src/stores/pricesStore"
 
 const route = useRoute()
 const router = useRouter()
@@ -159,7 +160,7 @@ async function reloadSelectedSet(trainingSetId?: string) {
 
 const canCreate = computed(() => !!state.trainingSet && !!state.name?.trim())
 
-const totalCost = computed(() => trainModelPrice(state.baseModel.value, state.fineTuneType.value, state.trainingSet?.numImages || 0))
+const totalCost = computed(() => trainModelPrice(state.baseModel.value, state.fineTuneType.value))
 
 async function startTraining() {
   if (!state.baseModel || !state.fineTuneType || !state.modelMode || !state.name || !state.trainingSet) return

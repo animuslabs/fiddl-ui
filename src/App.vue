@@ -36,6 +36,7 @@ import { useUserAuth } from "stores/userAuth"
 import { Loading, LoadingBar, LocalStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { toObject } from "lib/util"
+import { usePricesStore } from "src/stores/pricesStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {
     setTimeout(() => {
@@ -71,6 +72,7 @@ export default defineComponent({
   },
 
   mounted() {
+    void usePricesStore().reloadPrices().catch(console.error)
     void useUserAuth().attemptAutoLogin()
     LoadingBar.setDefaults({
       color: "primary",

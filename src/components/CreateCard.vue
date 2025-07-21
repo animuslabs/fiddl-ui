@@ -11,15 +11,6 @@
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
           q-tab-panel(name="video")
             VideoForm(@back="$emit('back')" @created="emit('created')")
-    q-dialog(v-model="showModelPicker")
-      q-card
-        .q-ma-md
-          .row
-            h5.q-mb-sm Select a custom model
-            .col-grow
-            q-btn(icon="add" label="create new model" flat color="primary" @click="router.push({name:'forge', params:{mode:'create'}})")
-          q-separator(color="primary").q-mb-lg
-          CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
 </template>
 
 <script lang="ts" setup>

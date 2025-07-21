@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { aspectRatios, videoModelDatas, videoModels, type AspectRatio } from "lib/imageModels"
+import { aspectRatios, videoModels, type AspectRatio } from "lib/imageModels"
 import { type CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import { computed, reactive, watch } from "vue"
 import { useLoadingStates } from "lib/composables/useLoadingStates"
@@ -11,6 +11,7 @@ import { LocalStorage } from "quasar"
 import z from "zod"
 import { match } from "ts-pattern"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
+import { prices } from "src/stores/pricesStore"
 
 export const createVideoRequestSchema = z
   .object({
@@ -106,7 +107,7 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
   })
 
   const selectedModelPrice = computed(() => {
-    return videoModelDatas.find((m) => m.name === state.req.model)?.pointsCostPerSecond || 0
+    return prices.video.model[state.req.model]
   })
 
   const totalCost = computed(() => {

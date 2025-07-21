@@ -8,15 +8,15 @@
           q-tooltip Clear Prompt
       .centered.q-ma-md
         q-btn(icon="lightbulb" flat @click="vidStore.newPrompt()" :loading="loading.new" :disable="anyLoading").q-mr-md
-          .badge-sm 1
+          .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
             p Generate a new prompt
         q-btn(icon="shuffle" flat @click="vidStore.randomizePrompt()" :loading="loading.randomize" :disable="anyLoading || req.prompt?.length < 10").q-mr-md
-          .badge-sm 1
+          .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
             p Randomize an element of the prompt
         q-btn(icon="arrow_upward" flat @click="vidStore.improvePrompt()" :loading="loading.improve" :disable="anyLoading || req.prompt?.length < 10")
-          .badge-sm 2
+          .badge-sm {{ prices.promptTools.improvePrompt }}
           q-tooltip
             p Improve the prompt
 
@@ -55,14 +55,14 @@
         div.q-ma-md.relative-position
           p Starting Image
           q-btn.q-mt-sm(label="Choose starting Image" @click="showImageDialog = true")
-
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData")
-      div(style="position:absolute; left:15px; top:15px;")
+    .full-width(style="height:30px;").gt-sm
+    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" )
+      div(style="position:absolute; left:15px; top:0px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div
+      div(style="position:absolute; top:0px;")
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || vidStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
           .badge {{ vidStore.totalCost }}
-      div(style="position:absolute; right:15px; top:15px;")
+      div(style="position:absolute; right:15px; top:0px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   q-dialog(v-model="showImageDialog")
@@ -82,7 +82,7 @@ import { videoModels } from "lib/imageModels"
 import { useQuasar } from "quasar"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { computed, ref, toRef } from "vue"
-
+import { prices } from "stores/pricesStore"
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
 //   showBackBtn: {
@@ -122,7 +122,7 @@ textarea::-webkit-resizer {
   overflow-y: auto;
   height: 700px;
 }
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
   .form-scroll {
     height: calc(100vh - 140px);
   }

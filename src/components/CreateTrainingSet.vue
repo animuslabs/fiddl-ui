@@ -32,7 +32,7 @@ div.q-ma-md
           div
             q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length " @click="handleFiles")
               .badge
-                p 10
+                p {{ prices.forge.createTrainingSet }}
         .centered
           p.q-mt-md Once created, a Training Set can be used to train multiple models.
   q-dialog( v-model="finishModal" persistent )
@@ -58,6 +58,7 @@ import { useForgeStore } from "src/stores/forgeStore"
 import { Dialog, Loading } from "quasar"
 import { uploadToPresignedPost, uploadWithProgress } from "lib/api"
 import { generateWebpThumbnails } from "../lib/imageUtils"
+import { prices } from "src/stores/pricesStore"
 
 // const trainingSetTypes: {
 //   label: string
@@ -92,6 +93,7 @@ export default defineComponent({
   emits: {},
   data() {
     return {
+      prices,
       setName: "" as string | null | number,
       setDescription: "" as string | null | number,
       price: 10,
