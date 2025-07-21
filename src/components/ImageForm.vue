@@ -11,7 +11,7 @@
           filled
           type="textarea"
           placeholder="Enter a description of the image to create"
-          autogrow
+          :autogrow="quasar.screen.lt.md"
         ).full-width
         .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
           q-btn(icon="clear" flat @click="req.prompt = ''" :disable="createStore.anyLoading" round)
@@ -64,10 +64,10 @@
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
     .full-width(style="height:30px;").gt-sm
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData")
+    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
       div(style="position:absolute; left:15px; top:0px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div(style="position:absolute; top:0px;")
+      div(style="position:absolute; top:0px; height:50px;" )
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || createStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
           .badge {{ createStore.totalCost }}
       div(style="position:absolute; right:15px; top:0px;")

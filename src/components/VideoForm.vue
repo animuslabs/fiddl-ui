@@ -2,7 +2,7 @@
   q-form.create-form.col.fit(@submit.prevent="create" style="padding-bottom: env(safe-area-inset-bottom, 24px);")
     component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md}")
       .centered.q-pb-md.relative-position
-        q-input.full-width( v-model="vidStore.state.req.prompt" style="resize:none;" :disable="anyLoading" @keydown.enter.prevent="create" color="primary" filled type="textarea" placeholder="Enter a description of the video to create" autogrow)
+        q-input.full-width( v-model="vidStore.state.req.prompt" style="resize:none;" :disable="anyLoading" @keydown.enter.prevent="create" color="primary" filled type="textarea" placeholder="Enter a description of the video to create" :autogrow="quasar.screen.lt.md")
         .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
           q-btn(icon="clear" flat @click="vidStore.state.req.prompt = ''" :disable="anyLoading" round)
           q-tooltip Clear Prompt
@@ -57,7 +57,7 @@
           q-btn.q-mt-sm(label="Choose starting Image" @click="showImageDialog = true")
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" )
-      div(style="position:absolute; left:15px; top:-10px;")
+      div(style="position:absolute; left:15px; top:0px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
       div(style="position:absolute; top:0px;")
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || vidStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
