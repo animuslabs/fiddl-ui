@@ -88,7 +88,6 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             style="width:100%; max-height:75vh; object-fit:contain; transform:`translateX(${touchMoveX}px)`"
             playsinline
             autoplay
-            muted="false"
             loop
             @canplay="mediaLoaded"
             @click.stop="onImageClick"
