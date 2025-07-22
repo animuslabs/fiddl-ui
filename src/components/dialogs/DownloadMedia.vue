@@ -3,6 +3,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
   q-card.q-dialog-plugin(style="width:500px; max-width:90vw;")
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
+        //- h4 {{ requestId }}
         h4.text-capitalize Download {{type}}
       div(v-if="!userOwnsMedia && !mediaUnlocked")
         .centered
@@ -28,8 +29,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
               p.q-ma-md Downloads
             .col-auto
               q-btn(label="original" icon="image" @click="downloadOriginal()")
-            .col-auto(v-if="type == 'image'")
-              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()")
+            .col-auto(v-if="type == 'image' && !isSvg")
+              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()" )
             small(v-if="type == 'image'") Upscaling can take 30+ seconds the first time
       .centered.q-pt-md.q-pb-md
         q-btn(label="< back" color="grey" flat @click="hide()")
@@ -40,7 +41,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { catchErr, downloadFile, longIdToShort, purchaseMedia, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
-import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia } from "src/lib/orval"
+import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
 import { creationsHdVideo } from "src/lib/orval"
@@ -48,16 +49,23 @@ import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
 export default defineComponent({
-  props: dialogProps,
+  props: { ...dialogProps, requestId: { type: String, required: false } },
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
       mediaUnlocked: false,
+      requestData: null as null | CreationsGetImageRequest200,
       prices,
+      isSvg: false,
     }
   },
   watch: {},
-
+  async mounted() {
+    if (!this.requestId) return
+    const { data } = await creationsGetImageRequest({ imageRequestId: this.requestId })
+    this.requestData = data
+    if (data.model?.includes("svg")) this.isSvg = true
+  },
   methods: {
     async downloadOriginal() {
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
@@ -69,8 +77,9 @@ export default defineComponent({
         if (this.type == "image") {
           const response = await creationsOriginalImage({ imageId: this.currentMediaId }).catch(catchErr)
           const imageData = response?.data
-          const imageDataUrl = `data:image/png;base64,${imageData}`
-          downloadFile(imageDataUrl, this.currentMediaId + "-original.png")
+          const imageDataUrl = this.isSvg ? `data:image/png;base64,${imageData}` : `data:image/png;base64,${imageData}`
+          const extension = this.isSvg ? ".svg" : ".png"
+          downloadFile(imageDataUrl, longIdToShort(this.currentMediaId) + "-original" + extension)
         } else {
           const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
           void triggerDownload(data, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.mp4`)
@@ -89,7 +98,7 @@ export default defineComponent({
     },
     async downloadUpscaled() {
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
-      if (!this.currentMediaId) return
+      if (!this.currentMediaId || this.isSvg) return
       if (this.type == "video") catchErr("video upscaling not yet supported")
       Loading.show({
         message: "Upscaling Image",

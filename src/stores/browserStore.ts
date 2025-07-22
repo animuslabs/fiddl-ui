@@ -76,15 +76,13 @@ export const useBrowserStore = defineStore("browserStore", {
   },
 
   actions: {
-    /* ---------- misc helpers ---------- */
+    // all properties of filter are being watched to trigger a reset
     setSort(method: SortMethod) {
       this.filter.sort = method
-      this.reset() // refresh list
+      // this.reset() // refresh list
     },
     setMediaType(type: MediaTypeFilter) {
-      this.filter.mediaType = type
-      this.filter.model = undefined
-      this.reset()
+      this.filter = { ...this.filter, mediaType: type, model: undefined }
     },
     resetFilters() {
       this.filter.aspectRatio = undefined

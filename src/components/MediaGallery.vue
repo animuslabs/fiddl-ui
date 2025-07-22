@@ -212,7 +212,7 @@ function videoClass(media: MediaGalleryMeta) {
         .full-width.full-height()
           .absolute-center
             h4 Loading
-          q-spinner.absolute.full-width.full-height.flex.flex-center(color="white" size="lg")
+          q-spinner.absolute.full-width.full-height.flex.flex-center(color="grey-10" size="lg")
       div(:style="mediaStyles" style="position: relative; overflow: hidden")
         video(
           :src="m.url"

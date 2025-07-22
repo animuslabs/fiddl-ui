@@ -3,7 +3,7 @@ import { defineStore } from "pinia"
 import { ref, computed, reactive, watch } from "vue"
 import { LocalStorage } from "quasar"
 import { useRouter } from "vue-router"
-import { aspectRatios, imageModels, type ImageModel } from "lib/imageModels"
+import { aspectRatios, imageModels, type AspectRatio, type ImageModel } from "lib/imageModels"
 import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
@@ -54,7 +54,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     if (model.includes("dall") || model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
     if (["flux-dev", "flux-pro", "flux-pro-ultra", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
     if (model.includes("imagen")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
-    if (model.includes("recraft") || model.includes("photon")) return ["1:1", "9:16", "16:9", "3:4", "4:3", "9:21", "21:9"]
+    if (model.includes("recraft") || model.includes("photon")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
     return availableAspectRatios
   })
 
@@ -164,6 +164,14 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       else state[key] = fresh[key]
     }
   }
+
+  watch(
+    () => state.req.model,
+    () => {
+      console.log("model watch triggered")
+      if (!availableAspectRatiosComputed.value?.includes(state.req.aspectRatio || "16:9")) (state.req.aspectRatio as any) = availableAspectRatiosComputed.value[0] || ("16:9" as AspectRatio)
+    },
+  )
 
   return {
     state,

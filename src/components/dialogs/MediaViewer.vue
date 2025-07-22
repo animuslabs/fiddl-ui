@@ -239,8 +239,8 @@ export default defineComponent({
       dynamic: false,
       userAuth: useUserAuth(),
       creationStore: useImageCreations(),
-      shareMenu: false,
-      moreOptionsMenu: false,
+      shareMenu: true,
+      moreOptionsMenu: true,
       localMediaObjects: [] as MediaGalleryMeta[],
       avatarImg,
       imageDeleted: false,
@@ -351,7 +351,8 @@ export default defineComponent({
   watch: {
     currentIndex: {
       handler() {
-        this.preloadMedia()
+        // this.preloadMedia()
+        // void this.loadRequestId()
       },
       immediate: false,
     },
@@ -376,6 +377,7 @@ export default defineComponent({
         console.log(response.data)
         this.userLikedMedia = response?.data
         this.loadingLike = false
+        void this.loadRequestId()
         await this.loadHdMedia()
         if (this.$route.name == "imageRequest") {
           const query = { index: this.currentIndex }
@@ -394,14 +396,11 @@ export default defineComponent({
   async mounted() {
     this.localMediaObjects = [...this.mediaObjects]
     this.currentIndex = this.startIndex
-    this.preloadMedia()
+    // this.preloadMedia()
     window.addEventListener("keydown", this.handleKeyDown)
-    if (!this.creatorMeta.userName.length || !this.requestId) {
-      this.dynamic = true
-    }
-    await this.loadRequestId()
-    await this.loadHdMedia()
-
+    this.dynamic = true
+    // // await this.loadRequestId()
+    // // await this.loadHdMedia()
     if (this.type == "video") {
       const video = this.$refs.mediaElement as HTMLVideoElement
       void video.play().catch((err) => {
@@ -632,7 +631,7 @@ export default defineComponent({
       }
     },
     showDownloadWindow() {
-      Dialog.create({ component: DownloadImage, componentProps: this.dialogParams }).onDismiss(() => {
+      Dialog.create({ component: DownloadImage, componentProps: { ...this.dialogParams, requestId: this.loadedRequestId } }).onDismiss(() => {
         this.triedHdLoad = false
         this.hdMediaLoaded = false
 

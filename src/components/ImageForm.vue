@@ -44,7 +44,7 @@
         div
           p Aspect Ratio
           .row
-            q-select(v-model="req.aspectRatio" :options="createStore.availableAspectRatios" style="font-size:20px;" :disable="createStore.anyLoading")
+            q-select(v-model="createStore.state.req.aspectRatio" :options="createStore.availableAspectRatios" style="font-size:20px;" :disable="createStore.anyLoading")
         div.q-ma-md(v-if="req.seed != undefined")
           p Seed
           .row(style="max-width:150px;").no-wrap
