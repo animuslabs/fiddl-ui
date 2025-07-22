@@ -1,6 +1,7 @@
 <template lang="pug">
 //- div.bg-black(style="position:fixed").full-width.full-height.z-max
 //- ImageGallery(:images="images" ref="gallery" hidden  )
+
 router-view(style="z-index:1")
 .bg-grid-overlay
 .bg-color-base
@@ -37,6 +38,7 @@ import { Loading, LoadingBar, LocalStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
+// import { useCreateImageStore } from "stores/createImageStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {
     setTimeout(() => {
@@ -44,6 +46,7 @@ if (import.meta.hot) {
     }, 10)
   })
 }
+// const createStore = useCreateImageStore()
 export default defineComponent({
   name: "App",
   components: {
@@ -52,6 +55,7 @@ export default defineComponent({
   data() {
     return {
       images: [] as string[],
+      // req: createStore.state.req,
     }
   },
   watch: {

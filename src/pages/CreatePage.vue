@@ -80,8 +80,8 @@ export default defineComponent({
               })
             }
           }
-          this.setReq(req, this.quasar.screen.lt.md)
           createCardStore.activeTab = mediaType
+          this.setReq(req, this.quasar.screen.lt.md)
           // const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
           // promptTab.setMediaMode(mediaType)
 

@@ -67,6 +67,7 @@ q-layout(view="lHh Lpr lFf" )
 
   q-page-container.centered.bg-transparent
     .centered(style="width:100vw; height:100%" )
+      //- h4.text-white {{ create.state.req.customModelName }} {{ create.state.req.customModelId}}
       router-view.full-width(style="max-width:1650px;")
       .full-width.q-pa-md
         .centered.items-center.q-gutter-md
@@ -99,10 +100,12 @@ import LoginDialog from "src/components/dialogs/LoginRegister.vue"
 import { avatarImg } from "lib/netlifyImg"
 import reloadAvatar from "lib/reloadAvatar"
 // import RegisterDialog from "components/dialogs/Register.vue"
+import { useCreateImageStore } from "stores/createImageStore"
 
 export default defineComponent({
   data() {
     return {
+      create: useCreateImageStore(),
       menu: false,
       avatarImg,
       reloadAvatar,

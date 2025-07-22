@@ -246,6 +246,7 @@ export default defineComponent({
       if (toggleCreateMode) this.createMode = true
       void this.$nextTick(() => {
         // console.log("createCard setReq Triggered", createCard)
+        // if(request.)
         this.activeCreateStore.setReq(request as any)
       })
     },

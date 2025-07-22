@@ -16,7 +16,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered.q-pt-md
           q-btn(color="accent" :label="`Unlock ${type}`" @click="unlock()" :disable="!$userAuth.loggedIn")
             .badge
-              p prices[type].unlock
+              p {{prices[type].unlock}}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
       .centered.q-pt-md.q-pb-md
@@ -36,7 +36,6 @@ export default defineComponent({
     type: {
       type: String as PropType<MediaType>,
       required: true,
-      prices,
     },
     userOwnsMedia: Boolean,
     currentMediaId: {
@@ -48,6 +47,7 @@ export default defineComponent({
   emits: ["unlocked", "hide", "ok"],
   data() {
     return {
+      prices,
       mediaUnlocked: false,
     }
   },

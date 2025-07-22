@@ -43,6 +43,7 @@ watch(
     void router.replace({ params: { activeTab: val } })
     emit("activeTab", store.activeTab)
   },
+  { immediate: true },
 )
 
 onMounted(() => {
@@ -67,7 +68,7 @@ watch(
       createStore.state.req.model = "custom"
     }
   },
-  { immediate: true },
+  { immediate: false },
 )
 
 async function setCustomModel(model: CustomModel) {
