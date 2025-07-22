@@ -21,6 +21,7 @@ const props = withDefaults(
     thumbSizeMobile?: number
     selectable?: boolean
     rowHeightRatio?: number
+    showLoading?: boolean
   }>(),
   {
     layout: "grid",
@@ -31,6 +32,7 @@ const props = withDefaults(
     thumbSizeMobile: 120,
     selectable: false,
     rowHeightRatio: 1.2,
+    showLoading: true,
   },
 )
 
@@ -90,6 +92,12 @@ const mediaStyles = computed(() => {
 })
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
+
+const filteredGalleryItems = computed(() => {
+  // const list = props.showLoading ? galleryItems.value : galleryItems.value.filter((el) => videoLoading.value[el.id])
+  // console.log(list)
+  return galleryItems.value
+})
 
 watch(
   () => props.mediaObjects,
@@ -195,7 +203,7 @@ function videoClass(media: MediaGalleryMeta) {
 <template lang="pug">
 .full-width(:style="wrapperStyles")
   div(
-    v-for="(m, index) in galleryItems"
+    v-for="(m, index) in filteredGalleryItems"
     :key="m.id"
     :style="getItemStyle(m)"
   )
@@ -208,11 +216,12 @@ function videoClass(media: MediaGalleryMeta) {
       @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
     )
     template(v-else)
-      div(v-if="videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
+      div(v-if="props.showLoading && videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
         .full-width.full-height()
           .absolute-center.z-top
             h4 Loading
           q-spinner.absolute.full-width.full-height.flex.flex-center(color="grey-10" size="lg")
+      //- div {{ !!videoLoading[m.id] }}
       div(:style="mediaStyles" style="position: relative; overflow: hidden")
         video(
           :src="m.url"

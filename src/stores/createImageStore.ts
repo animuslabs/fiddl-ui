@@ -54,7 +54,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     if (model.includes("dall") || model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
     if (["flux-dev", "flux-pro", "flux-pro-ultra", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
     if (model.includes("imagen")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
-    if (model.includes("recraft") || model.includes("photon")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
+    if (model.includes("recraft")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
+    if (model.includes("photon")) return ["1:1", "3:4", "4:3", "9:16", "16:9", "9:21", "21:9"]
+    if (model.includes("seedream")) return ["1:1", "3:4", "4:3", "16:9", "9:16", "2:3", "3:2", "21:9"]
     return availableAspectRatios
   })
 

@@ -4,15 +4,15 @@ import { reactive } from "vue"
 
 export const prices = reactive<PointsPrices200>({
   image: {
-    unlock: 12,
+    unlock: 12, // creator earns 4
     unlockCommission: 4,
     model: {
-      "flux-dev": 6,
-      "flux-pro": 10,
-      "flux-pro-ultra": 15,
       core: 8,
       "sd3-lg": 10,
       ultra: 15,
+      "flux-dev": 6,
+      "flux-pro": 12,
+      "flux-pro-ultra": 18,
       imagen4: 10,
       "imagen4-ultra": 15,
       photon: 8,
@@ -21,6 +21,7 @@ export const prices = reactive<PointsPrices200>({
       "dall-e-3": 25,
       "gpt-image-1": 22,
       custom: 10,
+      seedream3: 10,
     },
   },
   forge: {
@@ -55,8 +56,8 @@ export const prices = reactive<PointsPrices200>({
     linkTwitter: 100,
   },
   promptTools: {
-    improvePrompt: 2,
-    randomPrompt: 1,
+    improvePrompt: 3,
+    randomPrompt: 2,
   },
 })
 async function reloadPrices() {

@@ -13,6 +13,7 @@ export const imageModels = [
   "recraft3",
   "recraft3-svg",
   "gpt-image-1",
+  "seedream3",
 ] as const
 export type ImageModel = (typeof imageModels)[number]
 

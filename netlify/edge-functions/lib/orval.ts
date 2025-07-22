@@ -123,6 +123,7 @@ export const CreateImageBodyModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const;
 
 export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
@@ -346,6 +347,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
@@ -415,6 +417,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
@@ -484,6 +487,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
@@ -562,6 +566,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
@@ -679,6 +684,7 @@ export const CreationsBrowseCreateRequestsModel = {
   recraft3: 'recraft3',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const;
 
 export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
@@ -778,6 +784,7 @@ export type PointsPrices200ImageModel = {
   recraft3: number;
   'recraft3-svg': number;
   'gpt-image-1': number;
+  seedream3: number;
 };
 
 export type PointsPrices200Image = {
