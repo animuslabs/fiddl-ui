@@ -14,7 +14,7 @@ q-page.full-width
 import CreateCard from "components/CreateCard.vue"
 import CreatedImageCard from "components/CreatedImageCard.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
-import { getCreationRequest, timeSince } from "lib/util"
+import { getCreationRequest, throwErr, timeSince } from "lib/util"
 import { Dialog, useQuasar } from "quasar"
 import PromptTab from "src/components/PromptTab.vue"
 import UploaderCard from "src/components/UploaderCard.vue"
@@ -22,7 +22,7 @@ import { creationsGetCreationData, modelsGetCustomModel } from "src/lib/orval"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
 import { CreateImageRequest, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
-import { MediaType } from "lib/types"
+import { CreateEditType, MediaType } from "lib/types"
 import { createCardStore } from "src/stores/createCardStore"
 
 export default defineComponent({
@@ -51,21 +51,31 @@ export default defineComponent({
         const targetMediaId = this.$route.query?.mediaId
         const encodedRequestData = this.$route.query?.requestData
         const mediaType = this.$route.query?.type as MediaType
+        const editType = this.$route.query?.editType as CreateEditType
         if (targetMediaId && typeof targetMediaId == "string") {
           const { data: mediaData } = await creationsGetCreationData({ videoId: mediaType == "video" ? targetMediaId : undefined, imageId: mediaType == "image" ? targetMediaId : undefined })
           const request = await getCreationRequest(mediaData.requestId, mediaType)
-          let req: Partial<CreateVideoRequest | CreateImageRequest> = {
-            aspectRatio: request.aspectRatio as any,
-            model: (request.model as unknown as any) || "",
-            prompt: request.prompt || "",
-            public: request.public,
-            quantity: 1,
-            seed: request.seed,
-            duration: request.duration,
-            customModelId: request.customModelId,
-            negativePrompt: request.negativePrompt,
-            startImageId: request.startImageId,
-          }
+          let req: Partial<CreateVideoRequest | CreateImageRequest>
+          if (editType == "prompt") req = { prompt: request.prompt }
+          else if (editType == "all") {
+            req = {
+              aspectRatio: request.aspectRatio as any,
+              model: (request.model as unknown as any) || "",
+              prompt: request.prompt || "",
+              quantity: 1,
+              seed: request.seed,
+              duration: request.duration,
+              customModelId: request.customModelId,
+              negativePrompt: request.negativePrompt,
+              startImageId: request.startImageId,
+            }
+          } else if (editType == "video") {
+            req = {
+              startImageId: targetMediaId,
+              model: "seedance-pro",
+              prompt: "",
+            }
+          } else throwErr("invalid edit request")
           if (req.model == "custom" && req.customModelId) {
             const modelData = await modelsGetCustomModel({ id: req.customModelId }).catch(console.error)
             const customModel = modelData?.data
@@ -80,7 +90,7 @@ export default defineComponent({
               })
             }
           }
-          createCardStore.activeTab = mediaType
+          createCardStore.activeTab = editType == "video" ? "video" : mediaType
           this.setReq(req, this.quasar.screen.lt.md)
           // const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
           // promptTab.setMediaMode(mediaType)

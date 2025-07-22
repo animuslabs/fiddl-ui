@@ -93,7 +93,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="isPersistent")
             @click.stop="onImageClick"
             controls
           )
-        component(v-else :is="'img'" v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;")
+        img(v-else v-bind="mediaAttrs" ref="mediaElement" style="min-width:30vw;")
         .q-linear-progress.full-width.absolute-bottom(indeterminate color="primary")
         .absolute-top.full-width(style="width:100vw")
           .centered(v-if="hdVideoLoading")
@@ -615,15 +615,20 @@ export default defineComponent({
       }
     },
     editMedia() {
-      if (this.userOwnsMedia) {
-        void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
-        this.hide()
-      } else {
-        Dialog.create({ component: EditMedia, componentProps: this.dialogParams }).onOk(() => {
-          void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
-          this.hide()
-        })
-      }
+      Dialog.create({ component: EditMedia, componentProps: this.dialogParams })
+      // .onOk(() => {
+      //   void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
+      //   this.hide()
+      // })
+      // if (this.userOwnsMedia) {
+      //   void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
+      //   this.hide()
+      // } else {
+      //   Dialog.create({ component: EditMedia, componentProps: this.dialogParams }).onOk(() => {
+      //     void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type } })
+      //     this.hide()
+      //   })
+      // }
     },
     showDownloadWindow() {
       Dialog.create({ component: DownloadImage, componentProps: { ...this.dialogParams, requestId: this.loadedRequestId } }).onDismiss(() => {

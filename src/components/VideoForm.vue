@@ -33,7 +33,9 @@
         div
           p Aspect Ratio
           .row
-            q-select(v-model="req.aspectRatio" :options="vidStore.availableAspectRatios" style="font-size:20px;" :disable="anyLoading")
+            q-select(v-model="req.aspectRatio" :options="vidStore.availableAspectRatios" style="font-size:20px;" :disable="anyLoading||!!req.startImageId")
+            q-tooltip(v-if="req.startImageId")
+              p Starting image determines aspect ratio.
         div
           p Duration
           .row
@@ -53,8 +55,13 @@
             .badge-sm {{ vidStore.selectedModelPrice }}
             q-select.text-capitalize(v-model="req.model" :options="videoModels" style="font-size:20px;" :disable="anyLoading")
         div.q-ma-md.relative-position
-          p Starting Image
-          q-btn.q-mt-sm(label="Choose starting Image" @click="showImageDialog = true")
+          p.q-mb-sm Starting Image
+          q-img.q-mb-sm.relative-position(v-if="startingImageUrl" :src="startingImageUrl" style="max-height:200px; min-width:100px;" :class="disableStartingImage?'disabled':''")
+            .absolute-center.full-width(v-if="disableStartingImage")
+              .centered
+                div not supported by model
+          q-btn.q-mt-sm(v-if="startingImageUrl" label="Clear" @click="req.startImageId = undefined" icon="close")
+          q-btn.q-mt-sm(v-else label="Choose starting Image" @click="showImageDialog = true")
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" )
       div(style="position:absolute; left:15px; top:0px;")
@@ -69,9 +76,9 @@
     q-card
       .q-ma-md
         .centered
-          h4.q-mb-md Create a video from any creation on Fiddl.art
-          p This feature is coming soon!
-        //-   p When viewing an image, select the video create button to turn the image into a video
+          h4.q-mb-sm Create a video from any creation on Fiddl.art
+          q-img.q-mb-sm(src="/EditIcon.jpg" style="width:400px; max-width:95vw;")
+          p When viewing an image, select the edit button to turn the image into a video
         //- .centered.q-mt-md.q-gutter-md
         //-   q-btn(label="< back" outline color="secondary" @click="showImageDialog = false")
         //-   q-btn(label="browse images" color="primary" @click="$router.push({name:'browse'})")
@@ -83,6 +90,7 @@ import { useQuasar } from "quasar"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { computed, ref, toRef } from "vue"
 import { prices } from "stores/pricesStore"
+import { img } from "lib/netlifyImg"
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
 //   showBackBtn: {
@@ -93,17 +101,22 @@ const emit = defineEmits(["created", "back"])
 // })
 const quasar = useQuasar()
 const showImageDialog = ref(false)
-
 const vidStore = useCreateVideoStore()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
 const req = toRef(vidStore.state.req)
+// const disableStartingImage = computed(() => req.value.model == "veo-3")
+const disableStartingImage = computed(() => req.value.model == "veo-3")
 
 function create() {
   void vidStore.createVideoRequest().then(() => emit("created"))
 }
 const scrollWrapperComponent = computed(() => (quasar.screen.lt.md ? "q-scroll-area" : "div"))
 const showBackBtn = computed(() => quasar.screen.lt.md)
+const startingImageUrl = computed(() => {
+  if (!req.value.startImageId) return
+  return img(req.value.startImageId, "md")
+})
 </script>
 
 <style scoped>

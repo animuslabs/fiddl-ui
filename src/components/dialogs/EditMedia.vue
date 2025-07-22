@@ -22,9 +22,15 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
         .centered
           p.q-ma-md You own this {{ type }}.
         .centered
+          p How would you like use this creation?
+        .centered
           div.q-pt-lg
-            .row
-              q-btn(:label="`Edit ${type}`" @click="startEditing()" color="accent" icon="edit")
+            .row.q-mb-md
+              q-btn.q-mr-md(:label="`Prompt`" @click="startEditing('prompt')" color="primary" icon="edit" outline stack)
+              .col-grow
+              q-btn(:label="`All`" @click="startEditing('all')" color="primary" icon="edit_note" outline stack)
+            .centered(v-if="type=='image'")
+              q-btn(:label="`Create Video`" @click="startEditing('video')" color="primary" icon="video_settings" stack size="lg")
               //- h4.q-ma-md Start Editing
 
       .centered.q-pt-md.q-pb-md
@@ -37,9 +43,10 @@ import { catchErr, downloadFile, purchaseMedia } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { creationsOriginalImage, creationsUpscaledImage } from "src/lib/orval"
-import { MediaType } from "lib/types"
+import { CreateEditType, MediaType } from "lib/types"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
+import { match } from "ts-pattern"
 
 export default defineComponent({
   props: dialogProps,
@@ -65,8 +72,8 @@ export default defineComponent({
         catchErr(error)
       }
     },
-    startEditing() {
-      this.onOKClick()
+    startEditing(editType: CreateEditType) {
+      void this.$router.push({ name: "create", query: { mediaId: this.currentMediaId, type: this.type, editType } })
     },
     show() {
       const dialog = this.$refs.dialog as QDialog

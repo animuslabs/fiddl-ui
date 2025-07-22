@@ -149,3 +149,5 @@ export type UnifiedRequest = {
   // Helpful for filtering or UI branching
   type: "image" | "video"
 }
+
+export type CreateEditType = "prompt" | "video" | "all"
