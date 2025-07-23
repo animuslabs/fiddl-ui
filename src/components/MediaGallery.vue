@@ -217,12 +217,12 @@ function videoClass(media: MediaGalleryMeta) {
     )
     template(v-else)
       div(v-if="props.showLoading && videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
-        .full-width.full-height(style="max-width:200px; aspect-ratio: 1/1; ")
+        div
           .absolute-center.z-top
             h4 Loading
-          q-spinner.absolute.full-width.full-height.flex.flex-center(color="grey-10" size="lg")
+          q-spinner-gears.absolute-center(color="grey-10" size="150px")
       //- div {{ !!videoLoading[m.id] }}
-      div(:style="mediaStyles" style="position: relative; overflow: hidden")
+      div(v-show="!videoLoading[m.id]" :style="mediaStyles" style="position: relative; overflow: hidden;")
         video(
           :src="m.url"
           :key="videoReloadKey[m.id]"
