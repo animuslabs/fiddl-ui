@@ -1,21 +1,22 @@
 <template lang="pug">
   div
-    q-card.column(style="overflow: hidden;")
+    q-card(style="overflow: hidden;")
       div
         q-tabs(v-model="store.activeTab" class="text-primary" align="center" inline-label)
           q-tab(name="image" label="Image" icon="image")
           q-tab(name="video" label="Video" icon="movie")
         q-separator
-        q-tab-panels.bg-transparent(v-model="store.activeTab" animated swipeable)
-          q-tab-panel(name="image" class="column fit" style="padding:0px;")
+        q-tab-panels.bg-transparent(v-model="store.activeTab" swipeable :style="quasar.screen.lt.md? 'height:calc(90dvh - env(safe-area-inset-bottom))':''")
+          q-tab-panel(name="image")
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
           q-tab-panel(name="video")
-            VideoForm(@back="$emit('back')" @created="emit('created')")
+            VideoForm(@back="$emit('back')" @created="emit('created')" )
+
 </template>
 
 <script lang="ts" setup>
 import { ref, watch, onMounted } from "vue"
-import { LocalStorage } from "quasar"
+import { LocalStorage, useQuasar } from "quasar"
 import { useRouter, useRoute } from "vue-router"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
@@ -33,6 +34,7 @@ const route = useRoute()
 const store = createCardStore
 const createStore = useCreateImageStore()
 const creationsStore = useImageCreations()
+const quasar = useQuasar()
 
 const showModelPicker = ref(false)
 

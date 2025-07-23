@@ -138,7 +138,6 @@ textarea::-webkit-resizer {
 @media (max-width: 1000px) {
   .form-scroll {
     height: calc(100vh - 150px);
-    overflow: hidden;
   }
 }
 </style>
