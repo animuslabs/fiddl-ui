@@ -217,7 +217,7 @@ function videoClass(media: MediaGalleryMeta) {
     )
     template(v-else)
       div(v-if="props.showLoading && videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
-        .full-width.full-height()
+        .full-width.full-height(style="max-width:200px; aspect-ratio: 1/1; ")
           .absolute-center.z-top
             h4 Loading
           q-spinner.absolute.full-width.full-height.flex.flex-center(color="grey-10" size="lg")
