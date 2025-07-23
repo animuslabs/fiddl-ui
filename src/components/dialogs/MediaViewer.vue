@@ -396,14 +396,14 @@ export default defineComponent({
     this.dynamic = true
     // // await this.loadRequestId()
     // // await this.loadHdMedia()
-    if (this.type == "video") {
-      const video = this.$refs.mediaElement as HTMLVideoElement
-      void video.play().catch((err) => {
-        console.info(err)
-        video.muted = true
-        void video.play()
-      })
-    }
+    // if (this.type == "video") {
+    //   const video = this.$refs.mediaElement as HTMLVideoElement
+    //   void video.play().catch((err) => {
+    //     console.info(err)
+    //     video.muted = true
+    //     void video.play()
+    //   })
+    // }
   },
   methods: {
     async loadHdMedia(val?: string) {
