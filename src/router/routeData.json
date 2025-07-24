@@ -98,5 +98,10 @@
     "trainingSet",
     "/trainingSet/:trainingSetId?",
     "TrainingSetPage"
+  ],
+  [
+    "models",
+    "/models/:modelSlug?",
+    "ModelsPage"
   ]
 ]

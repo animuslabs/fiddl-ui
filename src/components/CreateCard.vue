@@ -6,7 +6,7 @@
           q-tab(name="image" label="Image" icon="image")
           q-tab(name="video" label="Video" icon="movie")
         q-separator
-        q-tab-panels.bg-transparent(v-model="store.activeTab" swipeable :style="quasar.screen.lt.md? 'height:calc(90dvh - env(safe-area-inset-bottom))':''")
+        q-tab-panels.bg-transparent(v-model="store.activeTab" swipeable animated :style="quasar.screen.lt.md? 'height:calc(90dvh - env(safe-area-inset-bottom))':''")
           q-tab-panel(name="image")
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
           q-tab-panel(name="video")

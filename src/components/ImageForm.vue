@@ -65,12 +65,12 @@
                 q-btn(round flat icon="list" @click="showModelPicker = true")
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
-      div(style="position:absolute; left:15px; top:0px;")
+      div(style="position:absolute; left:15px; top:15px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div(style="position:absolute; top:0px; height:50px;" )
+      div(style="position:absolute; top:15px; height:50px;" )
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || createStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
           .badge {{ createStore.totalCost }}
-      div(style="position:absolute; right:15px; top:0px;")
+      div(style="position:absolute; right:15px; top:15px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="createStore.anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   q-dialog(v-model="showModelPicker")

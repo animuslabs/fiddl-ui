@@ -63,13 +63,13 @@
           q-btn.q-mt-sm(v-if="startingImageUrl" label="Clear" @click="req.startImageId = undefined" icon="close")
           q-btn.q-mt-sm(v-else label="Choose starting Image" @click="showImageDialog = true")
     .full-width(style="height:30px;").gt-sm
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" )
-      div(style="position:absolute; left:15px; top:0px;")
+    .centered.relative-position.q-pb-md.q-pt-md(v-if="$userAuth.userData" style="height:50px;")
+      div(style="position:absolute; left:15px; top:15px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div(style="position:absolute; top:0px;")
+      div(style="position:absolute; top:15px;")
         q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || vidStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
           .badge {{ vidStore.totalCost }}
-      div(style="position:absolute; right:15px; top:0px;")
+      div(style="position:absolute; right:15px; top:15px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   q-dialog(v-model="showImageDialog")

@@ -1728,6 +1728,32 @@ export const ModelsGetUserModels200ItemMode = {
   general: 'general',
 } as const;
 
+export type ModelsGetUserModels200ItemModelTagsItem = typeof ModelsGetUserModels200ItemModelTagsItem[keyof typeof ModelsGetUserModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetUserModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
   id: string;
 };
@@ -1743,6 +1769,7 @@ export type ModelsGetUserModels200Item = {
   /** @nullable */
   fineTuneType: ModelsGetUserModels200ItemFineTuneType;
   mode: ModelsGetUserModels200ItemMode;
+  modelTags: ModelsGetUserModels200ItemModelTagsItem[];
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1886,12 +1913,39 @@ export const ModelsGetCustomModel200Mode = {
   general: 'general',
 } as const;
 
+export type ModelsGetCustomModel200ModelTagsItem = typeof ModelsGetCustomModel200ModelTagsItem[keyof typeof ModelsGetCustomModel200ModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetCustomModel200ModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
 export type ModelsGetCustomModel200 = {
   status: ModelsGetCustomModel200Status;
   modelType: ModelsGetCustomModel200ModelType;
   /** @nullable */
   fineTuneType: ModelsGetCustomModel200FineTuneType;
   mode: ModelsGetCustomModel200Mode;
+  modelTags: ModelsGetCustomModel200ModelTagsItem[];
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1907,6 +1961,174 @@ export type ModelsGetCustomModel200 = {
   Public: boolean;
   /** @nullable */
   trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
+};
+
+export type ModelsGetPublicModelsParams = {
+page?: number;
+tag?: ModelsGetPublicModelsTag;
+};
+
+export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModelsTag = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetPublicModels200ItemStatus = typeof ModelsGetPublicModels200ItemStatus[keyof typeof ModelsGetPublicModels200ItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemStatus = {
+  training: 'training',
+  trained: 'trained',
+  error: 'error',
+  waitingForImageUpload: 'waitingForImageUpload',
+} as const;
+
+export type ModelsGetPublicModels200ItemModelType = typeof ModelsGetPublicModels200ItemModelType[keyof typeof ModelsGetPublicModels200ItemModelType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemModelType = {
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ModelsGetPublicModels200ItemFineTuneType = typeof ModelsGetPublicModels200ItemFineTuneType[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemFineTuneType = {
+  lora: 'lora',
+  full: 'full',
+} as const;
+
+export type ModelsGetPublicModels200ItemMode = typeof ModelsGetPublicModels200ItemMode[keyof typeof ModelsGetPublicModels200ItemMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemMode = {
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
+
+export type ModelsGetPublicModels200ItemModelTagsItem = typeof ModelsGetPublicModels200ItemModelTagsItem[keyof typeof ModelsGetPublicModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetPublicModels200Item = {
+  status: ModelsGetPublicModels200ItemStatus;
+  modelType: ModelsGetPublicModels200ItemModelType;
+  /** @nullable */
+  fineTuneType: ModelsGetPublicModels200ItemFineTuneType;
+  mode: ModelsGetPublicModels200ItemMode;
+  modelTags: ModelsGetPublicModels200ItemModelTagsItem[];
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: string;
+  name: string;
+  slug: string;
+  /** @nullable */
+  trainingError: string | null;
+  /** @nullable */
+  trainingId: string | null;
+  /** @nullable */
+  inferenceId: string | null;
+  Public: boolean;
+  /** @nullable */
+  trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
+};
+
+export type ModelsGetBaseModelsParams = {
+page?: number;
+};
+
+export type ModelsGetBaseModels200ItemModelTagsItem = typeof ModelsGetBaseModels200ItemModelTagsItem[keyof typeof ModelsGetBaseModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetBaseModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetBaseModels200Item = {
+  modelTags: ModelsGetBaseModels200ItemModelTagsItem[];
+  slug: string;
+  updatedAt: string;
+  name: string;
   /** @nullable */
   description: string | null;
 };
@@ -6045,6 +6267,122 @@ export function useModelsGetCustomModel<TData = Awaited<ReturnType<typeof models
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsGetCustomModelQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const modelsGetPublicModels = (
+    params?: MaybeRef<ModelsGetPublicModelsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<ModelsGetPublicModels200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/models/getPublicModels`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getModelsGetPublicModelsQueryKey = (params?: MaybeRef<ModelsGetPublicModelsParams>,) => {
+    return ['models','getPublicModels', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getModelsGetPublicModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsGetPublicModels>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<ModelsGetPublicModelsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetPublicModels>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getModelsGetPublicModelsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsGetPublicModels>>> = ({ signal }) => modelsGetPublicModels(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsGetPublicModels>>, TError, TData> 
+}
+
+export type ModelsGetPublicModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsGetPublicModels>>>
+export type ModelsGetPublicModelsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useModelsGetPublicModels<TData = Awaited<ReturnType<typeof modelsGetPublicModels>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<ModelsGetPublicModelsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetPublicModels>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsGetPublicModelsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const modelsGetBaseModels = (
+    params?: MaybeRef<ModelsGetBaseModelsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<ModelsGetBaseModels200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/models/getBaseModels`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getModelsGetBaseModelsQueryKey = (params?: MaybeRef<ModelsGetBaseModelsParams>,) => {
+    return ['models','getBaseModels', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getModelsGetBaseModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsGetBaseModels>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<ModelsGetBaseModelsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetBaseModels>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getModelsGetBaseModelsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsGetBaseModels>>> = ({ signal }) => modelsGetBaseModels(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsGetBaseModels>>, TError, TData> 
+}
+
+export type ModelsGetBaseModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsGetBaseModels>>>
+export type ModelsGetBaseModelsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useModelsGetBaseModels<TData = Awaited<ReturnType<typeof modelsGetBaseModels>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<ModelsGetBaseModelsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetBaseModels>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsGetBaseModelsQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

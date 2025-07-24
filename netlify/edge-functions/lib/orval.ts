@@ -1698,6 +1698,32 @@ export const ModelsGetUserModels200ItemMode = {
   general: 'general',
 } as const;
 
+export type ModelsGetUserModels200ItemModelTagsItem = typeof ModelsGetUserModels200ItemModelTagsItem[keyof typeof ModelsGetUserModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetUserModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
   id: string;
 };
@@ -1713,6 +1739,7 @@ export type ModelsGetUserModels200Item = {
   /** @nullable */
   fineTuneType: ModelsGetUserModels200ItemFineTuneType;
   mode: ModelsGetUserModels200ItemMode;
+  modelTags: ModelsGetUserModels200ItemModelTagsItem[];
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1856,12 +1883,39 @@ export const ModelsGetCustomModel200Mode = {
   general: 'general',
 } as const;
 
+export type ModelsGetCustomModel200ModelTagsItem = typeof ModelsGetCustomModel200ModelTagsItem[keyof typeof ModelsGetCustomModel200ModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetCustomModel200ModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
 export type ModelsGetCustomModel200 = {
   status: ModelsGetCustomModel200Status;
   modelType: ModelsGetCustomModel200ModelType;
   /** @nullable */
   fineTuneType: ModelsGetCustomModel200FineTuneType;
   mode: ModelsGetCustomModel200Mode;
+  modelTags: ModelsGetCustomModel200ModelTagsItem[];
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -1877,6 +1931,174 @@ export type ModelsGetCustomModel200 = {
   Public: boolean;
   /** @nullable */
   trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
+};
+
+export type ModelsGetPublicModelsParams = {
+page?: number;
+tag?: ModelsGetPublicModelsTag;
+};
+
+export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModelsTag = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetPublicModels200ItemStatus = typeof ModelsGetPublicModels200ItemStatus[keyof typeof ModelsGetPublicModels200ItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemStatus = {
+  training: 'training',
+  trained: 'trained',
+  error: 'error',
+  waitingForImageUpload: 'waitingForImageUpload',
+} as const;
+
+export type ModelsGetPublicModels200ItemModelType = typeof ModelsGetPublicModels200ItemModelType[keyof typeof ModelsGetPublicModels200ItemModelType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemModelType = {
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ModelsGetPublicModels200ItemFineTuneType = typeof ModelsGetPublicModels200ItemFineTuneType[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemFineTuneType = {
+  lora: 'lora',
+  full: 'full',
+} as const;
+
+export type ModelsGetPublicModels200ItemMode = typeof ModelsGetPublicModels200ItemMode[keyof typeof ModelsGetPublicModels200ItemMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemMode = {
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
+
+export type ModelsGetPublicModels200ItemModelTagsItem = typeof ModelsGetPublicModels200ItemModelTagsItem[keyof typeof ModelsGetPublicModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetPublicModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetPublicModels200Item = {
+  status: ModelsGetPublicModels200ItemStatus;
+  modelType: ModelsGetPublicModels200ItemModelType;
+  /** @nullable */
+  fineTuneType: ModelsGetPublicModels200ItemFineTuneType;
+  mode: ModelsGetPublicModels200ItemMode;
+  modelTags: ModelsGetPublicModels200ItemModelTagsItem[];
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: string;
+  name: string;
+  slug: string;
+  /** @nullable */
+  trainingError: string | null;
+  /** @nullable */
+  trainingId: string | null;
+  /** @nullable */
+  inferenceId: string | null;
+  Public: boolean;
+  /** @nullable */
+  trainingSetId: string | null;
+  /** @nullable */
+  description: string | null;
+};
+
+export type ModelsGetBaseModelsParams = {
+page?: number;
+};
+
+export type ModelsGetBaseModels200ItemModelTagsItem = typeof ModelsGetBaseModels200ItemModelTagsItem[keyof typeof ModelsGetBaseModels200ItemModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetBaseModels200ItemModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetBaseModels200Item = {
+  modelTags: ModelsGetBaseModels200ItemModelTagsItem[];
+  slug: string;
+  updatedAt: string;
+  name: string;
   /** @nullable */
   description: string | null;
 };
@@ -6554,6 +6776,146 @@ export const modelsGetCustomModel = async (params: ModelsGetCustomModelParams, o
   const data: modelsGetCustomModelResponse['data'] = body ? JSON.parse(body) : {}
 
   return { data, status: res.status, headers: res.headers } as modelsGetCustomModelResponse
+}
+
+
+
+export type modelsGetPublicModelsResponse200 = {
+  data: ModelsGetPublicModels200Item[]
+  status: 200
+}
+
+export type modelsGetPublicModelsResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type modelsGetPublicModelsResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type modelsGetPublicModelsResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type modelsGetPublicModelsResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type modelsGetPublicModelsResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type modelsGetPublicModelsResponseComposite = modelsGetPublicModelsResponse200 | modelsGetPublicModelsResponse400 | modelsGetPublicModelsResponse401 | modelsGetPublicModelsResponse403 | modelsGetPublicModelsResponse404 | modelsGetPublicModelsResponse500;
+    
+export type modelsGetPublicModelsResponse = modelsGetPublicModelsResponseComposite & {
+  headers: Headers;
+}
+
+export const getModelsGetPublicModelsUrl = (params?: ModelsGetPublicModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getPublicModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getPublicModels`
+}
+
+export const modelsGetPublicModels = async (params?: ModelsGetPublicModelsParams, options?: RequestInit): Promise<modelsGetPublicModelsResponse> => {
+  
+  const res = await fetch(getModelsGetPublicModelsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: modelsGetPublicModelsResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as modelsGetPublicModelsResponse
+}
+
+
+
+export type modelsGetBaseModelsResponse200 = {
+  data: ModelsGetBaseModels200Item[]
+  status: 200
+}
+
+export type modelsGetBaseModelsResponse400 = {
+  data: ErrorBADREQUEST
+  status: 400
+}
+
+export type modelsGetBaseModelsResponse401 = {
+  data: ErrorUNAUTHORIZED
+  status: 401
+}
+
+export type modelsGetBaseModelsResponse403 = {
+  data: ErrorFORBIDDEN
+  status: 403
+}
+
+export type modelsGetBaseModelsResponse404 = {
+  data: ErrorNOTFOUND
+  status: 404
+}
+
+export type modelsGetBaseModelsResponse500 = {
+  data: ErrorINTERNALSERVERERROR
+  status: 500
+}
+    
+export type modelsGetBaseModelsResponseComposite = modelsGetBaseModelsResponse200 | modelsGetBaseModelsResponse400 | modelsGetBaseModelsResponse401 | modelsGetBaseModelsResponse403 | modelsGetBaseModelsResponse404 | modelsGetBaseModelsResponse500;
+    
+export type modelsGetBaseModelsResponse = modelsGetBaseModelsResponseComposite & {
+  headers: Headers;
+}
+
+export const getModelsGetBaseModelsUrl = (params?: ModelsGetBaseModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getBaseModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getBaseModels`
+}
+
+export const modelsGetBaseModels = async (params?: ModelsGetBaseModelsParams, options?: RequestInit): Promise<modelsGetBaseModelsResponse> => {
+  
+  const res = await fetch(getModelsGetBaseModelsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+  const data: modelsGetBaseModelsResponse['data'] = body ? JSON.parse(body) : {}
+
+  return { data, status: res.status, headers: res.headers } as modelsGetBaseModelsResponse
 }
 
 
