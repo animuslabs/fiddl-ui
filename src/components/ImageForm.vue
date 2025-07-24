@@ -1,7 +1,7 @@
 <template lang="pug">
   q-form.create-form.col.fit(@submit.prevent="createImage")
     component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md}")
-      .centered.q-pa-md.relative-position
+      .centered.relative-position
         q-input(
           v-model="req.prompt"
           style="resize:none;"
@@ -17,7 +17,7 @@
           q-btn(icon="clear" flat @click="req.prompt = ''" :disable="createStore.anyLoading" round)
           q-tooltip Clear Prompt
 
-      .centered.q-ma-md
+      .centered.q-ma-md.q-pt-md
         q-btn(icon="lightbulb" flat @click="createStore.newPrompt()" :loading="loading.new" :disable="createStore.anyLoading").q-mr-md
           .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
