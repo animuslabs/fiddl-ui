@@ -1787,6 +1787,7 @@ export type ModelsGetUserModels200Item = {
   trainingSetId: string | null;
   /** @nullable */
   description: string | null;
+  featured: boolean;
   imageRequests: ModelsGetUserModels200ItemImageRequestsItem[];
 };
 
@@ -1963,6 +1964,7 @@ export type ModelsGetCustomModel200 = {
   trainingSetId: string | null;
   /** @nullable */
   description: string | null;
+  featured: boolean;
 };
 
 export type ModelsGetPublicModelsParams = {
@@ -2092,6 +2094,8 @@ export type ModelsGetPublicModels200Item = {
   trainingSetId: string | null;
   /** @nullable */
   description: string | null;
+  featured: boolean;
+  previewMediaId?: string;
 };
 
 export type ModelsGetBaseModelsParams = {
@@ -2131,6 +2135,8 @@ export type ModelsGetBaseModels200Item = {
   name: string;
   /** @nullable */
   description: string | null;
+  featured: boolean;
+  previewMediaId?: string;
 };
 
 export type ModelsSetModelPrivacyBody = {

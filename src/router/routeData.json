@@ -101,7 +101,12 @@
   ],
   [
     "models",
-    "/models/:modelSlug?",
+    "/models",
     "ModelsPage"
+  ],
+  [
+    "model",
+    "/model/:modelName/:customModelId?",
+    "ModelPage"
   ]
 ]

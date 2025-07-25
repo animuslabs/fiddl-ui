@@ -5,13 +5,22 @@ import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
 
 export const models = reactive({
-  base: (LocalStorage.getItem("baseModels") as ModelsGetBaseModels200Item[]) || [],
+  // base: LocalStorage.getItem<ModelsGetBaseModels200Item[]>("baseModels") || [],
+  base: [] as ModelsGetBaseModels200Item[],
   custom: [] as ModelsGetPublicModels200Item[],
 })
 
-export const filteredBaseModels = computed(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
+export const filteredBaseModels = computed<ModelsGetBaseModels200Item[]>(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
 
-export const allModels = computed(() => [...models.base, ...models.custom].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()))
+export const allModels = computed(() =>
+  [...filteredBaseModels.value, ...models.custom].sort((a, b) => {
+    if (a.featured && !b.featured) return -1
+    if (!a.featured && b.featured) return 1
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  }),
+)
+export const featuredModels = computed(() => allModels.value.filter((model) => model.featured))
+export const notFeaturedModels = computed(() => allModels.value.filter((model) => !model.featured))
 export const filter = reactive({
   tag: null as ModelTags | null,
   currentPage: 1,

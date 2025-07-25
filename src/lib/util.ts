@@ -541,3 +541,11 @@ export function arraysEqual(a: unknown[], b: unknown[]) {
   }
   return true
 }
+
+export function goToModelPage(router: any, modelName: string, customModelId?: string) {
+  if (customModelId) {
+    router.push({ name: "model", params: { modelName, customModelId } })
+  } else {
+    router.push({ name: "model", params: { modelName } })
+  }
+}

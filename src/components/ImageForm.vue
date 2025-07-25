@@ -55,14 +55,15 @@
 
       .row
         div.q-ma-md.relative-position
-          p Model:
+          p Model
           .row.items-center.relative-position
-            .badge-sm {{ createStore.selectedModelPrice }}
-            q-select(v-model="req.model" :options="createStore.availableModels" style="font-size:20px;" :disable="createStore.anyLoading")
+            q-select.relative-position.text-capitalize(label="Quick Select" v-model="req.model" :options="createStore.availableModels" style="font-size:20px; min-width:140px;" :disable="createStore.anyLoading")
+              .badge-sm.text-white {{ createStore.selectedModelPrice }}
             div.q-ml-md(v-if="req.model === 'custom'")
               .row.q-gutter-md
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
+          q-btn.q-mt-md(@click="$router.push({ name: 'models' })" no-caps outline color="primary" icon="list" label="All Models")
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
       div(style="position:absolute; left:15px; top:15px;")
