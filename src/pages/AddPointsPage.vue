@@ -34,8 +34,8 @@ q-page.full-height.full-width
     h4 Adding {{ selectedPkg.points.toLocaleString() }} Points with a {{ selectedPkg.discountPct * 100 }}% discount will cost ${{ selectedPkg?.usd }}
   div.q-mt-lg(:class="!selectedPkg ? 'faded-out' : ''").q-mb-xl
     .centered.q-gutter-md.q-mb-lg
-      q-btn(label="Pay with PayPal" color="primary" @click="paymentMethod = 'paypal'" :disable="!selectedPkg || paymentMethod == 'paypal'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
-      q-btn(label="Pay with Crypto" color="primary" @click="paymentMethod = 'crypto'" :disable="!selectedPkg || paymentMethod == 'crypto'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
+      //- q-btn(label="Pay with PayPal" color="primary" @click="paymentMethod = 'paypal'" :disable="!selectedPkg || paymentMethod == 'paypal'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
+      //- q-btn(label="Pay with Crypto" color="primary" @click="paymentMethod = 'crypto'" :disable="!selectedPkg || paymentMethod == 'crypto'" :class="!selectedPkg ? 'faded-out' : ''" size="lg" flat)
     .centered(v-if="paymentMethod == 'paypal'")
       div(ref="paypal" style="border-radius: 14px; width:400px; max-width:90vw").bg-grey-2.q-pa-md.rounded-box
     .centered(v-if="paymentMethod == 'crypto'")
@@ -99,7 +99,7 @@ export default defineComponent({
       packages: [] as PointsPackageRender[],
       selectedPkgIndex: null as null | number,
       payPal: null as null | PayPalNamespace,
-      paymentMethod: null as "paypal" | "crypto" | null,
+      paymentMethod: "paypal" as "paypal" | "crypto" | null,
     }
   },
   computed: {},
@@ -124,16 +124,19 @@ export default defineComponent({
         // this.userAuth.loadUserData()
       },
     },
-    paymentMethod(val) {
-      LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
-      if (val == "paypal") {
-        void this.$nextTick(() => {
-          void loadPayPal().then((res) => {
-            this.payPal = res
-            this.initPPButton()
+    paymentMethod: {
+      handler(val) {
+        LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
+        if (val == "paypal") {
+          void this.$nextTick(() => {
+            void loadPayPal().then((res) => {
+              this.payPal = res
+              this.initPPButton()
+            })
           })
-        })
-      }
+        }
+      },
+      immediate: true,
     },
   },
 
@@ -237,7 +240,7 @@ export default defineComponent({
     paymentCompleted() {
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
-      this.paymentMethod = null
+      // this.paymentMethod = null
       umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
       LocalStorage.remove("orderDetails")
       this.selectedPkg = null

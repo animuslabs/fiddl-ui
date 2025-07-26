@@ -54,7 +54,7 @@
           .row.items-center.relative-position
             q-select.relative-position.text-capitalize(label="Quick Select" v-model="req.model" :options="videoModels" style="font-size:20px; min-width:140px;" :disable="anyLoading")
               .badge-sm.text-white {{ vidStore.selectedModelPrice }}
-            q-btn.q-mt-md(@click="$router.push({ name: 'models' ,params:{filterTag:'Video'}})" no-caps outline color="primary" icon="list" label="All Models")
+            q-btn.q-mt-md(@click="$router.push({ name: 'models' ,params:{filterTag:'Video'}})" no-caps outline color="primary" icon="list" label="Video Models")
         div.q-ma-md.relative-position
           p.q-mb-sm Starting Image
           q-img.q-mb-sm.relative-position(v-if="startingImageUrl" :src="startingImageUrl" style="max-height:200px; min-width:100px;" :class="disableStartingImage?'disabled':''")
