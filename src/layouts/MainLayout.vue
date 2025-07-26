@@ -16,6 +16,8 @@ q-layout(view="lHh Lpr lFf" )
             | browse
           q-route-tab(:to="{ name: 'forge' }").gt-xs.text-white
             | Forge
+          q-route-tab(:to="{ name: 'models' }").gt-xs.text-white
+            | Models
           q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
