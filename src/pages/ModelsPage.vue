@@ -2,8 +2,8 @@
 q-page.absolute-position
   div.z-top.bg-blur(style="position:sticky; top:50px;")
     .centered
-      h3 {{modelsStore.filter.tag||"All"}} Models
-      q-btn(v-if="modelsStore.filter.tag" label="Clear Filter" color="secondary" flat @click="modelsStore.filter.tag = null")
+      h3.relative-position {{modelsStore.filter.tag||"All"}} Models
+        q-btn.absolute-left( style="left:-60px" v-if="modelsStore.filter.tag" icon="close"  color="secondary" flat @click="modelsStore.filter.tag = null")
     .chip-strip.q-mb-md(ref="chipScrollContainer").q-pb-sm
       .tag-pill.cursor-pointer(
         v-for="tag in modelTags"
@@ -81,8 +81,9 @@ watch(
 )
 
 const selectTag = (tag: ModelTags) => {
-  void router.replace({ name: "models", params: { filterTag: tag } })
-  // filter.tag = filter.tag === tag ? null : tag
+  // void router.replace({ name: "models", params: { filterTag: tag } })
+  console.log(tag)
+  modelsStore.filter.tag = modelsStore.filter.tag === tag ? null : tag
   void nextTick(() => {
     window.scrollTo({ top: 0, behavior: "smooth" })
     window.scroll({ behavior: "smooth", top: 0 })
