@@ -1,24 +1,21 @@
 <template lang="pug">
 q-page.absolute-position
-  div.bg-grey-10.z-top(style="position:sticky; top:50px;")
+  div.z-top.bg-blur(style="position:sticky; top:50px;")
     .centered
-      h2 Models
-    //- q-separator(color="grey-8" spaced)
-    div.q-mb-md.q-pt-sm.q-pb-xs.bg-grey-9( style="overflow-y: hidden; scrollbar-width: none;")
-      .row.no-wrap.items-center.q-gutter-md
-        q-chip.cursor-pointer(
-          v-for="tag in modelTags"
-          :key="tag"
-          clickable
-          :color="filter.tag === tag ? 'accent' : 'grey-10'"
-          :text-color="filter.tag === tag ? 'black' : 'white'"
-          @click="selectTag(tag)"
-          style="height:35opx;"
-        )
-          h4 {{ tag }}
-  .centered(v-if="filter.tag")
-    q-btn(label="View All" size="sm" color="secondary" flat @click="filter.tag = null")
-    h2 {{ filter.tag }} Models
+      h3 {{modelsStore.filter.tag||"All"}} Models
+      q-btn(v-if="modelsStore.filter.tag" label="Clear Filter" color="secondary" flat @click="modelsStore.filter.tag = null")
+    .chip-strip.q-mb-md(ref="chipScrollContainer").q-pb-sm
+      .tag-pill.cursor-pointer(
+        v-for="tag in modelTags"
+        :key="tag"
+        :id="'chip-' + tag"
+        :color="modelsStore.filter.tag === tag ? 'accent' : 'grey-10'"
+        :text-color="modelsStore.filter.tag === tag ? 'black' : 'white'"
+        @click="selectTag(tag)"
+        style="height:35px;"
+        clickable
+      )
+        p {{ tag }}
   .row.q-ma-md
     .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in modelsStore.allModels.value" :key="model.slug")
       ModelCard.q-ma-sm( selectable :model="model" :key="model.slug" @chipClick="selectTag" @click="toModelPage(model)")
@@ -31,25 +28,31 @@ q-page.absolute-position
 
 
 </template>
-<style scoped>
-.q-chip {
-}
-</style>
 
 <script setup lang="ts">
 import { modelTags, type ModelTags } from "lib/imageModels"
 import type { MediaType } from "lib/types"
-import { reactive, watch } from "vue"
+import { watch, nextTick, getCurrentInstance, ref } from "vue"
 import ModelCard from "components/ModelCard.vue"
 import * as modelsStore from "stores/modelsStore"
 import { match } from "ts-pattern"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { type ModelsGetPublicModels200Item } from "lib/orval"
+
 const router = useRouter()
-const filter = reactive({
-  type: "all" as MediaType | "all",
-  tag: null as ModelTags | null,
-})
+const route = useRoute()
+
+const scrollSelectedChipIntoView = () => {
+  void nextTick(() => {
+    const tag = modelsStore.filter.tag
+    if (tag) {
+      const chipEl = document.getElementById("chip-" + tag)
+      if (chipEl) {
+        chipEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+      }
+    }
+  })
+}
 
 const toModelPage = (model: Partial<ModelsGetPublicModels200Item>) => {
   if (model.creatorId) {
@@ -59,19 +62,36 @@ const toModelPage = (model: Partial<ModelsGetPublicModels200Item>) => {
   }
 }
 watch(
-  filter,
+  () => route.params,
+  () => {
+    if (route.params.filterTag) modelsStore.filter.tag = route.params.filterTag as ModelTags
+    else modelsStore.filter.tag = null
+    scrollSelectedChipIntoView()
+  },
+  { immediate: true },
+)
+watch(
+  () => modelsStore.filter.tag,
   () => {
     console.log("filter modified")
-    modelsStore.filter.tag = filter.tag
-    // match(filter.type)
-    //   .with("all", () => (modelsStore.filter.tags = []))
-    //   .with("image", () => (modelsStore.filter.tags = ["Image"]))
-    //   .with("video", () => (modelsStore.filter.tags = ["Video"]))
+    void router.replace({ name: "models", params: { filterTag: modelsStore.filter.tag } })
+    scrollSelectedChipIntoView()
   },
   { immediate: true },
 )
 
 const selectTag = (tag: ModelTags) => {
-  filter.tag = filter.tag === tag ? null : tag
+  void router.replace({ name: "models", params: { filterTag: tag } })
+  // filter.tag = filter.tag === tag ? null : tag
+  void nextTick(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.scroll({ behavior: "smooth", top: 0 })
+    scrollSelectedChipIntoView()
+  })
 }
+
+// On mount, scroll to selected chip if any
+void nextTick(() => {
+  scrollSelectedChipIntoView()
+})
 </script>

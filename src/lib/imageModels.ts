@@ -26,7 +26,7 @@ export interface VideoModelData {
   pointsCostPerSecond: number
 }
 
-export const modelTags = ["Realistic", "Creative", "Illustrative", "DesignText", "Precision", "Vibrant", "Versatile", "FastBudget", "Vector", "Multimodal", "Bilingual", "Custom", "Cinematic", "MultiCamera", "Audio", "Dramatic", "Experimental", "Image", "Video"] as const
+export const modelTags = ["Image", "Video", "Realistic", "Creative", "Illustrative", "DesignText", "Precision", "Vibrant", "Versatile", "FastBudget", "Vector", "Multimodal", "Bilingual", "Custom", "Cinematic", "MultiCamera", "Audio", "Dramatic", "Experimental"] as const
 export type ModelTags = (typeof modelTags)[number]
 
 export const aspectRatios = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "4:3", "3:4", "5:4", "9:16", "9:21"] as const
