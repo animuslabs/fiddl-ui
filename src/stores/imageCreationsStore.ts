@@ -83,9 +83,10 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         customModelId: undefined,
       }
     },
-    searchCreations() {
+    searchCreations(includePublic: boolean = false) {
+      // if (this.loadingCreations) return
       this.creations = []
-      void this.loadCreations()
+      void this.loadCreations(includePublic)
     },
     deleteCreation(creationId: string) {
       const index = this.creations.findIndex((i) => i.id === creationId)
@@ -128,20 +129,22 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       this.creations = []
       await this.loadCreations()
     },
-    async loadCreations(userId?: string) {
-      if (!userId) userId = useUserAuth().userId || undefined
-      if (!userId) return
+    async loadCreations(includePublic: boolean = false) {
+      // if (!userId) userId = useUserAuth().userId || undefined
+      // if (!userId) return
+      const userId = useUserAuth().userId || undefined
+      if (!userId && !includePublic) return
       if (this.loadingCreations) {
         console.log("loadingCreations already in progress")
         return
       }
       this.loadingCreations = true
       try {
-        this.activeUserId = userId
+        if (!includePublic && userId) this.activeUserId = userId
         const lastItem = this.creations[this.creations.length - 1]
 
         const response = await creationsCreateImageRequests({
-          userId,
+          userId: includePublic ? undefined : userId,
           includeMetadata: true,
           order: "desc",
           endDateTime: lastItem?.createdAt?.toISOString(),

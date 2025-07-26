@@ -9,10 +9,10 @@ q-page.absolute-position
         v-for="tag in modelTags"
         :key="tag"
         :id="'chip-' + tag"
-        :color="modelsStore.filter.tag === tag ? 'accent' : 'grey-10'"
         :text-color="modelsStore.filter.tag === tag ? 'black' : 'white'"
         @click="selectTag(tag)"
         style="height:35px;"
+        :class="modelsStore.filter.tag === tag ? 'bg-accent' : 'bg-grey-10'"
         clickable
       )
         p {{ tag }}
