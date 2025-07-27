@@ -127,10 +127,11 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     // Initialize media viewer
-    initializeMediaViewer(mediaObjects: MediaGalleryMeta[], startIndex = 0) {
+    async initializeMediaViewer(mediaObjects: MediaGalleryMeta[], startIndex = 0) {
       this.mediaObjects = [...mediaObjects]
       this.currentIndex = startIndex
       this.resetStates()
+      await this.loadRequestId()
     },
 
     // Reset all states
