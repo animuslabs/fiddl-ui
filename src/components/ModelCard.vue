@@ -46,7 +46,7 @@ const cardBgStyle = computed(() => {
   return {
     "background-image": `linear-gradient(
   to left,
-  color-mix(in srgb, var(${isVideo.value ? "--q-positive" : "--q-primary"}) 40%, transparent),
+  color-mix(in srgb, var(${isVideo.value ? "--q-positive" : "--q-primary"}) 10%, transparent),
   rgba(30,30,30,1)
 ), url('${mediaUrl}')`,
     backgroundSize: "cover",
