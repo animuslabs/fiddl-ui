@@ -18,7 +18,7 @@ q-card.q-pa-md(
         q-chip(v-for="tag in model.modelTags" :key="tag" text-color="white" clickable @click.stop="$emit('chipClick', tag)")
           small {{ tag }}
     div.q-pa-md(style="right:0px; bottom:-20px; position: absolute;")
-      q-icon(:name="isVideo?'smart_display':'image'" size="35px"  :style="{ color: 'white', opacity: 0.5 }")
+      q-icon(:name="isVideo?'smart_display':'image'" size="35px"  :style="iconStyle")
 </template>
 
 <script setup lang="ts">
@@ -37,14 +37,18 @@ const props = defineProps({
 defineEmits({
   chipClick: (tag: ModelTags) => true,
 })
-
 const isVideo = computed(() => props.model.modelTags.includes("Video"))
+const iconStyle = computed(() => ({ color: isVideo.value ? "--q-positive" : "--q-primary", opacity: 0.7 }))
 
 const cardBgStyle = computed(() => {
   const { modelTags, previewMediaId } = props.model
   let mediaUrl = modelTags.includes("Video") ? s3Video(previewMediaId || "", "thumbnail") : img(previewMediaId || "", "md")
   return {
-    "background-image": `linear-gradient(to left, rgba(0,0,0,.3), rgba(30,30,30,1)), url('${mediaUrl}')`,
+    "background-image": `linear-gradient(
+  to left,
+  color-mix(in srgb, var(${isVideo.value ? "--q-positive" : "--q-primary"}) 40%, transparent),
+  rgba(30,30,30,1)
+), url('${mediaUrl}')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     // position: "absolute",
