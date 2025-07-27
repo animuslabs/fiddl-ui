@@ -71,6 +71,10 @@ function hide() {
 }
 
 function onDialogHide() {
+  // Always re-check for HD media after any dialog closes
+  mediaViewerStore.triedHdLoad = false
+  mediaViewerStore.hdMediaLoaded = false
+  void mediaViewerStore.loadHdMedia()
   emit("hide")
 }
 

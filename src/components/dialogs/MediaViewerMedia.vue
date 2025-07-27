@@ -33,7 +33,6 @@ div
       v-else
       v-bind="imageAttrs"
       ref="mediaElement"
-      style="min-width:30vw;"
     )
 
     .absolute-top.full-width(style="width:100vw")
@@ -81,10 +80,10 @@ const imageAttrs = computed(() => {
     class: mediaClass.value,
     style: {
       width: "100%",
-      maxHeight: "75vh",
-      objectFit: "contain",
+      "max-height": "75vh",
+      "object-fit": "contain",
       transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
-    },
+    } as Record<string, string>,
     onClick: (e: MouseEvent) => {
       e.stopPropagation()
       onMediaClick(e)
@@ -246,24 +245,20 @@ watch(
 }
 
 .video-wrapper {
-  max-width: 1920px;
-  max-height: 1080px;
+  max-height: 75vh;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: auto;
 }
 .video-wrapper video {
-  width: 100%;
-  height: auto;
+  height: 100%;
+  width: auto;
   object-fit: contain;
-  max-width: 1920px;
-  max-height: 1080px;
+  max-height: 75vh;
+  max-width: 100vw;
   margin: auto;
   display: block;
-}
-
-@media (min-width: 1400px) and (min-height: 800px) {
-  .video-wrapper video {
-    min-width: 1280px;
-    min-height: 720px;
-  }
 }
 </style>

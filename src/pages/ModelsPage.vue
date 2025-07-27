@@ -1,10 +1,10 @@
 <template lang="pug">
 q-page.absolute-position
-  div.z-top.bg-blur(style="position:sticky; top:50px;")
+  div(style="position:sticky; top:50px; z-index:10;").bg-blur-light
     .centered
       h3.relative-position {{modelsStore.filter.tag||"All"}} Models
         q-btn.absolute-left( style="left:-60px" v-if="modelsStore.filter.tag" icon="close"  color="secondary" flat @click="modelsStore.filter.tag = null")
-    .chip-strip.q-mb-md(ref="chipScrollContainer").q-pb-sm
+    .chip-strip.q-mb-md(ref="chipScrollContainer").q-pb-xs.q-pt-xs
       .tag-pill.cursor-pointer(
         v-for="tag in modelTags"
         :key="tag"
@@ -16,7 +16,7 @@ q-page.absolute-position
         clickable
       )
         p {{ tag }}
-  .row.q-ma-md
+  .row.q-ma-md(style="z-index:-5")
     .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in modelsStore.allModels.value" :key="model.slug")
       ModelCard.q-ma-sm( selectable :model="model" :key="model.slug" @chipClick="selectTag" @click="toModelPage(model)")
   //- .centered
