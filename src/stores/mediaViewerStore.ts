@@ -31,6 +31,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     triedHdLoad: false,
     hdMediaLoaded: false,
     firstImageLoaded: false,
+    hdImageSrc: {} as Record<string, string>,
+    hdVideoUrl: {} as Record<string, string>,
 
     // User states
     userOwnsMedia: false,
@@ -87,17 +89,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     // Get current media URL
     getCurrentMediaUrl(): string {
       const id = this.currentMediaId
-      if (this.currentMediaType === "image") return img(id, "lg")
-
-      const cached = LocalStorage.getItem<string>("hdVideoUrl-" + id)
-      if (cached) {
-        this.hdMediaLoaded = true
-        this.userOwnsMedia = true
-        this.triedHdLoad = true
-        return cached
-      } else {
-        return s3Video(id, "preview-lg")
+      if (this.currentMediaType === "image") {
+        return this.hdImageSrc[id] || img(id, "lg")
       }
+      return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
 
     // Get next media URL for preloading
@@ -106,17 +101,14 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (this.mediaObjects.length === 1) return currentUrl
 
       const nextIndex = this.touchState.moveX > 0 ? (this.currentIndex - 1 + this.mediaObjects.length) % this.mediaObjects.length : (this.currentIndex + 1) % this.mediaObjects.length
+
       const id = this.mediaObjects[nextIndex]?.id as string
       const mediaType = this.mediaObjects[nextIndex]?.type || "image"
 
-      if (mediaType === "image") return img(id, "lg")
-
-      const cached = LocalStorage.getItem<string>("hdVideoUrl-" + id)
-      if (cached) {
-        return cached
-      } else {
-        return s3Video(id, "preview-lg")
+      if (mediaType === "image") {
+        return this.hdImageSrc[id] || img(id, "lg")
       }
+      return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
 
     // Get media params for API calls
@@ -230,10 +222,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // Media loading
     async loadHdMedia(id?: string) {
-      this.imgLoading = false
       const mediaId = id || this.currentMediaId
       if (this.triedHdLoad || this.hdMediaLoaded) return
       this.triedHdLoad = true
+      this.loading = true
       this.userOwnsMedia = false
 
       let timer: any | null = null
@@ -274,20 +266,31 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       }
 
       if (imageData) {
+        const src = `data:image/webp;base64,${imageData}`
+        this.hdImageSrc[id] = src
         this.userOwnsMedia = true
-        return `data:image/webp;base64,${imageData}`
+        this.hdMediaLoaded = true
+        return src
       }
       return null
     },
 
     async loadHdVideo(id: string) {
-      const { data: hdUrl } = await creationsHdVideo({ videoId: id })
-      if (!hdUrl) return
+      this.hdVideoLoading = true
+      try {
+        const { data: hdUrl } = await creationsHdVideo({ videoId: id })
+        if (!hdUrl) return
 
-      LocalStorage.setItem("hdVideoUrl-" + id, hdUrl)
-      this.hdMediaLoaded = true
-      this.userOwnsMedia = true
-      return hdUrl
+        // optional persistence
+        LocalStorage.setItem("hdVideoUrl-" + id, hdUrl)
+
+        this.hdVideoUrl[id] = hdUrl
+        this.hdMediaLoaded = true
+        this.userOwnsMedia = true
+        return hdUrl
+      } finally {
+        this.hdVideoLoading = false
+      }
     },
 
     // User interactions

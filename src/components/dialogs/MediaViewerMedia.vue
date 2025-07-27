@@ -20,7 +20,7 @@ div
         ref="mediaElement"
         :src="mediaViewerStore.getCurrentMediaUrl()"
         class="image-darken"
-        style="width:100%; max-height:75vh; object-fit:contain; transform:`translateX(${mediaViewerStore.touchState.moveX}px)`"
+        :style="{ width: '100%', maxHeight: '75vh', objectFit: 'contain', transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
         playsinline
         autoplay
         loop
@@ -59,7 +59,7 @@ div
 import { ref, computed, nextTick, watch } from "vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import CreatorInfo from "src/components/CreatorInfo.vue"
-
+import { img, s3Video } from "src/lib/netlifyImg"
 interface Props {
   downloadMode?: boolean
 }
@@ -67,9 +67,18 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   downloadMode: false,
 })
-
-const mediaElement = ref<HTMLImageElement | HTMLVideoElement | null>(null)
 const mediaViewerStore = useMediaViewerStore()
+const currentHdUrl = computed(() => mediaViewerStore.hdVideoUrl[mediaViewerStore.currentMediaId])
+const mediaElement = ref<HTMLImageElement | HTMLVideoElement | null>(null)
+watch(currentHdUrl, (url) => {
+  if (!url || mediaViewerStore.currentMediaType !== "video") return
+  const el = mediaElement.value as HTMLVideoElement | null
+  if (el && el.src !== url) {
+    el.src = url
+    el.load()
+    el.play().catch(() => {})
+  }
+})
 
 const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.length > 0)
 
@@ -138,9 +147,7 @@ function preloadMedia() {
       const mediaObj = mediaViewerStore.mediaObjects[index]
       if (!mediaObj) return
       const isVideo = mediaObj.type === "video"
-      const url = isVideo
-        ? mediaViewerStore.getCurrentMediaUrl() // Use store method for consistency
-        : mediaViewerStore.getCurrentMediaUrl()
+      const url = isVideo ? mediaViewerStore.hdVideoUrl[mediaObj.id] || s3Video(mediaObj.id, "preview-lg") : mediaViewerStore.hdImageSrc[mediaObj.id] || img(mediaObj.id, "lg")
       if (isVideo) {
         const video = document.createElement("video")
         video.preload = "auto"
