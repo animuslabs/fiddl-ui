@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-width.position-relative
   .centered.q-mt-lg.q-mb-md
-    ModelCard(v-if="currentModel" :model="currentModel" style="width:700px;")
+    ModelCard(v-if="currentModel" :model="currentModel" style="width: 500px;")
   .centered.z-top.bg-blur.q-pa-sm(style="position: sticky; top: 50px;")
     .row.items-center.q-gutter-md.q-pr-md.cursor-pointer(v-if="creatorMeta" style="border-radius: 12px;" @click="router.push({ name: 'profile', params: { username: creatorMeta.userName } })")
       q-img(

@@ -2,9 +2,11 @@
 q-card.q-pa-md(
   style="position: relative; overflow: hidden;"
   @click.stop="console.log('hi')"
-  :style="mergedCardStyle"
+  :class="{ 'cursor-pointer': selectable }"
 ).relative-position
-  .card-bg(:style="cardBgStyle" style="height:250px; position: absolute;")
+  .card-bg(style="height:250px; position: absolute; inset: 0;")
+    .card-bg-img(:style="cardBgImgStyle")
+    .card-bg-gradient(:style="cardBgGradientStyle")
   .row(style="position: relative; z-index: 1;")
     //- //- .col-auto(style="width:40px;")
     //- //-   q-btn(size="sm" icon="close" flat round )
@@ -27,63 +29,84 @@ import { img, s3Video } from "lib/netlifyImg"
 import { type ModelsGetBaseModels200Item } from "lib/orval"
 import { reactive, computed } from "vue"
 
+// --- Ensure these are top-level so template can access them ---
+const cardBgImgStyle = computed(() => {
+  const { modelTags, previewMediaId } = props.model
+  let mediaUrl = modelTags.includes("Video") ? s3Video(previewMediaId || "", "thumbnail") : img(previewMediaId || "", "md")
+  const style: Record<string, string> = {
+    backgroundImage: `url('${mediaUrl}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    position: "absolute",
+    inset: "0",
+    zIndex: "0",
+    transition: "filter 0.2s",
+  }
+  style.filter = "grayscale(40%)"
+
+  return style
+})
+
+const cardBgGradientStyle = computed(() => {
+  const style: Record<string, string> = {
+    background: `linear-gradient(
+      to top left,
+      ${isVideo.value ? "var(--q-positive)" : "var(--q-primary)"} 10%,
+      rgba(30,30,30,.5),
+      rgba(30,30,30,.6),
+      rgba(30,30,30,.7),
+      rgba(30,30,30,.9)
+    )`,
+    position: "absolute",
+    inset: "0",
+    zIndex: "1",
+    pointerEvents: "none",
+  }
+  return style
+})
+// -------------------------------------------------------------
+
 const props = defineProps({
   model: {
     type: Object as () => ModelsGetBaseModels200Item,
     required: true,
   },
   selectable: { type: Boolean, default: false },
+  grayscale: { type: Boolean, default: false },
 })
 defineEmits({
   chipClick: (tag: ModelTags) => true,
 })
 const isVideo = computed(() => props.model.modelTags.includes("Video"))
-const iconStyle = computed(() => ({ color: isVideo.value ? "--q-positive" : "--q-primary", opacity: 0.7 }))
-
-const cardBgStyle = computed(() => {
-  const { modelTags, previewMediaId } = props.model
-  let mediaUrl = modelTags.includes("Video") ? s3Video(previewMediaId || "", "thumbnail") : img(previewMediaId || "", "md")
-  return {
-    "background-image": `linear-gradient(
-  to left,
-  color-mix(in srgb, var(${isVideo.value ? "--q-positive" : "--q-primary"}) 10%, transparent),
-  rgba(30,30,30,1)
-), url('${mediaUrl}')`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    // position: "absolute",
-    inset: "0",
-    zIndex: 0,
-  }
-})
-
-const mergedCardStyle = computed(() => {
-  const base: any = cardBorder.value
-  if (props.selectable) {
-    base.cursor = "pointer"
-  }
-  return base
-})
-
-const cardBorder = computed(() => {
-  const { modelTags } = props.model
-  const isVideo = modelTags.includes("Video")
-  // Use Quasar theme CSS vars
-  const color = isVideo ? "var($q-indigo)" : "var(--q-primary, #00adc7)"
-  // More visible, layered shadow for dark backgrounds
-  return {
-    // border: `0.5px solid ${color}`,
-    // boxShadow: `0 10px 20px ${color}`,
-    // shadow: `0 10px 20px ${color}`,
-    // borderRadius: "8px",
-    // backgroundColor: "rgba(0, 0, 0, 0.5)",
-    // color: "white",
-  }
-})
+const iconStyle = computed(() => ({ color: isVideo.value ? "--q-positive" : "--q-primary", opacity: 0.9 }))
 </script>
 
 <style scoped>
 .card-bg {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.card-bg-img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  transition: filter 0.2s;
+}
+.card-bg-gradient {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 </style>
