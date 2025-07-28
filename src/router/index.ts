@@ -4,13 +4,20 @@ import { createMemoryHistory, createRouter, createWebHashHistory, createWebHisto
 import routes from "./routes"
 
 // const createHistory = import.meta.env.SERVER ? createMemoryHistory : import.meta.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory
-const createHistory = () => createWebHistory
+const createHistory = () => createWebHistory(import.meta.env.VUE_ROUTER_BASE || "/")
 console.log("history mode:", import.meta.env)
 const Router = createRouter({
-  scrollBehavior: () => ({ left: 0, top: 0 }),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      console.log("scrollBehavior: savedPosition", savedPosition)
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  },
   routes,
   // history: createHistory(import.meta.env.VUE_ROUTER_BASE),
-  history: createWebHistory(),
+  history: createHistory(),
 })
 Router.afterEach((to) => {
   if (import.meta.env.CLIENT) {

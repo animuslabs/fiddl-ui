@@ -19,7 +19,7 @@ q-card.q-pa-md(
       .row.q-mt-md
         q-chip(v-for="tag in model.modelTags" :key="tag" text-color="white" clickable @click.stop="$emit('chipClick', tag)")
           small {{ tag }}
-    div.q-pa-md(style="right:0px; bottom:-20px; position: absolute;")
+    div.q-pa-md(style="right:-20px; bottom:-20px; position: absolute;")
       q-icon(:name="isVideo?'smart_display':'image'" size="35px"  :style="iconStyle")
 </template>
 
@@ -51,8 +51,8 @@ const cardBgGradientStyle = computed(() => {
   const style: Record<string, string> = {
     background: `linear-gradient(
       to top left,
-      ${isVideo.value ? "var(--q-positive)" : "var(--q-primary)"} 10%,
-      rgba(30,30,30,.5),
+      ${isVideo.value ? "var(--q-positive)" : "var(--q-primary)"} 3%,
+      rgba(30,30,30,.4),
       rgba(30,30,30,.6),
       rgba(30,30,30,.7),
       rgba(30,30,30,.9)
