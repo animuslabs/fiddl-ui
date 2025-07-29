@@ -55,7 +55,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     loadedRequestId: null as string | null,
 
     // UI states
-    shareMenu: false,
+    shareMenu: true,
     moreOptionsMenu: false,
     downloadMode: false,
     isPersistent: false,

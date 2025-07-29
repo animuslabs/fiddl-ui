@@ -6,13 +6,13 @@
       round
       flat
       color="grey-5"
-      @click.stop="mediaViewerStore.shareMenu = true"
+      @click.stop="shareMenuOpen = true"
     )
       q-menu(
-        v-model="mediaViewerStore.shareMenu"
+        v-if="shareMenuOpen"
         anchor="bottom left"
         self="top left"
-        @click.stop="mediaViewerStore.shareMenu = false"
+        @click.stop="shareMenuOpen = false"
       )
         q-list
           q-item(clickable @click.stop="mobileShare()" v-close-popup)
@@ -70,13 +70,13 @@
       round
       flat
       color="grey-5"
-      @click.stop="mediaViewerStore.moreOptionsMenu = true"
+      @click.stop="moreMenuOpen = true"
     )
       q-menu(
-        v-model="mediaViewerStore.moreOptionsMenu"
+        v-if="moreMenuOpen"
         anchor="bottom right"
         self="top right"
-        @click.stop="mediaViewerStore.moreOptionsMenu = false"
+        @click.stop="moreMenuOpen = false"
       )
         q-list
           q-item(
@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { Dialog } from "quasar"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
@@ -119,7 +119,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData } from "src/lib/orval"
-import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia } from "src/lib/util"
+import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
 import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
 import EditMedia from "./EditMedia.vue"
@@ -143,6 +143,8 @@ const emit = defineEmits<{
 const mediaViewerStore = useMediaViewerStore()
 const userAuth = useUserAuth()
 const router = useRouter()
+const shareMenuOpen = ref(true)
+const moreMenuOpen = ref(true)
 
 const userCreatedImage = computed(() => {
   if (!mediaViewerStore.creatorMeta) return false
@@ -150,7 +152,27 @@ const userCreatedImage = computed(() => {
 })
 
 async function mobileShare() {
-  await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", mediaViewerStore.getCurrentMediaUrl(), `${mediaViewerStore.currentMediaId}-fiddl-art.${mediaViewerStore.currentMediaType === "video" ? "mp4" : "webp"}`)
+  const url =
+    window.location.origin +
+    router.resolve({
+      name: "mediaRequest",
+      params: {
+        requestShortId: longIdToShort(mediaViewerStore.loadedRequestId || ""),
+        type: mediaViewerStore.currentMediaType,
+        index: mediaViewerStore.currentIndex || 0,
+      },
+      query: userAuth.userProfile?.username ? { referredBy: userAuth.userProfile.username } : {},
+    }).href
+
+  // Use shareMedia only if on mobile and Web Share API supports files, else use shareLink
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+  const fileName = `${mediaViewerStore.currentMediaId}-fiddl-art.${mediaViewerStore.currentMediaType === "video" ? "mp4" : "webp"}`
+  const file = new File([], fileName)
+  if (isMobile && typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+    await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", mediaViewerStore.getCurrentMediaUrl(), fileName)
+  } else {
+    await shareLink("Fiddl.art Creation", "Check out this creation on Fiddl.art", url)
+  }
 }
 
 async function share() {

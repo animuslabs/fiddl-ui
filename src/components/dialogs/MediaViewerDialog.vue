@@ -1,18 +1,17 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="mediaViewerStore.isPersistent")
-  q-card.q-dialog-plugin(style="width:90vw;" @click="hide()").bg-transparent
+  q-card.bg-transparent(style="width:90vw;" @click="hide()")
     .centered
       .col-auto
         .full-width
           .relative-position
             MediaViewerControls(
               :allowDelete="allowDelete"
-              :downloadMode="mediaViewerStore.downloadMode"
               @close="hide"
             )
 
     .centered
-      MediaViewerMedia(:downloadMode="mediaViewerStore.downloadMode")
+      MediaViewerMedia
 </template>
 
 <script setup lang="ts">
