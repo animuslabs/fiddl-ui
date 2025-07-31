@@ -7,10 +7,13 @@
   function = "handleRequestPage"
   path = "/r/*"
 
+[[edge_functions]]
+  function = "handleModelPage"
+  path     = "/model/:modelName/:customModelId?"
+
 [functions]
   included_files = [
     "netlify/edge-functions/lib/**",
-    "src/lib/**.ts"
   ]
 
 [[redirects]]

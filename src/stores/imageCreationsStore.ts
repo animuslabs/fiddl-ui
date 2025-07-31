@@ -145,7 +145,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
 
         const response = await creationsCreateImageRequests({
           userId: includePublic ? undefined : userId,
-          includeMetadata: true,
           order: "desc",
           endDateTime: lastItem?.createdAt?.toISOString(),
           limit: 20,
@@ -181,7 +180,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       try {
         const response = await creationsUserImagePurchases({
           userId,
-          includeMetadata: true,
           order: "desc",
           endDateTime: lastItem?.createdAt ? lastItem.createdAt : undefined,
           limit: 20,

@@ -4,7475 +4,3510 @@
  * Fiddl.art API
  * OpenAPI spec version: 1.0.0
  */
+import { fetcher } from "./fetcher.ts"
 export type ErrorBADREQUESTIssuesItem = {
-  message: string;
-};
+  message: string
+}
 
 /**
  * The error information
  */
 export interface ErrorBADREQUEST {
   /** The error message */
-  message: string;
+  message: string
   /** The error code */
-  code: string;
+  code: string
   /** An array of issues that were responsible for the error */
-  issues?: ErrorBADREQUESTIssuesItem[];
+  issues?: ErrorBADREQUESTIssuesItem[]
 }
 
 export type ErrorUNAUTHORIZEDIssuesItem = {
-  message: string;
-};
+  message: string
+}
 
 /**
  * The error information
  */
 export interface ErrorUNAUTHORIZED {
   /** The error message */
-  message: string;
+  message: string
   /** The error code */
-  code: string;
+  code: string
   /** An array of issues that were responsible for the error */
-  issues?: ErrorUNAUTHORIZEDIssuesItem[];
+  issues?: ErrorUNAUTHORIZEDIssuesItem[]
 }
 
 export type ErrorFORBIDDENIssuesItem = {
-  message: string;
-};
+  message: string
+}
 
 /**
  * The error information
  */
 export interface ErrorFORBIDDEN {
   /** The error message */
-  message: string;
+  message: string
   /** The error code */
-  code: string;
+  code: string
   /** An array of issues that were responsible for the error */
-  issues?: ErrorFORBIDDENIssuesItem[];
+  issues?: ErrorFORBIDDENIssuesItem[]
 }
 
 export type ErrorINTERNALSERVERERRORIssuesItem = {
-  message: string;
-};
+  message: string
+}
 
 /**
  * The error information
  */
 export interface ErrorINTERNALSERVERERROR {
   /** The error message */
-  message: string;
+  message: string
   /** The error code */
-  code: string;
+  code: string
   /** An array of issues that were responsible for the error */
-  issues?: ErrorINTERNALSERVERERRORIssuesItem[];
+  issues?: ErrorINTERNALSERVERERRORIssuesItem[]
 }
 
 export type ErrorNOTFOUNDIssuesItem = {
-  message: string;
-};
+  message: string
+}
 
 /**
  * The error information
  */
 export interface ErrorNOTFOUND {
   /** The error message */
-  message: string;
+  message: string
   /** The error code */
-  code: string;
+  code: string
   /** An array of issues that were responsible for the error */
-  issues?: ErrorNOTFOUNDIssuesItem[];
+  issues?: ErrorNOTFOUNDIssuesItem[]
 }
 
 export type PkAuthRegisterStartBody = {
-  email?: string;
-  phone?: string;
-  referredByUserName?: string;
-};
+  email?: string
+  phone?: string
+  referredByUserName?: string
+}
 
 export type PkAuthRegisterFinishBody = {
-  userId: string;
-  data?: unknown;
-};
+  userId: string
+  data?: unknown
+}
 
 export type PkAuthLoginStartBody = {
-  userId: string;
-};
+  userId: string
+}
 
 export type PkAuthLoginFinishBody = {
-  userId: string;
-  data?: unknown;
-};
+  userId: string
+  data?: unknown
+}
 
-export type CreateImageBodyModel = typeof CreateImageBodyModel[keyof typeof CreateImageBodyModel];
+export type CreateImageBodyModel = (typeof CreateImageBodyModel)[keyof typeof CreateImageBodyModel]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyModel = {
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
-} as const;
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
 
-export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
+export type CreateImageBodyAspectRatio = (typeof CreateImageBodyAspectRatio)[keyof typeof CreateImageBodyAspectRatio]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreateImageBody = {
-  prompt: string;
-  negativePrompt?: string;
+  prompt: string
+  negativePrompt?: string
   /**
    * @minimum 1
    * @maximum 100
    */
-  quantity: number;
-  seed?: number;
-  model: CreateImageBodyModel;
-  public?: boolean;
-  aspectRatio?: CreateImageBodyAspectRatio;
-  customModelId?: string;
-};
+  quantity: number
+  seed?: number
+  model: CreateImageBodyModel
+  public?: boolean
+  aspectRatio?: CreateImageBodyAspectRatio
+  customModelId?: string
+}
 
 export type CreateImage200 = {
-  ids: string[];
-  id: string;
-  errors: string[];
-};
+  ids: string[]
+  id: string
+  errors: string[]
+}
 
-export type CreateVideoBodyModel = typeof CreateVideoBodyModel[keyof typeof CreateVideoBodyModel];
+export type CreateVideoBodyModel = (typeof CreateVideoBodyModel)[keyof typeof CreateVideoBodyModel]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyModel = {
-  'veo-2': 'veo-2',
-  'veo-3': 'veo-3',
-  'seedance-pro': 'seedance-pro',
-  'seedance-lite': 'seedance-lite',
-  kling: 'kling',
-} as const;
+  "veo-2": "veo-2",
+  "veo-3": "veo-3",
+  "seedance-pro": "seedance-pro",
+  "seedance-lite": "seedance-lite",
+  kling: "kling",
+} as const
 
-export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
+export type CreateVideoBodyAspectRatio = (typeof CreateVideoBodyAspectRatio)[keyof typeof CreateVideoBodyAspectRatio]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreateVideoBody = {
-  prompt: string;
+  prompt: string
   /**
    * @minimum 1
    * @maximum 5
    */
-  quantity: number;
-  seed?: number;
-  model: CreateVideoBodyModel;
-  public: boolean;
-  aspectRatio: CreateVideoBodyAspectRatio;
-  duration: number;
-  startImageId?: string;
-};
+  quantity: number
+  seed?: number
+  model: CreateVideoBodyModel
+  public: boolean
+  aspectRatio: CreateVideoBodyAspectRatio
+  duration: number
+  startImageId?: string
+}
 
-export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
+export type CreateVideo200VideosItemStatus = (typeof CreateVideo200VideosItemStatus)[keyof typeof CreateVideo200VideosItemStatus]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideo200VideosItemStatus = {
-  processing: 'processing',
-  previewRendering: 'previewRendering',
-  ready: 'ready',
-  errored: 'errored',
-} as const;
+  processing: "processing",
+  previewRendering: "previewRendering",
+  ready: "ready",
+  errored: "errored",
+} as const
 
 export type CreateVideo200VideosItem = {
-  status: CreateVideo200VideosItemStatus;
-  id: string;
-  createdAt: string;
-  updatedAt: string;
+  status: CreateVideo200VideosItemStatus
+  id: string
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  seed: string | null;
-  errored: boolean;
-  deleted: boolean;
-  videoRequestId: string;
+  seed: string | null
+  errored: boolean
+  deleted: boolean
+  videoRequestId: string
   /** @nullable */
-  replicatePredictionId: string | null;
+  replicatePredictionId: string | null
   /** @nullable */
-  coconutJobId: string | null;
+  coconutJobId: string | null
   /** @nullable */
-  errorMessage: string | null;
-};
+  errorMessage: string | null
+}
 
 export type CreateVideo200 = {
-  id: string;
-  userId: string;
-  prompt: string;
-  model: string;
-  aspectRatio: string;
-  duration: number;
+  id: string
+  userId: string
+  prompt: string
+  model: string
+  aspectRatio: string
+  duration: number
   /** @nullable */
-  seed: string | null;
+  seed: string | null
   /** @nullable */
-  negativePrompt: string | null;
-  quantity: number;
-  createdAt: string;
-  updatedAt: string;
-  public: boolean;
-  deleted: boolean;
+  negativePrompt: string | null
+  quantity: number
+  createdAt: string
+  updatedAt: string
+  public: boolean
+  deleted: boolean
   /** @nullable */
-  error: string | null;
+  error: string | null
   /** @nullable */
-  startImageId: string | null;
-  videos: CreateVideo200VideosItem[];
-};
+  startImageId: string | null
+  videos: CreateVideo200VideosItem[]
+}
 
-export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
+export type CreateRandomPromptBodyType = (typeof CreateRandomPromptBodyType)[keyof typeof CreateRandomPromptBodyType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateRandomPromptBodyType = {
-  image: 'image',
-  video: 'video',
-} as const;
+  image: "image",
+  video: "video",
+} as const
 
 export type CreateRandomPromptBody = {
-  theme?: string;
-  type?: CreateRandomPromptBodyType;
-};
+  theme?: string
+  type?: CreateRandomPromptBodyType
+}
 
-export type CreateImprovePromptBodyType = typeof CreateImprovePromptBodyType[keyof typeof CreateImprovePromptBodyType];
+export type CreateImprovePromptBodyType = (typeof CreateImprovePromptBodyType)[keyof typeof CreateImprovePromptBodyType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImprovePromptBodyType = {
-  image: 'image',
-  video: 'video',
-} as const;
+  image: "image",
+  video: "video",
+} as const
 
 export type CreateImprovePromptBody = {
-  prompt: string;
-  type?: CreateImprovePromptBodyType;
-};
+  prompt: string
+  type?: CreateImprovePromptBodyType
+}
 
 export type CreationsGetCreationDataParams = {
-imageId?: string;
-videoId?: string;
-};
+  imageId?: string
+  videoId?: string
+}
 
 export type CreationsGetCreationData200 = {
-  id: string;
-  createdAt: string;
-  requestId: string;
-  seed?: number;
-  creatorId: string;
-  numCollections: number;
-};
+  id: string
+  createdAt: string
+  requestId: string
+  seed?: number
+  creatorId: string
+  numCollections: number
+}
 
 export type CreationsUserImagePurchasesParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: CreationsUserImagePurchasesOrder;
-endDateTime?: string;
-includeMetadata?: boolean;
-customModelId?: string;
-model?: typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel] ;
-aspectRatio?: CreationsUserImagePurchasesAspectRatio;
-promptIncludes?: string;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: CreationsUserImagePurchasesOrder
+  endDateTime?: string
+  customModelId?: string
+  model?: (typeof CreationsUserImagePurchasesModel)[keyof typeof CreationsUserImagePurchasesModel]
+  aspectRatio?: CreationsUserImagePurchasesAspectRatio
+  promptIncludes?: string
+}
 
-export type CreationsUserImagePurchasesOrder = typeof CreationsUserImagePurchasesOrder[keyof typeof CreationsUserImagePurchasesOrder];
+export type CreationsUserImagePurchasesOrder = (typeof CreationsUserImagePurchasesOrder)[keyof typeof CreationsUserImagePurchasesOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
-  'veo-3': 'veo-3',
-  'seedance-pro': 'seedance-pro',
-  'seedance-lite': 'seedance-lite',
-  kling: 'kling',
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
+  asc: "asc",
+  desc: "desc",
 } as const
-export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
+export const CreationsUserImagePurchasesModel = {
+  "veo-2": "veo-2",
+  "veo-3": "veo-3",
+  "seedance-pro": "seedance-pro",
+  "seedance-lite": "seedance-lite",
+  kling: "kling",
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
+export type CreationsUserImagePurchasesAspectRatio = (typeof CreationsUserImagePurchasesAspectRatio)[keyof typeof CreationsUserImagePurchasesAspectRatio]
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreationsUserImagePurchases200Item = {
-  id: string;
-  userId: string;
-  imageId: string;
-  createdAt: string;
-};
+  id: string
+  userId: string
+  imageId: string
+  createdAt: string
+}
 
 export type CreationsUserVideoPurchasesParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: CreationsUserVideoPurchasesOrder;
-endDateTime?: string;
-includeMetadata?: boolean;
-customModelId?: string;
-model?: typeof CreationsUserVideoPurchasesModel[keyof typeof CreationsUserVideoPurchasesModel] ;
-aspectRatio?: CreationsUserVideoPurchasesAspectRatio;
-promptIncludes?: string;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: CreationsUserVideoPurchasesOrder
+  endDateTime?: string
+  customModelId?: string
+  model?: (typeof CreationsUserVideoPurchasesModel)[keyof typeof CreationsUserVideoPurchasesModel]
+  aspectRatio?: CreationsUserVideoPurchasesAspectRatio
+  promptIncludes?: string
+}
 
-export type CreationsUserVideoPurchasesOrder = typeof CreationsUserVideoPurchasesOrder[keyof typeof CreationsUserVideoPurchasesOrder];
+export type CreationsUserVideoPurchasesOrder = (typeof CreationsUserVideoPurchasesOrder)[keyof typeof CreationsUserVideoPurchasesOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
-  'veo-3': 'veo-3',
-  'seedance-pro': 'seedance-pro',
-  'seedance-lite': 'seedance-lite',
-  kling: 'kling',
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
+  asc: "asc",
+  desc: "desc",
 } as const
-export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
+export const CreationsUserVideoPurchasesModel = {
+  "veo-2": "veo-2",
+  "veo-3": "veo-3",
+  "seedance-pro": "seedance-pro",
+  "seedance-lite": "seedance-lite",
+  kling: "kling",
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
+export type CreationsUserVideoPurchasesAspectRatio = (typeof CreationsUserVideoPurchasesAspectRatio)[keyof typeof CreationsUserVideoPurchasesAspectRatio]
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreationsUserVideoPurchases200Item = {
-  id: string;
-  userId: string;
-  videoId: string;
-  createdAt: string;
-};
+  id: string
+  userId: string
+  videoId: string
+  createdAt: string
+}
 
 export type CreationsCreateImageRequestsParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: CreationsCreateImageRequestsOrder;
-endDateTime?: string;
-includeMetadata?: boolean;
-customModelId?: string;
-model?: typeof CreationsCreateImageRequestsModel[keyof typeof CreationsCreateImageRequestsModel] ;
-aspectRatio?: CreationsCreateImageRequestsAspectRatio;
-promptIncludes?: string;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: CreationsCreateImageRequestsOrder
+  endDateTime?: string
+  customModelId?: string
+  model?: (typeof CreationsCreateImageRequestsModel)[keyof typeof CreationsCreateImageRequestsModel]
+  aspectRatio?: CreationsCreateImageRequestsAspectRatio
+  promptIncludes?: string
+}
 
-export type CreationsCreateImageRequestsOrder = typeof CreationsCreateImageRequestsOrder[keyof typeof CreationsCreateImageRequestsOrder];
+export type CreationsCreateImageRequestsOrder = (typeof CreationsCreateImageRequestsOrder)[keyof typeof CreationsCreateImageRequestsOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
-  'veo-3': 'veo-3',
-  'seedance-pro': 'seedance-pro',
-  'seedance-lite': 'seedance-lite',
-  kling: 'kling',
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
+  asc: "asc",
+  desc: "desc",
 } as const
-export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
+export const CreationsCreateImageRequestsModel = {
+  "veo-2": "veo-2",
+  "veo-3": "veo-3",
+  "seedance-pro": "seedance-pro",
+  "seedance-lite": "seedance-lite",
+  kling: "kling",
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
+export type CreationsCreateImageRequestsAspectRatio = (typeof CreationsCreateImageRequestsAspectRatio)[keyof typeof CreationsCreateImageRequestsAspectRatio]
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreationsCreateImageRequests200Item = {
-  id: string;
-  imageIds: string[];
-  createdAt: string;
-  aspectRatio: string;
-  public: boolean;
-  creatorId: string;
-  model?: string;
-  seed?: number;
-  prompt?: string;
-  negativePrompt?: string;
-  quantity: number;
-  customModelId?: string;
-  customModelName?: string;
-};
+  id: string
+  imageIds: string[]
+  createdAt: string
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  creatorUsername: string
+  model?: string
+  seed?: number
+  prompt?: string
+  negativePrompt?: string
+  quantity: number
+  customModelId?: string
+  customModelName?: string
+}
 
 export type CreationsCreateVideoRequestsParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: CreationsCreateVideoRequestsOrder;
-endDateTime?: string;
-includeMetadata?: boolean;
-customModelId?: string;
-model?: typeof CreationsCreateVideoRequestsModel[keyof typeof CreationsCreateVideoRequestsModel] ;
-aspectRatio?: CreationsCreateVideoRequestsAspectRatio;
-promptIncludes?: string;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: CreationsCreateVideoRequestsOrder
+  endDateTime?: string
+  customModelId?: string
+  model?: (typeof CreationsCreateVideoRequestsModel)[keyof typeof CreationsCreateVideoRequestsModel]
+  aspectRatio?: CreationsCreateVideoRequestsAspectRatio
+  promptIncludes?: string
+}
 
-export type CreationsCreateVideoRequestsOrder = typeof CreationsCreateVideoRequestsOrder[keyof typeof CreationsCreateVideoRequestsOrder];
+export type CreationsCreateVideoRequestsOrder = (typeof CreationsCreateVideoRequestsOrder)[keyof typeof CreationsCreateVideoRequestsOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
-  'veo-3': 'veo-3',
-  'seedance-pro': 'seedance-pro',
-  'seedance-lite': 'seedance-lite',
-  kling: 'kling',
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
+  asc: "asc",
+  desc: "desc",
 } as const
-export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
+export const CreationsCreateVideoRequestsModel = {
+  "veo-2": "veo-2",
+  "veo-3": "veo-3",
+  "seedance-pro": "seedance-pro",
+  "seedance-lite": "seedance-lite",
+  kling: "kling",
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
+export type CreationsCreateVideoRequestsAspectRatio = (typeof CreationsCreateVideoRequestsAspectRatio)[keyof typeof CreationsCreateVideoRequestsAspectRatio]
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
 export type CreationsCreateVideoRequests200Item = {
-  id: string;
-  videoIds: string[];
-  createdAt: string;
-  aspectRatio: string;
-  public: boolean;
-  creatorId: string;
-  model?: string;
-  seed?: number;
-  prompt?: string;
-  duration?: number;
-  quantity: number;
-  startImageId?: string;
-};
+  id: string
+  videoIds: string[]
+  createdAt: string
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  creatorUsername: string
+  model?: string
+  seed?: number
+  prompt?: string
+  duration?: number
+  quantity: number
+  startImageId?: string
+}
 
 export type CreationsGetImageRequestParams = {
-imageRequestId: string;
-};
+  imageRequestId: string
+}
 
 export type CreationsGetImageRequest200 = {
-  id: string;
-  imageIds: string[];
-  createdAt: string;
-  aspectRatio: string;
-  public: boolean;
-  creatorId: string;
-  model?: string;
-  seed?: number;
-  prompt?: string;
-  negativePrompt?: string;
-  quantity: number;
-  customModelId?: string;
-  customModelName?: string;
-};
+  id: string
+  imageIds: string[]
+  createdAt: string
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  creatorUsername: string
+  model?: string
+  seed?: number
+  prompt?: string
+  negativePrompt?: string
+  quantity: number
+  customModelId?: string
+  customModelName?: string
+}
 
 export type CreationsGetVideoRequestParams = {
-videoRequestId: string;
-};
+  videoRequestId: string
+}
 
 export type CreationsGetVideoRequest200 = {
-  id: string;
-  videoIds: string[];
-  createdAt: string;
-  aspectRatio: string;
-  public: boolean;
-  creatorId: string;
-  model?: string;
-  seed?: number;
-  prompt?: string;
-  duration?: number;
-  quantity: number;
-  startImageId?: string;
-};
+  id: string
+  videoIds: string[]
+  createdAt: string
+  aspectRatio: string
+  public: boolean
+  creatorId: string
+  creatorUsername: string
+  model?: string
+  seed?: number
+  prompt?: string
+  duration?: number
+  quantity: number
+  startImageId?: string
+}
 
 export type CreationsBrowseCreateRequestsParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: CreationsBrowseCreateRequestsOrder;
-endDateTime?: string;
-promptIncludes?: string;
-model?: CreationsBrowseCreateRequestsModel;
-aspectRatio?: CreationsBrowseCreateRequestsAspectRatio;
-customModelId?: string;
-randomSeed?: number;
-sortMethod: CreationsBrowseCreateRequestsSortMethod;
-mediaType?: CreationsBrowseCreateRequestsMediaType;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: CreationsBrowseCreateRequestsOrder
+  endDateTime?: string
+  promptIncludes?: string
+  model?: CreationsBrowseCreateRequestsModel
+  aspectRatio?: CreationsBrowseCreateRequestsAspectRatio
+  customModelId?: string
+  randomSeed?: number
+  sortMethod: CreationsBrowseCreateRequestsSortMethod
+  mediaType?: CreationsBrowseCreateRequestsMediaType
+}
 
-export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
+export type CreationsBrowseCreateRequestsOrder = (typeof CreationsBrowseCreateRequestsOrder)[keyof typeof CreationsBrowseCreateRequestsOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
+  asc: "asc",
+  desc: "desc",
+} as const
 
-export type CreationsBrowseCreateRequestsModel = typeof CreationsBrowseCreateRequestsModel[keyof typeof CreationsBrowseCreateRequestsModel];
+export type CreationsBrowseCreateRequestsModel = (typeof CreationsBrowseCreateRequestsModel)[keyof typeof CreationsBrowseCreateRequestsModel]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsModel = {
-  ultra: 'ultra',
-  'sd3-lg': 'sd3-lg',
-  core: 'core',
-  'dall-e-3': 'dall-e-3',
-  'flux-pro-ultra': 'flux-pro-ultra',
-  'flux-dev': 'flux-dev',
-  'flux-pro': 'flux-pro',
-  custom: 'custom',
-  imagen4: 'imagen4',
-  'imagen4-ultra': 'imagen4-ultra',
-  photon: 'photon',
-  recraft3: 'recraft3',
-  'recraft3-svg': 'recraft3-svg',
-  'gpt-image-1': 'gpt-image-1',
-  seedream3: 'seedream3',
-} as const;
+  ultra: "ultra",
+  "sd3-lg": "sd3-lg",
+  core: "core",
+  "dall-e-3": "dall-e-3",
+  "flux-pro-ultra": "flux-pro-ultra",
+  "flux-dev": "flux-dev",
+  "flux-pro": "flux-pro",
+  custom: "custom",
+  imagen4: "imagen4",
+  "imagen4-ultra": "imagen4-ultra",
+  photon: "photon",
+  recraft3: "recraft3",
+  "recraft3-svg": "recraft3-svg",
+  "gpt-image-1": "gpt-image-1",
+  seedream3: "seedream3",
+} as const
 
-export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
+export type CreationsBrowseCreateRequestsAspectRatio = (typeof CreationsBrowseCreateRequestsAspectRatio)[keyof typeof CreationsBrowseCreateRequestsAspectRatio]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsAspectRatio = {
-  '16:9': '16:9',
-  '1:1': '1:1',
-  '21:9': '21:9',
-  '2:3': '2:3',
-  '3:2': '3:2',
-  '4:5': '4:5',
-  '5:4': '5:4',
-  '9:16': '9:16',
-  '9:21': '9:21',
-  '3:4': '3:4',
-  '4:3': '4:3',
-} as const;
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "21:9": "21:9",
+  "2:3": "2:3",
+  "3:2": "3:2",
+  "4:5": "4:5",
+  "5:4": "5:4",
+  "9:16": "9:16",
+  "9:21": "9:21",
+  "3:4": "3:4",
+  "4:3": "4:3",
+} as const
 
-export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
+export type CreationsBrowseCreateRequestsSortMethod = (typeof CreationsBrowseCreateRequestsSortMethod)[keyof typeof CreationsBrowseCreateRequestsSortMethod]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsSortMethod = {
-  latest: 'latest',
-  shuffle: 'shuffle',
-  popular: 'popular',
-} as const;
+  latest: "latest",
+  shuffle: "shuffle",
+  popular: "popular",
+} as const
 
-export type CreationsBrowseCreateRequestsMediaType = typeof CreationsBrowseCreateRequestsMediaType[keyof typeof CreationsBrowseCreateRequestsMediaType];
+export type CreationsBrowseCreateRequestsMediaType = (typeof CreationsBrowseCreateRequestsMediaType)[keyof typeof CreationsBrowseCreateRequestsMediaType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsMediaType = {
-  image: 'image',
-  video: 'video',
-  all: 'all',
-} as const;
+  image: "image",
+  video: "video",
+  all: "all",
+} as const
 
 export type CreationsHdImageParams = {
-imageId: string;
-};
+  imageId: string
+}
 
 export type CreationsHdVideoParams = {
-videoId: string;
-download?: boolean;
-};
+  videoId: string
+  download?: boolean
+}
 
 export type CreationsOriginalImageParams = {
-imageId: string;
-};
+  imageId: string
+}
 
 export type CreationsUpscaledImageParams = {
-imageId: string;
-};
+  imageId: string
+}
 
 export type CreationsPurchaseMediaBody = {
-  imageId?: string;
-  videoId?: string;
-};
+  imageId?: string
+  videoId?: string
+}
 
 export type CreationsDeleteMediaBody = {
-  imageId?: string;
-  videoId?: string;
-};
+  imageId?: string
+  videoId?: string
+}
 
 export type CreationsDeleteRequestBody = {
-  videoRequestId?: string;
-  imageRequestId?: string;
-};
+  videoRequestId?: string
+  imageRequestId?: string
+}
 
 export type CreationsSetRequestPrivacyBody = {
-  videoRequestId?: string;
-  imageRequestId?: string;
-  public: boolean;
-};
+  videoRequestId?: string
+  imageRequestId?: string
+  public: boolean
+}
 
 export type PointsPackagesAvailable200Item = {
-  points: number;
-  discountPct: number;
-  usd: number;
-};
+  points: number
+  discountPct: number
+  usd: number
+}
 
 export type PointsPrices200ImageModel = {
-  ultra: number;
-  'sd3-lg': number;
-  core: number;
-  'dall-e-3': number;
-  'flux-pro-ultra': number;
-  'flux-dev': number;
-  'flux-pro': number;
-  custom: number;
-  imagen4: number;
-  'imagen4-ultra': number;
-  photon: number;
-  recraft3: number;
-  'recraft3-svg': number;
-  'gpt-image-1': number;
-  seedream3: number;
-};
+  ultra: number
+  "sd3-lg": number
+  core: number
+  "dall-e-3": number
+  "flux-pro-ultra": number
+  "flux-dev": number
+  "flux-pro": number
+  custom: number
+  imagen4: number
+  "imagen4-ultra": number
+  photon: number
+  recraft3: number
+  "recraft3-svg": number
+  "gpt-image-1": number
+  seedream3: number
+}
 
 export type PointsPrices200Image = {
-  unlock: number;
-  unlockCommission: number;
-  model: PointsPrices200ImageModel;
-};
+  unlock: number
+  unlockCommission: number
+  model: PointsPrices200ImageModel
+}
 
 export type PointsPrices200ForgeTrainBaseModel = {
-  fluxDev: number;
-  fluxPro: number;
-  fluxProUltra: number;
-  faceClone: number;
-  faceForge: number;
-};
+  fluxDev: number
+  fluxPro: number
+  fluxProUltra: number
+  faceClone: number
+  faceForge: number
+}
 
 export type PointsPrices200ForgeFineTuneType = {
-  lora: number;
-  full: number;
-};
+  lora: number
+  full: number
+}
 
 export type PointsPrices200Forge = {
-  createTrainingSet: number;
-  trainBaseModel: PointsPrices200ForgeTrainBaseModel;
-  fineTuneType: PointsPrices200ForgeFineTuneType;
-  customModelCharge: number;
-  customModelOwnerComission: number;
-};
+  createTrainingSet: number
+  trainBaseModel: PointsPrices200ForgeTrainBaseModel
+  fineTuneType: PointsPrices200ForgeFineTuneType
+  customModelCharge: number
+  customModelOwnerComission: number
+}
 
 export type PointsPrices200VideoModel = {
-  'veo-2': number;
-  'veo-3': number;
-  'seedance-pro': number;
-  'seedance-lite': number;
-  kling: number;
-};
+  "veo-2": number
+  "veo-3": number
+  "seedance-pro": number
+  "seedance-lite": number
+  kling: number
+}
 
 export type PointsPrices200Video = {
-  unlock: number;
-  unlockCommission: number;
-  model: PointsPrices200VideoModel;
-};
+  unlock: number
+  unlockCommission: number
+  model: PointsPrices200VideoModel
+}
 
 export type PointsPrices200SocialRewards = {
-  linkEmail: number;
-  linkTwitter: number;
-  linkGoogle: number;
-  linkPhone: number;
-  linkTelegram: number;
-};
+  linkEmail: number
+  linkTwitter: number
+  linkGoogle: number
+  linkPhone: number
+  linkTelegram: number
+}
 
 export type PointsPrices200PromptTools = {
-  improvePrompt: number;
-  randomPrompt: number;
-};
+  improvePrompt: number
+  randomPrompt: number
+}
 
 export type PointsPrices200 = {
-  image: PointsPrices200Image;
-  forge: PointsPrices200Forge;
-  video: PointsPrices200Video;
-  socialRewards: PointsPrices200SocialRewards;
-  promptTools: PointsPrices200PromptTools;
-};
+  image: PointsPrices200Image
+  forge: PointsPrices200Forge
+  video: PointsPrices200Video
+  socialRewards: PointsPrices200SocialRewards
+  promptTools: PointsPrices200PromptTools
+}
 
-export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
+export type PointsInitBuyPackageBodyMethod = (typeof PointsInitBuyPackageBodyMethod)[keyof typeof PointsInitBuyPackageBodyMethod]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackageBodyMethod = {
-  payPal: 'payPal',
-  stripe: 'stripe',
-  applePay: 'applePay',
-  googlePay: 'googlePay',
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  payPal: "payPal",
+  stripe: "stripe",
+  applePay: "applePay",
+  googlePay: "googlePay",
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
 export type PointsInitBuyPackageBody = {
-  packageId: number;
-  method: PointsInitBuyPackageBodyMethod;
-};
+  packageId: number
+  method: PointsInitBuyPackageBodyMethod
+}
 
 export type PointsInitBuyPackage200AnyOfLinksItem = {
-  href: string;
-  rel: string;
-  method: string;
-};
+  href: string
+  rel: string
+  method: string
+}
 
 export type PointsInitBuyPackage200AnyOf = {
-  id: string;
-  status: string;
-  links: PointsInitBuyPackage200AnyOfLinksItem[];
-};
+  id: string
+  status: string
+  links: PointsInitBuyPackage200AnyOfLinksItem[]
+}
 
-export type PointsInitBuyPackage200AnyOfThreeChainName = typeof PointsInitBuyPackage200AnyOfThreeChainName[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName];
+export type PointsInitBuyPackage200AnyOfThreeChainName = (typeof PointsInitBuyPackage200AnyOfThreeChainName)[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeChainName = {
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
-export type PointsInitBuyPackage200AnyOfThreeTokenType = typeof PointsInitBuyPackage200AnyOfThreeTokenType[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType];
+export type PointsInitBuyPackage200AnyOfThreeTokenType = (typeof PointsInitBuyPackage200AnyOfThreeTokenType)[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeTokenType = {
-  TLOS: 'TLOS',
-} as const;
+  TLOS: "TLOS",
+} as const
 
 export type PointsInitBuyPackage200AnyOfThree = {
-  chainName: PointsInitBuyPackage200AnyOfThreeChainName;
-  tokenType: PointsInitBuyPackage200AnyOfThreeTokenType;
-  id: string;
-  userId: string;
-  tokenAmount: number;
-  usdValue: number;
-  fee: number;
+  chainName: PointsInitBuyPackage200AnyOfThreeChainName
+  tokenType: PointsInitBuyPackage200AnyOfThreeTokenType
+  id: string
+  userId: string
+  tokenAmount: number
+  usdValue: number
+  fee: number
   /** @nullable */
-  transactionId: string | null;
+  transactionId: string | null
   /** @nullable */
-  transactionTime: string | null;
+  transactionTime: string | null
   /** @nullable */
-  blockNumber: number | null;
+  blockNumber: number | null
   /** @nullable */
-  memo: string | null;
+  memo: string | null
   /** @nullable */
-  senderWallet: string | null;
-  destWallet: string;
-  confirmed: boolean;
+  senderWallet: string | null
+  destWallet: string
+  confirmed: boolean
   /** @nullable */
-  pointsGranted: number | null;
-  createdAt: string;
+  pointsGranted: number | null
+  createdAt: string
   /** @nullable */
-  updatedAt: string | null;
-};
+  updatedAt: string | null
+}
 
-export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
+export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree
 
-export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
+export type PointsFinishBuyPackageBodyMethod = (typeof PointsFinishBuyPackageBodyMethod)[keyof typeof PointsFinishBuyPackageBodyMethod]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsFinishBuyPackageBodyMethod = {
-  payPal: 'payPal',
-  stripe: 'stripe',
-  applePay: 'applePay',
-  googlePay: 'googlePay',
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  payPal: "payPal",
+  stripe: "stripe",
+  applePay: "applePay",
+  googlePay: "googlePay",
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
 export type PointsFinishBuyPackageBody = {
-  orderId: string;
-  method: PointsFinishBuyPackageBodyMethod;
-  trackingId?: string;
-};
+  orderId: string
+  method: PointsFinishBuyPackageBodyMethod
+  trackingId?: string
+}
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
-  currency_code: string;
-  value: string;
-};
+  currency_code: string
+  value: string
+}
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItem = {
-  reference_id: string;
-  amount: PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount;
-};
+  reference_id: string
+  amount: PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount
+}
 
 export type PointsFinishBuyPackage200AnyOf = {
-  id: string;
-  status: string;
-  purchase_units: PointsFinishBuyPackage200AnyOfPurchaseUnitsItem[];
-};
+  id: string
+  status: string
+  purchase_units: PointsFinishBuyPackage200AnyOfPurchaseUnitsItem[]
+}
 
 export type PointsFinishBuyPackage200AnyOfFour = {
-  status: string;
-};
+  status: string
+}
 
-export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour;
+export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour
 
 export type PointsGetOrders200PayPalOrdersItem = {
-  id: string;
-  orderID: string;
-  amount: number;
-  currency: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-};
+  id: string
+  orderID: string
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
 
-export type PointsGetOrders200CryptoOrdersItemChainName = typeof PointsGetOrders200CryptoOrdersItemChainName[keyof typeof PointsGetOrders200CryptoOrdersItemChainName];
+export type PointsGetOrders200CryptoOrdersItemChainName = (typeof PointsGetOrders200CryptoOrdersItemChainName)[keyof typeof PointsGetOrders200CryptoOrdersItemChainName]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrders200CryptoOrdersItemChainName = {
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
 export type PointsGetOrders200CryptoOrdersItem = {
-  id: string;
-  chainName: PointsGetOrders200CryptoOrdersItemChainName;
-  tokenAmount: number;
-  usdValue: number;
-  confirmed: boolean;
+  id: string
+  chainName: PointsGetOrders200CryptoOrdersItemChainName
+  tokenAmount: number
+  usdValue: number
+  confirmed: boolean
   /** @nullable */
-  transactionId: string | null;
+  transactionId: string | null
   /** @nullable */
-  memo: string | null;
+  memo: string | null
   /** @nullable */
-  senderWallet: string | null;
-  destWallet: string;
-  createdAt: string;
+  senderWallet: string | null
+  destWallet: string
+  createdAt: string
   /** @nullable */
-  updatedAt: string | null;
-};
+  updatedAt: string | null
+}
 
 export type PointsGetOrders200 = {
-  payPalOrders: PointsGetOrders200PayPalOrdersItem[];
-  cryptoOrders: PointsGetOrders200CryptoOrdersItem[];
-};
+  payPalOrders: PointsGetOrders200PayPalOrdersItem[]
+  cryptoOrders: PointsGetOrders200CryptoOrdersItem[]
+}
 
 export type PointsGetOrderParams = {
-id: string;
-method: PointsGetOrderMethod;
-};
+  id: string
+  method: PointsGetOrderMethod
+}
 
-export type PointsGetOrderMethod = typeof PointsGetOrderMethod[keyof typeof PointsGetOrderMethod];
+export type PointsGetOrderMethod = (typeof PointsGetOrderMethod)[keyof typeof PointsGetOrderMethod]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrderMethod = {
-  payPal: 'payPal',
-  stripe: 'stripe',
-  applePay: 'applePay',
-  googlePay: 'googlePay',
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  payPal: "payPal",
+  stripe: "stripe",
+  applePay: "applePay",
+  googlePay: "googlePay",
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
 export type PointsGetOrder200AnyOf = {
-  id: string;
-  userId: string;
-  orderID: string;
-  amount: number;
-  currency: string;
-  status: string;
-  packageDetailsJSON: string;
+  id: string
+  userId: string
+  orderID: string
+  amount: number
+  currency: string
+  status: string
+  packageDetailsJSON: string
   /** @nullable */
-  orderDataJSON: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+  orderDataJSON: string | null
+  createdAt: string
+  updatedAt: string
+}
 
-export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
+export type PointsGetOrder200AnyOfTwoChainName = (typeof PointsGetOrder200AnyOfTwoChainName)[keyof typeof PointsGetOrder200AnyOfTwoChainName]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoChainName = {
-  telosNative: 'telosNative',
-  telosEVM: 'telosEVM',
-} as const;
+  telosNative: "telosNative",
+  telosEVM: "telosEVM",
+} as const
 
-export type PointsGetOrder200AnyOfTwoTokenType = typeof PointsGetOrder200AnyOfTwoTokenType[keyof typeof PointsGetOrder200AnyOfTwoTokenType];
+export type PointsGetOrder200AnyOfTwoTokenType = (typeof PointsGetOrder200AnyOfTwoTokenType)[keyof typeof PointsGetOrder200AnyOfTwoTokenType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoTokenType = {
-  TLOS: 'TLOS',
-} as const;
+  TLOS: "TLOS",
+} as const
 
 export type PointsGetOrder200AnyOfTwo = {
-  chainName: PointsGetOrder200AnyOfTwoChainName;
-  tokenType: PointsGetOrder200AnyOfTwoTokenType;
-  id: string;
-  userId: string;
-  tokenAmount: number;
-  usdValue: number;
-  fee: number;
+  chainName: PointsGetOrder200AnyOfTwoChainName
+  tokenType: PointsGetOrder200AnyOfTwoTokenType
+  id: string
+  userId: string
+  tokenAmount: number
+  usdValue: number
+  fee: number
   /** @nullable */
-  transactionId: string | null;
+  transactionId: string | null
   /** @nullable */
-  transactionTime: string | null;
+  transactionTime: string | null
   /** @nullable */
-  blockNumber: number | null;
+  blockNumber: number | null
   /** @nullable */
-  memo: string | null;
+  memo: string | null
   /** @nullable */
-  senderWallet: string | null;
-  destWallet: string;
-  confirmed: boolean;
+  senderWallet: string | null
+  destWallet: string
+  confirmed: boolean
   /** @nullable */
-  pointsGranted: number | null;
-  createdAt: string;
+  pointsGranted: number | null
+  createdAt: string
   /** @nullable */
-  updatedAt: string | null;
-};
+  updatedAt: string | null
+}
 
-export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
+export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo
 
 export type UserGetParams = {
-userId: string;
-};
+  userId: string
+}
 
 /**
  * @nullable
  */
 export type UserGet200AvatarConfig = {
-  imageId: string;
-} | null;
+  imageId: string
+} | null
 
 export type UserGet200 = {
-  id: string;
+  id: string
   /** @nullable */
-  webauthnUserID: string | null;
+  webauthnUserID: string | null
   /** @nullable */
-  currentPassKeyChallenge: string | null;
-  availablePoints: number;
-  createdAt: string;
-  updatedAt: string;
-  spentPoints: number;
-  admin: boolean;
+  currentPassKeyChallenge: string | null
+  availablePoints: number
+  createdAt: string
+  updatedAt: string
+  spentPoints: number
+  admin: boolean
   /** @nullable */
-  referredById: string | null;
-  lastNotificationSent: string;
+  referredById: string | null
+  lastNotificationSent: string
   /** @nullable */
-  privyId: string | null;
+  privyId: string | null
   /** @nullable */
-  AvatarConfig: UserGet200AvatarConfig;
-};
+  AvatarConfig: UserGet200AvatarConfig
+}
 
 export type UserProfileParams = {
-userId: string;
-};
+  userId: string
+}
 
 export type UserProfile200 = {
-  userId: string;
+  userId: string
   /** @nullable */
-  username: string | null;
+  username: string | null
   /** @nullable */
-  email: string | null;
-  emailVerified: boolean;
+  email: string | null
+  emailVerified: boolean
   /** @nullable */
-  phone: string | null;
-  phoneVerified: boolean;
+  phone: string | null
+  phoneVerified: boolean
   /** @nullable */
-  twitter: string | null;
-  twitterVerified: boolean;
+  twitter: string | null
+  twitterVerified: boolean
   /** @nullable */
-  instagram: string | null;
-  instagramVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  instagram: string | null
+  instagramVerified: boolean
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  lastUsernameChange: string | null;
+  lastUsernameChange: string | null
   /** @nullable */
-  bio: string | null;
+  bio: string | null
   /** @nullable */
-  linksJSON: string | null;
+  linksJSON: string | null
   /** @nullable */
-  pangeaAccount: string | null;
-};
+  pangeaAccount: string | null
+}
 
 export type UserPublicProfileParams = {
-userId: string;
-};
+  userId: string
+}
 
 export type UserPublicProfile200Profile = {
   /** @nullable */
-  username: string | null;
+  username: string | null
   /** @nullable */
-  bio: string | null;
+  bio: string | null
   /** @nullable */
-  linksJSON: string | null;
-};
+  linksJSON: string | null
+}
 
 export type UserPublicProfile200 = {
-  profile: UserPublicProfile200Profile;
-  imagesCreated: number;
-  imagesFavorited: number;
-};
+  profile: UserPublicProfile200Profile
+  imagesCreated: number
+  imagesFavorited: number
+}
 
 export type UserGetUsernameParams = {
-userId: string;
-};
+  userId: string
+}
 
 export type UserSetUsernameBody = {
-  username: string;
-};
+  username: string
+}
 
 export type UserSetUsername200 = {
-  userId: string;
+  userId: string
   /** @nullable */
-  username: string | null;
+  username: string | null
   /** @nullable */
-  email: string | null;
-  emailVerified: boolean;
+  email: string | null
+  emailVerified: boolean
   /** @nullable */
-  phone: string | null;
-  phoneVerified: boolean;
+  phone: string | null
+  phoneVerified: boolean
   /** @nullable */
-  twitter: string | null;
-  twitterVerified: boolean;
+  twitter: string | null
+  twitterVerified: boolean
   /** @nullable */
-  instagram: string | null;
-  instagramVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  instagram: string | null
+  instagramVerified: boolean
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  lastUsernameChange: string | null;
+  lastUsernameChange: string | null
   /** @nullable */
-  bio: string | null;
+  bio: string | null
   /** @nullable */
-  linksJSON: string | null;
+  linksJSON: string | null
   /** @nullable */
-  pangeaAccount: string | null;
-};
+  pangeaAccount: string | null
+}
 
 export type UserSetBioBody = {
-  bio: string;
-};
+  bio: string
+}
 
 export type UserSetBio200 = {
-  userId: string;
+  userId: string
   /** @nullable */
-  username: string | null;
+  username: string | null
   /** @nullable */
-  email: string | null;
-  emailVerified: boolean;
+  email: string | null
+  emailVerified: boolean
   /** @nullable */
-  phone: string | null;
-  phoneVerified: boolean;
+  phone: string | null
+  phoneVerified: boolean
   /** @nullable */
-  twitter: string | null;
-  twitterVerified: boolean;
+  twitter: string | null
+  twitterVerified: boolean
   /** @nullable */
-  instagram: string | null;
-  instagramVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  instagram: string | null
+  instagramVerified: boolean
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  lastUsernameChange: string | null;
+  lastUsernameChange: string | null
   /** @nullable */
-  bio: string | null;
+  bio: string | null
   /** @nullable */
-  linksJSON: string | null;
+  linksJSON: string | null
   /** @nullable */
-  pangeaAccount: string | null;
-};
+  pangeaAccount: string | null
+}
 
 export type UserSendVerificationEmailBody = {
-  email: string;
-};
+  email: string
+}
 
 export type UserPointsHistoryParams = {
-userId?: string;
-startDateTime?: string;
-limit?: number;
-offset?: number;
-order?: UserPointsHistoryOrder;
-endDateTime?: string;
-includeMetadata?: boolean;
-};
+  userId?: string
+  startDateTime?: string
+  limit?: number
+  offset?: number
+  order?: UserPointsHistoryOrder
+  endDateTime?: string
+}
 
-export type UserPointsHistoryOrder = typeof UserPointsHistoryOrder[keyof typeof UserPointsHistoryOrder];
+export type UserPointsHistoryOrder = (typeof UserPointsHistoryOrder)[keyof typeof UserPointsHistoryOrder]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistoryOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
+  asc: "asc",
+  desc: "desc",
+} as const
 
-export type UserPointsHistory200ItemType = typeof UserPointsHistory200ItemType[keyof typeof UserPointsHistory200ItemType];
+export type UserPointsHistory200ItemType = (typeof UserPointsHistory200ItemType)[keyof typeof UserPointsHistory200ItemType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistory200ItemType = {
-  purchase: 'purchase',
-  refund: 'refund',
-  comission: 'comission',
-  bonus: 'bonus',
-  referral: 'referral',
-  commission: 'commission',
-  promoCode: 'promoCode',
-  createModel: 'createModel',
-  cryptoDeposit: 'cryptoDeposit',
-  createTrainingSet: 'createTrainingSet',
-} as const;
+  purchase: "purchase",
+  refund: "refund",
+  comission: "comission",
+  bonus: "bonus",
+  referral: "referral",
+  commission: "commission",
+  promoCode: "promoCode",
+  createModel: "createModel",
+  cryptoDeposit: "cryptoDeposit",
+  createTrainingSet: "createTrainingSet",
+} as const
 
 export type UserPointsHistory200Item = {
-  type: UserPointsHistory200ItemType;
-  id: string;
-  createdAt: string;
+  type: UserPointsHistory200ItemType
+  id: string
+  createdAt: string
   /** @nullable */
-  memo: string | null;
-  quantity: number;
-  userFinalBalance: number;
-};
+  memo: string | null
+  quantity: number
+  userFinalBalance: number
+}
 
 export type UserFindByUsernameParams = {
-username: string;
-};
+  username: string
+}
 
 export type UserFindByEmailParams = {
-email: string;
-};
+  email: string
+}
 
 export type UserFindByPhoneParams = {
-phone: string;
-};
+  phone: string
+}
 
 export type UserFindByPrivyIdParams = {
-privyId: string;
-};
+  privyId: string
+}
 
-export type UserGetNotificationConfig200EmailFrequency = typeof UserGetNotificationConfig200EmailFrequency[keyof typeof UserGetNotificationConfig200EmailFrequency];
+export type UserGetNotificationConfig200EmailFrequency = (typeof UserGetNotificationConfig200EmailFrequency)[keyof typeof UserGetNotificationConfig200EmailFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200EmailFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
-export type UserGetNotificationConfig200PhoneFrequency = typeof UserGetNotificationConfig200PhoneFrequency[keyof typeof UserGetNotificationConfig200PhoneFrequency];
+export type UserGetNotificationConfig200PhoneFrequency = (typeof UserGetNotificationConfig200PhoneFrequency)[keyof typeof UserGetNotificationConfig200PhoneFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200PhoneFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
 export type UserGetNotificationConfig200 = {
-  emailFrequency: UserGetNotificationConfig200EmailFrequency;
-  phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
-  userId: string;
-  email: boolean;
-  phone: boolean;
-};
+  emailFrequency: UserGetNotificationConfig200EmailFrequency
+  phoneFrequency: UserGetNotificationConfig200PhoneFrequency
+  userId: string
+  email: boolean
+  phone: boolean
+}
 
-export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
+export type UserSetNotificationConfigBodyEmailFrequency = (typeof UserSetNotificationConfigBodyEmailFrequency)[keyof typeof UserSetNotificationConfigBodyEmailFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyEmailFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
-export type UserSetNotificationConfigBodyPhoneFrequency = typeof UserSetNotificationConfigBodyPhoneFrequency[keyof typeof UserSetNotificationConfigBodyPhoneFrequency];
+export type UserSetNotificationConfigBodyPhoneFrequency = (typeof UserSetNotificationConfigBodyPhoneFrequency)[keyof typeof UserSetNotificationConfigBodyPhoneFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyPhoneFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
 export type UserSetNotificationConfigBody = {
-  email?: boolean;
-  phone?: boolean;
-  emailFrequency?: UserSetNotificationConfigBodyEmailFrequency;
-  phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency;
-};
+  email?: boolean
+  phone?: boolean
+  emailFrequency?: UserSetNotificationConfigBodyEmailFrequency
+  phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency
+}
 
-export type UserSetNotificationConfig200EmailFrequency = typeof UserSetNotificationConfig200EmailFrequency[keyof typeof UserSetNotificationConfig200EmailFrequency];
+export type UserSetNotificationConfig200EmailFrequency = (typeof UserSetNotificationConfig200EmailFrequency)[keyof typeof UserSetNotificationConfig200EmailFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200EmailFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
-export type UserSetNotificationConfig200PhoneFrequency = typeof UserSetNotificationConfig200PhoneFrequency[keyof typeof UserSetNotificationConfig200PhoneFrequency];
+export type UserSetNotificationConfig200PhoneFrequency = (typeof UserSetNotificationConfig200PhoneFrequency)[keyof typeof UserSetNotificationConfig200PhoneFrequency]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200PhoneFrequency = {
-  instant: 'instant',
-  daily: 'daily',
-  weekly: 'weekly',
-  monthly: 'monthly',
-} as const;
+  instant: "instant",
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+} as const
 
 export type UserSetNotificationConfig200 = {
-  emailFrequency: UserSetNotificationConfig200EmailFrequency;
-  phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
-  userId: string;
-  email: boolean;
-  phone: boolean;
-};
+  emailFrequency: UserSetNotificationConfig200EmailFrequency
+  phoneFrequency: UserSetNotificationConfig200PhoneFrequency
+  userId: string
+  email: boolean
+  phone: boolean
+}
 
-export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
+export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown }
 
 export type UserSetAvatarBodyPosition = {
-  x: number;
-  y: number;
-};
+  x: number
+  y: number
+}
 
 export type UserSetAvatarBody = {
-  imageId: string;
-  scale: number;
-  position: UserSetAvatarBodyPosition;
-};
+  imageId: string
+  scale: number
+  position: UserSetAvatarBodyPosition
+}
 
 /**
  * @nullable
  */
 export type UserAllUsers200ItemProfile = {
   /** @nullable */
-  bio: string | null;
+  bio: string | null
   /** @nullable */
-  username: string | null;
-} | null;
+  username: string | null
+} | null
 
 export type UserAllUsers200Item = {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  Profile: UserAllUsers200ItemProfile;
-};
+  Profile: UserAllUsers200ItemProfile
+}
 
 export type LoginLinkInitLoginLinkBody = {
-  email?: string;
-  phoneNumber?: string;
-  referredBy?: string;
-};
+  email?: string
+  phoneNumber?: string
+  referredBy?: string
+}
 
 export type LoginLinkLoginWithLinkBody = {
-  linkId: string;
-};
+  linkId: string
+}
 
 export type LoginLinkLoginWithLink200 = {
-  token: string;
-  userId: string;
-};
+  token: string
+  userId: string
+}
 
 export type StatsUsers200 = {
-  spentPoints: number;
-  spentOver100Points: number;
-  spentOver1000Points: number;
-  spentOver10000Points: number;
-  spentOver20000Points: number;
-  purchasedImage: number;
-  createdImage: number;
-  emailVerified: number;
-  phoneVerified: number;
-  instagramVerified: number;
-  twitterVerified: number;
-  setUsername: number;
-};
+  spentPoints: number
+  spentOver100Points: number
+  spentOver1000Points: number
+  spentOver10000Points: number
+  spentOver20000Points: number
+  purchasedImage: number
+  createdImage: number
+  emailVerified: number
+  phoneVerified: number
+  instagramVerified: number
+  twitterVerified: number
+  setUsername: number
+}
 
 export type _StatsImages200AverageImageQuantityPerCreateRequestAvg = {
   /** @nullable */
-  quantity: number | null;
-};
+  quantity: number | null
+}
 
 export type StatsImages200AverageImageQuantityPerCreateRequest = {
-  _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg;
-};
+  _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg
+}
 
 export type StatsImages200 = {
-  totalCreated: number;
-  totalUpscaled: number;
-  totalImageCreateRequests: number;
-  averageImageQuantityPerCreateRequest: StatsImages200AverageImageQuantityPerCreateRequest;
-  purchasedImages: number;
-  totalPurchases: number;
-  privateImages: number;
-  imagesInAtLeastOneCollection: number;
-  imageCreationFailed: number;
-};
+  totalCreated: number
+  totalUpscaled: number
+  totalImageCreateRequests: number
+  averageImageQuantityPerCreateRequest: StatsImages200AverageImageQuantityPerCreateRequest
+  purchasedImages: number
+  totalPurchases: number
+  privateImages: number
+  imagesInAtLeastOneCollection: number
+  imageCreationFailed: number
+}
 
 export type StatsCollections200 = {
-  collectionsCreated: number;
-  emptyCollections: number;
-};
+  collectionsCreated: number
+  emptyCollections: number
+}
 
 export type _StatsPayments200PaypalOrdersTotalPaidSum = {
   /** @nullable */
-  amount: number | null;
-};
+  amount: number | null
+}
 
 export type StatsPayments200PaypalOrdersTotalPaid = {
-  _sum: _StatsPayments200PaypalOrdersTotalPaidSum;
-};
+  _sum: _StatsPayments200PaypalOrdersTotalPaidSum
+}
 
 export type StatsPayments200 = {
-  incompletePayPayPalOrders: number;
-  completePayPayPalOrders: number;
-  paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
-};
+  incompletePayPayPalOrders: number
+  completePayPayPalOrders: number
+  paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid
+}
 
 export type CollectionsMediaInUsersCollectionParams = {
-imageId?: string;
-videoId?: string;
-name: string;
-};
+  imageId?: string
+  videoId?: string
+  name: string
+}
 
 export type CollectionsLikeMediaBody = {
-  imageId?: string;
-  videoId?: string;
-};
+  imageId?: string
+  videoId?: string
+}
 
 export type CollectionsUnlikeMediaBody = {
-  imageId?: string;
-  videoId?: string;
-};
+  imageId?: string
+  videoId?: string
+}
 
 export type CollectionsGetCollectionMetaParams = {
-id: string;
-};
+  id: string
+}
 
 export type _CollectionsGetCollectionMeta200Count = {
-  Images: number;
-  Favorited: number;
-};
+  Images: number
+  Favorited: number
+}
 
 export type CollectionsGetCollectionMeta200 = {
-  id: string;
-  name: string;
-  description: string;
-  ownerId: string;
-  private: boolean;
-  _count: _CollectionsGetCollectionMeta200Count;
-};
+  id: string
+  name: string
+  description: string
+  ownerId: string
+  private: boolean
+  _count: _CollectionsGetCollectionMeta200Count
+}
 
 export type CollectionsFindCollectionByNameParams = {
-ownerId: string;
-collectionName: string;
-};
+  ownerId: string
+  collectionName: string
+}
 
 export type CollectionsFindCollectionByName200 = {
-  id: string;
-};
+  id: string
+}
 
 export type CollectionsGetCollectionImagesParams = {
-id: string;
-};
+  id: string
+}
 
 export type CollectionsGetCollectionImages200ItemImageRequest = {
-  userId: string;
-};
+  userId: string
+}
 
 export type CollectionsGetCollectionImages200Item = {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  imageRequestId: string;
-  seed: string;
-  errored: boolean;
-  filtered: boolean;
-  deleted: boolean;
-  imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
-};
+  id: string
+  createdAt: string
+  updatedAt: string
+  imageRequestId: string
+  seed: string
+  errored: boolean
+  filtered: boolean
+  deleted: boolean
+  imageRequest: CollectionsGetCollectionImages200ItemImageRequest
+}
 
 export type CollectionsGetCollectionVideosParams = {
-id: string;
-};
+  id: string
+}
 
-export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
+export type CollectionsGetCollectionVideos200ItemStatus = (typeof CollectionsGetCollectionVideos200ItemStatus)[keyof typeof CollectionsGetCollectionVideos200ItemStatus]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionVideos200ItemStatus = {
-  processing: 'processing',
-  previewRendering: 'previewRendering',
-  ready: 'ready',
-  errored: 'errored',
-} as const;
+  processing: "processing",
+  previewRendering: "previewRendering",
+  ready: "ready",
+  errored: "errored",
+} as const
 
 export type CollectionsGetCollectionVideos200ItemVideoRequest = {
-  userId: string;
-};
+  userId: string
+}
 
 export type CollectionsGetCollectionVideos200Item = {
-  status: CollectionsGetCollectionVideos200ItemStatus;
-  id: string;
-  createdAt: string;
-  updatedAt: string;
+  status: CollectionsGetCollectionVideos200ItemStatus
+  id: string
+  createdAt: string
+  updatedAt: string
   /** @nullable */
-  seed: string | null;
-  errored: boolean;
-  deleted: boolean;
-  videoRequestId: string;
+  seed: string | null
+  errored: boolean
+  deleted: boolean
+  videoRequestId: string
   /** @nullable */
-  replicatePredictionId: string | null;
+  replicatePredictionId: string | null
   /** @nullable */
-  coconutJobId: string | null;
+  coconutJobId: string | null
   /** @nullable */
-  errorMessage: string | null;
-  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
-};
+  errorMessage: string | null
+  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest
+}
 
 export type PromoCreatePromoCodeBody = {
-  points: number;
-};
+  points: number
+}
 
 export type PromoCreatePromoCode200 = {
-  id: string;
-  points: number;
+  id: string
+  points: number
   /** @nullable */
-  claimedByUserId: string | null;
+  claimedByUserId: string | null
   /** @nullable */
-  claimedAt: string | null;
-  createdAt: string;
-};
+  claimedAt: string | null
+  createdAt: string
+}
 
 export type PromoDeletePromoCodeBody = {
-  id: string;
-};
+  id: string
+}
 
 export type PromoGetPromoCodes200Item = {
-  id: string;
-  points: number;
+  id: string
+  points: number
   /** @nullable */
-  claimedByUserId: string | null;
+  claimedByUserId: string | null
   /** @nullable */
-  claimedAt: string | null;
-  createdAt: string;
-};
+  claimedAt: string | null
+  createdAt: string
+}
 
 export type PromoGetPromoCodeDetailsParams = {
-id: string;
-};
+  id: string
+}
 
 export type PromoGetPromoCodeDetails200 = {
-  id: string;
-  points: number;
+  id: string
+  points: number
   /** @nullable */
-  claimedByUserId: string | null;
+  claimedByUserId: string | null
   /** @nullable */
-  claimedAt: string | null;
-  createdAt: string;
-};
+  claimedAt: string | null
+  createdAt: string
+}
 
 export type PromoClaimPromoCodeBody = {
-  id: string;
-};
+  id: string
+}
 
 export type ModelsEditModelBody = {
-  id: string;
+  id: string
   /** @maxLength 30 */
-  name: string;
+  name: string
   /** @maxLength 500 */
-  description: string;
-};
+  description: string
+}
 
 export type ModelsGetUserModelsParams = {
-trainingSetId?: string;
-};
+  trainingSetId?: string
+}
 
-export type ModelsGetUserModels200ItemStatus = typeof ModelsGetUserModels200ItemStatus[keyof typeof ModelsGetUserModels200ItemStatus];
+export type ModelsGetUserModels200ItemStatus = (typeof ModelsGetUserModels200ItemStatus)[keyof typeof ModelsGetUserModels200ItemStatus]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemStatus = {
-  training: 'training',
-  trained: 'trained',
-  error: 'error',
-  waitingForImageUpload: 'waitingForImageUpload',
-} as const;
+  training: "training",
+  trained: "trained",
+  error: "error",
+  waitingForImageUpload: "waitingForImageUpload",
+} as const
 
-export type ModelsGetUserModels200ItemModelType = typeof ModelsGetUserModels200ItemModelType[keyof typeof ModelsGetUserModels200ItemModelType];
+export type ModelsGetUserModels200ItemModelType = (typeof ModelsGetUserModels200ItemModelType)[keyof typeof ModelsGetUserModels200ItemModelType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelType = {
-  faceClone: 'faceClone',
-  faceForge: 'faceForge',
-  fluxDev: 'fluxDev',
-  fluxPro: 'fluxPro',
-  fluxProUltra: 'fluxProUltra',
-} as const;
+  faceClone: "faceClone",
+  faceForge: "faceForge",
+  fluxDev: "fluxDev",
+  fluxPro: "fluxPro",
+  fluxProUltra: "fluxProUltra",
+} as const
 
 /**
  * @nullable
  */
-export type ModelsGetUserModels200ItemFineTuneType = typeof ModelsGetUserModels200ItemFineTuneType[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null;
+export type ModelsGetUserModels200ItemFineTuneType = (typeof ModelsGetUserModels200ItemFineTuneType)[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemFineTuneType = {
-  lora: 'lora',
-  full: 'full',
-} as const;
+  lora: "lora",
+  full: "full",
+} as const
 
-export type ModelsGetUserModels200ItemMode = typeof ModelsGetUserModels200ItemMode[keyof typeof ModelsGetUserModels200ItemMode];
+export type ModelsGetUserModels200ItemMode = (typeof ModelsGetUserModels200ItemMode)[keyof typeof ModelsGetUserModels200ItemMode]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemMode = {
-  subject: 'subject',
-  style: 'style',
-  object: 'object',
-  general: 'general',
-} as const;
+  subject: "subject",
+  style: "style",
+  object: "object",
+  general: "general",
+} as const
 
-export type ModelsGetUserModels200ItemModelTagsItem = typeof ModelsGetUserModels200ItemModelTagsItem[keyof typeof ModelsGetUserModels200ItemModelTagsItem];
+export type ModelsGetUserModels200ItemModelTagsItem = (typeof ModelsGetUserModels200ItemModelTagsItem)[keyof typeof ModelsGetUserModels200ItemModelTagsItem]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelTagsItem = {
-  Realistic: 'Realistic',
-  Creative: 'Creative',
-  Illustrative: 'Illustrative',
-  DesignText: 'DesignText',
-  Precision: 'Precision',
-  Vibrant: 'Vibrant',
-  Versatile: 'Versatile',
-  FastBudget: 'FastBudget',
-  Vector: 'Vector',
-  Multimodal: 'Multimodal',
-  Bilingual: 'Bilingual',
-  Custom: 'Custom',
-  Cinematic: 'Cinematic',
-  MultiCamera: 'MultiCamera',
-  Audio: 'Audio',
-  Dramatic: 'Dramatic',
-  Experimental: 'Experimental',
-  Image: 'Image',
-  Video: 'Video',
-} as const;
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
 
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
-  id: string;
-};
+  id: string
+}
 
 export type ModelsGetUserModels200ItemImageRequestsItem = {
-  id: string;
-  images: ModelsGetUserModels200ItemImageRequestsItemImagesItem[];
-};
+  id: string
+  images: ModelsGetUserModels200ItemImageRequestsItemImagesItem[]
+}
 
 export type ModelsGetUserModels200Item = {
-  status: ModelsGetUserModels200ItemStatus;
-  modelType: ModelsGetUserModels200ItemModelType;
+  status: ModelsGetUserModels200ItemStatus
+  modelType: ModelsGetUserModels200ItemModelType
   /** @nullable */
-  fineTuneType: ModelsGetUserModels200ItemFineTuneType;
-  mode: ModelsGetUserModels200ItemMode;
-  modelTags: ModelsGetUserModels200ItemModelTagsItem[];
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  creatorId: string;
-  name: string;
-  slug: string;
+  fineTuneType: ModelsGetUserModels200ItemFineTuneType
+  mode: ModelsGetUserModels200ItemMode
+  modelTags: ModelsGetUserModels200ItemModelTagsItem[]
+  id: string
+  createdAt: string
+  updatedAt: string
+  creatorId: string
+  name: string
+  slug: string
   /** @nullable */
-  trainingError: string | null;
+  trainingError: string | null
   /** @nullable */
-  trainingId: string | null;
+  trainingId: string | null
   /** @nullable */
-  inferenceId: string | null;
-  Public: boolean;
+  inferenceId: string | null
+  Public: boolean
   /** @nullable */
-  trainingSetId: string | null;
+  trainingSetId: string | null
   /** @nullable */
-  description: string | null;
-  featured: boolean;
-  imageRequests: ModelsGetUserModels200ItemImageRequestsItem[];
-};
+  description: string | null
+  featured: boolean
+  imageRequests: ModelsGetUserModels200ItemImageRequestsItem[]
+}
 
-export type ModelsCreateModelBodyBaseModel = typeof ModelsCreateModelBodyBaseModel[keyof typeof ModelsCreateModelBodyBaseModel];
+export type ModelsCreateModelBodyBaseModel = (typeof ModelsCreateModelBodyBaseModel)[keyof typeof ModelsCreateModelBodyBaseModel]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyBaseModel = {
-  faceClone: 'faceClone',
-  faceForge: 'faceForge',
-  fluxDev: 'fluxDev',
-  fluxPro: 'fluxPro',
-  fluxProUltra: 'fluxProUltra',
-} as const;
+  faceClone: "faceClone",
+  faceForge: "faceForge",
+  fluxDev: "fluxDev",
+  fluxPro: "fluxPro",
+  fluxProUltra: "fluxProUltra",
+} as const
 
-export type ModelsCreateModelBodyModelMode = typeof ModelsCreateModelBodyModelMode[keyof typeof ModelsCreateModelBodyModelMode];
+export type ModelsCreateModelBodyModelMode = (typeof ModelsCreateModelBodyModelMode)[keyof typeof ModelsCreateModelBodyModelMode]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyModelMode = {
-  subject: 'subject',
-  style: 'style',
-  object: 'object',
-  general: 'general',
-} as const;
+  subject: "subject",
+  style: "style",
+  object: "object",
+  general: "general",
+} as const
 
-export type ModelsCreateModelBodyFineTuneType = typeof ModelsCreateModelBodyFineTuneType[keyof typeof ModelsCreateModelBodyFineTuneType];
+export type ModelsCreateModelBodyFineTuneType = (typeof ModelsCreateModelBodyFineTuneType)[keyof typeof ModelsCreateModelBodyFineTuneType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyFineTuneType = {
-  lora: 'lora',
-  full: 'full',
-} as const;
+  lora: "lora",
+  full: "full",
+} as const
 
 export type ModelsCreateModelBody = {
-  name: string;
-  description: string;
-  baseModel: ModelsCreateModelBodyBaseModel;
-  modelMode: ModelsCreateModelBodyModelMode;
-  fineTuneType: ModelsCreateModelBodyFineTuneType;
-  trainingSetId: string;
-};
+  name: string
+  description: string
+  baseModel: ModelsCreateModelBodyBaseModel
+  modelMode: ModelsCreateModelBodyModelMode
+  fineTuneType: ModelsCreateModelBodyFineTuneType
+  trainingSetId: string
+}
 
 export type ModelsGetTrainingStatusParams = {
-id: string;
-};
+  id: string
+}
 
-export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200Status[keyof typeof ModelsGetTrainingStatus200Status];
+export type ModelsGetTrainingStatus200Status = (typeof ModelsGetTrainingStatus200Status)[keyof typeof ModelsGetTrainingStatus200Status]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetTrainingStatus200Status = {
-  processing: 'processing',
-  trained: 'trained',
-  succeeded: 'succeeded',
-  failed: 'failed',
-} as const;
+  processing: "processing",
+  trained: "trained",
+  succeeded: "succeeded",
+  failed: "failed",
+} as const
 
 export type ModelsGetTrainingStatus200 = {
-  status: ModelsGetTrainingStatus200Status;
+  status: ModelsGetTrainingStatus200Status
   /** @nullable */
-  error: string | null;
+  error: string | null
   /**
    * @minimum 0
    * @maximum 100
    */
-  progress: number;
-  elapsedTime: string;
-  remainingTime: string;
-};
+  progress: number
+  elapsedTime: string
+  remainingTime: string
+}
 
 export type ModelsDeleteModelBody = {
-  id: string;
-};
+  id: string
+}
 
 export type ModelsGetCustomModelParams = {
-id: string;
-};
+  id: string
+}
 
-export type ModelsGetCustomModel200Status = typeof ModelsGetCustomModel200Status[keyof typeof ModelsGetCustomModel200Status];
+export type ModelsGetCustomModel200Status = (typeof ModelsGetCustomModel200Status)[keyof typeof ModelsGetCustomModel200Status]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Status = {
-  training: 'training',
-  trained: 'trained',
-  error: 'error',
-  waitingForImageUpload: 'waitingForImageUpload',
-} as const;
+  training: "training",
+  trained: "trained",
+  error: "error",
+  waitingForImageUpload: "waitingForImageUpload",
+} as const
 
-export type ModelsGetCustomModel200ModelType = typeof ModelsGetCustomModel200ModelType[keyof typeof ModelsGetCustomModel200ModelType];
+export type ModelsGetCustomModel200ModelType = (typeof ModelsGetCustomModel200ModelType)[keyof typeof ModelsGetCustomModel200ModelType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelType = {
-  faceClone: 'faceClone',
-  faceForge: 'faceForge',
-  fluxDev: 'fluxDev',
-  fluxPro: 'fluxPro',
-  fluxProUltra: 'fluxProUltra',
-} as const;
+  faceClone: "faceClone",
+  faceForge: "faceForge",
+  fluxDev: "fluxDev",
+  fluxPro: "fluxPro",
+  fluxProUltra: "fluxProUltra",
+} as const
 
 /**
  * @nullable
  */
-export type ModelsGetCustomModel200FineTuneType = typeof ModelsGetCustomModel200FineTuneType[keyof typeof ModelsGetCustomModel200FineTuneType] | null;
+export type ModelsGetCustomModel200FineTuneType = (typeof ModelsGetCustomModel200FineTuneType)[keyof typeof ModelsGetCustomModel200FineTuneType] | null
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200FineTuneType = {
-  lora: 'lora',
-  full: 'full',
-} as const;
+  lora: "lora",
+  full: "full",
+} as const
 
-export type ModelsGetCustomModel200Mode = typeof ModelsGetCustomModel200Mode[keyof typeof ModelsGetCustomModel200Mode];
+export type ModelsGetCustomModel200Mode = (typeof ModelsGetCustomModel200Mode)[keyof typeof ModelsGetCustomModel200Mode]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Mode = {
-  subject: 'subject',
-  style: 'style',
-  object: 'object',
-  general: 'general',
-} as const;
+  subject: "subject",
+  style: "style",
+  object: "object",
+  general: "general",
+} as const
 
-export type ModelsGetCustomModel200ModelTagsItem = typeof ModelsGetCustomModel200ModelTagsItem[keyof typeof ModelsGetCustomModel200ModelTagsItem];
+export type ModelsGetCustomModel200ModelTagsItem = (typeof ModelsGetCustomModel200ModelTagsItem)[keyof typeof ModelsGetCustomModel200ModelTagsItem]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelTagsItem = {
-  Realistic: 'Realistic',
-  Creative: 'Creative',
-  Illustrative: 'Illustrative',
-  DesignText: 'DesignText',
-  Precision: 'Precision',
-  Vibrant: 'Vibrant',
-  Versatile: 'Versatile',
-  FastBudget: 'FastBudget',
-  Vector: 'Vector',
-  Multimodal: 'Multimodal',
-  Bilingual: 'Bilingual',
-  Custom: 'Custom',
-  Cinematic: 'Cinematic',
-  MultiCamera: 'MultiCamera',
-  Audio: 'Audio',
-  Dramatic: 'Dramatic',
-  Experimental: 'Experimental',
-  Image: 'Image',
-  Video: 'Video',
-} as const;
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
 
 export type ModelsGetCustomModel200 = {
-  status: ModelsGetCustomModel200Status;
-  modelType: ModelsGetCustomModel200ModelType;
+  status: ModelsGetCustomModel200Status
+  modelType: ModelsGetCustomModel200ModelType
   /** @nullable */
-  fineTuneType: ModelsGetCustomModel200FineTuneType;
-  mode: ModelsGetCustomModel200Mode;
-  modelTags: ModelsGetCustomModel200ModelTagsItem[];
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  creatorId: string;
-  name: string;
-  slug: string;
+  fineTuneType: ModelsGetCustomModel200FineTuneType
+  mode: ModelsGetCustomModel200Mode
+  modelTags: ModelsGetCustomModel200ModelTagsItem[]
+  id: string
+  createdAt: string
+  updatedAt: string
+  creatorId: string
+  name: string
+  slug: string
   /** @nullable */
-  trainingError: string | null;
+  trainingError: string | null
   /** @nullable */
-  trainingId: string | null;
+  trainingId: string | null
   /** @nullable */
-  inferenceId: string | null;
-  Public: boolean;
+  inferenceId: string | null
+  Public: boolean
   /** @nullable */
-  trainingSetId: string | null;
+  trainingSetId: string | null
   /** @nullable */
-  description: string | null;
-  featured: boolean;
-};
+  description: string | null
+  featured: boolean
+}
 
 export type ModelsGetPublicModelsParams = {
-page?: number;
-tag?: ModelsGetPublicModelsTag;
-};
+  page?: number
+  tag?: ModelsGetPublicModelsTag
+}
 
-export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];
+export type ModelsGetPublicModelsTag = (typeof ModelsGetPublicModelsTag)[keyof typeof ModelsGetPublicModelsTag]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModelsTag = {
-  Realistic: 'Realistic',
-  Creative: 'Creative',
-  Illustrative: 'Illustrative',
-  DesignText: 'DesignText',
-  Precision: 'Precision',
-  Vibrant: 'Vibrant',
-  Versatile: 'Versatile',
-  FastBudget: 'FastBudget',
-  Vector: 'Vector',
-  Multimodal: 'Multimodal',
-  Bilingual: 'Bilingual',
-  Custom: 'Custom',
-  Cinematic: 'Cinematic',
-  MultiCamera: 'MultiCamera',
-  Audio: 'Audio',
-  Dramatic: 'Dramatic',
-  Experimental: 'Experimental',
-  Image: 'Image',
-  Video: 'Video',
-} as const;
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
 
-export type ModelsGetPublicModels200ItemStatus = typeof ModelsGetPublicModels200ItemStatus[keyof typeof ModelsGetPublicModels200ItemStatus];
+export type ModelsGetPublicModels200ItemStatus = (typeof ModelsGetPublicModels200ItemStatus)[keyof typeof ModelsGetPublicModels200ItemStatus]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemStatus = {
-  training: 'training',
-  trained: 'trained',
-  error: 'error',
-  waitingForImageUpload: 'waitingForImageUpload',
-} as const;
+  training: "training",
+  trained: "trained",
+  error: "error",
+  waitingForImageUpload: "waitingForImageUpload",
+} as const
 
-export type ModelsGetPublicModels200ItemModelType = typeof ModelsGetPublicModels200ItemModelType[keyof typeof ModelsGetPublicModels200ItemModelType];
+export type ModelsGetPublicModels200ItemModelType = (typeof ModelsGetPublicModels200ItemModelType)[keyof typeof ModelsGetPublicModels200ItemModelType]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelType = {
-  faceClone: 'faceClone',
-  faceForge: 'faceForge',
-  fluxDev: 'fluxDev',
-  fluxPro: 'fluxPro',
-  fluxProUltra: 'fluxProUltra',
-} as const;
+  faceClone: "faceClone",
+  faceForge: "faceForge",
+  fluxDev: "fluxDev",
+  fluxPro: "fluxPro",
+  fluxProUltra: "fluxProUltra",
+} as const
 
 /**
  * @nullable
  */
-export type ModelsGetPublicModels200ItemFineTuneType = typeof ModelsGetPublicModels200ItemFineTuneType[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null;
+export type ModelsGetPublicModels200ItemFineTuneType = (typeof ModelsGetPublicModels200ItemFineTuneType)[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemFineTuneType = {
-  lora: 'lora',
-  full: 'full',
-} as const;
+  lora: "lora",
+  full: "full",
+} as const
 
-export type ModelsGetPublicModels200ItemMode = typeof ModelsGetPublicModels200ItemMode[keyof typeof ModelsGetPublicModels200ItemMode];
+export type ModelsGetPublicModels200ItemMode = (typeof ModelsGetPublicModels200ItemMode)[keyof typeof ModelsGetPublicModels200ItemMode]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemMode = {
-  subject: 'subject',
-  style: 'style',
-  object: 'object',
-  general: 'general',
-} as const;
+  subject: "subject",
+  style: "style",
+  object: "object",
+  general: "general",
+} as const
 
-export type ModelsGetPublicModels200ItemModelTagsItem = typeof ModelsGetPublicModels200ItemModelTagsItem[keyof typeof ModelsGetPublicModels200ItemModelTagsItem];
+export type ModelsGetPublicModels200ItemModelTagsItem = (typeof ModelsGetPublicModels200ItemModelTagsItem)[keyof typeof ModelsGetPublicModels200ItemModelTagsItem]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelTagsItem = {
-  Realistic: 'Realistic',
-  Creative: 'Creative',
-  Illustrative: 'Illustrative',
-  DesignText: 'DesignText',
-  Precision: 'Precision',
-  Vibrant: 'Vibrant',
-  Versatile: 'Versatile',
-  FastBudget: 'FastBudget',
-  Vector: 'Vector',
-  Multimodal: 'Multimodal',
-  Bilingual: 'Bilingual',
-  Custom: 'Custom',
-  Cinematic: 'Cinematic',
-  MultiCamera: 'MultiCamera',
-  Audio: 'Audio',
-  Dramatic: 'Dramatic',
-  Experimental: 'Experimental',
-  Image: 'Image',
-  Video: 'Video',
-} as const;
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
 
 export type ModelsGetPublicModels200Item = {
-  status: ModelsGetPublicModels200ItemStatus;
-  modelType: ModelsGetPublicModels200ItemModelType;
+  status: ModelsGetPublicModels200ItemStatus
+  modelType: ModelsGetPublicModels200ItemModelType
   /** @nullable */
-  fineTuneType: ModelsGetPublicModels200ItemFineTuneType;
-  mode: ModelsGetPublicModels200ItemMode;
-  modelTags: ModelsGetPublicModels200ItemModelTagsItem[];
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  creatorId: string;
-  name: string;
-  slug: string;
+  fineTuneType: ModelsGetPublicModels200ItemFineTuneType
+  mode: ModelsGetPublicModels200ItemMode
+  modelTags: ModelsGetPublicModels200ItemModelTagsItem[]
+  id: string
+  createdAt: string
+  updatedAt: string
+  creatorId: string
+  name: string
+  slug: string
   /** @nullable */
-  trainingError: string | null;
+  trainingError: string | null
   /** @nullable */
-  trainingId: string | null;
+  trainingId: string | null
   /** @nullable */
-  inferenceId: string | null;
-  Public: boolean;
+  inferenceId: string | null
+  Public: boolean
   /** @nullable */
-  trainingSetId: string | null;
+  trainingSetId: string | null
   /** @nullable */
-  description: string | null;
-  featured: boolean;
-  previewMediaId?: string;
-};
+  description: string | null
+  featured: boolean
+  previewMediaId?: string
+}
 
 export type ModelsGetBaseModelsParams = {
-page?: number;
-};
+  page?: number
+}
 
-export type ModelsGetBaseModels200ItemModelTagsItem = typeof ModelsGetBaseModels200ItemModelTagsItem[keyof typeof ModelsGetBaseModels200ItemModelTagsItem];
+export type ModelsGetBaseModels200ItemModelTagsItem = (typeof ModelsGetBaseModels200ItemModelTagsItem)[keyof typeof ModelsGetBaseModels200ItemModelTagsItem]
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetBaseModels200ItemModelTagsItem = {
-  Realistic: 'Realistic',
-  Creative: 'Creative',
-  Illustrative: 'Illustrative',
-  DesignText: 'DesignText',
-  Precision: 'Precision',
-  Vibrant: 'Vibrant',
-  Versatile: 'Versatile',
-  FastBudget: 'FastBudget',
-  Vector: 'Vector',
-  Multimodal: 'Multimodal',
-  Bilingual: 'Bilingual',
-  Custom: 'Custom',
-  Cinematic: 'Cinematic',
-  MultiCamera: 'MultiCamera',
-  Audio: 'Audio',
-  Dramatic: 'Dramatic',
-  Experimental: 'Experimental',
-  Image: 'Image',
-  Video: 'Video',
-} as const;
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
 
 export type ModelsGetBaseModels200Item = {
-  modelTags: ModelsGetBaseModels200ItemModelTagsItem[];
-  slug: string;
-  updatedAt: string;
-  name: string;
+  modelTags: ModelsGetBaseModels200ItemModelTagsItem[]
+  slug: string
+  updatedAt: string
+  name: string
   /** @nullable */
-  description: string | null;
-  featured: boolean;
-  previewMediaId?: string;
-};
+  description: string | null
+  featured: boolean
+  /** @nullable */
+  blogLink: string | null
+  /** @nullable */
+  longDescription: string | null
+  previewMediaId?: string
+}
+
+export type ModelsGetModelByNameParams = {
+  name: string
+  customModelId?: string
+  includeMedia?: number
+}
+
+export type ModelsGetModelByName200CustomModelCreator = {
+  id: string
+  userName: string
+}
+
+export type ModelsGetModelByName200ModelModelTagsItem = (typeof ModelsGetModelByName200ModelModelTagsItem)[keyof typeof ModelsGetModelByName200ModelModelTagsItem]
+
+export const ModelsGetModelByName200ModelModelTagsItem = {
+  Realistic: "Realistic",
+  Creative: "Creative",
+  Illustrative: "Illustrative",
+  DesignText: "DesignText",
+  Precision: "Precision",
+  Vibrant: "Vibrant",
+  Versatile: "Versatile",
+  FastBudget: "FastBudget",
+  Vector: "Vector",
+  Multimodal: "Multimodal",
+  Bilingual: "Bilingual",
+  Custom: "Custom",
+  Cinematic: "Cinematic",
+  MultiCamera: "MultiCamera",
+  Audio: "Audio",
+  Dramatic: "Dramatic",
+  Experimental: "Experimental",
+  Image: "Image",
+  Video: "Video",
+} as const
+
+export type ModelsGetModelByName200Model = {
+  modelTags: ModelsGetModelByName200ModelModelTagsItem[]
+  slug: string
+  updatedAt: string
+  name: string
+  /** @nullable */
+  description: string | null
+  featured: boolean
+  /** @nullable */
+  blogLink: string | null
+  /** @nullable */
+  longDescription: string | null
+}
+
+export type ModelsGetModelByName200MediaItem = {
+  id: string
+  meta: string
+  creatorUsername?: string
+}
+
+export type ModelsGetModelByName200 = {
+  customModelCreator?: ModelsGetModelByName200CustomModelCreator
+  model: ModelsGetModelByName200Model
+  media?: ModelsGetModelByName200MediaItem[]
+}
 
 export type ModelsSetModelPrivacyBody = {
-  id: string;
-  public: boolean;
-};
+  id: string
+  public: boolean
+}
 
 export type AdminLoginAsUserBody = {
-  id: string;
-};
+  id: string
+}
 
 export type PrivyAuthenticateBody = {
-  accessToken: string;
-  referrerUsername?: string;
-};
+  accessToken: string
+  referrerUsername?: string
+}
 
 export type PrivyAuthenticate200 = {
-  token: string;
-  userId: string;
-};
+  token: string
+  userId: string
+}
 
 export type TrainingSetsCreateSetBody = {
   /** @maxLength 30 */
-  name: string;
+  name: string
   /** @maxLength 400 */
-  description: string;
+  description: string
   /**
    * @minimum 3
    * @maximum 200
    */
-  numImages: number;
+  numImages: number
   /** @maximum 800 */
-  zipSizeMb: number;
-};
+  zipSizeMb: number
+}
 
-export type TrainingSetsCreateSet200SignedZipUploadDataFields = {[key: string]: string};
+export type TrainingSetsCreateSet200SignedZipUploadDataFields = { [key: string]: string }
 
 export type TrainingSetsCreateSet200SignedZipUploadData = {
-  url: string;
-  fields: TrainingSetsCreateSet200SignedZipUploadDataFields;
-};
+  url: string
+  fields: TrainingSetsCreateSet200SignedZipUploadDataFields
+}
 
-export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields = {[key: string]: string};
+export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields = { [key: string]: string }
 
 export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItem = {
-  url: string;
-  fields: TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields;
-};
+  url: string
+  fields: TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields
+}
 
 export type TrainingSetsCreateSet200 = {
-  trainingSetId: string;
-  signedZipUploadData: TrainingSetsCreateSet200SignedZipUploadData;
-  signedThumbnailUploadDatas: TrainingSetsCreateSet200SignedThumbnailUploadDatasItem[];
-};
+  trainingSetId: string
+  signedZipUploadData: TrainingSetsCreateSet200SignedZipUploadData
+  signedThumbnailUploadDatas: TrainingSetsCreateSet200SignedThumbnailUploadDatasItem[]
+}
 
 export type TrainingSetsFinalizeSetBody = {
-  trainingSetId: string;
-};
+  trainingSetId: string
+}
 
 export type TrainingSetsGetUserSetsParams = {
-userId: string;
-};
+  userId: string
+}
 
 export type TrainingSetsGetUserSets200Item = {
-  id: string;
-  ownerId: string;
-  createdAt: string;
-  name: string;
-  sizeMB: number;
-  numImages: number;
-  status: number;
-  thumbnailIds: string[];
+  id: string
+  ownerId: string
+  createdAt: string
+  name: string
+  sizeMB: number
+  numImages: number
+  status: number
+  thumbnailIds: string[]
   /** @nullable */
-  description: string | null;
-  deleted: boolean;
-  updatedAt: string;
-};
+  description: string | null
+  deleted: boolean
+  updatedAt: string
+}
 
 export type TrainingSetsGetSetParams = {
-trainingSetId: string;
-};
+  trainingSetId: string
+}
 
 export type TrainingSetsGetSet200 = {
-  id: string;
-  ownerId: string;
-  createdAt: string;
-  name: string;
-  sizeMB: number;
-  numImages: number;
-  status: number;
-  thumbnailIds: string[];
+  id: string
+  ownerId: string
+  createdAt: string
+  name: string
+  sizeMB: number
+  numImages: number
+  status: number
+  thumbnailIds: string[]
   /** @nullable */
-  description: string | null;
-  deleted: boolean;
-  updatedAt: string;
-};
+  description: string | null
+  deleted: boolean
+  updatedAt: string
+}
 
 export type TrainingSetsDeleteSetBody = {
-  trainingSetId: string;
-};
+  trainingSetId: string
+}
 
 export type TrainingSetsEditSetBody = {
-  trainingSetId: string;
+  trainingSetId: string
   /** @maxLength 32 */
-  newName: string;
+  newName: string
   /** @maxLength 400 */
-  newDescription: string;
-};
-
-export type pkAuthRegisterStartResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type pkAuthRegisterStartResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pkAuthRegisterStartResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pkAuthRegisterStartResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pkAuthRegisterStartResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pkAuthRegisterStartResponseComposite = pkAuthRegisterStartResponse200 | pkAuthRegisterStartResponse400 | pkAuthRegisterStartResponse401 | pkAuthRegisterStartResponse403 | pkAuthRegisterStartResponse500;
-    
-export type pkAuthRegisterStartResponse = pkAuthRegisterStartResponseComposite & {
-  headers: Headers;
+  newDescription: string
 }
 
 export const getPkAuthRegisterStartUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/pkAuth/registerStart`
 }
 
-export const pkAuthRegisterStart = async (pkAuthRegisterStartBody: PkAuthRegisterStartBody, options?: RequestInit): Promise<pkAuthRegisterStartResponse> => {
-  
-  const res = await fetch(getPkAuthRegisterStartUrl(),
-  {      
+export const pkAuthRegisterStart = async (pkAuthRegisterStartBody: PkAuthRegisterStartBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPkAuthRegisterStartUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pkAuthRegisterStartBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pkAuthRegisterStartResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pkAuthRegisterStartResponse
-}
-
-
-
-export type pkAuthRegisterFinishResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type pkAuthRegisterFinishResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pkAuthRegisterFinishResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pkAuthRegisterFinishResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pkAuthRegisterFinishResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pkAuthRegisterFinishResponseComposite = pkAuthRegisterFinishResponse200 | pkAuthRegisterFinishResponse400 | pkAuthRegisterFinishResponse401 | pkAuthRegisterFinishResponse403 | pkAuthRegisterFinishResponse500;
-    
-export type pkAuthRegisterFinishResponse = pkAuthRegisterFinishResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pkAuthRegisterStartBody),
+  })
 }
 
 export const getPkAuthRegisterFinishUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/pkAuth/registerFinish`
 }
 
-export const pkAuthRegisterFinish = async (pkAuthRegisterFinishBody: PkAuthRegisterFinishBody, options?: RequestInit): Promise<pkAuthRegisterFinishResponse> => {
-  
-  const res = await fetch(getPkAuthRegisterFinishUrl(),
-  {      
+export const pkAuthRegisterFinish = async (pkAuthRegisterFinishBody: PkAuthRegisterFinishBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPkAuthRegisterFinishUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pkAuthRegisterFinishBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pkAuthRegisterFinishResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pkAuthRegisterFinishResponse
-}
-
-
-
-export type pkAuthLoginStartResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type pkAuthLoginStartResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pkAuthLoginStartResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pkAuthLoginStartResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pkAuthLoginStartResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pkAuthLoginStartResponseComposite = pkAuthLoginStartResponse200 | pkAuthLoginStartResponse400 | pkAuthLoginStartResponse401 | pkAuthLoginStartResponse403 | pkAuthLoginStartResponse500;
-    
-export type pkAuthLoginStartResponse = pkAuthLoginStartResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pkAuthRegisterFinishBody),
+  })
 }
 
 export const getPkAuthLoginStartUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/pkAuth/loginStart`
 }
 
-export const pkAuthLoginStart = async (pkAuthLoginStartBody: PkAuthLoginStartBody, options?: RequestInit): Promise<pkAuthLoginStartResponse> => {
-  
-  const res = await fetch(getPkAuthLoginStartUrl(),
-  {      
+export const pkAuthLoginStart = async (pkAuthLoginStartBody: PkAuthLoginStartBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPkAuthLoginStartUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pkAuthLoginStartBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pkAuthLoginStartResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pkAuthLoginStartResponse
-}
-
-
-
-export type pkAuthLoginFinishResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type pkAuthLoginFinishResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pkAuthLoginFinishResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pkAuthLoginFinishResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pkAuthLoginFinishResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pkAuthLoginFinishResponseComposite = pkAuthLoginFinishResponse200 | pkAuthLoginFinishResponse400 | pkAuthLoginFinishResponse401 | pkAuthLoginFinishResponse403 | pkAuthLoginFinishResponse500;
-    
-export type pkAuthLoginFinishResponse = pkAuthLoginFinishResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pkAuthLoginStartBody),
+  })
 }
 
 export const getPkAuthLoginFinishUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/pkAuth/loginFinish`
 }
 
-export const pkAuthLoginFinish = async (pkAuthLoginFinishBody: PkAuthLoginFinishBody, options?: RequestInit): Promise<pkAuthLoginFinishResponse> => {
-  
-  const res = await fetch(getPkAuthLoginFinishUrl(),
-  {      
+export const pkAuthLoginFinish = async (pkAuthLoginFinishBody: PkAuthLoginFinishBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPkAuthLoginFinishUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pkAuthLoginFinishBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pkAuthLoginFinishResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pkAuthLoginFinishResponse
-}
-
-
-
-export type createImageResponse200 = {
-  data: CreateImage200
-  status: 200
-}
-
-export type createImageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type createImageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type createImageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type createImageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type createImageResponseComposite = createImageResponse200 | createImageResponse400 | createImageResponse401 | createImageResponse403 | createImageResponse500;
-    
-export type createImageResponse = createImageResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pkAuthLoginFinishBody),
+  })
 }
 
 export const getCreateImageUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/create/image`
 }
 
-export const createImage = async (createImageBody: CreateImageBody, options?: RequestInit): Promise<createImageResponse> => {
-  
-  const res = await fetch(getCreateImageUrl(),
-  {      
+export const createImage = async (createImageBody: CreateImageBody, options?: RequestInit): Promise<CreateImage200> => {
+  return fetcher<CreateImage200>(getCreateImageUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      createImageBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: createImageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as createImageResponse
-}
-
-
-
-export type createVideoResponse200 = {
-  data: CreateVideo200
-  status: 200
-}
-
-export type createVideoResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type createVideoResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type createVideoResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type createVideoResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type createVideoResponseComposite = createVideoResponse200 | createVideoResponse400 | createVideoResponse401 | createVideoResponse403 | createVideoResponse500;
-    
-export type createVideoResponse = createVideoResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createImageBody),
+  })
 }
 
 export const getCreateVideoUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/create/video`
 }
 
-export const createVideo = async (createVideoBody: CreateVideoBody, options?: RequestInit): Promise<createVideoResponse> => {
-  
-  const res = await fetch(getCreateVideoUrl(),
-  {      
+export const createVideo = async (createVideoBody: CreateVideoBody, options?: RequestInit): Promise<CreateVideo200> => {
+  return fetcher<CreateVideo200>(getCreateVideoUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      createVideoBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: createVideoResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as createVideoResponse
-}
-
-
-
-export type createRandomPromptResponse200 = {
-  data: string
-  status: 200
-}
-
-export type createRandomPromptResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type createRandomPromptResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type createRandomPromptResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type createRandomPromptResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type createRandomPromptResponseComposite = createRandomPromptResponse200 | createRandomPromptResponse400 | createRandomPromptResponse401 | createRandomPromptResponse403 | createRandomPromptResponse500;
-    
-export type createRandomPromptResponse = createRandomPromptResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createVideoBody),
+  })
 }
 
 export const getCreateRandomPromptUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/create/randomPrompt`
 }
 
-export const createRandomPrompt = async (createRandomPromptBody: CreateRandomPromptBody, options?: RequestInit): Promise<createRandomPromptResponse> => {
-  
-  const res = await fetch(getCreateRandomPromptUrl(),
-  {      
+export const createRandomPrompt = async (createRandomPromptBody: CreateRandomPromptBody, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreateRandomPromptUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      createRandomPromptBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: createRandomPromptResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as createRandomPromptResponse
-}
-
-
-
-export type createImprovePromptResponse200 = {
-  data: string
-  status: 200
-}
-
-export type createImprovePromptResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type createImprovePromptResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type createImprovePromptResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type createImprovePromptResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type createImprovePromptResponseComposite = createImprovePromptResponse200 | createImprovePromptResponse400 | createImprovePromptResponse401 | createImprovePromptResponse403 | createImprovePromptResponse500;
-    
-export type createImprovePromptResponse = createImprovePromptResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createRandomPromptBody),
+  })
 }
 
 export const getCreateImprovePromptUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/create/improvePrompt`
 }
 
-export const createImprovePrompt = async (createImprovePromptBody: CreateImprovePromptBody, options?: RequestInit): Promise<createImprovePromptResponse> => {
-  
-  const res = await fetch(getCreateImprovePromptUrl(),
-  {      
+export const createImprovePrompt = async (createImprovePromptBody: CreateImprovePromptBody, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreateImprovePromptUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      createImprovePromptBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: createImprovePromptResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as createImprovePromptResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createImprovePromptBody),
+  })
 }
 
-
-
-export type creationsGetCreationDataResponse200 = {
-  data: CreationsGetCreationData200
-  status: 200
-}
-
-export type creationsGetCreationDataResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsGetCreationDataResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsGetCreationDataResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsGetCreationDataResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsGetCreationDataResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsGetCreationDataResponseComposite = creationsGetCreationDataResponse200 | creationsGetCreationDataResponse400 | creationsGetCreationDataResponse401 | creationsGetCreationDataResponse403 | creationsGetCreationDataResponse404 | creationsGetCreationDataResponse500;
-    
-export type creationsGetCreationDataResponse = creationsGetCreationDataResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsGetCreationDataUrl = (params?: CreationsGetCreationDataParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsGetCreationDataUrl = (params?: CreationsGetCreationDataParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getCreationData?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getCreationData`
 }
 
-export const creationsGetCreationData = async (params?: CreationsGetCreationDataParams, options?: RequestInit): Promise<creationsGetCreationDataResponse> => {
-  
-  const res = await fetch(getCreationsGetCreationDataUrl(params),
-  {      
+export const creationsGetCreationData = async (params?: CreationsGetCreationDataParams, options?: RequestInit): Promise<CreationsGetCreationData200> => {
+  return fetcher<CreationsGetCreationData200>(getCreationsGetCreationDataUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsGetCreationDataResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsGetCreationDataResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsUserImagePurchasesResponse200 = {
-  data: CreationsUserImagePurchases200Item[]
-  status: 200
-}
-
-export type creationsUserImagePurchasesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsUserImagePurchasesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsUserImagePurchasesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsUserImagePurchasesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsUserImagePurchasesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsUserImagePurchasesResponseComposite = creationsUserImagePurchasesResponse200 | creationsUserImagePurchasesResponse400 | creationsUserImagePurchasesResponse401 | creationsUserImagePurchasesResponse403 | creationsUserImagePurchasesResponse404 | creationsUserImagePurchasesResponse500;
-    
-export type creationsUserImagePurchasesResponse = creationsUserImagePurchasesResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsUserImagePurchasesUrl = (params?: CreationsUserImagePurchasesParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsUserImagePurchasesUrl = (params?: CreationsUserImagePurchasesParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/userImagePurchases?${stringifiedParams}` : `https://api.fiddl.art/api/creations/userImagePurchases`
 }
 
-export const creationsUserImagePurchases = async (params?: CreationsUserImagePurchasesParams, options?: RequestInit): Promise<creationsUserImagePurchasesResponse> => {
-  
-  const res = await fetch(getCreationsUserImagePurchasesUrl(params),
-  {      
+export const creationsUserImagePurchases = async (params?: CreationsUserImagePurchasesParams, options?: RequestInit): Promise<CreationsUserImagePurchases200Item[]> => {
+  return fetcher<CreationsUserImagePurchases200Item[]>(getCreationsUserImagePurchasesUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsUserImagePurchasesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsUserImagePurchasesResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsUserVideoPurchasesResponse200 = {
-  data: CreationsUserVideoPurchases200Item[]
-  status: 200
-}
-
-export type creationsUserVideoPurchasesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsUserVideoPurchasesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsUserVideoPurchasesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsUserVideoPurchasesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsUserVideoPurchasesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsUserVideoPurchasesResponseComposite = creationsUserVideoPurchasesResponse200 | creationsUserVideoPurchasesResponse400 | creationsUserVideoPurchasesResponse401 | creationsUserVideoPurchasesResponse403 | creationsUserVideoPurchasesResponse404 | creationsUserVideoPurchasesResponse500;
-    
-export type creationsUserVideoPurchasesResponse = creationsUserVideoPurchasesResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsUserVideoPurchasesUrl = (params?: CreationsUserVideoPurchasesParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsUserVideoPurchasesUrl = (params?: CreationsUserVideoPurchasesParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/userVideoPurchases?${stringifiedParams}` : `https://api.fiddl.art/api/creations/userVideoPurchases`
 }
 
-export const creationsUserVideoPurchases = async (params?: CreationsUserVideoPurchasesParams, options?: RequestInit): Promise<creationsUserVideoPurchasesResponse> => {
-  
-  const res = await fetch(getCreationsUserVideoPurchasesUrl(params),
-  {      
+export const creationsUserVideoPurchases = async (params?: CreationsUserVideoPurchasesParams, options?: RequestInit): Promise<CreationsUserVideoPurchases200Item[]> => {
+  return fetcher<CreationsUserVideoPurchases200Item[]>(getCreationsUserVideoPurchasesUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsUserVideoPurchasesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsUserVideoPurchasesResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsCreateImageRequestsResponse200 = {
-  data: CreationsCreateImageRequests200Item[]
-  status: 200
-}
-
-export type creationsCreateImageRequestsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsCreateImageRequestsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsCreateImageRequestsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsCreateImageRequestsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsCreateImageRequestsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsCreateImageRequestsResponseComposite = creationsCreateImageRequestsResponse200 | creationsCreateImageRequestsResponse400 | creationsCreateImageRequestsResponse401 | creationsCreateImageRequestsResponse403 | creationsCreateImageRequestsResponse404 | creationsCreateImageRequestsResponse500;
-    
-export type creationsCreateImageRequestsResponse = creationsCreateImageRequestsResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsCreateImageRequestsUrl = (params?: CreationsCreateImageRequestsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsCreateImageRequestsUrl = (params?: CreationsCreateImageRequestsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createImageRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createImageRequests`
 }
 
-export const creationsCreateImageRequests = async (params?: CreationsCreateImageRequestsParams, options?: RequestInit): Promise<creationsCreateImageRequestsResponse> => {
-  
-  const res = await fetch(getCreationsCreateImageRequestsUrl(params),
-  {      
+export const creationsCreateImageRequests = async (params?: CreationsCreateImageRequestsParams, options?: RequestInit): Promise<CreationsCreateImageRequests200Item[]> => {
+  return fetcher<CreationsCreateImageRequests200Item[]>(getCreationsCreateImageRequestsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsCreateImageRequestsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsCreateImageRequestsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsCreateVideoRequestsResponse200 = {
-  data: CreationsCreateVideoRequests200Item[]
-  status: 200
-}
-
-export type creationsCreateVideoRequestsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsCreateVideoRequestsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsCreateVideoRequestsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsCreateVideoRequestsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsCreateVideoRequestsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsCreateVideoRequestsResponseComposite = creationsCreateVideoRequestsResponse200 | creationsCreateVideoRequestsResponse400 | creationsCreateVideoRequestsResponse401 | creationsCreateVideoRequestsResponse403 | creationsCreateVideoRequestsResponse404 | creationsCreateVideoRequestsResponse500;
-    
-export type creationsCreateVideoRequestsResponse = creationsCreateVideoRequestsResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideoRequestsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideoRequestsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/createVideoRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/createVideoRequests`
 }
 
-export const creationsCreateVideoRequests = async (params?: CreationsCreateVideoRequestsParams, options?: RequestInit): Promise<creationsCreateVideoRequestsResponse> => {
-  
-  const res = await fetch(getCreationsCreateVideoRequestsUrl(params),
-  {      
+export const creationsCreateVideoRequests = async (params?: CreationsCreateVideoRequestsParams, options?: RequestInit): Promise<CreationsCreateVideoRequests200Item[]> => {
+  return fetcher<CreationsCreateVideoRequests200Item[]>(getCreationsCreateVideoRequestsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsCreateVideoRequestsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsCreateVideoRequestsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsGetImageRequestResponse200 = {
-  data: CreationsGetImageRequest200
-  status: 200
-}
-
-export type creationsGetImageRequestResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsGetImageRequestResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsGetImageRequestResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsGetImageRequestResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsGetImageRequestResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsGetImageRequestResponseComposite = creationsGetImageRequestResponse200 | creationsGetImageRequestResponse400 | creationsGetImageRequestResponse401 | creationsGetImageRequestResponse403 | creationsGetImageRequestResponse404 | creationsGetImageRequestResponse500;
-    
-export type creationsGetImageRequestResponse = creationsGetImageRequestResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsGetImageRequestUrl = (params: CreationsGetImageRequestParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsGetImageRequestUrl = (params: CreationsGetImageRequestParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getImageRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getImageRequest`
 }
 
-export const creationsGetImageRequest = async (params: CreationsGetImageRequestParams, options?: RequestInit): Promise<creationsGetImageRequestResponse> => {
-  
-  const res = await fetch(getCreationsGetImageRequestUrl(params),
-  {      
+export const creationsGetImageRequest = async (params: CreationsGetImageRequestParams, options?: RequestInit): Promise<CreationsGetImageRequest200> => {
+  return fetcher<CreationsGetImageRequest200>(getCreationsGetImageRequestUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsGetImageRequestResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsGetImageRequestResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsGetVideoRequestResponse200 = {
-  data: CreationsGetVideoRequest200
-  status: 200
-}
-
-export type creationsGetVideoRequestResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsGetVideoRequestResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsGetVideoRequestResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsGetVideoRequestResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsGetVideoRequestResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsGetVideoRequestResponseComposite = creationsGetVideoRequestResponse200 | creationsGetVideoRequestResponse400 | creationsGetVideoRequestResponse401 | creationsGetVideoRequestResponse403 | creationsGetVideoRequestResponse404 | creationsGetVideoRequestResponse500;
-    
-export type creationsGetVideoRequestResponse = creationsGetVideoRequestResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsGetVideoRequestUrl = (params: CreationsGetVideoRequestParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsGetVideoRequestUrl = (params: CreationsGetVideoRequestParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/getVideoRequest?${stringifiedParams}` : `https://api.fiddl.art/api/creations/getVideoRequest`
 }
 
-export const creationsGetVideoRequest = async (params: CreationsGetVideoRequestParams, options?: RequestInit): Promise<creationsGetVideoRequestResponse> => {
-  
-  const res = await fetch(getCreationsGetVideoRequestUrl(params),
-  {      
+export const creationsGetVideoRequest = async (params: CreationsGetVideoRequestParams, options?: RequestInit): Promise<CreationsGetVideoRequest200> => {
+  return fetcher<CreationsGetVideoRequest200>(getCreationsGetVideoRequestUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsGetVideoRequestResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsGetVideoRequestResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsBrowseCreateRequestsResponse200 = {
-  data: unknown[]
-  status: 200
-}
-
-export type creationsBrowseCreateRequestsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsBrowseCreateRequestsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsBrowseCreateRequestsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsBrowseCreateRequestsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsBrowseCreateRequestsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsBrowseCreateRequestsResponseComposite = creationsBrowseCreateRequestsResponse200 | creationsBrowseCreateRequestsResponse400 | creationsBrowseCreateRequestsResponse401 | creationsBrowseCreateRequestsResponse403 | creationsBrowseCreateRequestsResponse404 | creationsBrowseCreateRequestsResponse500;
-    
-export type creationsBrowseCreateRequestsResponse = creationsBrowseCreateRequestsResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreateRequestsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreateRequestsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/browseCreateRequests?${stringifiedParams}` : `https://api.fiddl.art/api/creations/browseCreateRequests`
 }
 
-export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<creationsBrowseCreateRequestsResponse> => {
-  
-  const res = await fetch(getCreationsBrowseCreateRequestsUrl(params),
-  {      
+export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<unknown[]> => {
+  return fetcher<unknown[]>(getCreationsBrowseCreateRequestsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsBrowseCreateRequestsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsBrowseCreateRequestsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsHdImageResponse200 = {
-  data: string
-  status: 200
-}
-
-export type creationsHdImageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsHdImageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsHdImageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsHdImageResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsHdImageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsHdImageResponseComposite = creationsHdImageResponse200 | creationsHdImageResponse400 | creationsHdImageResponse401 | creationsHdImageResponse403 | creationsHdImageResponse404 | creationsHdImageResponse500;
-    
-export type creationsHdImageResponse = creationsHdImageResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsHdImageUrl = (params: CreationsHdImageParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsHdImageUrl = (params: CreationsHdImageParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/hdImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/hdImage`
 }
 
-export const creationsHdImage = async (params: CreationsHdImageParams, options?: RequestInit): Promise<creationsHdImageResponse> => {
-  
-  const res = await fetch(getCreationsHdImageUrl(params),
-  {      
+export const creationsHdImage = async (params: CreationsHdImageParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreationsHdImageUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsHdImageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsHdImageResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsHdVideoResponse200 = {
-  data: string
-  status: 200
-}
-
-export type creationsHdVideoResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsHdVideoResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsHdVideoResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsHdVideoResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsHdVideoResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsHdVideoResponseComposite = creationsHdVideoResponse200 | creationsHdVideoResponse400 | creationsHdVideoResponse401 | creationsHdVideoResponse403 | creationsHdVideoResponse404 | creationsHdVideoResponse500;
-    
-export type creationsHdVideoResponse = creationsHdVideoResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsHdVideoUrl = (params: CreationsHdVideoParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsHdVideoUrl = (params: CreationsHdVideoParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/hdVideo?${stringifiedParams}` : `https://api.fiddl.art/api/creations/hdVideo`
 }
 
-export const creationsHdVideo = async (params: CreationsHdVideoParams, options?: RequestInit): Promise<creationsHdVideoResponse> => {
-  
-  const res = await fetch(getCreationsHdVideoUrl(params),
-  {      
+export const creationsHdVideo = async (params: CreationsHdVideoParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreationsHdVideoUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsHdVideoResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsHdVideoResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsOriginalImageResponse200 = {
-  data: string
-  status: 200
-}
-
-export type creationsOriginalImageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsOriginalImageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsOriginalImageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsOriginalImageResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsOriginalImageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsOriginalImageResponseComposite = creationsOriginalImageResponse200 | creationsOriginalImageResponse400 | creationsOriginalImageResponse401 | creationsOriginalImageResponse403 | creationsOriginalImageResponse404 | creationsOriginalImageResponse500;
-    
-export type creationsOriginalImageResponse = creationsOriginalImageResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/originalImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/originalImage`
 }
 
-export const creationsOriginalImage = async (params: CreationsOriginalImageParams, options?: RequestInit): Promise<creationsOriginalImageResponse> => {
-  
-  const res = await fetch(getCreationsOriginalImageUrl(params),
-  {      
+export const creationsOriginalImage = async (params: CreationsOriginalImageParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreationsOriginalImageUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsOriginalImageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsOriginalImageResponse
+    method: "GET",
+  })
 }
 
-
-
-export type creationsUpscaledImageResponse200 = {
-  data: string
-  status: 200
-}
-
-export type creationsUpscaledImageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsUpscaledImageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsUpscaledImageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsUpscaledImageResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type creationsUpscaledImageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsUpscaledImageResponseComposite = creationsUpscaledImageResponse200 | creationsUpscaledImageResponse400 | creationsUpscaledImageResponse401 | creationsUpscaledImageResponse403 | creationsUpscaledImageResponse404 | creationsUpscaledImageResponse500;
-    
-export type creationsUpscaledImageResponse = creationsUpscaledImageResponseComposite & {
-  headers: Headers;
-}
-
-export const getCreationsUpscaledImageUrl = (params: CreationsUpscaledImageParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCreationsUpscaledImageUrl = (params: CreationsUpscaledImageParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/creations/upscaledImage?${stringifiedParams}` : `https://api.fiddl.art/api/creations/upscaledImage`
 }
 
-export const creationsUpscaledImage = async (params: CreationsUpscaledImageParams, options?: RequestInit): Promise<creationsUpscaledImageResponse> => {
-  
-  const res = await fetch(getCreationsUpscaledImageUrl(params),
-  {      
+export const creationsUpscaledImage = async (params: CreationsUpscaledImageParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getCreationsUpscaledImageUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsUpscaledImageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsUpscaledImageResponse
-}
-
-
-
-export type creationsPurchaseMediaResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type creationsPurchaseMediaResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsPurchaseMediaResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsPurchaseMediaResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsPurchaseMediaResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsPurchaseMediaResponseComposite = creationsPurchaseMediaResponse200 | creationsPurchaseMediaResponse400 | creationsPurchaseMediaResponse401 | creationsPurchaseMediaResponse403 | creationsPurchaseMediaResponse500;
-    
-export type creationsPurchaseMediaResponse = creationsPurchaseMediaResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getCreationsPurchaseMediaUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/creations/purchaseMedia`
 }
 
-export const creationsPurchaseMedia = async (creationsPurchaseMediaBody: CreationsPurchaseMediaBody, options?: RequestInit): Promise<creationsPurchaseMediaResponse> => {
-  
-  const res = await fetch(getCreationsPurchaseMediaUrl(),
-  {      
+export const creationsPurchaseMedia = async (creationsPurchaseMediaBody: CreationsPurchaseMediaBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getCreationsPurchaseMediaUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      creationsPurchaseMediaBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsPurchaseMediaResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsPurchaseMediaResponse
-}
-
-
-
-export type creationsDeleteMediaResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type creationsDeleteMediaResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsDeleteMediaResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsDeleteMediaResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsDeleteMediaResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsDeleteMediaResponseComposite = creationsDeleteMediaResponse200 | creationsDeleteMediaResponse400 | creationsDeleteMediaResponse401 | creationsDeleteMediaResponse403 | creationsDeleteMediaResponse500;
-    
-export type creationsDeleteMediaResponse = creationsDeleteMediaResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(creationsPurchaseMediaBody),
+  })
 }
 
 export const getCreationsDeleteMediaUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/creations/deleteMedia`
 }
 
-export const creationsDeleteMedia = async (creationsDeleteMediaBody: CreationsDeleteMediaBody, options?: RequestInit): Promise<creationsDeleteMediaResponse> => {
-  
-  const res = await fetch(getCreationsDeleteMediaUrl(),
-  {      
+export const creationsDeleteMedia = async (creationsDeleteMediaBody: CreationsDeleteMediaBody, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getCreationsDeleteMediaUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      creationsDeleteMediaBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsDeleteMediaResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsDeleteMediaResponse
-}
-
-
-
-export type creationsDeleteRequestResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type creationsDeleteRequestResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsDeleteRequestResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsDeleteRequestResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsDeleteRequestResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsDeleteRequestResponseComposite = creationsDeleteRequestResponse200 | creationsDeleteRequestResponse400 | creationsDeleteRequestResponse401 | creationsDeleteRequestResponse403 | creationsDeleteRequestResponse500;
-    
-export type creationsDeleteRequestResponse = creationsDeleteRequestResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(creationsDeleteMediaBody),
+  })
 }
 
 export const getCreationsDeleteRequestUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/creations/deleteRequest`
 }
 
-export const creationsDeleteRequest = async (creationsDeleteRequestBody: CreationsDeleteRequestBody, options?: RequestInit): Promise<creationsDeleteRequestResponse> => {
-  
-  const res = await fetch(getCreationsDeleteRequestUrl(),
-  {      
+export const creationsDeleteRequest = async (creationsDeleteRequestBody: CreationsDeleteRequestBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getCreationsDeleteRequestUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      creationsDeleteRequestBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsDeleteRequestResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsDeleteRequestResponse
-}
-
-
-
-export type creationsSetRequestPrivacyResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type creationsSetRequestPrivacyResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type creationsSetRequestPrivacyResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type creationsSetRequestPrivacyResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type creationsSetRequestPrivacyResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type creationsSetRequestPrivacyResponseComposite = creationsSetRequestPrivacyResponse200 | creationsSetRequestPrivacyResponse400 | creationsSetRequestPrivacyResponse401 | creationsSetRequestPrivacyResponse403 | creationsSetRequestPrivacyResponse500;
-    
-export type creationsSetRequestPrivacyResponse = creationsSetRequestPrivacyResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(creationsDeleteRequestBody),
+  })
 }
 
 export const getCreationsSetRequestPrivacyUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/creations/setRequestPrivacy`
 }
 
-export const creationsSetRequestPrivacy = async (creationsSetRequestPrivacyBody: CreationsSetRequestPrivacyBody, options?: RequestInit): Promise<creationsSetRequestPrivacyResponse> => {
-  
-  const res = await fetch(getCreationsSetRequestPrivacyUrl(),
-  {      
+export const creationsSetRequestPrivacy = async (creationsSetRequestPrivacyBody: CreationsSetRequestPrivacyBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getCreationsSetRequestPrivacyUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      creationsSetRequestPrivacyBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: creationsSetRequestPrivacyResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as creationsSetRequestPrivacyResponse
-}
-
-
-
-export type pointsPackagesAvailableResponse200 = {
-  data: PointsPackagesAvailable200Item[]
-  status: 200
-}
-
-export type pointsPackagesAvailableResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsPackagesAvailableResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsPackagesAvailableResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsPackagesAvailableResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type pointsPackagesAvailableResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsPackagesAvailableResponseComposite = pointsPackagesAvailableResponse200 | pointsPackagesAvailableResponse400 | pointsPackagesAvailableResponse401 | pointsPackagesAvailableResponse403 | pointsPackagesAvailableResponse404 | pointsPackagesAvailableResponse500;
-    
-export type pointsPackagesAvailableResponse = pointsPackagesAvailableResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(creationsSetRequestPrivacyBody),
+  })
 }
 
 export const getPointsPackagesAvailableUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/points/packagesAvailable`
 }
 
-export const pointsPackagesAvailable = async ( options?: RequestInit): Promise<pointsPackagesAvailableResponse> => {
-  
-  const res = await fetch(getPointsPackagesAvailableUrl(),
-  {      
+export const pointsPackagesAvailable = async (options?: RequestInit): Promise<PointsPackagesAvailable200Item[]> => {
+  return fetcher<PointsPackagesAvailable200Item[]>(getPointsPackagesAvailableUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsPackagesAvailableResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsPackagesAvailableResponse
-}
-
-
-
-export type pointsPricesResponse200 = {
-  data: PointsPrices200
-  status: 200
-}
-
-export type pointsPricesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsPricesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsPricesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsPricesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type pointsPricesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsPricesResponseComposite = pointsPricesResponse200 | pointsPricesResponse400 | pointsPricesResponse401 | pointsPricesResponse403 | pointsPricesResponse404 | pointsPricesResponse500;
-    
-export type pointsPricesResponse = pointsPricesResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getPointsPricesUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/points/prices`
 }
 
-export const pointsPrices = async ( options?: RequestInit): Promise<pointsPricesResponse> => {
-  
-  const res = await fetch(getPointsPricesUrl(),
-  {      
+export const pointsPrices = async (options?: RequestInit): Promise<PointsPrices200> => {
+  return fetcher<PointsPrices200>(getPointsPricesUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsPricesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsPricesResponse
-}
-
-
-
-export type pointsInitBuyPackageResponse200 = {
-  data: PointsInitBuyPackage200
-  status: 200
-}
-
-export type pointsInitBuyPackageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsInitBuyPackageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsInitBuyPackageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsInitBuyPackageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsInitBuyPackageResponseComposite = pointsInitBuyPackageResponse200 | pointsInitBuyPackageResponse400 | pointsInitBuyPackageResponse401 | pointsInitBuyPackageResponse403 | pointsInitBuyPackageResponse500;
-    
-export type pointsInitBuyPackageResponse = pointsInitBuyPackageResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getPointsInitBuyPackageUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/points/initBuyPackage`
 }
 
-export const pointsInitBuyPackage = async (pointsInitBuyPackageBody: PointsInitBuyPackageBody, options?: RequestInit): Promise<pointsInitBuyPackageResponse> => {
-  
-  const res = await fetch(getPointsInitBuyPackageUrl(),
-  {      
+export const pointsInitBuyPackage = async (pointsInitBuyPackageBody: PointsInitBuyPackageBody, options?: RequestInit): Promise<PointsInitBuyPackage200> => {
+  return fetcher<PointsInitBuyPackage200>(getPointsInitBuyPackageUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pointsInitBuyPackageBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsInitBuyPackageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsInitBuyPackageResponse
-}
-
-
-
-export type pointsFinishBuyPackageResponse200 = {
-  data: PointsFinishBuyPackage200
-  status: 200
-}
-
-export type pointsFinishBuyPackageResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsFinishBuyPackageResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsFinishBuyPackageResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsFinishBuyPackageResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsFinishBuyPackageResponseComposite = pointsFinishBuyPackageResponse200 | pointsFinishBuyPackageResponse400 | pointsFinishBuyPackageResponse401 | pointsFinishBuyPackageResponse403 | pointsFinishBuyPackageResponse500;
-    
-export type pointsFinishBuyPackageResponse = pointsFinishBuyPackageResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pointsInitBuyPackageBody),
+  })
 }
 
 export const getPointsFinishBuyPackageUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/points/finishBuyPackage`
 }
 
-export const pointsFinishBuyPackage = async (pointsFinishBuyPackageBody: PointsFinishBuyPackageBody, options?: RequestInit): Promise<pointsFinishBuyPackageResponse> => {
-  
-  const res = await fetch(getPointsFinishBuyPackageUrl(),
-  {      
+export const pointsFinishBuyPackage = async (pointsFinishBuyPackageBody: PointsFinishBuyPackageBody, options?: RequestInit): Promise<PointsFinishBuyPackage200> => {
+  return fetcher<PointsFinishBuyPackage200>(getPointsFinishBuyPackageUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      pointsFinishBuyPackageBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsFinishBuyPackageResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsFinishBuyPackageResponse
-}
-
-
-
-export type pointsGetOrdersResponse200 = {
-  data: PointsGetOrders200
-  status: 200
-}
-
-export type pointsGetOrdersResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsGetOrdersResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsGetOrdersResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsGetOrdersResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type pointsGetOrdersResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsGetOrdersResponseComposite = pointsGetOrdersResponse200 | pointsGetOrdersResponse400 | pointsGetOrdersResponse401 | pointsGetOrdersResponse403 | pointsGetOrdersResponse404 | pointsGetOrdersResponse500;
-    
-export type pointsGetOrdersResponse = pointsGetOrdersResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pointsFinishBuyPackageBody),
+  })
 }
 
 export const getPointsGetOrdersUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/points/getOrders`
 }
 
-export const pointsGetOrders = async ( options?: RequestInit): Promise<pointsGetOrdersResponse> => {
-  
-  const res = await fetch(getPointsGetOrdersUrl(),
-  {      
+export const pointsGetOrders = async (options?: RequestInit): Promise<PointsGetOrders200> => {
+  return fetcher<PointsGetOrders200>(getPointsGetOrdersUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsGetOrdersResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsGetOrdersResponse
+    method: "GET",
+  })
 }
 
-
-
-export type pointsGetOrderResponse200 = {
-  data: PointsGetOrder200
-  status: 200
-}
-
-export type pointsGetOrderResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type pointsGetOrderResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type pointsGetOrderResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type pointsGetOrderResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type pointsGetOrderResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type pointsGetOrderResponseComposite = pointsGetOrderResponse200 | pointsGetOrderResponse400 | pointsGetOrderResponse401 | pointsGetOrderResponse403 | pointsGetOrderResponse404 | pointsGetOrderResponse500;
-    
-export type pointsGetOrderResponse = pointsGetOrderResponseComposite & {
-  headers: Headers;
-}
-
-export const getPointsGetOrderUrl = (params: PointsGetOrderParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getPointsGetOrderUrl = (params: PointsGetOrderParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/points/getOrder?${stringifiedParams}` : `https://api.fiddl.art/api/points/getOrder`
 }
 
-export const pointsGetOrder = async (params: PointsGetOrderParams, options?: RequestInit): Promise<pointsGetOrderResponse> => {
-  
-  const res = await fetch(getPointsGetOrderUrl(params),
-  {      
+export const pointsGetOrder = async (params: PointsGetOrderParams, options?: RequestInit): Promise<PointsGetOrder200> => {
+  return fetcher<PointsGetOrder200>(getPointsGetOrderUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: pointsGetOrderResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as pointsGetOrderResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userGetResponse200 = {
-  data: UserGet200
-  status: 200
-}
-
-export type userGetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userGetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userGetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userGetResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userGetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userGetResponseComposite = userGetResponse200 | userGetResponse400 | userGetResponse401 | userGetResponse403 | userGetResponse404 | userGetResponse500;
-    
-export type userGetResponse = userGetResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserGetUrl = (params: UserGetParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserGetUrl = (params: UserGetParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/get?${stringifiedParams}` : `https://api.fiddl.art/api/user/get`
 }
 
-export const userGet = async (params: UserGetParams, options?: RequestInit): Promise<userGetResponse> => {
-  
-  const res = await fetch(getUserGetUrl(params),
-  {      
+export const userGet = async (params: UserGetParams, options?: RequestInit): Promise<UserGet200> => {
+  return fetcher<UserGet200>(getUserGetUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userGetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userGetResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userProfileResponse200 = {
-  data: UserProfile200
-  status: 200
-}
-
-export type userProfileResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userProfileResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userProfileResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userProfileResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userProfileResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userProfileResponseComposite = userProfileResponse200 | userProfileResponse400 | userProfileResponse401 | userProfileResponse403 | userProfileResponse404 | userProfileResponse500;
-    
-export type userProfileResponse = userProfileResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserProfileUrl = (params: UserProfileParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserProfileUrl = (params: UserProfileParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/profile?${stringifiedParams}` : `https://api.fiddl.art/api/user/profile`
 }
 
-export const userProfile = async (params: UserProfileParams, options?: RequestInit): Promise<userProfileResponse> => {
-  
-  const res = await fetch(getUserProfileUrl(params),
-  {      
+export const userProfile = async (params: UserProfileParams, options?: RequestInit): Promise<UserProfile200> => {
+  return fetcher<UserProfile200>(getUserProfileUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userProfileResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userProfileResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userPublicProfileResponse200 = {
-  data: UserPublicProfile200
-  status: 200
-}
-
-export type userPublicProfileResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userPublicProfileResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userPublicProfileResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userPublicProfileResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userPublicProfileResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userPublicProfileResponseComposite = userPublicProfileResponse200 | userPublicProfileResponse400 | userPublicProfileResponse401 | userPublicProfileResponse403 | userPublicProfileResponse404 | userPublicProfileResponse500;
-    
-export type userPublicProfileResponse = userPublicProfileResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserPublicProfileUrl = (params: UserPublicProfileParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserPublicProfileUrl = (params: UserPublicProfileParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/publicProfile?${stringifiedParams}` : `https://api.fiddl.art/api/user/publicProfile`
 }
 
-export const userPublicProfile = async (params: UserPublicProfileParams, options?: RequestInit): Promise<userPublicProfileResponse> => {
-  
-  const res = await fetch(getUserPublicProfileUrl(params),
-  {      
+export const userPublicProfile = async (params: UserPublicProfileParams, options?: RequestInit): Promise<UserPublicProfile200> => {
+  return fetcher<UserPublicProfile200>(getUserPublicProfileUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userPublicProfileResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userPublicProfileResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userGetUsernameResponse200 = {
-  data: string
-  status: 200
-}
-
-export type userGetUsernameResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userGetUsernameResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userGetUsernameResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userGetUsernameResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userGetUsernameResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userGetUsernameResponseComposite = userGetUsernameResponse200 | userGetUsernameResponse400 | userGetUsernameResponse401 | userGetUsernameResponse403 | userGetUsernameResponse404 | userGetUsernameResponse500;
-    
-export type userGetUsernameResponse = userGetUsernameResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserGetUsernameUrl = (params: UserGetUsernameParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserGetUsernameUrl = (params: UserGetUsernameParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/getUsername?${stringifiedParams}` : `https://api.fiddl.art/api/user/getUsername`
 }
 
-export const userGetUsername = async (params: UserGetUsernameParams, options?: RequestInit): Promise<userGetUsernameResponse> => {
-  
-  const res = await fetch(getUserGetUsernameUrl(params),
-  {      
+export const userGetUsername = async (params: UserGetUsernameParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getUserGetUsernameUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userGetUsernameResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userGetUsernameResponse
-}
-
-
-
-export type userSetUsernameResponse200 = {
-  data: UserSetUsername200
-  status: 200
-}
-
-export type userSetUsernameResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userSetUsernameResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userSetUsernameResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userSetUsernameResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userSetUsernameResponseComposite = userSetUsernameResponse200 | userSetUsernameResponse400 | userSetUsernameResponse401 | userSetUsernameResponse403 | userSetUsernameResponse500;
-    
-export type userSetUsernameResponse = userSetUsernameResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getUserSetUsernameUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/setUsername`
 }
 
-export const userSetUsername = async (userSetUsernameBody: UserSetUsernameBody, options?: RequestInit): Promise<userSetUsernameResponse> => {
-  
-  const res = await fetch(getUserSetUsernameUrl(),
-  {      
+export const userSetUsername = async (userSetUsernameBody: UserSetUsernameBody, options?: RequestInit): Promise<UserSetUsername200> => {
+  return fetcher<UserSetUsername200>(getUserSetUsernameUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userSetUsernameBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userSetUsernameResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userSetUsernameResponse
-}
-
-
-
-export type userSetBioResponse200 = {
-  data: UserSetBio200
-  status: 200
-}
-
-export type userSetBioResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userSetBioResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userSetBioResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userSetBioResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userSetBioResponseComposite = userSetBioResponse200 | userSetBioResponse400 | userSetBioResponse401 | userSetBioResponse403 | userSetBioResponse500;
-    
-export type userSetBioResponse = userSetBioResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userSetUsernameBody),
+  })
 }
 
 export const getUserSetBioUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/setBio`
 }
 
-export const userSetBio = async (userSetBioBody: UserSetBioBody, options?: RequestInit): Promise<userSetBioResponse> => {
-  
-  const res = await fetch(getUserSetBioUrl(),
-  {      
+export const userSetBio = async (userSetBioBody: UserSetBioBody, options?: RequestInit): Promise<UserSetBio200> => {
+  return fetcher<UserSetBio200>(getUserSetBioUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userSetBioBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userSetBioResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userSetBioResponse
-}
-
-
-
-export type userSendVerificationEmailResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type userSendVerificationEmailResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userSendVerificationEmailResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userSendVerificationEmailResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userSendVerificationEmailResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userSendVerificationEmailResponseComposite = userSendVerificationEmailResponse200 | userSendVerificationEmailResponse400 | userSendVerificationEmailResponse401 | userSendVerificationEmailResponse403 | userSendVerificationEmailResponse500;
-    
-export type userSendVerificationEmailResponse = userSendVerificationEmailResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userSetBioBody),
+  })
 }
 
 export const getUserSendVerificationEmailUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/sendVerificationEmail`
 }
 
-export const userSendVerificationEmail = async (userSendVerificationEmailBody: UserSendVerificationEmailBody, options?: RequestInit): Promise<userSendVerificationEmailResponse> => {
-  
-  const res = await fetch(getUserSendVerificationEmailUrl(),
-  {      
+export const userSendVerificationEmail = async (userSendVerificationEmailBody: UserSendVerificationEmailBody, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getUserSendVerificationEmailUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userSendVerificationEmailBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userSendVerificationEmailResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userSendVerificationEmailResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userSendVerificationEmailBody),
+  })
 }
 
-
-
-export type userPointsHistoryResponse200 = {
-  data: UserPointsHistory200Item[]
-  status: 200
-}
-
-export type userPointsHistoryResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userPointsHistoryResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userPointsHistoryResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userPointsHistoryResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userPointsHistoryResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userPointsHistoryResponseComposite = userPointsHistoryResponse200 | userPointsHistoryResponse400 | userPointsHistoryResponse401 | userPointsHistoryResponse403 | userPointsHistoryResponse404 | userPointsHistoryResponse500;
-    
-export type userPointsHistoryResponse = userPointsHistoryResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/pointsHistory?${stringifiedParams}` : `https://api.fiddl.art/api/user/pointsHistory`
 }
 
-export const userPointsHistory = async (params?: UserPointsHistoryParams, options?: RequestInit): Promise<userPointsHistoryResponse> => {
-  
-  const res = await fetch(getUserPointsHistoryUrl(params),
-  {      
+export const userPointsHistory = async (params?: UserPointsHistoryParams, options?: RequestInit): Promise<UserPointsHistory200Item[]> => {
+  return fetcher<UserPointsHistory200Item[]>(getUserPointsHistoryUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userPointsHistoryResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userPointsHistoryResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userFindByUsernameResponse200 = {
-  data: string
-  status: 200
-}
-
-export type userFindByUsernameResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userFindByUsernameResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userFindByUsernameResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userFindByUsernameResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userFindByUsernameResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userFindByUsernameResponseComposite = userFindByUsernameResponse200 | userFindByUsernameResponse400 | userFindByUsernameResponse401 | userFindByUsernameResponse403 | userFindByUsernameResponse404 | userFindByUsernameResponse500;
-    
-export type userFindByUsernameResponse = userFindByUsernameResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserFindByUsernameUrl = (params: UserFindByUsernameParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserFindByUsernameUrl = (params: UserFindByUsernameParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByUsername?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByUsername`
 }
 
-export const userFindByUsername = async (params: UserFindByUsernameParams, options?: RequestInit): Promise<userFindByUsernameResponse> => {
-  
-  const res = await fetch(getUserFindByUsernameUrl(params),
-  {      
+export const userFindByUsername = async (params: UserFindByUsernameParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getUserFindByUsernameUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userFindByUsernameResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userFindByUsernameResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userFindByEmailResponse200 = {
-  data: string
-  status: 200
-}
-
-export type userFindByEmailResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userFindByEmailResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userFindByEmailResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userFindByEmailResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userFindByEmailResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userFindByEmailResponseComposite = userFindByEmailResponse200 | userFindByEmailResponse400 | userFindByEmailResponse401 | userFindByEmailResponse403 | userFindByEmailResponse404 | userFindByEmailResponse500;
-    
-export type userFindByEmailResponse = userFindByEmailResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserFindByEmailUrl = (params: UserFindByEmailParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserFindByEmailUrl = (params: UserFindByEmailParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByEmail?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByEmail`
 }
 
-export const userFindByEmail = async (params: UserFindByEmailParams, options?: RequestInit): Promise<userFindByEmailResponse> => {
-  
-  const res = await fetch(getUserFindByEmailUrl(params),
-  {      
+export const userFindByEmail = async (params: UserFindByEmailParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getUserFindByEmailUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userFindByEmailResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userFindByEmailResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userFindByPhoneResponse200 = {
-  data: string
-  status: 200
-}
-
-export type userFindByPhoneResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userFindByPhoneResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userFindByPhoneResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userFindByPhoneResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userFindByPhoneResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userFindByPhoneResponseComposite = userFindByPhoneResponse200 | userFindByPhoneResponse400 | userFindByPhoneResponse401 | userFindByPhoneResponse403 | userFindByPhoneResponse404 | userFindByPhoneResponse500;
-    
-export type userFindByPhoneResponse = userFindByPhoneResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserFindByPhoneUrl = (params: UserFindByPhoneParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserFindByPhoneUrl = (params: UserFindByPhoneParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByPhone?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByPhone`
 }
 
-export const userFindByPhone = async (params: UserFindByPhoneParams, options?: RequestInit): Promise<userFindByPhoneResponse> => {
-  
-  const res = await fetch(getUserFindByPhoneUrl(params),
-  {      
+export const userFindByPhone = async (params: UserFindByPhoneParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getUserFindByPhoneUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userFindByPhoneResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userFindByPhoneResponse
+    method: "GET",
+  })
 }
 
-
-
-export type userFindByPrivyIdResponse200 = {
-  data: string
-  status: 200
-}
-
-export type userFindByPrivyIdResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userFindByPrivyIdResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userFindByPrivyIdResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userFindByPrivyIdResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userFindByPrivyIdResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userFindByPrivyIdResponseComposite = userFindByPrivyIdResponse200 | userFindByPrivyIdResponse400 | userFindByPrivyIdResponse401 | userFindByPrivyIdResponse403 | userFindByPrivyIdResponse404 | userFindByPrivyIdResponse500;
-    
-export type userFindByPrivyIdResponse = userFindByPrivyIdResponseComposite & {
-  headers: Headers;
-}
-
-export const getUserFindByPrivyIdUrl = (params: UserFindByPrivyIdParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getUserFindByPrivyIdUrl = (params: UserFindByPrivyIdParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/user/findByPrivyId?${stringifiedParams}` : `https://api.fiddl.art/api/user/findByPrivyId`
 }
 
-export const userFindByPrivyId = async (params: UserFindByPrivyIdParams, options?: RequestInit): Promise<userFindByPrivyIdResponse> => {
-  
-  const res = await fetch(getUserFindByPrivyIdUrl(params),
-  {      
+export const userFindByPrivyId = async (params: UserFindByPrivyIdParams, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getUserFindByPrivyIdUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userFindByPrivyIdResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userFindByPrivyIdResponse
-}
-
-
-
-export type userGetNotificationConfigResponse200 = {
-  data: UserGetNotificationConfig200
-  status: 200
-}
-
-export type userGetNotificationConfigResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userGetNotificationConfigResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userGetNotificationConfigResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userGetNotificationConfigResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userGetNotificationConfigResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userGetNotificationConfigResponseComposite = userGetNotificationConfigResponse200 | userGetNotificationConfigResponse400 | userGetNotificationConfigResponse401 | userGetNotificationConfigResponse403 | userGetNotificationConfigResponse404 | userGetNotificationConfigResponse500;
-    
-export type userGetNotificationConfigResponse = userGetNotificationConfigResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getUserGetNotificationConfigUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/getNotificationConfig`
 }
 
-export const userGetNotificationConfig = async ( options?: RequestInit): Promise<userGetNotificationConfigResponse> => {
-  
-  const res = await fetch(getUserGetNotificationConfigUrl(),
-  {      
+export const userGetNotificationConfig = async (options?: RequestInit): Promise<UserGetNotificationConfig200> => {
+  return fetcher<UserGetNotificationConfig200>(getUserGetNotificationConfigUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userGetNotificationConfigResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userGetNotificationConfigResponse
-}
-
-
-
-export type userSetNotificationConfigResponse200 = {
-  data: UserSetNotificationConfig200
-  status: 200
-}
-
-export type userSetNotificationConfigResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userSetNotificationConfigResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userSetNotificationConfigResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userSetNotificationConfigResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userSetNotificationConfigResponseComposite = userSetNotificationConfigResponse200 | userSetNotificationConfigResponse400 | userSetNotificationConfigResponse401 | userSetNotificationConfigResponse403 | userSetNotificationConfigResponse500;
-    
-export type userSetNotificationConfigResponse = userSetNotificationConfigResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getUserSetNotificationConfigUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/setNotificationConfig`
 }
 
-export const userSetNotificationConfig = async (userSetNotificationConfigBody: UserSetNotificationConfigBody, options?: RequestInit): Promise<userSetNotificationConfigResponse> => {
-  
-  const res = await fetch(getUserSetNotificationConfigUrl(),
-  {      
+export const userSetNotificationConfig = async (userSetNotificationConfigBody: UserSetNotificationConfigBody, options?: RequestInit): Promise<UserSetNotificationConfig200> => {
+  return fetcher<UserSetNotificationConfig200>(getUserSetNotificationConfigUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userSetNotificationConfigBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userSetNotificationConfigResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userSetNotificationConfigResponse
-}
-
-
-
-export type userUnsubscribeEmailNotificationsResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type userUnsubscribeEmailNotificationsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userUnsubscribeEmailNotificationsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userUnsubscribeEmailNotificationsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userUnsubscribeEmailNotificationsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userUnsubscribeEmailNotificationsResponseComposite = userUnsubscribeEmailNotificationsResponse200 | userUnsubscribeEmailNotificationsResponse400 | userUnsubscribeEmailNotificationsResponse401 | userUnsubscribeEmailNotificationsResponse403 | userUnsubscribeEmailNotificationsResponse500;
-    
-export type userUnsubscribeEmailNotificationsResponse = userUnsubscribeEmailNotificationsResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userSetNotificationConfigBody),
+  })
 }
 
 export const getUserUnsubscribeEmailNotificationsUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/unsubscribeEmailNotifications`
 }
 
-export const userUnsubscribeEmailNotifications = async (userUnsubscribeEmailNotificationsBody: UserUnsubscribeEmailNotificationsBody, options?: RequestInit): Promise<userUnsubscribeEmailNotificationsResponse> => {
-  
-  const res = await fetch(getUserUnsubscribeEmailNotificationsUrl(),
-  {      
+export const userUnsubscribeEmailNotifications = async (userUnsubscribeEmailNotificationsBody: UserUnsubscribeEmailNotificationsBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getUserUnsubscribeEmailNotificationsUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userUnsubscribeEmailNotificationsBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userUnsubscribeEmailNotificationsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userUnsubscribeEmailNotificationsResponse
-}
-
-
-
-export type userSetAvatarResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type userSetAvatarResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userSetAvatarResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userSetAvatarResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userSetAvatarResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userSetAvatarResponseComposite = userSetAvatarResponse200 | userSetAvatarResponse400 | userSetAvatarResponse401 | userSetAvatarResponse403 | userSetAvatarResponse500;
-    
-export type userSetAvatarResponse = userSetAvatarResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userUnsubscribeEmailNotificationsBody),
+  })
 }
 
 export const getUserSetAvatarUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/setAvatar`
 }
 
-export const userSetAvatar = async (userSetAvatarBody: UserSetAvatarBody, options?: RequestInit): Promise<userSetAvatarResponse> => {
-  
-  const res = await fetch(getUserSetAvatarUrl(),
-  {      
+export const userSetAvatar = async (userSetAvatarBody: UserSetAvatarBody, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getUserSetAvatarUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userSetAvatarBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userSetAvatarResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userSetAvatarResponse
-}
-
-
-
-export type userAllUsersResponse200 = {
-  data: UserAllUsers200Item[]
-  status: 200
-}
-
-export type userAllUsersResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type userAllUsersResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type userAllUsersResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type userAllUsersResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type userAllUsersResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type userAllUsersResponseComposite = userAllUsersResponse200 | userAllUsersResponse400 | userAllUsersResponse401 | userAllUsersResponse403 | userAllUsersResponse404 | userAllUsersResponse500;
-    
-export type userAllUsersResponse = userAllUsersResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userSetAvatarBody),
+  })
 }
 
 export const getUserAllUsersUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/user/allUsers`
 }
 
-export const userAllUsers = async ( options?: RequestInit): Promise<userAllUsersResponse> => {
-  
-  const res = await fetch(getUserAllUsersUrl(),
-  {      
+export const userAllUsers = async (options?: RequestInit): Promise<UserAllUsers200Item[]> => {
+  return fetcher<UserAllUsers200Item[]>(getUserAllUsersUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: userAllUsersResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as userAllUsersResponse
-}
-
-
-
-export type loginLinkInitLoginLinkResponse200 = {
-  data: string
-  status: 200
-}
-
-export type loginLinkInitLoginLinkResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type loginLinkInitLoginLinkResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type loginLinkInitLoginLinkResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type loginLinkInitLoginLinkResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type loginLinkInitLoginLinkResponseComposite = loginLinkInitLoginLinkResponse200 | loginLinkInitLoginLinkResponse400 | loginLinkInitLoginLinkResponse401 | loginLinkInitLoginLinkResponse403 | loginLinkInitLoginLinkResponse500;
-    
-export type loginLinkInitLoginLinkResponse = loginLinkInitLoginLinkResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getLoginLinkInitLoginLinkUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/loginLink/initLoginLink`
 }
 
-export const loginLinkInitLoginLink = async (loginLinkInitLoginLinkBody: LoginLinkInitLoginLinkBody, options?: RequestInit): Promise<loginLinkInitLoginLinkResponse> => {
-  
-  const res = await fetch(getLoginLinkInitLoginLinkUrl(),
-  {      
+export const loginLinkInitLoginLink = async (loginLinkInitLoginLinkBody: LoginLinkInitLoginLinkBody, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getLoginLinkInitLoginLinkUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginLinkInitLoginLinkBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: loginLinkInitLoginLinkResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as loginLinkInitLoginLinkResponse
-}
-
-
-
-export type loginLinkLoginWithLinkResponse200 = {
-  data: LoginLinkLoginWithLink200
-  status: 200
-}
-
-export type loginLinkLoginWithLinkResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type loginLinkLoginWithLinkResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type loginLinkLoginWithLinkResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type loginLinkLoginWithLinkResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type loginLinkLoginWithLinkResponseComposite = loginLinkLoginWithLinkResponse200 | loginLinkLoginWithLinkResponse400 | loginLinkLoginWithLinkResponse401 | loginLinkLoginWithLinkResponse403 | loginLinkLoginWithLinkResponse500;
-    
-export type loginLinkLoginWithLinkResponse = loginLinkLoginWithLinkResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(loginLinkInitLoginLinkBody),
+  })
 }
 
 export const getLoginLinkLoginWithLinkUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/loginLink/loginWithLink`
 }
 
-export const loginLinkLoginWithLink = async (loginLinkLoginWithLinkBody: LoginLinkLoginWithLinkBody, options?: RequestInit): Promise<loginLinkLoginWithLinkResponse> => {
-  
-  const res = await fetch(getLoginLinkLoginWithLinkUrl(),
-  {      
+export const loginLinkLoginWithLink = async (loginLinkLoginWithLinkBody: LoginLinkLoginWithLinkBody, options?: RequestInit): Promise<LoginLinkLoginWithLink200> => {
+  return fetcher<LoginLinkLoginWithLink200>(getLoginLinkLoginWithLinkUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginLinkLoginWithLinkBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: loginLinkLoginWithLinkResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as loginLinkLoginWithLinkResponse
-}
-
-
-
-export type statsUsersResponse200 = {
-  data: StatsUsers200
-  status: 200
-}
-
-export type statsUsersResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type statsUsersResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type statsUsersResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type statsUsersResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type statsUsersResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type statsUsersResponseComposite = statsUsersResponse200 | statsUsersResponse400 | statsUsersResponse401 | statsUsersResponse403 | statsUsersResponse404 | statsUsersResponse500;
-    
-export type statsUsersResponse = statsUsersResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(loginLinkLoginWithLinkBody),
+  })
 }
 
 export const getStatsUsersUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/stats/users`
 }
 
-export const statsUsers = async ( options?: RequestInit): Promise<statsUsersResponse> => {
-  
-  const res = await fetch(getStatsUsersUrl(),
-  {      
+export const statsUsers = async (options?: RequestInit): Promise<StatsUsers200> => {
+  return fetcher<StatsUsers200>(getStatsUsersUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: statsUsersResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as statsUsersResponse
-}
-
-
-
-export type statsImagesResponse200 = {
-  data: StatsImages200
-  status: 200
-}
-
-export type statsImagesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type statsImagesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type statsImagesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type statsImagesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type statsImagesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type statsImagesResponseComposite = statsImagesResponse200 | statsImagesResponse400 | statsImagesResponse401 | statsImagesResponse403 | statsImagesResponse404 | statsImagesResponse500;
-    
-export type statsImagesResponse = statsImagesResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getStatsImagesUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/stats/images`
 }
 
-export const statsImages = async ( options?: RequestInit): Promise<statsImagesResponse> => {
-  
-  const res = await fetch(getStatsImagesUrl(),
-  {      
+export const statsImages = async (options?: RequestInit): Promise<StatsImages200> => {
+  return fetcher<StatsImages200>(getStatsImagesUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: statsImagesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as statsImagesResponse
-}
-
-
-
-export type statsCollectionsResponse200 = {
-  data: StatsCollections200
-  status: 200
-}
-
-export type statsCollectionsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type statsCollectionsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type statsCollectionsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type statsCollectionsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type statsCollectionsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type statsCollectionsResponseComposite = statsCollectionsResponse200 | statsCollectionsResponse400 | statsCollectionsResponse401 | statsCollectionsResponse403 | statsCollectionsResponse404 | statsCollectionsResponse500;
-    
-export type statsCollectionsResponse = statsCollectionsResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getStatsCollectionsUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/stats/collections`
 }
 
-export const statsCollections = async ( options?: RequestInit): Promise<statsCollectionsResponse> => {
-  
-  const res = await fetch(getStatsCollectionsUrl(),
-  {      
+export const statsCollections = async (options?: RequestInit): Promise<StatsCollections200> => {
+  return fetcher<StatsCollections200>(getStatsCollectionsUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: statsCollectionsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as statsCollectionsResponse
-}
-
-
-
-export type statsPaymentsResponse200 = {
-  data: StatsPayments200
-  status: 200
-}
-
-export type statsPaymentsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type statsPaymentsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type statsPaymentsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type statsPaymentsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type statsPaymentsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type statsPaymentsResponseComposite = statsPaymentsResponse200 | statsPaymentsResponse400 | statsPaymentsResponse401 | statsPaymentsResponse403 | statsPaymentsResponse404 | statsPaymentsResponse500;
-    
-export type statsPaymentsResponse = statsPaymentsResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getStatsPaymentsUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/stats/payments`
 }
 
-export const statsPayments = async ( options?: RequestInit): Promise<statsPaymentsResponse> => {
-  
-  const res = await fetch(getStatsPaymentsUrl(),
-  {      
+export const statsPayments = async (options?: RequestInit): Promise<StatsPayments200> => {
+  return fetcher<StatsPayments200>(getStatsPaymentsUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: statsPaymentsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as statsPaymentsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type collectionsMediaInUsersCollectionResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type collectionsMediaInUsersCollectionResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsMediaInUsersCollectionResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsMediaInUsersCollectionResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsMediaInUsersCollectionResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type collectionsMediaInUsersCollectionResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsMediaInUsersCollectionResponseComposite = collectionsMediaInUsersCollectionResponse200 | collectionsMediaInUsersCollectionResponse400 | collectionsMediaInUsersCollectionResponse401 | collectionsMediaInUsersCollectionResponse403 | collectionsMediaInUsersCollectionResponse404 | collectionsMediaInUsersCollectionResponse500;
-    
-export type collectionsMediaInUsersCollectionResponse = collectionsMediaInUsersCollectionResponseComposite & {
-  headers: Headers;
-}
-
-export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/mediaInUsersCollection?${stringifiedParams}` : `https://api.fiddl.art/api/collections/mediaInUsersCollection`
 }
 
-export const collectionsMediaInUsersCollection = async (params: CollectionsMediaInUsersCollectionParams, options?: RequestInit): Promise<collectionsMediaInUsersCollectionResponse> => {
-  
-  const res = await fetch(getCollectionsMediaInUsersCollectionUrl(params),
-  {      
+export const collectionsMediaInUsersCollection = async (params: CollectionsMediaInUsersCollectionParams, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getCollectionsMediaInUsersCollectionUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsMediaInUsersCollectionResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsMediaInUsersCollectionResponse
-}
-
-
-
-export type collectionsLikeMediaResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type collectionsLikeMediaResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsLikeMediaResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsLikeMediaResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsLikeMediaResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsLikeMediaResponseComposite = collectionsLikeMediaResponse200 | collectionsLikeMediaResponse400 | collectionsLikeMediaResponse401 | collectionsLikeMediaResponse403 | collectionsLikeMediaResponse500;
-    
-export type collectionsLikeMediaResponse = collectionsLikeMediaResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getCollectionsLikeMediaUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/collections/likeMedia`
 }
 
-export const collectionsLikeMedia = async (collectionsLikeMediaBody: CollectionsLikeMediaBody, options?: RequestInit): Promise<collectionsLikeMediaResponse> => {
-  
-  const res = await fetch(getCollectionsLikeMediaUrl(),
-  {      
+export const collectionsLikeMedia = async (collectionsLikeMediaBody: CollectionsLikeMediaBody, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getCollectionsLikeMediaUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      collectionsLikeMediaBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsLikeMediaResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsLikeMediaResponse
-}
-
-
-
-export type collectionsUnlikeMediaResponse200 = {
-  data: boolean
-  status: 200
-}
-
-export type collectionsUnlikeMediaResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsUnlikeMediaResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsUnlikeMediaResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsUnlikeMediaResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsUnlikeMediaResponseComposite = collectionsUnlikeMediaResponse200 | collectionsUnlikeMediaResponse400 | collectionsUnlikeMediaResponse401 | collectionsUnlikeMediaResponse403 | collectionsUnlikeMediaResponse500;
-    
-export type collectionsUnlikeMediaResponse = collectionsUnlikeMediaResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(collectionsLikeMediaBody),
+  })
 }
 
 export const getCollectionsUnlikeMediaUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/collections/unlikeMedia`
 }
 
-export const collectionsUnlikeMedia = async (collectionsUnlikeMediaBody: CollectionsUnlikeMediaBody, options?: RequestInit): Promise<collectionsUnlikeMediaResponse> => {
-  
-  const res = await fetch(getCollectionsUnlikeMediaUrl(),
-  {      
+export const collectionsUnlikeMedia = async (collectionsUnlikeMediaBody: CollectionsUnlikeMediaBody, options?: RequestInit): Promise<boolean> => {
+  return fetcher<boolean>(getCollectionsUnlikeMediaUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      collectionsUnlikeMediaBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsUnlikeMediaResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsUnlikeMediaResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(collectionsUnlikeMediaBody),
+  })
 }
 
-
-
-export type collectionsGetCollectionMetaResponse200 = {
-  data: CollectionsGetCollectionMeta200
-  status: 200
-}
-
-export type collectionsGetCollectionMetaResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsGetCollectionMetaResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsGetCollectionMetaResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsGetCollectionMetaResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type collectionsGetCollectionMetaResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsGetCollectionMetaResponseComposite = collectionsGetCollectionMetaResponse200 | collectionsGetCollectionMetaResponse400 | collectionsGetCollectionMetaResponse401 | collectionsGetCollectionMetaResponse403 | collectionsGetCollectionMetaResponse404 | collectionsGetCollectionMetaResponse500;
-    
-export type collectionsGetCollectionMetaResponse = collectionsGetCollectionMetaResponseComposite & {
-  headers: Headers;
-}
-
-export const getCollectionsGetCollectionMetaUrl = (params: CollectionsGetCollectionMetaParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCollectionsGetCollectionMetaUrl = (params: CollectionsGetCollectionMetaParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionMeta?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionMeta`
 }
 
-export const collectionsGetCollectionMeta = async (params: CollectionsGetCollectionMetaParams, options?: RequestInit): Promise<collectionsGetCollectionMetaResponse> => {
-  
-  const res = await fetch(getCollectionsGetCollectionMetaUrl(params),
-  {      
+export const collectionsGetCollectionMeta = async (params: CollectionsGetCollectionMetaParams, options?: RequestInit): Promise<CollectionsGetCollectionMeta200> => {
+  return fetcher<CollectionsGetCollectionMeta200>(getCollectionsGetCollectionMetaUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsGetCollectionMetaResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsGetCollectionMetaResponse
+    method: "GET",
+  })
 }
 
-
-
-export type collectionsFindCollectionByNameResponse200 = {
-  data: CollectionsFindCollectionByName200
-  status: 200
-}
-
-export type collectionsFindCollectionByNameResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsFindCollectionByNameResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsFindCollectionByNameResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsFindCollectionByNameResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type collectionsFindCollectionByNameResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsFindCollectionByNameResponseComposite = collectionsFindCollectionByNameResponse200 | collectionsFindCollectionByNameResponse400 | collectionsFindCollectionByNameResponse401 | collectionsFindCollectionByNameResponse403 | collectionsFindCollectionByNameResponse404 | collectionsFindCollectionByNameResponse500;
-    
-export type collectionsFindCollectionByNameResponse = collectionsFindCollectionByNameResponseComposite & {
-  headers: Headers;
-}
-
-export const getCollectionsFindCollectionByNameUrl = (params: CollectionsFindCollectionByNameParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCollectionsFindCollectionByNameUrl = (params: CollectionsFindCollectionByNameParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/findCollectionByName?${stringifiedParams}` : `https://api.fiddl.art/api/collections/findCollectionByName`
 }
 
-export const collectionsFindCollectionByName = async (params: CollectionsFindCollectionByNameParams, options?: RequestInit): Promise<collectionsFindCollectionByNameResponse> => {
-  
-  const res = await fetch(getCollectionsFindCollectionByNameUrl(params),
-  {      
+export const collectionsFindCollectionByName = async (params: CollectionsFindCollectionByNameParams, options?: RequestInit): Promise<CollectionsFindCollectionByName200> => {
+  return fetcher<CollectionsFindCollectionByName200>(getCollectionsFindCollectionByNameUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsFindCollectionByNameResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsFindCollectionByNameResponse
+    method: "GET",
+  })
 }
 
-
-
-export type collectionsGetCollectionImagesResponse200 = {
-  data: CollectionsGetCollectionImages200Item[]
-  status: 200
-}
-
-export type collectionsGetCollectionImagesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsGetCollectionImagesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsGetCollectionImagesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsGetCollectionImagesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type collectionsGetCollectionImagesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsGetCollectionImagesResponseComposite = collectionsGetCollectionImagesResponse200 | collectionsGetCollectionImagesResponse400 | collectionsGetCollectionImagesResponse401 | collectionsGetCollectionImagesResponse403 | collectionsGetCollectionImagesResponse404 | collectionsGetCollectionImagesResponse500;
-    
-export type collectionsGetCollectionImagesResponse = collectionsGetCollectionImagesResponseComposite & {
-  headers: Headers;
-}
-
-export const getCollectionsGetCollectionImagesUrl = (params: CollectionsGetCollectionImagesParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCollectionsGetCollectionImagesUrl = (params: CollectionsGetCollectionImagesParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionImages?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionImages`
 }
 
-export const collectionsGetCollectionImages = async (params: CollectionsGetCollectionImagesParams, options?: RequestInit): Promise<collectionsGetCollectionImagesResponse> => {
-  
-  const res = await fetch(getCollectionsGetCollectionImagesUrl(params),
-  {      
+export const collectionsGetCollectionImages = async (params: CollectionsGetCollectionImagesParams, options?: RequestInit): Promise<CollectionsGetCollectionImages200Item[]> => {
+  return fetcher<CollectionsGetCollectionImages200Item[]>(getCollectionsGetCollectionImagesUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsGetCollectionImagesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsGetCollectionImagesResponse
+    method: "GET",
+  })
 }
 
-
-
-export type collectionsGetCollectionVideosResponse200 = {
-  data: CollectionsGetCollectionVideos200Item[]
-  status: 200
-}
-
-export type collectionsGetCollectionVideosResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type collectionsGetCollectionVideosResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type collectionsGetCollectionVideosResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type collectionsGetCollectionVideosResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type collectionsGetCollectionVideosResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type collectionsGetCollectionVideosResponseComposite = collectionsGetCollectionVideosResponse200 | collectionsGetCollectionVideosResponse400 | collectionsGetCollectionVideosResponse401 | collectionsGetCollectionVideosResponse403 | collectionsGetCollectionVideosResponse404 | collectionsGetCollectionVideosResponse500;
-    
-export type collectionsGetCollectionVideosResponse = collectionsGetCollectionVideosResponseComposite & {
-  headers: Headers;
-}
-
-export const getCollectionsGetCollectionVideosUrl = (params: CollectionsGetCollectionVideosParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCollectionsGetCollectionVideosUrl = (params: CollectionsGetCollectionVideosParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/collections/getCollectionVideos?${stringifiedParams}` : `https://api.fiddl.art/api/collections/getCollectionVideos`
 }
 
-export const collectionsGetCollectionVideos = async (params: CollectionsGetCollectionVideosParams, options?: RequestInit): Promise<collectionsGetCollectionVideosResponse> => {
-  
-  const res = await fetch(getCollectionsGetCollectionVideosUrl(params),
-  {      
+export const collectionsGetCollectionVideos = async (params: CollectionsGetCollectionVideosParams, options?: RequestInit): Promise<CollectionsGetCollectionVideos200Item[]> => {
+  return fetcher<CollectionsGetCollectionVideos200Item[]>(getCollectionsGetCollectionVideosUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: collectionsGetCollectionVideosResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as collectionsGetCollectionVideosResponse
-}
-
-
-
-export type promoCreatePromoCodeResponse200 = {
-  data: PromoCreatePromoCode200
-  status: 200
-}
-
-export type promoCreatePromoCodeResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type promoCreatePromoCodeResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type promoCreatePromoCodeResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type promoCreatePromoCodeResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type promoCreatePromoCodeResponseComposite = promoCreatePromoCodeResponse200 | promoCreatePromoCodeResponse400 | promoCreatePromoCodeResponse401 | promoCreatePromoCodeResponse403 | promoCreatePromoCodeResponse500;
-    
-export type promoCreatePromoCodeResponse = promoCreatePromoCodeResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getPromoCreatePromoCodeUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/promo/createPromoCode`
 }
 
-export const promoCreatePromoCode = async (promoCreatePromoCodeBody: PromoCreatePromoCodeBody, options?: RequestInit): Promise<promoCreatePromoCodeResponse> => {
-  
-  const res = await fetch(getPromoCreatePromoCodeUrl(),
-  {      
+export const promoCreatePromoCode = async (promoCreatePromoCodeBody: PromoCreatePromoCodeBody, options?: RequestInit): Promise<PromoCreatePromoCode200> => {
+  return fetcher<PromoCreatePromoCode200>(getPromoCreatePromoCodeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      promoCreatePromoCodeBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: promoCreatePromoCodeResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as promoCreatePromoCodeResponse
-}
-
-
-
-export type promoDeletePromoCodeResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type promoDeletePromoCodeResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type promoDeletePromoCodeResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type promoDeletePromoCodeResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type promoDeletePromoCodeResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type promoDeletePromoCodeResponseComposite = promoDeletePromoCodeResponse200 | promoDeletePromoCodeResponse400 | promoDeletePromoCodeResponse401 | promoDeletePromoCodeResponse403 | promoDeletePromoCodeResponse500;
-    
-export type promoDeletePromoCodeResponse = promoDeletePromoCodeResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(promoCreatePromoCodeBody),
+  })
 }
 
 export const getPromoDeletePromoCodeUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/promo/deletePromoCode`
 }
 
-export const promoDeletePromoCode = async (promoDeletePromoCodeBody: PromoDeletePromoCodeBody, options?: RequestInit): Promise<promoDeletePromoCodeResponse> => {
-  
-  const res = await fetch(getPromoDeletePromoCodeUrl(),
-  {      
+export const promoDeletePromoCode = async (promoDeletePromoCodeBody: PromoDeletePromoCodeBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPromoDeletePromoCodeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      promoDeletePromoCodeBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: promoDeletePromoCodeResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as promoDeletePromoCodeResponse
-}
-
-
-
-export type promoGetPromoCodesResponse200 = {
-  data: PromoGetPromoCodes200Item[]
-  status: 200
-}
-
-export type promoGetPromoCodesResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type promoGetPromoCodesResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type promoGetPromoCodesResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type promoGetPromoCodesResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type promoGetPromoCodesResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type promoGetPromoCodesResponseComposite = promoGetPromoCodesResponse200 | promoGetPromoCodesResponse400 | promoGetPromoCodesResponse401 | promoGetPromoCodesResponse403 | promoGetPromoCodesResponse404 | promoGetPromoCodesResponse500;
-    
-export type promoGetPromoCodesResponse = promoGetPromoCodesResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(promoDeletePromoCodeBody),
+  })
 }
 
 export const getPromoGetPromoCodesUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/promo/getPromoCodes`
 }
 
-export const promoGetPromoCodes = async ( options?: RequestInit): Promise<promoGetPromoCodesResponse> => {
-  
-  const res = await fetch(getPromoGetPromoCodesUrl(),
-  {      
+export const promoGetPromoCodes = async (options?: RequestInit): Promise<PromoGetPromoCodes200Item[]> => {
+  return fetcher<PromoGetPromoCodes200Item[]>(getPromoGetPromoCodesUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: promoGetPromoCodesResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as promoGetPromoCodesResponse
+    method: "GET",
+  })
 }
 
-
-
-export type promoGetPromoCodeDetailsResponse200 = {
-  data: PromoGetPromoCodeDetails200
-  status: 200
-}
-
-export type promoGetPromoCodeDetailsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type promoGetPromoCodeDetailsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type promoGetPromoCodeDetailsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type promoGetPromoCodeDetailsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type promoGetPromoCodeDetailsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type promoGetPromoCodeDetailsResponseComposite = promoGetPromoCodeDetailsResponse200 | promoGetPromoCodeDetailsResponse400 | promoGetPromoCodeDetailsResponse401 | promoGetPromoCodeDetailsResponse403 | promoGetPromoCodeDetailsResponse404 | promoGetPromoCodeDetailsResponse500;
-    
-export type promoGetPromoCodeDetailsResponse = promoGetPromoCodeDetailsResponseComposite & {
-  headers: Headers;
-}
-
-export const getPromoGetPromoCodeDetailsUrl = (params: PromoGetPromoCodeDetailsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getPromoGetPromoCodeDetailsUrl = (params: PromoGetPromoCodeDetailsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/promo/getPromoCodeDetails?${stringifiedParams}` : `https://api.fiddl.art/api/promo/getPromoCodeDetails`
 }
 
-export const promoGetPromoCodeDetails = async (params: PromoGetPromoCodeDetailsParams, options?: RequestInit): Promise<promoGetPromoCodeDetailsResponse> => {
-  
-  const res = await fetch(getPromoGetPromoCodeDetailsUrl(params),
-  {      
+export const promoGetPromoCodeDetails = async (params: PromoGetPromoCodeDetailsParams, options?: RequestInit): Promise<PromoGetPromoCodeDetails200> => {
+  return fetcher<PromoGetPromoCodeDetails200>(getPromoGetPromoCodeDetailsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: promoGetPromoCodeDetailsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as promoGetPromoCodeDetailsResponse
-}
-
-
-
-export type promoClaimPromoCodeResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type promoClaimPromoCodeResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type promoClaimPromoCodeResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type promoClaimPromoCodeResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type promoClaimPromoCodeResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type promoClaimPromoCodeResponseComposite = promoClaimPromoCodeResponse200 | promoClaimPromoCodeResponse400 | promoClaimPromoCodeResponse401 | promoClaimPromoCodeResponse403 | promoClaimPromoCodeResponse500;
-    
-export type promoClaimPromoCodeResponse = promoClaimPromoCodeResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getPromoClaimPromoCodeUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/promo/claimPromoCode`
 }
 
-export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPromoCodeBody, options?: RequestInit): Promise<promoClaimPromoCodeResponse> => {
-  
-  const res = await fetch(getPromoClaimPromoCodeUrl(),
-  {      
+export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPromoCodeBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getPromoClaimPromoCodeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      promoClaimPromoCodeBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: promoClaimPromoCodeResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as promoClaimPromoCodeResponse
-}
-
-
-
-export type modelsEditModelResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type modelsEditModelResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsEditModelResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsEditModelResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsEditModelResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsEditModelResponseComposite = modelsEditModelResponse200 | modelsEditModelResponse400 | modelsEditModelResponse401 | modelsEditModelResponse403 | modelsEditModelResponse500;
-    
-export type modelsEditModelResponse = modelsEditModelResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(promoClaimPromoCodeBody),
+  })
 }
 
 export const getModelsEditModelUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/models/editModel`
 }
 
-export const modelsEditModel = async (modelsEditModelBody: ModelsEditModelBody, options?: RequestInit): Promise<modelsEditModelResponse> => {
-  
-  const res = await fetch(getModelsEditModelUrl(),
-  {      
+export const modelsEditModel = async (modelsEditModelBody: ModelsEditModelBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getModelsEditModelUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      modelsEditModelBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsEditModelResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsEditModelResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(modelsEditModelBody),
+  })
 }
 
-
-
-export type modelsGetUserModelsResponse200 = {
-  data: ModelsGetUserModels200Item[]
-  status: 200
-}
-
-export type modelsGetUserModelsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsGetUserModelsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsGetUserModelsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsGetUserModelsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type modelsGetUserModelsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsGetUserModelsResponseComposite = modelsGetUserModelsResponse200 | modelsGetUserModelsResponse400 | modelsGetUserModelsResponse401 | modelsGetUserModelsResponse403 | modelsGetUserModelsResponse404 | modelsGetUserModelsResponse500;
-    
-export type modelsGetUserModelsResponse = modelsGetUserModelsResponseComposite & {
-  headers: Headers;
-}
-
-export const getModelsGetUserModelsUrl = (params?: ModelsGetUserModelsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getModelsGetUserModelsUrl = (params?: ModelsGetUserModelsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getUserModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getUserModels`
 }
 
-export const modelsGetUserModels = async (params?: ModelsGetUserModelsParams, options?: RequestInit): Promise<modelsGetUserModelsResponse> => {
-  
-  const res = await fetch(getModelsGetUserModelsUrl(params),
-  {      
+export const modelsGetUserModels = async (params?: ModelsGetUserModelsParams, options?: RequestInit): Promise<ModelsGetUserModels200Item[]> => {
+  return fetcher<ModelsGetUserModels200Item[]>(getModelsGetUserModelsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetUserModelsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsGetUserModelsResponse
-}
-
-
-
-export type modelsCreateModelResponse200 = {
-  data: string
-  status: 200
-}
-
-export type modelsCreateModelResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsCreateModelResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsCreateModelResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsCreateModelResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsCreateModelResponseComposite = modelsCreateModelResponse200 | modelsCreateModelResponse400 | modelsCreateModelResponse401 | modelsCreateModelResponse403 | modelsCreateModelResponse500;
-    
-export type modelsCreateModelResponse = modelsCreateModelResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getModelsCreateModelUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/models/createModel`
 }
 
-export const modelsCreateModel = async (modelsCreateModelBody: ModelsCreateModelBody, options?: RequestInit): Promise<modelsCreateModelResponse> => {
-  
-  const res = await fetch(getModelsCreateModelUrl(),
-  {      
+export const modelsCreateModel = async (modelsCreateModelBody: ModelsCreateModelBody, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getModelsCreateModelUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      modelsCreateModelBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsCreateModelResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsCreateModelResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(modelsCreateModelBody),
+  })
 }
 
-
-
-export type modelsGetTrainingStatusResponse200 = {
-  data: ModelsGetTrainingStatus200
-  status: 200
-}
-
-export type modelsGetTrainingStatusResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsGetTrainingStatusResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsGetTrainingStatusResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsGetTrainingStatusResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type modelsGetTrainingStatusResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsGetTrainingStatusResponseComposite = modelsGetTrainingStatusResponse200 | modelsGetTrainingStatusResponse400 | modelsGetTrainingStatusResponse401 | modelsGetTrainingStatusResponse403 | modelsGetTrainingStatusResponse404 | modelsGetTrainingStatusResponse500;
-    
-export type modelsGetTrainingStatusResponse = modelsGetTrainingStatusResponseComposite & {
-  headers: Headers;
-}
-
-export const getModelsGetTrainingStatusUrl = (params: ModelsGetTrainingStatusParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getModelsGetTrainingStatusUrl = (params: ModelsGetTrainingStatusParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getTrainingStatus?${stringifiedParams}` : `https://api.fiddl.art/api/models/getTrainingStatus`
 }
 
-export const modelsGetTrainingStatus = async (params: ModelsGetTrainingStatusParams, options?: RequestInit): Promise<modelsGetTrainingStatusResponse> => {
-  
-  const res = await fetch(getModelsGetTrainingStatusUrl(params),
-  {      
+export const modelsGetTrainingStatus = async (params: ModelsGetTrainingStatusParams, options?: RequestInit): Promise<ModelsGetTrainingStatus200> => {
+  return fetcher<ModelsGetTrainingStatus200>(getModelsGetTrainingStatusUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetTrainingStatusResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsGetTrainingStatusResponse
-}
-
-
-
-export type modelsDeleteModelResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type modelsDeleteModelResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsDeleteModelResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsDeleteModelResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsDeleteModelResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsDeleteModelResponseComposite = modelsDeleteModelResponse200 | modelsDeleteModelResponse400 | modelsDeleteModelResponse401 | modelsDeleteModelResponse403 | modelsDeleteModelResponse500;
-    
-export type modelsDeleteModelResponse = modelsDeleteModelResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getModelsDeleteModelUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/models/deleteModel`
 }
 
-export const modelsDeleteModel = async (modelsDeleteModelBody: ModelsDeleteModelBody, options?: RequestInit): Promise<modelsDeleteModelResponse> => {
-  
-  const res = await fetch(getModelsDeleteModelUrl(),
-  {      
+export const modelsDeleteModel = async (modelsDeleteModelBody: ModelsDeleteModelBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getModelsDeleteModelUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      modelsDeleteModelBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsDeleteModelResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsDeleteModelResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(modelsDeleteModelBody),
+  })
 }
 
-
-
-export type modelsGetCustomModelResponse200 = {
-  data: ModelsGetCustomModel200
-  status: 200
-}
-
-export type modelsGetCustomModelResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsGetCustomModelResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsGetCustomModelResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsGetCustomModelResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type modelsGetCustomModelResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsGetCustomModelResponseComposite = modelsGetCustomModelResponse200 | modelsGetCustomModelResponse400 | modelsGetCustomModelResponse401 | modelsGetCustomModelResponse403 | modelsGetCustomModelResponse404 | modelsGetCustomModelResponse500;
-    
-export type modelsGetCustomModelResponse = modelsGetCustomModelResponseComposite & {
-  headers: Headers;
-}
-
-export const getModelsGetCustomModelUrl = (params: ModelsGetCustomModelParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getModelsGetCustomModelUrl = (params: ModelsGetCustomModelParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getCustomModel?${stringifiedParams}` : `https://api.fiddl.art/api/models/getCustomModel`
 }
 
-export const modelsGetCustomModel = async (params: ModelsGetCustomModelParams, options?: RequestInit): Promise<modelsGetCustomModelResponse> => {
-  
-  const res = await fetch(getModelsGetCustomModelUrl(params),
-  {      
+export const modelsGetCustomModel = async (params: ModelsGetCustomModelParams, options?: RequestInit): Promise<ModelsGetCustomModel200> => {
+  return fetcher<ModelsGetCustomModel200>(getModelsGetCustomModelUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetCustomModelResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsGetCustomModelResponse
+    method: "GET",
+  })
 }
 
-
-
-export type modelsGetPublicModelsResponse200 = {
-  data: ModelsGetPublicModels200Item[]
-  status: 200
-}
-
-export type modelsGetPublicModelsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsGetPublicModelsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsGetPublicModelsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsGetPublicModelsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type modelsGetPublicModelsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsGetPublicModelsResponseComposite = modelsGetPublicModelsResponse200 | modelsGetPublicModelsResponse400 | modelsGetPublicModelsResponse401 | modelsGetPublicModelsResponse403 | modelsGetPublicModelsResponse404 | modelsGetPublicModelsResponse500;
-    
-export type modelsGetPublicModelsResponse = modelsGetPublicModelsResponseComposite & {
-  headers: Headers;
-}
-
-export const getModelsGetPublicModelsUrl = (params?: ModelsGetPublicModelsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getModelsGetPublicModelsUrl = (params?: ModelsGetPublicModelsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getPublicModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getPublicModels`
 }
 
-export const modelsGetPublicModels = async (params?: ModelsGetPublicModelsParams, options?: RequestInit): Promise<modelsGetPublicModelsResponse> => {
-  
-  const res = await fetch(getModelsGetPublicModelsUrl(params),
-  {      
+export const modelsGetPublicModels = async (params?: ModelsGetPublicModelsParams, options?: RequestInit): Promise<ModelsGetPublicModels200Item[]> => {
+  return fetcher<ModelsGetPublicModels200Item[]>(getModelsGetPublicModelsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetPublicModelsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsGetPublicModelsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type modelsGetBaseModelsResponse200 = {
-  data: ModelsGetBaseModels200Item[]
-  status: 200
-}
-
-export type modelsGetBaseModelsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsGetBaseModelsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsGetBaseModelsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsGetBaseModelsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type modelsGetBaseModelsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsGetBaseModelsResponseComposite = modelsGetBaseModelsResponse200 | modelsGetBaseModelsResponse400 | modelsGetBaseModelsResponse401 | modelsGetBaseModelsResponse403 | modelsGetBaseModelsResponse404 | modelsGetBaseModelsResponse500;
-    
-export type modelsGetBaseModelsResponse = modelsGetBaseModelsResponseComposite & {
-  headers: Headers;
-}
-
-export const getModelsGetBaseModelsUrl = (params?: ModelsGetBaseModelsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getModelsGetBaseModelsUrl = (params?: ModelsGetBaseModelsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getBaseModels?${stringifiedParams}` : `https://api.fiddl.art/api/models/getBaseModels`
 }
 
-export const modelsGetBaseModels = async (params?: ModelsGetBaseModelsParams, options?: RequestInit): Promise<modelsGetBaseModelsResponse> => {
-  
-  const res = await fetch(getModelsGetBaseModelsUrl(params),
-  {      
+export const modelsGetBaseModels = async (params?: ModelsGetBaseModelsParams, options?: RequestInit): Promise<ModelsGetBaseModels200Item[]> => {
+  return fetcher<ModelsGetBaseModels200Item[]>(getModelsGetBaseModelsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsGetBaseModelsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsGetBaseModelsResponse
+    method: "GET",
+  })
 }
 
+export const getModelsGetModelByNameUrl = (params: ModelsGetModelByNameParams) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
-export type modelsSetModelPrivacyResponse200 = {
-  data: unknown
-  status: 200
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/models/getModelByName?${stringifiedParams}` : `https://api.fiddl.art/api/models/getModelByName`
 }
 
-export type modelsSetModelPrivacyResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type modelsSetModelPrivacyResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type modelsSetModelPrivacyResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type modelsSetModelPrivacyResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type modelsSetModelPrivacyResponseComposite = modelsSetModelPrivacyResponse200 | modelsSetModelPrivacyResponse400 | modelsSetModelPrivacyResponse401 | modelsSetModelPrivacyResponse403 | modelsSetModelPrivacyResponse500;
-    
-export type modelsSetModelPrivacyResponse = modelsSetModelPrivacyResponseComposite & {
-  headers: Headers;
+export const modelsGetModelByName = async (params: ModelsGetModelByNameParams, options?: RequestInit): Promise<ModelsGetModelByName200> => {
+  return fetcher<ModelsGetModelByName200>(getModelsGetModelByNameUrl(params), {
+    ...options,
+    method: "GET",
+  })
 }
 
 export const getModelsSetModelPrivacyUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/models/setModelPrivacy`
 }
 
-export const modelsSetModelPrivacy = async (modelsSetModelPrivacyBody: ModelsSetModelPrivacyBody, options?: RequestInit): Promise<modelsSetModelPrivacyResponse> => {
-  
-  const res = await fetch(getModelsSetModelPrivacyUrl(),
-  {      
+export const modelsSetModelPrivacy = async (modelsSetModelPrivacyBody: ModelsSetModelPrivacyBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getModelsSetModelPrivacyUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      modelsSetModelPrivacyBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: modelsSetModelPrivacyResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as modelsSetModelPrivacyResponse
-}
-
-
-
-export type adminLoginAsUserResponse200 = {
-  data: string
-  status: 200
-}
-
-export type adminLoginAsUserResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type adminLoginAsUserResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type adminLoginAsUserResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type adminLoginAsUserResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type adminLoginAsUserResponseComposite = adminLoginAsUserResponse200 | adminLoginAsUserResponse400 | adminLoginAsUserResponse401 | adminLoginAsUserResponse403 | adminLoginAsUserResponse500;
-    
-export type adminLoginAsUserResponse = adminLoginAsUserResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(modelsSetModelPrivacyBody),
+  })
 }
 
 export const getAdminLoginAsUserUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/admin/loginAsUser`
 }
 
-export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBody, options?: RequestInit): Promise<adminLoginAsUserResponse> => {
-  
-  const res = await fetch(getAdminLoginAsUserUrl(),
-  {      
+export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBody, options?: RequestInit): Promise<string> => {
+  return fetcher<string>(getAdminLoginAsUserUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      adminLoginAsUserBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: adminLoginAsUserResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as adminLoginAsUserResponse
-}
-
-
-
-export type privyAuthenticateResponse200 = {
-  data: PrivyAuthenticate200
-  status: 200
-}
-
-export type privyAuthenticateResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type privyAuthenticateResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type privyAuthenticateResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type privyAuthenticateResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type privyAuthenticateResponseComposite = privyAuthenticateResponse200 | privyAuthenticateResponse400 | privyAuthenticateResponse401 | privyAuthenticateResponse403 | privyAuthenticateResponse500;
-    
-export type privyAuthenticateResponse = privyAuthenticateResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminLoginAsUserBody),
+  })
 }
 
 export const getPrivyAuthenticateUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/privy/authenticate`
 }
 
-export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticateBody, options?: RequestInit): Promise<privyAuthenticateResponse> => {
-  
-  const res = await fetch(getPrivyAuthenticateUrl(),
-  {      
+export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticateBody, options?: RequestInit): Promise<PrivyAuthenticate200> => {
+  return fetcher<PrivyAuthenticate200>(getPrivyAuthenticateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      privyAuthenticateBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: privyAuthenticateResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as privyAuthenticateResponse
-}
-
-
-
-export type trainingSetsCreateSetResponse200 = {
-  data: TrainingSetsCreateSet200
-  status: 200
-}
-
-export type trainingSetsCreateSetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsCreateSetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsCreateSetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsCreateSetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsCreateSetResponseComposite = trainingSetsCreateSetResponse200 | trainingSetsCreateSetResponse400 | trainingSetsCreateSetResponse401 | trainingSetsCreateSetResponse403 | trainingSetsCreateSetResponse500;
-    
-export type trainingSetsCreateSetResponse = trainingSetsCreateSetResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(privyAuthenticateBody),
+  })
 }
 
 export const getTrainingSetsCreateSetUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/trainingSets/createSet`
 }
 
-export const trainingSetsCreateSet = async (trainingSetsCreateSetBody: TrainingSetsCreateSetBody, options?: RequestInit): Promise<trainingSetsCreateSetResponse> => {
-  
-  const res = await fetch(getTrainingSetsCreateSetUrl(),
-  {      
+export const trainingSetsCreateSet = async (trainingSetsCreateSetBody: TrainingSetsCreateSetBody, options?: RequestInit): Promise<TrainingSetsCreateSet200> => {
+  return fetcher<TrainingSetsCreateSet200>(getTrainingSetsCreateSetUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      trainingSetsCreateSetBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsCreateSetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsCreateSetResponse
-}
-
-
-
-export type trainingSetsFinalizeSetResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type trainingSetsFinalizeSetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsFinalizeSetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsFinalizeSetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsFinalizeSetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsFinalizeSetResponseComposite = trainingSetsFinalizeSetResponse200 | trainingSetsFinalizeSetResponse400 | trainingSetsFinalizeSetResponse401 | trainingSetsFinalizeSetResponse403 | trainingSetsFinalizeSetResponse500;
-    
-export type trainingSetsFinalizeSetResponse = trainingSetsFinalizeSetResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(trainingSetsCreateSetBody),
+  })
 }
 
 export const getTrainingSetsFinalizeSetUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/trainingSets/finalizeSet`
 }
 
-export const trainingSetsFinalizeSet = async (trainingSetsFinalizeSetBody: TrainingSetsFinalizeSetBody, options?: RequestInit): Promise<trainingSetsFinalizeSetResponse> => {
-  
-  const res = await fetch(getTrainingSetsFinalizeSetUrl(),
-  {      
+export const trainingSetsFinalizeSet = async (trainingSetsFinalizeSetBody: TrainingSetsFinalizeSetBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getTrainingSetsFinalizeSetUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      trainingSetsFinalizeSetBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsFinalizeSetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsFinalizeSetResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(trainingSetsFinalizeSetBody),
+  })
 }
 
-
-
-export type trainingSetsGetUserSetsResponse200 = {
-  data: TrainingSetsGetUserSets200Item[]
-  status: 200
-}
-
-export type trainingSetsGetUserSetsResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsGetUserSetsResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsGetUserSetsResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsGetUserSetsResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type trainingSetsGetUserSetsResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsGetUserSetsResponseComposite = trainingSetsGetUserSetsResponse200 | trainingSetsGetUserSetsResponse400 | trainingSetsGetUserSetsResponse401 | trainingSetsGetUserSetsResponse403 | trainingSetsGetUserSetsResponse404 | trainingSetsGetUserSetsResponse500;
-    
-export type trainingSetsGetUserSetsResponse = trainingSetsGetUserSetsResponseComposite & {
-  headers: Headers;
-}
-
-export const getTrainingSetsGetUserSetsUrl = (params: TrainingSetsGetUserSetsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getTrainingSetsGetUserSetsUrl = (params: TrainingSetsGetUserSetsParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/trainingSets/getUserSets?${stringifiedParams}` : `https://api.fiddl.art/api/trainingSets/getUserSets`
 }
 
-export const trainingSetsGetUserSets = async (params: TrainingSetsGetUserSetsParams, options?: RequestInit): Promise<trainingSetsGetUserSetsResponse> => {
-  
-  const res = await fetch(getTrainingSetsGetUserSetsUrl(params),
-  {      
+export const trainingSetsGetUserSets = async (params: TrainingSetsGetUserSetsParams, options?: RequestInit): Promise<TrainingSetsGetUserSets200Item[]> => {
+  return fetcher<TrainingSetsGetUserSets200Item[]>(getTrainingSetsGetUserSetsUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsGetUserSetsResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsGetUserSetsResponse
+    method: "GET",
+  })
 }
 
-
-
-export type trainingSetsGetSetResponse200 = {
-  data: TrainingSetsGetSet200
-  status: 200
-}
-
-export type trainingSetsGetSetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsGetSetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsGetSetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsGetSetResponse404 = {
-  data: ErrorNOTFOUND
-  status: 404
-}
-
-export type trainingSetsGetSetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsGetSetResponseComposite = trainingSetsGetSetResponse200 | trainingSetsGetSetResponse400 | trainingSetsGetSetResponse401 | trainingSetsGetSetResponse403 | trainingSetsGetSetResponse404 | trainingSetsGetSetResponse500;
-    
-export type trainingSetsGetSetResponse = trainingSetsGetSetResponseComposite & {
-  headers: Headers;
-}
-
-export const getTrainingSetsGetSetUrl = (params: TrainingSetsGetSetParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getTrainingSetsGetSetUrl = (params: TrainingSetsGetSetParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0 ? `https://api.fiddl.art/api/trainingSets/getSet?${stringifiedParams}` : `https://api.fiddl.art/api/trainingSets/getSet`
 }
 
-export const trainingSetsGetSet = async (params: TrainingSetsGetSetParams, options?: RequestInit): Promise<trainingSetsGetSetResponse> => {
-  
-  const res = await fetch(getTrainingSetsGetSetUrl(params),
-  {      
+export const trainingSetsGetSet = async (params: TrainingSetsGetSetParams, options?: RequestInit): Promise<TrainingSetsGetSet200> => {
+  return fetcher<TrainingSetsGetSet200>(getTrainingSetsGetSetUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsGetSetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsGetSetResponse
-}
-
-
-
-export type trainingSetsDeleteSetResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type trainingSetsDeleteSetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsDeleteSetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsDeleteSetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsDeleteSetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsDeleteSetResponseComposite = trainingSetsDeleteSetResponse200 | trainingSetsDeleteSetResponse400 | trainingSetsDeleteSetResponse401 | trainingSetsDeleteSetResponse403 | trainingSetsDeleteSetResponse500;
-    
-export type trainingSetsDeleteSetResponse = trainingSetsDeleteSetResponseComposite & {
-  headers: Headers;
+    method: "GET",
+  })
 }
 
 export const getTrainingSetsDeleteSetUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/trainingSets/deleteSet`
 }
 
-export const trainingSetsDeleteSet = async (trainingSetsDeleteSetBody: TrainingSetsDeleteSetBody, options?: RequestInit): Promise<trainingSetsDeleteSetResponse> => {
-  
-  const res = await fetch(getTrainingSetsDeleteSetUrl(),
-  {      
+export const trainingSetsDeleteSet = async (trainingSetsDeleteSetBody: TrainingSetsDeleteSetBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getTrainingSetsDeleteSetUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      trainingSetsDeleteSetBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsDeleteSetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsDeleteSetResponse
-}
-
-
-
-export type trainingSetsEditSetResponse200 = {
-  data: unknown
-  status: 200
-}
-
-export type trainingSetsEditSetResponse400 = {
-  data: ErrorBADREQUEST
-  status: 400
-}
-
-export type trainingSetsEditSetResponse401 = {
-  data: ErrorUNAUTHORIZED
-  status: 401
-}
-
-export type trainingSetsEditSetResponse403 = {
-  data: ErrorFORBIDDEN
-  status: 403
-}
-
-export type trainingSetsEditSetResponse500 = {
-  data: ErrorINTERNALSERVERERROR
-  status: 500
-}
-    
-export type trainingSetsEditSetResponseComposite = trainingSetsEditSetResponse200 | trainingSetsEditSetResponse400 | trainingSetsEditSetResponse401 | trainingSetsEditSetResponse403 | trainingSetsEditSetResponse500;
-    
-export type trainingSetsEditSetResponse = trainingSetsEditSetResponseComposite & {
-  headers: Headers;
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(trainingSetsDeleteSetBody),
+  })
 }
 
 export const getTrainingSetsEditSetUrl = () => {
-
-
-  
-
   return `https://api.fiddl.art/api/trainingSets/editSet`
 }
 
-export const trainingSetsEditSet = async (trainingSetsEditSetBody: TrainingSetsEditSetBody, options?: RequestInit): Promise<trainingSetsEditSetResponse> => {
-  
-  const res = await fetch(getTrainingSetsEditSetUrl(),
-  {      
+export const trainingSetsEditSet = async (trainingSetsEditSetBody: TrainingSetsEditSetBody, options?: RequestInit): Promise<unknown> => {
+  return fetcher<unknown>(getTrainingSetsEditSetUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      trainingSetsEditSetBody,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: trainingSetsEditSetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as trainingSetsEditSetResponse
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(trainingSetsEditSetBody),
+  })
 }

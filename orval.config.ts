@@ -14,6 +14,16 @@ export default defineConfig({
       target: "./netlify/edge-functions/lib/orval.ts",
       client: "fetch",
       baseUrl: "https://api.fiddl.art/api",
+      fileExtension: "ts",
+      override: {
+        mutator: {
+          path: "./netlify/edge-functions/lib/fetcher.ts",
+          name: "fetcher",
+        },
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
+      },
     },
   },
 })

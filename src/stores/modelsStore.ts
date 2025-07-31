@@ -4,10 +4,13 @@ import { LocalStorage } from "quasar"
 import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
 
+// Extend the base model type to include an id: string field
+type CustomModel = ModelsGetBaseModels200Item & { id: string }
+
 export const models = reactive({
   // base: LocalStorage.getItem<ModelsGetBaseModels200Item[]>("baseModels") || [],
   base: [] as ModelsGetBaseModels200Item[],
-  custom: [] as ModelsGetPublicModels200Item[],
+  custom: [] as CustomModel[],
 })
 
 export const filteredBaseModels = computed<ModelsGetBaseModels200Item[]>(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
@@ -77,13 +80,28 @@ export async function loadCustomModels() {
   const newModels = response.data
   const tempObj = {}
   for (const model of models.custom) {
-    tempObj[model.id] = model
+    tempObj[model.slug] = model
   }
   for (const model of newModels) {
-    tempObj[model.id] = model
+    tempObj[model.slug] = model
   }
+
   const mergedSorted = (Object.values(tempObj) as ModelsGetPublicModels200Item[]).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-  models.custom = mergedSorted
+  const transformedModels: CustomModel[] = mergedSorted.map((model) => {
+    return {
+      blogLink: null,
+      description: model.description,
+      featured: model.featured,
+      id: model.id,
+      modelTags: model.modelTags,
+      name: model.name,
+      previewMediaId: model.previewMediaId,
+      slug: model.slug,
+      updatedAt: model.updatedAt,
+      longDescription: null,
+    }
+  })
+  models.custom = transformedModels
 }
 
 // export function addTag(tag: ModelTags | ModelTags[]) {

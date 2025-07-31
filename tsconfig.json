@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "useDefineForClassFields": true,
     "jsx": "preserve",
-    "lib": ["esnext", "dom"]
+    "lib": ["esnext", "dom", "DOM.Iterable", "DOM", "ESNext"]
   },
   "exclude": ["./src-capacitor", "./src-cordova", "./quasar.config.*.temporary.compiled*", ".quasar", "../fiddl-server/**/*"],
   "include": [

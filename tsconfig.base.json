@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable", // ← add this
+      "esnext"
+    ],
     "allowImportingTsExtensions": true,
     "target": "ESNext",
     "module": "ESNext",

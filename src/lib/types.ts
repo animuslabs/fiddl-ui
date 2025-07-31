@@ -132,6 +132,7 @@ export type UnifiedRequest = {
   aspectRatio: string
   public: boolean
   creatorId: string
+  creatorUsername: string
   prompt?: string
   seed?: number
   model?: string

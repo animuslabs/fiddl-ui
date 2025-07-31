@@ -341,7 +341,6 @@ limit?: number;
 offset?: number;
 order?: CreationsUserImagePurchasesOrder;
 endDateTime?: string;
-includeMetadata?: boolean;
 customModelId?: string;
 model?: typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel] ;
 aspectRatio?: CreationsUserImagePurchasesAspectRatio;
@@ -411,7 +410,6 @@ limit?: number;
 offset?: number;
 order?: CreationsUserVideoPurchasesOrder;
 endDateTime?: string;
-includeMetadata?: boolean;
 customModelId?: string;
 model?: typeof CreationsUserVideoPurchasesModel[keyof typeof CreationsUserVideoPurchasesModel] ;
 aspectRatio?: CreationsUserVideoPurchasesAspectRatio;
@@ -481,7 +479,6 @@ limit?: number;
 offset?: number;
 order?: CreationsCreateImageRequestsOrder;
 endDateTime?: string;
-includeMetadata?: boolean;
 customModelId?: string;
 model?: typeof CreationsCreateImageRequestsModel[keyof typeof CreationsCreateImageRequestsModel] ;
 aspectRatio?: CreationsCreateImageRequestsAspectRatio;
@@ -544,6 +541,7 @@ export type CreationsCreateImageRequests200Item = {
   aspectRatio: string;
   public: boolean;
   creatorId: string;
+  creatorUsername: string;
   model?: string;
   seed?: number;
   prompt?: string;
@@ -560,7 +558,6 @@ limit?: number;
 offset?: number;
 order?: CreationsCreateVideoRequestsOrder;
 endDateTime?: string;
-includeMetadata?: boolean;
 customModelId?: string;
 model?: typeof CreationsCreateVideoRequestsModel[keyof typeof CreationsCreateVideoRequestsModel] ;
 aspectRatio?: CreationsCreateVideoRequestsAspectRatio;
@@ -623,6 +620,7 @@ export type CreationsCreateVideoRequests200Item = {
   aspectRatio: string;
   public: boolean;
   creatorId: string;
+  creatorUsername: string;
   model?: string;
   seed?: number;
   prompt?: string;
@@ -642,6 +640,7 @@ export type CreationsGetImageRequest200 = {
   aspectRatio: string;
   public: boolean;
   creatorId: string;
+  creatorUsername: string;
   model?: string;
   seed?: number;
   prompt?: string;
@@ -662,6 +661,7 @@ export type CreationsGetVideoRequest200 = {
   aspectRatio: string;
   public: boolean;
   creatorId: string;
+  creatorUsername: string;
   model?: string;
   seed?: number;
   prompt?: string;
@@ -1277,7 +1277,6 @@ limit?: number;
 offset?: number;
 order?: UserPointsHistoryOrder;
 endDateTime?: string;
-includeMetadata?: boolean;
 };
 
 export type UserPointsHistoryOrder = typeof UserPointsHistoryOrder[keyof typeof UserPointsHistoryOrder];
@@ -2136,7 +2135,74 @@ export type ModelsGetBaseModels200Item = {
   /** @nullable */
   description: string | null;
   featured: boolean;
+  /** @nullable */
+  blogLink: string | null;
+  /** @nullable */
+  longDescription: string | null;
   previewMediaId?: string;
+};
+
+export type ModelsGetModelByNameParams = {
+name: string;
+customModelId?: string;
+includeMedia?: number;
+};
+
+export type ModelsGetModelByName200CustomModelCreator = {
+  id: string;
+  userName: string;
+};
+
+export type ModelsGetModelByName200ModelModelTagsItem = typeof ModelsGetModelByName200ModelModelTagsItem[keyof typeof ModelsGetModelByName200ModelModelTagsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelsGetModelByName200ModelModelTagsItem = {
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
+
+export type ModelsGetModelByName200Model = {
+  modelTags: ModelsGetModelByName200ModelModelTagsItem[];
+  slug: string;
+  updatedAt: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  featured: boolean;
+  /** @nullable */
+  blogLink: string | null;
+  /** @nullable */
+  longDescription: string | null;
+};
+
+export type ModelsGetModelByName200MediaItem = {
+  id: string;
+  meta: string;
+  creatorUsername?: string;
+};
+
+export type ModelsGetModelByName200 = {
+  customModelCreator?: ModelsGetModelByName200CustomModelCreator;
+  model: ModelsGetModelByName200Model;
+  media?: ModelsGetModelByName200MediaItem[];
 };
 
 export type ModelsSetModelPrivacyBody = {
@@ -6389,6 +6455,64 @@ export function useModelsGetBaseModels<TData = Awaited<ReturnType<typeof modelsG
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsGetBaseModelsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const modelsGetModelByName = (
+    params: MaybeRef<ModelsGetModelByNameParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<ModelsGetModelByName200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/models/getModelByName`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getModelsGetModelByNameQueryKey = (params: MaybeRef<ModelsGetModelByNameParams>,) => {
+    return ['models','getModelByName', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getModelsGetModelByNameQueryOptions = <TData = Awaited<ReturnType<typeof modelsGetModelByName>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<ModelsGetModelByNameParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetModelByName>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getModelsGetModelByNameQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsGetModelByName>>> = ({ signal }) => modelsGetModelByName(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsGetModelByName>>, TError, TData> 
+}
+
+export type ModelsGetModelByNameQueryResult = NonNullable<Awaited<ReturnType<typeof modelsGetModelByName>>>
+export type ModelsGetModelByNameQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useModelsGetModelByName<TData = Awaited<ReturnType<typeof modelsGetModelByName>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<ModelsGetModelByNameParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsGetModelByName>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsGetModelByNameQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
