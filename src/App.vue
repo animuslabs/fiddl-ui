@@ -71,6 +71,8 @@ export default defineComponent({
     },
   },
   created() {
+    document.querySelectorAll<HTMLDivElement>(".ssr-metadata").forEach((el) => el.remove())
+
     // this.$userAuth = useUserAuth()
     // console.log(this.$route.query)
   },

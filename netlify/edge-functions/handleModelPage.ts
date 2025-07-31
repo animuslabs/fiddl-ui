@@ -22,7 +22,7 @@ export default async (request: Request, _context: Context) => {
     const cacheKey = `model-page:${modelName}:${customModelId || "base"}`
     if (!modelName) return context.next()
 
-    const cached = await context.cache.get(cacheKey)
+    const cached = await context.cache?.get?.(cacheKey)
     if (cached) return cached
 
     const [res, modelData, baseModels, publicModels] = await Promise.all([context.next(), modelsGetModelByName({ name: modelName, customModelId, includeMedia: 20 }), modelsGetBaseModels().catch(console.error), modelsGetPublicModels().catch(console.error)])
@@ -59,7 +59,7 @@ export default async (request: Request, _context: Context) => {
       },
     })
 
-    await context.cache.set(cacheKey, response.clone(), 3600)
+    if (context.cache?.set) await context.cache.set(cacheKey, response.clone(), 3600)
     return response
   } catch (error) {
     console.error("Error in modelsPage edge function:", error)

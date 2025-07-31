@@ -23,7 +23,7 @@ export function img(id: string, size: ImageSize, width?: number | false, format?
   if (width) params += `&w=${width}`
   if (format) params += `&fm=${format}`
   if (quality) params += `&q=${quality}`
-  if (window.location.hostname === "localhost") return `${imageApiUrl}${id}-${size}.webp`
+  if (env.VITE_API_ROOT?.includes("localhost")) return `${imageApiUrl}${id}-${size}.webp`
   else return netlifyImgPath + `${id}-${size}.webp` + params
 }
 

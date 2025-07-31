@@ -69,6 +69,7 @@
       j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + '&l=' + l;
       f.parentNode.insertBefore(j, f);
     })(window, document, 'script', 'dataLayer', 'GTM-ND4R396L');
+    document.querySelectorAll(".ssr-metadata").forEach((el) => el.remove())
   </script>
 </head>
 
