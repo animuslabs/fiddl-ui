@@ -65,6 +65,7 @@
     "@deepgram/sdk": "3.6.0",
     "@eslint/js": "^9.10.0",
     "@quasar/app-vite": "^2.0.8",
+    "@quasar/icongenie": "^4.0.0",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "22.5.4",
     "@types/path-browserify": "^1",

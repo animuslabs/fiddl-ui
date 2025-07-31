@@ -1,3 +1,5 @@
+import type { ModelsGetBaseModels200Item } from "./orval"
+
 type TwitterCardType = "summary" | "summary_large_image" | "app" | "player"
 
 export function setSocialMetadata(html: string, title: string, description: string, imageUrl: string, canonicalUrl: string, twitterCard: TwitterCardType): string {
@@ -88,4 +90,53 @@ export const normalizeCanonicalUrl = (url: string, keep: string[] = []): string 
   }
   parsed.search = filteredParams.toString()
   return parsed.toString()
+}
+
+export function buildModelPageJsonLd(model: ModelsGetBaseModels200Item, mediaIds: string[]): object {
+  const isImage = model.modelTags.includes("Image")
+  const images =
+    model.topImages?.slice(0, 5).map((img) => ({
+      "@type": "ImageObject",
+      contentUrl: img.cdnUrl,
+      caption: img.prompt || model.name,
+      description: img.prompt || model.name,
+      representativeOfPage: true,
+    })) || []
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    name: model.name,
+    description: model.description || "",
+    url: model.url,
+    image: images,
+    ...(model.creator && {
+      creator: {
+        "@type": "Person",
+        name: model.creator.name || model.creator.username || "",
+      },
+    }),
+  }
+}
+
+export interface PreviewConfig {
+  media: MediaItem
+}
+
+export function buildPreviewHtml(config: PreviewConfig): string {
+  const { images, maxCount = 3, containerId = "ssr-preview" } = config
+  const sliced = images.slice(0, maxCount)
+
+  if (sliced.length === 0) return ""
+
+  const imgTags = sliced
+    .map((img) => {
+      const alt = img.alt || img.prompt || ""
+      const title = img.prompt || ""
+      return `<img src="${img.cdnUrl}" alt="${alt}" title="${title}"
+      style="width:120px;height:auto;object-fit:cover;border-radius:4px;margin:4px;">`
+    })
+    .join("")
+
+  return `<div id="${containerId}" style="display:flex;flex-wrap:wrap;">${imgTags}</div>`
 }

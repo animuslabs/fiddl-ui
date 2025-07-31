@@ -51,7 +51,7 @@ const cardBgGradientStyle = computed(() => {
   const style: Record<string, string> = {
     background: `linear-gradient(
       to top left,
-      ${isVideo.value ? "var(--q-positive)" : "var(--q-primary)"} 3%,
+      ${isVideo.value ? "var(--q-secondary)" : "var(--q-primary)"} 8%,
       rgba(30,30,30,.4),
       rgba(30,30,30,.6),
       rgba(30,30,30,.7),
