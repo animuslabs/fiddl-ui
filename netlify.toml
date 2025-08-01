@@ -7,7 +7,7 @@
 
 [[edge_functions]]
   function = "request"
-  path = "/r/*"
+  path = "/request/*"
   cache = "manual"
 
 [[edge_functions]]
