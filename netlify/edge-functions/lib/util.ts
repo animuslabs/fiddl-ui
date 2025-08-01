@@ -29,33 +29,38 @@ export function escapeHtml(input: string): string {
 }
 type TwitterCardType = "summary" | "summary_large_image" | "player" | "app"
 
-/**
- * Replace *all* existing OG / Twitter / canonical tags and insert a fresh set.
- */
-export function setSocialMetadata(html: string, title: string, description: string, imageUrl: string, canonicalUrl: string, twitterCard: TwitterCardType = "summary_large_image"): string {
-  // 1 — remove any existing OG, Twitter, or canonical tags (case-insensitive)
-  html = html
-    // remove <meta property="og:*" ...>  OR  <meta name="twitter:*" ...>
-    .replace(/<meta\s+[^>]*?(property|name)=["']?(og:[^"']+|twitter:[^"']+)["'][^>]*?>/gi, "")
-    // remove <link rel="canonical" ...>
-    .replace(/<link\s+[^>]*?rel=["']?canonical["'][^>]*?>/gi, "")
+interface SocialMeta {
+  title: string
+  description: string
+  imageUrl: string
+  ogUrl: string
+  canonicalUrl: string
+  twitterCard?: TwitterCardType
+  twitterImageAlt?: string
+  ogType?: string
+}
 
-  // 2 — build the new tag block
+export function setSocialMetadata(html: string, meta: SocialMeta): string {
+  const { title, description, imageUrl, ogUrl, canonicalUrl, twitterCard = "summary_large_image", twitterImageAlt = description, ogType = "website" } = meta
+
+  html = html.replace(/<meta\s+[^>]*?(property|name)=["']?(og:[^"']+|twitter:[^"']+)["'][^>]*?>/gi, "").replace(/<link\s+[^>]*?rel=["']?canonical["'][^>]*?>/gi, "")
+
   const tags = [
+    `<meta property="og:type"          content="${escapeAttr(ogType)}">`,
     `<meta property="og:title"         content="${escapeAttr(title)}">`,
     `<meta property="og:description"   content="${escapeAttr(description)}">`,
     `<meta property="og:image"         content="${escapeAttr(imageUrl)}">`,
-    `<meta property="og:url"           content="${escapeAttr(canonicalUrl)}">`,
+    `<meta property="og:url"           content="${escapeAttr(ogUrl)}">`,
 
     `<meta name="twitter:card"         content="${escapeAttr(twitterCard)}">`,
     `<meta name="twitter:title"        content="${escapeAttr(title)}">`,
     `<meta name="twitter:description"  content="${escapeAttr(description)}">`,
     `<meta name="twitter:image"        content="${escapeAttr(imageUrl)}">`,
+    `<meta name="twitter:image:alt"    content="${escapeAttr(twitterImageAlt)}">`,
 
     `<link rel="canonical"             href="${escapeAttr(canonicalUrl)}">`,
   ].join("\n  ")
 
-  // 3 — insert just before </head>
   return html.replace(/<\/head>/i, `  ${tags}\n</head>`)
 }
 
@@ -71,7 +76,6 @@ export function shortIdToLong(base64url: string): string {
   // Convert the byte array to a hex string
   let hexStr = ""
   for (let i = 0; i < bytes.length; i++) {
-    //@ts-ignore
     hexStr += bytes[i].toString(16).padStart(2, "0")
   }
   // Re-insert hyphens to format it as a UUID
@@ -118,7 +122,7 @@ export function buildModelSchema(data: ModelsGetModelByName200, fullUrl: string)
       const contentUrl = type === "image" ? img(item.id, "lg") : s3Video(item.id, "preview-lg")
       const thumbnailUrl = s3Video(item.id, "thumbnail")
 
-      const base = {
+      const base: Record<string, any> = {
         "@type": type === "image" ? "ImageObject" : "VideoObject",
         contentUrl,
         thumbnailUrl: type === "image" ? undefined : thumbnailUrl,

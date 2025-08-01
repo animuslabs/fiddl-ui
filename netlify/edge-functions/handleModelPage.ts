@@ -47,7 +47,15 @@ export default async (request: Request, _context: Context) => {
 
     let modified = html.replace(/<title>.*?<\/title>/i, `<title>${modelData.model.name} | Fiddl.art</title>`).replace(/<head([^>]*)>/i, `<head$1>\n<script type="application/ld+json">${schemaJson}</script>`)
     modified = modified.replace(/<body([^>]*)>/i, `<body$1>\n${ssrBlock}`)
-    modified = setSocialMetadata(modified, ogTitle, ogDescription, ogImage, canonicalUrl, "summary_large_image")
+    modified = setSocialMetadata(modified, {
+      title: modelData.model.name + " | Fiddl.art",
+      description: modelData.model.description ?? "Create, share and earn with generative art on Fiddl.art.",
+      imageUrl: ogImage,
+      ogUrl: fullUrl,
+      canonicalUrl: fullUrl,
+      ogType: "website",
+      twitterImageAlt: modelData.media?.[0]?.meta ?? undefined,
+    })
     // Cache the final response
     const response = new Response(modified, {
       status: res.status,
