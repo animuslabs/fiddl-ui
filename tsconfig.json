@@ -23,6 +23,7 @@
     "src/shims.d.ts", // Explicitly include your custom type definitions
     "quasar.config.js",
     "netlify/edge-functions/*",
+    "netlify/edge-functions/routes/*",
     "netlify/edge-functions/lib",
     "src/**/*"
   ]

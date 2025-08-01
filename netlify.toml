@@ -6,12 +6,14 @@
   command = "yarn dev --port 5173"
 
 [[edge_functions]]
-  function = "handleRequestPage"
+  function = "routes/request"
   path = "/r/*"
+  cache = "manual"
 
 [[edge_functions]]
-  function = "handleModelPage"
+  function = "routes/model"
   path     = "/model/:modelName/:customModelId?"
+  cache = "manual"
 
 [functions]
   included_files = [

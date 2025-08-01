@@ -5,7 +5,7 @@ export type OgType = "website" | "article" | "profile" | "video.other"
 export type TwitterCard = "summary" | "summary_large_image" | "player" | "app"
 
 export type SocialMetaInput = {
-  title: string
+  title?: string
   description: string
   imageUrl: string
   ogUrl?: string // defaults to canonicalUrl
@@ -33,6 +33,7 @@ export type PageBlocks = {
 export type BuildPageConfig = {
   request: Request
   context: Context
+  pageTitle?: string // optional page title override
   social?: SocialMetaInput
   cache?: CacheConfig
   blocks?: PageBlocks
@@ -111,7 +112,7 @@ function buildHeaders(cfg?: CacheConfig): Headers {
 
 // ───────── main constructor ─────────
 
-export async function buildPageResponse({ request, context, social, cache, blocks, transformHtml, upstreamHtml }: BuildPageConfig): Promise<Response> {
+export async function buildPageResponse({ request, context, social, pageTitle, cache, blocks, transformHtml, upstreamHtml }: BuildPageConfig): Promise<Response> {
   const url = new URL(request.url)
 
   // programmatic CacheStorage
@@ -130,7 +131,7 @@ export async function buildPageResponse({ request, context, social, cache, block
   // defaults for social meta
   const canonical = social?.canonicalUrl || cleanUrl(url)
   const meta: Required<SocialMetaInput> = {
-    title: social?.title ?? "",
+    title: social?.title ?? pageTitle ?? "Fiddl.art",
     description: social?.description ?? "",
     imageUrl: social?.imageUrl ?? "",
     ogUrl: social?.ogUrl || canonical,
@@ -142,7 +143,7 @@ export async function buildPageResponse({ request, context, social, cache, block
 
   // assemble HTML
   let html = baseHtml
-  if (blocks?.title) html = replaceTitle(html, blocks.title)
+  if (blocks?.title) html = replaceTitle(html, blocks.title || pageTitle || new URL(request.url).pathname.split("/").pop() + "| Fiddl.art")
   if (blocks?.jsonLd?.length) html = injectJsonLd(html, blocks.jsonLd)
   if (social) html = setSocial(html, meta)
   if (blocks?.htmlBlocks?.length) html = injectSsrBlocks(html, blocks.htmlBlocks)
