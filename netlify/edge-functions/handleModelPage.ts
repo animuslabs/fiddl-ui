@@ -33,17 +33,15 @@ export default async (request: Request, _context: Context) => {
     const fullUrl = `${url.origin}${url.pathname}`
     const schemaJson = buildModelSchema(modelData, fullUrl)
     const metadataHtml = buildModelMetadataInnerHtml(modelData)
-    const mediaHtml = buildMediaEls(
-      (modelData.media || []).map((m) => ({
-        ...m,
-        type: modelData.model.modelTags.some((tag) => tag.toLowerCase().includes("video")) ? "video" : "image",
-      })),
-    )
+    const type = modelData.model.modelTags.some((tag) => tag.toLowerCase().includes("video")) ? "video" : "image"
+    const media = modelData.media || []
+    const firstMedia = media[0]
+    const mediaHtml = buildMediaEls(media.map((m) => ({ ...m, type })))
     const ssrBlock = `<div class="ssr-metadata">${buildStaticTopNavHtml()}\n${metadataHtml}\n${mediaHtml}\n${modelNavHtml}</div>`
-
-    const ogTitle = `${modelData.model.name} | Fiddl.art`
+    // console.log("First Media:", modelData)
+    const ogTitle = `${modelData.model.name} Model | Fiddl.art`
     const ogDescription = modelData.model.description || "Create, share and earn with generative art on Fiddl.art."
-    const ogImage = modelData.media?.[0] ? (modelData.model.modelTags.some((tag) => tag.toLowerCase().includes("video")) ? s3Video(modelData.media[0].id, "thumbnail") : img(modelData.media[0].id, "lg")) : "https://app.fiddl.art/icons/icon-512x512.png"
+    const ogImage = firstMedia ? (type == "video" ? s3Video(firstMedia.id, "thumbnail") : img(firstMedia.id, "lg")) : "https://app.fiddl.art/OGImage-1.jpg"
     const modelPath = `/model/${modelName}${customModelId ? `/${customModelId}` : ""}`
     const canonicalUrl = `${url.origin}${modelPath}`
 
