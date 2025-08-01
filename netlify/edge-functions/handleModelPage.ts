@@ -1,6 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels } from "./lib/orval.ts"
-import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml } from "./lib/util.ts"
+import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml, setSocialMetadata, updateLinkTag } from "./lib/util.ts"
+import { img, s3Video } from "./lib/netlifyImg.ts"
 
 export const config: Config = {
   path: "/model/:modelName/:customModelId?",
@@ -41,12 +42,15 @@ export default async (request: Request, _context: Context) => {
     )
     const ssrBlock = `<div class="ssr-metadata">${buildStaticTopNavHtml()}\n${metadataHtml}\n${mediaHtml}\n${modelNavHtml}</div>`
 
-    // Inject metadata into <head>
+    const ogTitle = `${modelData.model.name} | Fiddl.art`
+    const ogDescription = modelData.model.description || "Create, share and earn with generative art on Fiddl.art."
+    const ogImage = modelData.media?.[0] ? (modelData.model.modelTags.some((tag) => tag.toLowerCase().includes("video")) ? s3Video(modelData.media[0].id, "thumbnail") : img(modelData.media[0].id, "lg")) : "https://app.fiddl.art/icons/icon-512x512.png"
+    const modelPath = `/model/${modelName}${customModelId ? `/${customModelId}` : ""}`
+    const canonicalUrl = `${url.origin}${modelPath}`
+
     let modified = html.replace(/<title>.*?<\/title>/i, `<title>${modelData.model.name} | Fiddl.art</title>`).replace(/<head([^>]*)>/i, `<head$1>\n<script type="application/ld+json">${schemaJson}</script>`)
-
-    // Inject crawlable HTML into <body>
     modified = modified.replace(/<body([^>]*)>/i, `<body$1>\n${ssrBlock}`)
-
+    modified = setSocialMetadata(modified, ogTitle, ogDescription, ogImage, canonicalUrl, "summary_large_image")
     // Cache the final response
     const response = new Response(modified, {
       status: res.status,

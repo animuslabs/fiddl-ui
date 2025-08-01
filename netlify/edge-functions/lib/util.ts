@@ -1,6 +1,17 @@
 import { img, s3Video } from "./netlifyImg.ts"
 import type { ModelsGetPublicModels200Item, ModelsGetBaseModels200Item, ModelsGetModelByName200, ModelsGetModelByName200MediaItem } from "./orval.ts"
 
+export const updateLinkTag = (html: string, rel: string, href: string): string => {
+  const linkTagRegex = new RegExp(`<link\\s[^>]*rel=["']${rel}["'][^>]*>`, "i")
+  const newLinkTag = `<link rel="${rel}" href="${href}" />`
+
+  if (linkTagRegex.test(html)) {
+    return html.replace(linkTagRegex, newLinkTag)
+  } else {
+    return html.replace(/<\/head>/i, `  ${newLinkTag}\n</head>`)
+  }
+}
+
 export function escapeHtml(input: string): string {
   const map: Record<string, string> = {
     "&": "&amp;",
