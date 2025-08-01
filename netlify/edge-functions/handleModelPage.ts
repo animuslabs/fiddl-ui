@@ -8,13 +8,14 @@ export const config: Config = {
   cache: "manual",
 }
 
-export default async (request: Request, _context: Context) => {
-  const context = _context as Context & {
-    cache: {
-      get(key: string): Promise<Response | undefined>
-      set(key: string, value: Response, ttl?: number): Promise<void>
-    }
-  }
+export default async (request: Request, context: Context) => {
+  const url = new URL(request.url)
+  const cacheKey = new Request(url.toString()) // stable cache key for this page
+
+  // 1) Try cache
+  const cache = await caches.open("models")
+  const cached = await cache.match(cacheKey)
+  if (cached) return cached
   try {
     const url = new URL(request.url)
     const segments = url.pathname.split("/")
@@ -22,9 +23,6 @@ export default async (request: Request, _context: Context) => {
     const customModelId = segments[3] || undefined
     const cacheKey = `model-page:${modelName}:${customModelId || "base"}`
     if (!modelName) return context.next()
-
-    const cached = await context.cache?.get?.(cacheKey)
-    if (cached) return cached
     console.log("Cache miss for model page:", cacheKey)
     const [res, modelData, baseModels, publicModels] = await Promise.all([context.next(), modelsGetModelByName({ name: modelName, customModelId, includeMedia: 20 }), modelsGetBaseModels().catch(console.error), modelsGetPublicModels().catch(console.error)])
     const allModels = [...(baseModels || []), ...(publicModels || [])]
@@ -33,10 +31,10 @@ export default async (request: Request, _context: Context) => {
     const fullUrl = `${url.origin}${url.pathname}`
     const schemaJson = buildModelSchema(modelData, fullUrl)
     const metadataHtml = buildModelMetadataInnerHtml(modelData)
-    const type = modelData.model.modelTags.some((tag) => tag.toLowerCase().includes("video")) ? "video" : "image"
+    const type = modelData.model.modelTags.some((tag: string) => tag.toLowerCase().includes("video")) ? "video" : "image"
     const media = modelData.media || []
     const firstMedia = media[0]
-    const mediaHtml = buildMediaEls(media.map((m) => ({ ...m, type })))
+    const mediaHtml = buildMediaEls(media.map((m: any) => ({ ...m, type })))
     const ssrBlock = `<div class="ssr-metadata">${buildStaticTopNavHtml()}\n${metadataHtml}\n${mediaHtml}\n${modelNavHtml}</div>`
     // console.log("First Media:", modelData)
 
@@ -63,7 +61,7 @@ export default async (request: Request, _context: Context) => {
       },
     })
 
-    if (context.cache?.set) await context.cache.set(cacheKey, response.clone(), 3600)
+    if (response.ok) await cache.put(cacheKey, response.clone())
     return response
   } catch (error) {
     console.error("Error in modelsPage edge function:", error)
