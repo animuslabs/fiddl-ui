@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
   <meta charset="utf-8" />
   <title>Fiddl.art – Create & Earn with Generative Art</title>
 
@@ -69,12 +70,17 @@
       j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + '&l=' + l;
       f.parentNode.insertBefore(j, f);
     })(window, document, 'script', 'dataLayer', 'GTM-ND4R396L');
-    document.querySelectorAll(".ssr-metadata").forEach((el) => el.remove())
   </script>
 </head>
 
 <body style="background:#121212;">
-  <!-- Google Tag Manager (noscript) -->
+  <script>
+    const ssrEl = document.querySelector('.ssr-metadata')
+    if (ssrEl) {
+      ssrEl.remove()
+      console.log("SSR metadata removed early")
+    }
+  </script>
   <noscript>
     <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-ND4R396L" height="0" width="0"
       style="display:none;visibility:hidden"></iframe>
@@ -82,5 +88,7 @@
 
   <!-- quasar:entry-point -->
 </body>
+
+
 
 </html>
