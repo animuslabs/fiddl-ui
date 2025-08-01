@@ -39,17 +39,15 @@ export default async (request: Request, _context: Context) => {
     const mediaHtml = buildMediaEls(media.map((m) => ({ ...m, type })))
     const ssrBlock = `<div class="ssr-metadata">${buildStaticTopNavHtml()}\n${metadataHtml}\n${mediaHtml}\n${modelNavHtml}</div>`
     // console.log("First Media:", modelData)
-    const ogTitle = `${modelData.model.name} Model | Fiddl.art`
-    const ogDescription = modelData.model.description || "Create, share and earn with generative art on Fiddl.art."
+
     const ogImage = firstMedia ? (type == "video" ? s3Video(firstMedia.id, "thumbnail") : img(firstMedia.id, "lg")) : "https://app.fiddl.art/OGImage-1.jpg"
     const modelPath = `/model/${modelName}${customModelId ? `/${customModelId}` : ""}`
-    const canonicalUrl = `${url.origin}${modelPath}`
 
     let modified = html.replace(/<title>.*?<\/title>/i, `<title>${modelData.model.name} | Fiddl.art</title>`).replace(/<head([^>]*)>/i, `<head$1>\n<script type="application/ld+json">${schemaJson}</script>`)
     modified = modified.replace(/<body([^>]*)>/i, `<body$1>\n${ssrBlock}`)
     modified = setSocialMetadata(modified, {
-      title: modelData.model.name + " | Fiddl.art",
-      description: modelData.model.description ?? "Create, share and earn with generative art on Fiddl.art.",
+      title: `${modelData.model.name} Model | Fiddl.art`,
+      description: modelData.model.description || "Create, share and earn with generative art on Fiddl.art.",
       imageUrl: ogImage,
       ogUrl: fullUrl,
       canonicalUrl: fullUrl,
@@ -60,11 +58,8 @@ export default async (request: Request, _context: Context) => {
     const response = new Response(modified, {
       status: res.status,
       headers: {
-        //@ts-ignore
-        ...Object.fromEntries(res.headers.entries()),
-
-        "Cache-Control": "public, s-maxage=3600",
         "Content-Type": "text/html",
+        "Cache-Control": "public, s-maxage=3600",
       },
     })
 
