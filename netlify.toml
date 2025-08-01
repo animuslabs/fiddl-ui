@@ -6,12 +6,12 @@
   command = "yarn dev --port 5173"
 
 [[edge_functions]]
-  function = "routes/request"
+  function = "request"
   path = "/r/*"
   cache = "manual"
 
 [[edge_functions]]
-  function = "routes/model"
+  function = "model"
   path     = "/model/:modelName/:customModelId?"
   cache = "manual"
 
@@ -19,7 +19,6 @@
   included_files = [
     "netlify/edge-functions/lib/**",
   ]
-  deno_import_map = "netlify/edge-functions/import_map.json"
 
 
 [[redirects]]

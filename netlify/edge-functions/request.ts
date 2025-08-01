@@ -1,8 +1,8 @@
 import type { Context } from "@netlify/edge-functions"
-import { buildPageResponse } from "../lib/page.ts"
-import { shortIdToLong } from "../lib/util.ts"
-import { creationsGetImageRequest, creationsGetVideoRequest } from "../lib/orval.ts"
-import { img, s3Video } from "../lib/netlifyImg.ts"
+import { buildPageResponse } from "./lib/page.ts"
+import { shortIdToLong } from "./lib/util.ts"
+import { creationsGetImageRequest, creationsGetVideoRequest } from "./lib/orval.ts"
+import { img, s3Video } from "./lib/netlifyImg.ts"
 
 export default async function (request: Request, context: Context) {
   try {
