@@ -21,13 +21,9 @@ export default async function (request: Request, context: Context) {
     // Compose blocks
     const fullUrl = `${url.origin}${url.pathname}`
     const schemaJson = buildModelSchema(modelData, fullUrl)
-    const metaHtml = buildModelMetadataInnerHtml(modelData)
 
     const isVideo = modelData.model.modelTags.some((t: string) => t.toLowerCase().includes("video"))
     const media = modelData.media || []
-    const mediaHtml = buildMediaEls(media.map((m: any) => ({ ...m, type: isVideo ? "video" : "image" })))
-    const footerHtml = buildModelFooterHtml([...(baseModels ?? []), ...(publicModels ?? [])])
-    const topNavHtml = buildStaticTopNavHtml()
 
     const first = media[0]
     const ogImage = first ? (isVideo ? s3Video(first.id, "thumbnail") : img(first.id, "lg")) : "https://app.fiddl.art/OGImage-1.jpg"
@@ -47,7 +43,12 @@ export default async function (request: Request, context: Context) {
       blocks: {
         title: `${modelData.model.name} | Fiddl.art`,
         jsonLd: [schemaJson],
-        htmlBlocks: [topNavHtml, metaHtml, mediaHtml, footerHtml],
+        htmlBlocks: [
+          buildStaticTopNavHtml(),
+          buildModelMetadataInnerHtml(modelData),
+          buildMediaEls(media.map((m) => ({ ...m, type: isVideo ? "video" : "image" }))), //
+          buildModelFooterHtml([...(baseModels ?? []), ...(publicModels ?? [])]),
+        ],
       },
     })
   } catch (e) {
