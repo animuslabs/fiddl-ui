@@ -1,6 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
+import { buildPageResponse } from "./lib/page.ts"
 import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels } from "./lib/orval.ts"
-import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml, setSocialMetadata, updateLinkTag } from "./lib/util.ts"
+import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 
 export const config: Config = {
@@ -8,72 +9,57 @@ export const config: Config = {
   cache: "manual",
 }
 
-export default async (request: Request, context: Context) => {
-  const url = new URL(request.url)
-  const cacheKey = new Request(url.toString()) // stable cache key for this page
-
-  // 1) Try cache
-  const cache = await caches.open("models")
-  const cached = await cache.match(cacheKey)
-  if (cached) return cached
+export default async function (request: Request, context: Context) {
   try {
     const url = new URL(request.url)
-    const segments = url.pathname.split("/")
-    const modelName = segments[2]
-    const customModelId = segments[3] || undefined
-    const cacheKey = `model-page:${modelName}:${customModelId || "base"}`
+    const [, , modelName, customModelId] = url.pathname.split("/")
     if (!modelName) return context.next()
-    console.log("Cache miss for model page:", cacheKey)
-    const [res, modelData, baseModels, publicModels] = await Promise.all([context.next(), modelsGetModelByName({ name: modelName, customModelId, includeMedia: 20 }), modelsGetBaseModels().catch(console.error), modelsGetPublicModels().catch(console.error)])
-    const allModels = [...(baseModels || []), ...(publicModels || [])]
-    const modelNavHtml = buildModelFooterHtml(allModels)
-    const html = await res.text()
+
+    // Fetch data (only if not cached — buildPageResponse will cache final HTML)
+    const [modelData, baseModels, publicModels] = await Promise.all([modelsGetModelByName({ name: modelName, customModelId, includeMedia: 20 }), modelsGetBaseModels().catch(() => null), modelsGetPublicModels().catch(() => null)])
+
+    // Compose blocks
     const fullUrl = `${url.origin}${url.pathname}`
     const schemaJson = buildModelSchema(modelData, fullUrl)
-    const metadataHtml = buildModelMetadataInnerHtml(modelData)
-    const type = modelData.model.modelTags.some((tag: string) => tag.toLowerCase().includes("video")) ? "video" : "image"
+    const metaHtml = buildModelMetadataInnerHtml(modelData)
+
+    const isVideo = modelData.model.modelTags.some((t: string) => t.toLowerCase().includes("video"))
     const media = modelData.media || []
-    const firstMedia = media[0]
-    const mediaHtml = buildMediaEls(media.map((m: any) => ({ ...m, type })))
-    const ssrBlock = `<div class="ssr-metadata">${buildStaticTopNavHtml()}\n${metadataHtml}\n${mediaHtml}\n${modelNavHtml}</div>`
-    // console.log("First Media:", modelData)
+    const mediaHtml = buildMediaEls(media.map((m: any) => ({ ...m, type: isVideo ? "video" : "image" })))
+    const footerHtml = buildModelFooterHtml([...(baseModels ?? []), ...(publicModels ?? [])])
+    const topNavHtml = buildStaticTopNavHtml()
 
-    const ogImage = firstMedia ? (type == "video" ? s3Video(firstMedia.id, "thumbnail") : img(firstMedia.id, "lg")) : "https://app.fiddl.art/OGImage-1.jpg"
-    const modelPath = `/model/${modelName}${customModelId ? `/${customModelId}` : ""}`
+    const first = media[0]
+    const ogImage = first ? (isVideo ? s3Video(first.id, "thumbnail") : img(first.id, "lg")) : "https://app.fiddl.art/OGImage-1.jpg"
 
-    let modified = html.replace(/<title>.*?<\/title>/i, `<title>${modelData.model.name} | Fiddl.art</title>`).replace(/<head([^>]*)>/i, `<head$1>\n<script type="application/ld+json">${schemaJson}</script>`)
-    modified = modified.replace(/<body([^>]*)>/i, `<body$1>\n${ssrBlock}`)
-    modified = setSocialMetadata(modified, {
-      title: `${modelData.model.name} Model | Fiddl.art`,
-      description: modelData.model.description || "Create, share and earn with generative art on Fiddl.art.",
-      imageUrl: ogImage,
-      ogUrl: fullUrl,
-      canonicalUrl: fullUrl,
-      ogType: "website",
-      twitterImageAlt: modelData.media?.[0]?.meta ?? undefined,
-    })
-    // Cache the final response
-    const response = new Response(modified, {
-      status: res.status,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-
-        // Browser: keep conservative (SPAs shouldn’t be cached long in browsers)
-        "Cache-Control": "max-age=0, must-revalidate",
-
-        // CDN: cache aggressively at the edge
-        "Netlify-CDN-Cache-Control": "public, max-age=3600, stale-while-revalidate=300",
-
-        // Optional: make purging and deploy-persistence easier
-        "Cache-Tag": `model,model:${modelName}${customModelId ? `,custom:${customModelId}` : ""}`,
-        "Netlify-Cache-ID": "models-v1",
+    // Hand off to the master constructor
+    return buildPageResponse({
+      request,
+      context,
+      social: {
+        title: `${modelData.model.name} Model | Fiddl.art`,
+        description: modelData.model.description || "Create, share and earn with generative art on Fiddl.art.",
+        imageUrl: ogImage,
+        // canonical+ogUrl default to clean origin+pathname if omitted
+        twitterImageAlt: first?.meta ?? "",
+        ogType: "website",
+      },
+      blocks: {
+        title: `${modelData.model.name} | Fiddl.art`,
+        jsonLd: [schemaJson],
+        htmlBlocks: [topNavHtml, metaHtml, mediaHtml, footerHtml],
+      },
+      cache: {
+        namespace: "models",
+        edgeTtl: 3600,
+        edgeSwr: 300,
+        browser: "revalidate",
+        tags: ["model", `model:${modelName}`, customModelId ? `custom:${customModelId}` : ""].filter(Boolean),
+        cacheId: "models-v1",
       },
     })
-
-    if (response.ok) await cache.put(cacheKey, response.clone())
-    return response
-  } catch (error) {
-    console.error("Error in modelsPage edge function:", error)
+  } catch (e) {
+    console.error("handleModelPage error:", e)
     return context.next()
   }
 }
