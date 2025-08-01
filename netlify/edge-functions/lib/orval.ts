@@ -4,3510 +4,4311 @@
  * Fiddl.art API
  * OpenAPI spec version: 1.0.0
  */
-import { fetcher } from "./fetcher.ts"
+import { fetcher } from './fetcher.ts';
 export type ErrorBADREQUESTIssuesItem = {
-  message: string
-}
+  message: string;
+};
 
 /**
  * The error information
  */
 export interface ErrorBADREQUEST {
   /** The error message */
-  message: string
+  message: string;
   /** The error code */
-  code: string
+  code: string;
   /** An array of issues that were responsible for the error */
-  issues?: ErrorBADREQUESTIssuesItem[]
+  issues?: ErrorBADREQUESTIssuesItem[];
 }
 
 export type ErrorUNAUTHORIZEDIssuesItem = {
-  message: string
-}
+  message: string;
+};
 
 /**
  * The error information
  */
 export interface ErrorUNAUTHORIZED {
   /** The error message */
-  message: string
+  message: string;
   /** The error code */
-  code: string
+  code: string;
   /** An array of issues that were responsible for the error */
-  issues?: ErrorUNAUTHORIZEDIssuesItem[]
+  issues?: ErrorUNAUTHORIZEDIssuesItem[];
 }
 
 export type ErrorFORBIDDENIssuesItem = {
-  message: string
-}
+  message: string;
+};
 
 /**
  * The error information
  */
 export interface ErrorFORBIDDEN {
   /** The error message */
-  message: string
+  message: string;
   /** The error code */
-  code: string
+  code: string;
   /** An array of issues that were responsible for the error */
-  issues?: ErrorFORBIDDENIssuesItem[]
+  issues?: ErrorFORBIDDENIssuesItem[];
 }
 
 export type ErrorINTERNALSERVERERRORIssuesItem = {
-  message: string
-}
+  message: string;
+};
 
 /**
  * The error information
  */
 export interface ErrorINTERNALSERVERERROR {
   /** The error message */
-  message: string
+  message: string;
   /** The error code */
-  code: string
+  code: string;
   /** An array of issues that were responsible for the error */
-  issues?: ErrorINTERNALSERVERERRORIssuesItem[]
+  issues?: ErrorINTERNALSERVERERRORIssuesItem[];
 }
 
 export type ErrorNOTFOUNDIssuesItem = {
-  message: string
-}
+  message: string;
+};
 
 /**
  * The error information
  */
 export interface ErrorNOTFOUND {
   /** The error message */
-  message: string
+  message: string;
   /** The error code */
-  code: string
+  code: string;
   /** An array of issues that were responsible for the error */
-  issues?: ErrorNOTFOUNDIssuesItem[]
+  issues?: ErrorNOTFOUNDIssuesItem[];
 }
 
 export type PkAuthRegisterStartBody = {
-  email?: string
-  phone?: string
-  referredByUserName?: string
-}
+  email?: string;
+  phone?: string;
+  referredByUserName?: string;
+};
 
 export type PkAuthRegisterFinishBody = {
-  userId: string
-  data?: unknown
-}
+  userId: string;
+  data?: unknown;
+};
 
 export type PkAuthLoginStartBody = {
-  userId: string
-}
+  userId: string;
+};
 
 export type PkAuthLoginFinishBody = {
-  userId: string
-  data?: unknown
-}
+  userId: string;
+  data?: unknown;
+};
 
-export type CreateImageBodyModel = (typeof CreateImageBodyModel)[keyof typeof CreateImageBodyModel]
+export type CreateImageBodyModel = typeof CreateImageBodyModel[keyof typeof CreateImageBodyModel];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyModel = {
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
-} as const
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
+} as const;
 
-export type CreateImageBodyAspectRatio = (typeof CreateImageBodyAspectRatio)[keyof typeof CreateImageBodyAspectRatio]
+export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreateImageBody = {
-  prompt: string
-  negativePrompt?: string
+  prompt: string;
+  negativePrompt?: string;
   /**
    * @minimum 1
    * @maximum 100
    */
-  quantity: number
-  seed?: number
-  model: CreateImageBodyModel
-  public?: boolean
-  aspectRatio?: CreateImageBodyAspectRatio
-  customModelId?: string
-}
+  quantity: number;
+  seed?: number;
+  model: CreateImageBodyModel;
+  public?: boolean;
+  aspectRatio?: CreateImageBodyAspectRatio;
+  customModelId?: string;
+};
 
 export type CreateImage200 = {
-  ids: string[]
-  id: string
-  errors: string[]
-}
+  ids: string[];
+  id: string;
+  errors: string[];
+};
 
-export type CreateVideoBodyModel = (typeof CreateVideoBodyModel)[keyof typeof CreateVideoBodyModel]
+export type CreateVideoBodyModel = typeof CreateVideoBodyModel[keyof typeof CreateVideoBodyModel];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyModel = {
-  "veo-2": "veo-2",
-  "veo-3": "veo-3",
-  "seedance-pro": "seedance-pro",
-  "seedance-lite": "seedance-lite",
-  kling: "kling",
-} as const
+  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+} as const;
 
-export type CreateVideoBodyAspectRatio = (typeof CreateVideoBodyAspectRatio)[keyof typeof CreateVideoBodyAspectRatio]
+export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreateVideoBody = {
-  prompt: string
+  prompt: string;
   /**
    * @minimum 1
    * @maximum 5
    */
-  quantity: number
-  seed?: number
-  model: CreateVideoBodyModel
-  public: boolean
-  aspectRatio: CreateVideoBodyAspectRatio
-  duration: number
-  startImageId?: string
-}
+  quantity: number;
+  seed?: number;
+  model: CreateVideoBodyModel;
+  public: boolean;
+  aspectRatio: CreateVideoBodyAspectRatio;
+  duration: number;
+  startImageId?: string;
+};
 
-export type CreateVideo200VideosItemStatus = (typeof CreateVideo200VideosItemStatus)[keyof typeof CreateVideo200VideosItemStatus]
+export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideo200VideosItemStatus = {
-  processing: "processing",
-  previewRendering: "previewRendering",
-  ready: "ready",
-  errored: "errored",
-} as const
+  processing: 'processing',
+  previewRendering: 'previewRendering',
+  ready: 'ready',
+  errored: 'errored',
+} as const;
 
 export type CreateVideo200VideosItem = {
-  status: CreateVideo200VideosItemStatus
-  id: string
-  createdAt: string
-  updatedAt: string
+  status: CreateVideo200VideosItemStatus;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  seed: string | null
-  errored: boolean
-  deleted: boolean
-  videoRequestId: string
+  seed: string | null;
+  errored: boolean;
+  deleted: boolean;
+  videoRequestId: string;
   /** @nullable */
-  replicatePredictionId: string | null
+  replicatePredictionId: string | null;
   /** @nullable */
-  coconutJobId: string | null
+  coconutJobId: string | null;
   /** @nullable */
-  errorMessage: string | null
-}
+  errorMessage: string | null;
+};
 
 export type CreateVideo200 = {
-  id: string
-  userId: string
-  prompt: string
-  model: string
-  aspectRatio: string
-  duration: number
+  id: string;
+  userId: string;
+  prompt: string;
+  model: string;
+  aspectRatio: string;
+  duration: number;
   /** @nullable */
-  seed: string | null
+  seed: string | null;
   /** @nullable */
-  negativePrompt: string | null
-  quantity: number
-  createdAt: string
-  updatedAt: string
-  public: boolean
-  deleted: boolean
+  negativePrompt: string | null;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+  public: boolean;
+  deleted: boolean;
   /** @nullable */
-  error: string | null
+  error: string | null;
   /** @nullable */
-  startImageId: string | null
-  videos: CreateVideo200VideosItem[]
-}
+  startImageId: string | null;
+  videos: CreateVideo200VideosItem[];
+};
 
-export type CreateRandomPromptBodyType = (typeof CreateRandomPromptBodyType)[keyof typeof CreateRandomPromptBodyType]
+export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateRandomPromptBodyType = {
-  image: "image",
-  video: "video",
-} as const
+  image: 'image',
+  video: 'video',
+} as const;
 
 export type CreateRandomPromptBody = {
-  theme?: string
-  type?: CreateRandomPromptBodyType
-}
+  theme?: string;
+  type?: CreateRandomPromptBodyType;
+};
 
-export type CreateImprovePromptBodyType = (typeof CreateImprovePromptBodyType)[keyof typeof CreateImprovePromptBodyType]
+export type CreateImprovePromptBodyType = typeof CreateImprovePromptBodyType[keyof typeof CreateImprovePromptBodyType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImprovePromptBodyType = {
-  image: "image",
-  video: "video",
-} as const
+  image: 'image',
+  video: 'video',
+} as const;
 
 export type CreateImprovePromptBody = {
-  prompt: string
-  type?: CreateImprovePromptBodyType
-}
+  prompt: string;
+  type?: CreateImprovePromptBodyType;
+};
 
 export type CreationsGetCreationDataParams = {
-  imageId?: string
-  videoId?: string
-}
+imageId?: string;
+videoId?: string;
+};
 
 export type CreationsGetCreationData200 = {
-  id: string
-  createdAt: string
-  requestId: string
-  seed?: number
-  creatorId: string
-  numCollections: number
-}
+  id: string;
+  createdAt: string;
+  requestId: string;
+  seed?: number;
+  creatorId: string;
+  numCollections: number;
+};
 
 export type CreationsUserImagePurchasesParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: CreationsUserImagePurchasesOrder
-  endDateTime?: string
-  customModelId?: string
-  model?: (typeof CreationsUserImagePurchasesModel)[keyof typeof CreationsUserImagePurchasesModel]
-  aspectRatio?: CreationsUserImagePurchasesAspectRatio
-  promptIncludes?: string
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsUserImagePurchasesOrder;
+endDateTime?: string;
+customModelId?: string;
+model?: typeof CreationsUserImagePurchasesModel[keyof typeof CreationsUserImagePurchasesModel] ;
+aspectRatio?: CreationsUserImagePurchasesAspectRatio;
+promptIncludes?: string;
+};
 
-export type CreationsUserImagePurchasesOrder = (typeof CreationsUserImagePurchasesOrder)[keyof typeof CreationsUserImagePurchasesOrder]
+export type CreationsUserImagePurchasesOrder = typeof CreationsUserImagePurchasesOrder[keyof typeof CreationsUserImagePurchasesOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export const CreationsUserImagePurchasesModel = {
-  "veo-2": "veo-2",
-  "veo-3": "veo-3",
-  "seedance-pro": "seedance-pro",
-  "seedance-lite": "seedance-lite",
-  kling: "kling",
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
-export type CreationsUserImagePurchasesAspectRatio = (typeof CreationsUserImagePurchasesAspectRatio)[keyof typeof CreationsUserImagePurchasesAspectRatio]
+export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreationsUserImagePurchases200Item = {
-  id: string
-  userId: string
-  imageId: string
-  createdAt: string
-}
+  id: string;
+  userId: string;
+  imageId: string;
+  createdAt: string;
+};
 
 export type CreationsUserVideoPurchasesParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: CreationsUserVideoPurchasesOrder
-  endDateTime?: string
-  customModelId?: string
-  model?: (typeof CreationsUserVideoPurchasesModel)[keyof typeof CreationsUserVideoPurchasesModel]
-  aspectRatio?: CreationsUserVideoPurchasesAspectRatio
-  promptIncludes?: string
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsUserVideoPurchasesOrder;
+endDateTime?: string;
+customModelId?: string;
+model?: typeof CreationsUserVideoPurchasesModel[keyof typeof CreationsUserVideoPurchasesModel] ;
+aspectRatio?: CreationsUserVideoPurchasesAspectRatio;
+promptIncludes?: string;
+};
 
-export type CreationsUserVideoPurchasesOrder = (typeof CreationsUserVideoPurchasesOrder)[keyof typeof CreationsUserVideoPurchasesOrder]
+export type CreationsUserVideoPurchasesOrder = typeof CreationsUserVideoPurchasesOrder[keyof typeof CreationsUserVideoPurchasesOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export const CreationsUserVideoPurchasesModel = {
-  "veo-2": "veo-2",
-  "veo-3": "veo-3",
-  "seedance-pro": "seedance-pro",
-  "seedance-lite": "seedance-lite",
-  kling: "kling",
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
-export type CreationsUserVideoPurchasesAspectRatio = (typeof CreationsUserVideoPurchasesAspectRatio)[keyof typeof CreationsUserVideoPurchasesAspectRatio]
+export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreationsUserVideoPurchases200Item = {
-  id: string
-  userId: string
-  videoId: string
-  createdAt: string
-}
+  id: string;
+  userId: string;
+  videoId: string;
+  createdAt: string;
+};
 
 export type CreationsCreateImageRequestsParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: CreationsCreateImageRequestsOrder
-  endDateTime?: string
-  customModelId?: string
-  model?: (typeof CreationsCreateImageRequestsModel)[keyof typeof CreationsCreateImageRequestsModel]
-  aspectRatio?: CreationsCreateImageRequestsAspectRatio
-  promptIncludes?: string
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateImageRequestsOrder;
+endDateTime?: string;
+customModelId?: string;
+model?: typeof CreationsCreateImageRequestsModel[keyof typeof CreationsCreateImageRequestsModel] ;
+aspectRatio?: CreationsCreateImageRequestsAspectRatio;
+promptIncludes?: string;
+};
 
-export type CreationsCreateImageRequestsOrder = (typeof CreationsCreateImageRequestsOrder)[keyof typeof CreationsCreateImageRequestsOrder]
+export type CreationsCreateImageRequestsOrder = typeof CreationsCreateImageRequestsOrder[keyof typeof CreationsCreateImageRequestsOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export const CreationsCreateImageRequestsModel = {
-  "veo-2": "veo-2",
-  "veo-3": "veo-3",
-  "seedance-pro": "seedance-pro",
-  "seedance-lite": "seedance-lite",
-  kling: "kling",
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
-export type CreationsCreateImageRequestsAspectRatio = (typeof CreationsCreateImageRequestsAspectRatio)[keyof typeof CreationsCreateImageRequestsAspectRatio]
+export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreationsCreateImageRequests200Item = {
-  id: string
-  imageIds: string[]
-  createdAt: string
-  aspectRatio: string
-  public: boolean
-  creatorId: string
-  creatorUsername: string
-  model?: string
-  seed?: number
-  prompt?: string
-  negativePrompt?: string
-  quantity: number
-  customModelId?: string
-  customModelName?: string
-}
+  id: string;
+  imageIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  negativePrompt?: string;
+  quantity: number;
+  customModelId?: string;
+  customModelName?: string;
+};
 
 export type CreationsCreateVideoRequestsParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: CreationsCreateVideoRequestsOrder
-  endDateTime?: string
-  customModelId?: string
-  model?: (typeof CreationsCreateVideoRequestsModel)[keyof typeof CreationsCreateVideoRequestsModel]
-  aspectRatio?: CreationsCreateVideoRequestsAspectRatio
-  promptIncludes?: string
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsCreateVideoRequestsOrder;
+endDateTime?: string;
+customModelId?: string;
+model?: typeof CreationsCreateVideoRequestsModel[keyof typeof CreationsCreateVideoRequestsModel] ;
+aspectRatio?: CreationsCreateVideoRequestsAspectRatio;
+promptIncludes?: string;
+};
 
-export type CreationsCreateVideoRequestsOrder = (typeof CreationsCreateVideoRequestsOrder)[keyof typeof CreationsCreateVideoRequestsOrder]
+export type CreationsCreateVideoRequestsOrder = typeof CreationsCreateVideoRequestsOrder[keyof typeof CreationsCreateVideoRequestsOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export const CreationsCreateVideoRequestsModel = {
-  "veo-2": "veo-2",
-  "veo-3": "veo-3",
-  "seedance-pro": "seedance-pro",
-  "seedance-lite": "seedance-lite",
-  kling: "kling",
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
 } as const
-export type CreationsCreateVideoRequestsAspectRatio = (typeof CreationsCreateVideoRequestsAspectRatio)[keyof typeof CreationsCreateVideoRequestsAspectRatio]
+export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
 export type CreationsCreateVideoRequests200Item = {
-  id: string
-  videoIds: string[]
-  createdAt: string
-  aspectRatio: string
-  public: boolean
-  creatorId: string
-  creatorUsername: string
-  model?: string
-  seed?: number
-  prompt?: string
-  duration?: number
-  quantity: number
-  startImageId?: string
-}
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
+  startImageId?: string;
+};
 
 export type CreationsGetImageRequestParams = {
-  imageRequestId: string
-}
+imageRequestId: string;
+};
 
 export type CreationsGetImageRequest200 = {
-  id: string
-  imageIds: string[]
-  createdAt: string
-  aspectRatio: string
-  public: boolean
-  creatorId: string
-  creatorUsername: string
-  model?: string
-  seed?: number
-  prompt?: string
-  negativePrompt?: string
-  quantity: number
-  customModelId?: string
-  customModelName?: string
-}
+  id: string;
+  imageIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  negativePrompt?: string;
+  quantity: number;
+  customModelId?: string;
+  customModelName?: string;
+};
 
 export type CreationsGetVideoRequestParams = {
-  videoRequestId: string
-}
+videoRequestId: string;
+};
 
 export type CreationsGetVideoRequest200 = {
-  id: string
-  videoIds: string[]
-  createdAt: string
-  aspectRatio: string
-  public: boolean
-  creatorId: string
-  creatorUsername: string
-  model?: string
-  seed?: number
-  prompt?: string
-  duration?: number
-  quantity: number
-  startImageId?: string
-}
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  duration?: number;
+  quantity: number;
+  startImageId?: string;
+};
 
 export type CreationsBrowseCreateRequestsParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: CreationsBrowseCreateRequestsOrder
-  endDateTime?: string
-  promptIncludes?: string
-  model?: CreationsBrowseCreateRequestsModel
-  aspectRatio?: CreationsBrowseCreateRequestsAspectRatio
-  customModelId?: string
-  randomSeed?: number
-  sortMethod: CreationsBrowseCreateRequestsSortMethod
-  mediaType?: CreationsBrowseCreateRequestsMediaType
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsBrowseCreateRequestsOrder;
+endDateTime?: string;
+promptIncludes?: string;
+model?: CreationsBrowseCreateRequestsModel;
+aspectRatio?: CreationsBrowseCreateRequestsAspectRatio;
+customModelId?: string;
+randomSeed?: number;
+sortMethod: CreationsBrowseCreateRequestsSortMethod;
+mediaType?: CreationsBrowseCreateRequestsMediaType;
+};
 
-export type CreationsBrowseCreateRequestsOrder = (typeof CreationsBrowseCreateRequestsOrder)[keyof typeof CreationsBrowseCreateRequestsOrder]
+export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export type CreationsBrowseCreateRequestsModel = (typeof CreationsBrowseCreateRequestsModel)[keyof typeof CreationsBrowseCreateRequestsModel]
+export type CreationsBrowseCreateRequestsModel = typeof CreationsBrowseCreateRequestsModel[keyof typeof CreationsBrowseCreateRequestsModel];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsModel = {
-  ultra: "ultra",
-  "sd3-lg": "sd3-lg",
-  core: "core",
-  "dall-e-3": "dall-e-3",
-  "flux-pro-ultra": "flux-pro-ultra",
-  "flux-dev": "flux-dev",
-  "flux-pro": "flux-pro",
-  custom: "custom",
-  imagen4: "imagen4",
-  "imagen4-ultra": "imagen4-ultra",
-  photon: "photon",
-  recraft3: "recraft3",
-  "recraft3-svg": "recraft3-svg",
-  "gpt-image-1": "gpt-image-1",
-  seedream3: "seedream3",
-} as const
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
+} as const;
 
-export type CreationsBrowseCreateRequestsAspectRatio = (typeof CreationsBrowseCreateRequestsAspectRatio)[keyof typeof CreationsBrowseCreateRequestsAspectRatio]
+export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsAspectRatio = {
-  "16:9": "16:9",
-  "1:1": "1:1",
-  "21:9": "21:9",
-  "2:3": "2:3",
-  "3:2": "3:2",
-  "4:5": "4:5",
-  "5:4": "5:4",
-  "9:16": "9:16",
-  "9:21": "9:21",
-  "3:4": "3:4",
-  "4:3": "4:3",
-} as const
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
 
-export type CreationsBrowseCreateRequestsSortMethod = (typeof CreationsBrowseCreateRequestsSortMethod)[keyof typeof CreationsBrowseCreateRequestsSortMethod]
+export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsSortMethod = {
-  latest: "latest",
-  shuffle: "shuffle",
-  popular: "popular",
-} as const
+  latest: 'latest',
+  shuffle: 'shuffle',
+  popular: 'popular',
+} as const;
 
-export type CreationsBrowseCreateRequestsMediaType = (typeof CreationsBrowseCreateRequestsMediaType)[keyof typeof CreationsBrowseCreateRequestsMediaType]
+export type CreationsBrowseCreateRequestsMediaType = typeof CreationsBrowseCreateRequestsMediaType[keyof typeof CreationsBrowseCreateRequestsMediaType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsMediaType = {
-  image: "image",
-  video: "video",
-  all: "all",
-} as const
+  image: 'image',
+  video: 'video',
+  all: 'all',
+} as const;
 
 export type CreationsHdImageParams = {
-  imageId: string
-}
+imageId: string;
+};
 
 export type CreationsHdVideoParams = {
-  videoId: string
-  download?: boolean
-}
+videoId: string;
+download?: boolean;
+};
 
 export type CreationsOriginalImageParams = {
-  imageId: string
-}
+imageId: string;
+};
 
 export type CreationsUpscaledImageParams = {
-  imageId: string
-}
+imageId: string;
+};
 
 export type CreationsPurchaseMediaBody = {
-  imageId?: string
-  videoId?: string
-}
+  imageId?: string;
+  videoId?: string;
+};
 
 export type CreationsDeleteMediaBody = {
-  imageId?: string
-  videoId?: string
-}
+  imageId?: string;
+  videoId?: string;
+};
 
 export type CreationsDeleteRequestBody = {
-  videoRequestId?: string
-  imageRequestId?: string
-}
+  videoRequestId?: string;
+  imageRequestId?: string;
+};
 
 export type CreationsSetRequestPrivacyBody = {
-  videoRequestId?: string
-  imageRequestId?: string
-  public: boolean
-}
+  videoRequestId?: string;
+  imageRequestId?: string;
+  public: boolean;
+};
 
 export type PointsPackagesAvailable200Item = {
-  points: number
-  discountPct: number
-  usd: number
-}
+  points: number;
+  discountPct: number;
+  usd: number;
+};
 
 export type PointsPrices200ImageModel = {
-  ultra: number
-  "sd3-lg": number
-  core: number
-  "dall-e-3": number
-  "flux-pro-ultra": number
-  "flux-dev": number
-  "flux-pro": number
-  custom: number
-  imagen4: number
-  "imagen4-ultra": number
-  photon: number
-  recraft3: number
-  "recraft3-svg": number
-  "gpt-image-1": number
-  seedream3: number
-}
+  ultra: number;
+  'sd3-lg': number;
+  core: number;
+  'dall-e-3': number;
+  'flux-pro-ultra': number;
+  'flux-dev': number;
+  'flux-pro': number;
+  custom: number;
+  imagen4: number;
+  'imagen4-ultra': number;
+  photon: number;
+  recraft3: number;
+  'recraft3-svg': number;
+  'gpt-image-1': number;
+  seedream3: number;
+};
 
 export type PointsPrices200Image = {
-  unlock: number
-  unlockCommission: number
-  model: PointsPrices200ImageModel
-}
+  unlock: number;
+  unlockCommission: number;
+  model: PointsPrices200ImageModel;
+};
 
 export type PointsPrices200ForgeTrainBaseModel = {
-  fluxDev: number
-  fluxPro: number
-  fluxProUltra: number
-  faceClone: number
-  faceForge: number
-}
+  fluxDev: number;
+  fluxPro: number;
+  fluxProUltra: number;
+  faceClone: number;
+  faceForge: number;
+};
 
 export type PointsPrices200ForgeFineTuneType = {
-  lora: number
-  full: number
-}
+  lora: number;
+  full: number;
+};
 
 export type PointsPrices200Forge = {
-  createTrainingSet: number
-  trainBaseModel: PointsPrices200ForgeTrainBaseModel
-  fineTuneType: PointsPrices200ForgeFineTuneType
-  customModelCharge: number
-  customModelOwnerComission: number
-}
+  createTrainingSet: number;
+  trainBaseModel: PointsPrices200ForgeTrainBaseModel;
+  fineTuneType: PointsPrices200ForgeFineTuneType;
+  customModelCharge: number;
+  customModelOwnerComission: number;
+};
 
 export type PointsPrices200VideoModel = {
-  "veo-2": number
-  "veo-3": number
-  "seedance-pro": number
-  "seedance-lite": number
-  kling: number
-}
+  'veo-2': number;
+  'veo-3': number;
+  'seedance-pro': number;
+  'seedance-lite': number;
+  kling: number;
+};
 
 export type PointsPrices200Video = {
-  unlock: number
-  unlockCommission: number
-  model: PointsPrices200VideoModel
-}
+  unlock: number;
+  unlockCommission: number;
+  model: PointsPrices200VideoModel;
+};
 
 export type PointsPrices200SocialRewards = {
-  linkEmail: number
-  linkTwitter: number
-  linkGoogle: number
-  linkPhone: number
-  linkTelegram: number
-}
+  linkEmail: number;
+  linkTwitter: number;
+  linkGoogle: number;
+  linkPhone: number;
+  linkTelegram: number;
+};
 
 export type PointsPrices200PromptTools = {
-  improvePrompt: number
-  randomPrompt: number
-}
+  improvePrompt: number;
+  randomPrompt: number;
+};
 
 export type PointsPrices200 = {
-  image: PointsPrices200Image
-  forge: PointsPrices200Forge
-  video: PointsPrices200Video
-  socialRewards: PointsPrices200SocialRewards
-  promptTools: PointsPrices200PromptTools
-}
+  image: PointsPrices200Image;
+  forge: PointsPrices200Forge;
+  video: PointsPrices200Video;
+  socialRewards: PointsPrices200SocialRewards;
+  promptTools: PointsPrices200PromptTools;
+};
 
-export type PointsInitBuyPackageBodyMethod = (typeof PointsInitBuyPackageBodyMethod)[keyof typeof PointsInitBuyPackageBodyMethod]
+export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackageBodyMethod = {
-  payPal: "payPal",
-  stripe: "stripe",
-  applePay: "applePay",
-  googlePay: "googlePay",
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  payPal: 'payPal',
+  stripe: 'stripe',
+  applePay: 'applePay',
+  googlePay: 'googlePay',
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
 export type PointsInitBuyPackageBody = {
-  packageId: number
-  method: PointsInitBuyPackageBodyMethod
-}
+  packageId: number;
+  method: PointsInitBuyPackageBodyMethod;
+};
 
 export type PointsInitBuyPackage200AnyOfLinksItem = {
-  href: string
-  rel: string
-  method: string
-}
+  href: string;
+  rel: string;
+  method: string;
+};
 
 export type PointsInitBuyPackage200AnyOf = {
-  id: string
-  status: string
-  links: PointsInitBuyPackage200AnyOfLinksItem[]
-}
+  id: string;
+  status: string;
+  links: PointsInitBuyPackage200AnyOfLinksItem[];
+};
 
-export type PointsInitBuyPackage200AnyOfThreeChainName = (typeof PointsInitBuyPackage200AnyOfThreeChainName)[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName]
+export type PointsInitBuyPackage200AnyOfThreeChainName = typeof PointsInitBuyPackage200AnyOfThreeChainName[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeChainName = {
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
-export type PointsInitBuyPackage200AnyOfThreeTokenType = (typeof PointsInitBuyPackage200AnyOfThreeTokenType)[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType]
+export type PointsInitBuyPackage200AnyOfThreeTokenType = typeof PointsInitBuyPackage200AnyOfThreeTokenType[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeTokenType = {
-  TLOS: "TLOS",
-} as const
+  TLOS: 'TLOS',
+} as const;
 
 export type PointsInitBuyPackage200AnyOfThree = {
-  chainName: PointsInitBuyPackage200AnyOfThreeChainName
-  tokenType: PointsInitBuyPackage200AnyOfThreeTokenType
-  id: string
-  userId: string
-  tokenAmount: number
-  usdValue: number
-  fee: number
+  chainName: PointsInitBuyPackage200AnyOfThreeChainName;
+  tokenType: PointsInitBuyPackage200AnyOfThreeTokenType;
+  id: string;
+  userId: string;
+  tokenAmount: number;
+  usdValue: number;
+  fee: number;
   /** @nullable */
-  transactionId: string | null
+  transactionId: string | null;
   /** @nullable */
-  transactionTime: string | null
+  transactionTime: string | null;
   /** @nullable */
-  blockNumber: number | null
+  blockNumber: number | null;
   /** @nullable */
-  memo: string | null
+  memo: string | null;
   /** @nullable */
-  senderWallet: string | null
-  destWallet: string
-  confirmed: boolean
+  senderWallet: string | null;
+  destWallet: string;
+  confirmed: boolean;
   /** @nullable */
-  pointsGranted: number | null
-  createdAt: string
+  pointsGranted: number | null;
+  createdAt: string;
   /** @nullable */
-  updatedAt: string | null
-}
+  updatedAt: string | null;
+};
 
-export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree
+export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
 
-export type PointsFinishBuyPackageBodyMethod = (typeof PointsFinishBuyPackageBodyMethod)[keyof typeof PointsFinishBuyPackageBodyMethod]
+export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsFinishBuyPackageBodyMethod = {
-  payPal: "payPal",
-  stripe: "stripe",
-  applePay: "applePay",
-  googlePay: "googlePay",
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  payPal: 'payPal',
+  stripe: 'stripe',
+  applePay: 'applePay',
+  googlePay: 'googlePay',
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
 export type PointsFinishBuyPackageBody = {
-  orderId: string
-  method: PointsFinishBuyPackageBodyMethod
-  trackingId?: string
-}
+  orderId: string;
+  method: PointsFinishBuyPackageBodyMethod;
+  trackingId?: string;
+};
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
-  currency_code: string
-  value: string
-}
+  currency_code: string;
+  value: string;
+};
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItem = {
-  reference_id: string
-  amount: PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount
-}
+  reference_id: string;
+  amount: PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount;
+};
 
 export type PointsFinishBuyPackage200AnyOf = {
-  id: string
-  status: string
-  purchase_units: PointsFinishBuyPackage200AnyOfPurchaseUnitsItem[]
-}
+  id: string;
+  status: string;
+  purchase_units: PointsFinishBuyPackage200AnyOfPurchaseUnitsItem[];
+};
 
 export type PointsFinishBuyPackage200AnyOfFour = {
-  status: string
-}
+  status: string;
+};
 
-export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour
+export type PointsFinishBuyPackage200 = PointsFinishBuyPackage200AnyOf | PointsFinishBuyPackage200AnyOfFour;
 
 export type PointsGetOrders200PayPalOrdersItem = {
-  id: string
-  orderID: string
-  amount: number
-  currency: string
-  status: string
-  createdAt: string
-  updatedAt: string
-}
+  id: string;
+  orderID: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
-export type PointsGetOrders200CryptoOrdersItemChainName = (typeof PointsGetOrders200CryptoOrdersItemChainName)[keyof typeof PointsGetOrders200CryptoOrdersItemChainName]
+export type PointsGetOrders200CryptoOrdersItemChainName = typeof PointsGetOrders200CryptoOrdersItemChainName[keyof typeof PointsGetOrders200CryptoOrdersItemChainName];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrders200CryptoOrdersItemChainName = {
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
 export type PointsGetOrders200CryptoOrdersItem = {
-  id: string
-  chainName: PointsGetOrders200CryptoOrdersItemChainName
-  tokenAmount: number
-  usdValue: number
-  confirmed: boolean
+  id: string;
+  chainName: PointsGetOrders200CryptoOrdersItemChainName;
+  tokenAmount: number;
+  usdValue: number;
+  confirmed: boolean;
   /** @nullable */
-  transactionId: string | null
+  transactionId: string | null;
   /** @nullable */
-  memo: string | null
+  memo: string | null;
   /** @nullable */
-  senderWallet: string | null
-  destWallet: string
-  createdAt: string
+  senderWallet: string | null;
+  destWallet: string;
+  createdAt: string;
   /** @nullable */
-  updatedAt: string | null
-}
+  updatedAt: string | null;
+};
 
 export type PointsGetOrders200 = {
-  payPalOrders: PointsGetOrders200PayPalOrdersItem[]
-  cryptoOrders: PointsGetOrders200CryptoOrdersItem[]
-}
+  payPalOrders: PointsGetOrders200PayPalOrdersItem[];
+  cryptoOrders: PointsGetOrders200CryptoOrdersItem[];
+};
 
 export type PointsGetOrderParams = {
-  id: string
-  method: PointsGetOrderMethod
-}
+id: string;
+method: PointsGetOrderMethod;
+};
 
-export type PointsGetOrderMethod = (typeof PointsGetOrderMethod)[keyof typeof PointsGetOrderMethod]
+export type PointsGetOrderMethod = typeof PointsGetOrderMethod[keyof typeof PointsGetOrderMethod];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrderMethod = {
-  payPal: "payPal",
-  stripe: "stripe",
-  applePay: "applePay",
-  googlePay: "googlePay",
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  payPal: 'payPal',
+  stripe: 'stripe',
+  applePay: 'applePay',
+  googlePay: 'googlePay',
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
 export type PointsGetOrder200AnyOf = {
-  id: string
-  userId: string
-  orderID: string
-  amount: number
-  currency: string
-  status: string
-  packageDetailsJSON: string
+  id: string;
+  userId: string;
+  orderID: string;
+  amount: number;
+  currency: string;
+  status: string;
+  packageDetailsJSON: string;
   /** @nullable */
-  orderDataJSON: string | null
-  createdAt: string
-  updatedAt: string
-}
+  orderDataJSON: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
-export type PointsGetOrder200AnyOfTwoChainName = (typeof PointsGetOrder200AnyOfTwoChainName)[keyof typeof PointsGetOrder200AnyOfTwoChainName]
+export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoChainName = {
-  telosNative: "telosNative",
-  telosEVM: "telosEVM",
-} as const
+  telosNative: 'telosNative',
+  telosEVM: 'telosEVM',
+} as const;
 
-export type PointsGetOrder200AnyOfTwoTokenType = (typeof PointsGetOrder200AnyOfTwoTokenType)[keyof typeof PointsGetOrder200AnyOfTwoTokenType]
+export type PointsGetOrder200AnyOfTwoTokenType = typeof PointsGetOrder200AnyOfTwoTokenType[keyof typeof PointsGetOrder200AnyOfTwoTokenType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoTokenType = {
-  TLOS: "TLOS",
-} as const
+  TLOS: 'TLOS',
+} as const;
 
 export type PointsGetOrder200AnyOfTwo = {
-  chainName: PointsGetOrder200AnyOfTwoChainName
-  tokenType: PointsGetOrder200AnyOfTwoTokenType
-  id: string
-  userId: string
-  tokenAmount: number
-  usdValue: number
-  fee: number
+  chainName: PointsGetOrder200AnyOfTwoChainName;
+  tokenType: PointsGetOrder200AnyOfTwoTokenType;
+  id: string;
+  userId: string;
+  tokenAmount: number;
+  usdValue: number;
+  fee: number;
   /** @nullable */
-  transactionId: string | null
+  transactionId: string | null;
   /** @nullable */
-  transactionTime: string | null
+  transactionTime: string | null;
   /** @nullable */
-  blockNumber: number | null
+  blockNumber: number | null;
   /** @nullable */
-  memo: string | null
+  memo: string | null;
   /** @nullable */
-  senderWallet: string | null
-  destWallet: string
-  confirmed: boolean
+  senderWallet: string | null;
+  destWallet: string;
+  confirmed: boolean;
   /** @nullable */
-  pointsGranted: number | null
-  createdAt: string
+  pointsGranted: number | null;
+  createdAt: string;
   /** @nullable */
-  updatedAt: string | null
-}
+  updatedAt: string | null;
+};
 
-export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo
+export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
 
 export type UserGetParams = {
-  userId: string
-}
+userId: string;
+};
 
 /**
  * @nullable
  */
 export type UserGet200AvatarConfig = {
-  imageId: string
-} | null
+  imageId: string;
+} | null;
 
 export type UserGet200 = {
-  id: string
+  id: string;
   /** @nullable */
-  webauthnUserID: string | null
+  webauthnUserID: string | null;
   /** @nullable */
-  currentPassKeyChallenge: string | null
-  availablePoints: number
-  createdAt: string
-  updatedAt: string
-  spentPoints: number
-  admin: boolean
+  currentPassKeyChallenge: string | null;
+  availablePoints: number;
+  createdAt: string;
+  updatedAt: string;
+  spentPoints: number;
+  admin: boolean;
   /** @nullable */
-  referredById: string | null
-  lastNotificationSent: string
+  referredById: string | null;
+  lastNotificationSent: string;
   /** @nullable */
-  privyId: string | null
+  privyId: string | null;
   /** @nullable */
-  AvatarConfig: UserGet200AvatarConfig
-}
+  AvatarConfig: UserGet200AvatarConfig;
+};
 
 export type UserProfileParams = {
-  userId: string
-}
+userId: string;
+};
 
 export type UserProfile200 = {
-  userId: string
+  userId: string;
   /** @nullable */
-  username: string | null
+  username: string | null;
   /** @nullable */
-  email: string | null
-  emailVerified: boolean
+  email: string | null;
+  emailVerified: boolean;
   /** @nullable */
-  phone: string | null
-  phoneVerified: boolean
+  phone: string | null;
+  phoneVerified: boolean;
   /** @nullable */
-  twitter: string | null
-  twitterVerified: boolean
+  twitter: string | null;
+  twitterVerified: boolean;
   /** @nullable */
-  instagram: string | null
-  instagramVerified: boolean
-  createdAt: string
-  updatedAt: string
+  instagram: string | null;
+  instagramVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  lastUsernameChange: string | null
+  lastUsernameChange: string | null;
   /** @nullable */
-  bio: string | null
+  bio: string | null;
   /** @nullable */
-  linksJSON: string | null
+  linksJSON: string | null;
   /** @nullable */
-  pangeaAccount: string | null
-}
+  pangeaAccount: string | null;
+};
 
 export type UserPublicProfileParams = {
-  userId: string
-}
+userId: string;
+};
 
 export type UserPublicProfile200Profile = {
   /** @nullable */
-  username: string | null
+  username: string | null;
   /** @nullable */
-  bio: string | null
+  bio: string | null;
   /** @nullable */
-  linksJSON: string | null
-}
+  linksJSON: string | null;
+};
 
 export type UserPublicProfile200 = {
-  profile: UserPublicProfile200Profile
-  imagesCreated: number
-  imagesFavorited: number
-}
+  profile: UserPublicProfile200Profile;
+  imagesCreated: number;
+  imagesFavorited: number;
+};
 
 export type UserGetUsernameParams = {
-  userId: string
-}
+userId: string;
+};
 
 export type UserSetUsernameBody = {
-  username: string
-}
+  username: string;
+};
 
 export type UserSetUsername200 = {
-  userId: string
+  userId: string;
   /** @nullable */
-  username: string | null
+  username: string | null;
   /** @nullable */
-  email: string | null
-  emailVerified: boolean
+  email: string | null;
+  emailVerified: boolean;
   /** @nullable */
-  phone: string | null
-  phoneVerified: boolean
+  phone: string | null;
+  phoneVerified: boolean;
   /** @nullable */
-  twitter: string | null
-  twitterVerified: boolean
+  twitter: string | null;
+  twitterVerified: boolean;
   /** @nullable */
-  instagram: string | null
-  instagramVerified: boolean
-  createdAt: string
-  updatedAt: string
+  instagram: string | null;
+  instagramVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  lastUsernameChange: string | null
+  lastUsernameChange: string | null;
   /** @nullable */
-  bio: string | null
+  bio: string | null;
   /** @nullable */
-  linksJSON: string | null
+  linksJSON: string | null;
   /** @nullable */
-  pangeaAccount: string | null
-}
+  pangeaAccount: string | null;
+};
 
 export type UserSetBioBody = {
-  bio: string
-}
+  bio: string;
+};
 
 export type UserSetBio200 = {
-  userId: string
+  userId: string;
   /** @nullable */
-  username: string | null
+  username: string | null;
   /** @nullable */
-  email: string | null
-  emailVerified: boolean
+  email: string | null;
+  emailVerified: boolean;
   /** @nullable */
-  phone: string | null
-  phoneVerified: boolean
+  phone: string | null;
+  phoneVerified: boolean;
   /** @nullable */
-  twitter: string | null
-  twitterVerified: boolean
+  twitter: string | null;
+  twitterVerified: boolean;
   /** @nullable */
-  instagram: string | null
-  instagramVerified: boolean
-  createdAt: string
-  updatedAt: string
+  instagram: string | null;
+  instagramVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  lastUsernameChange: string | null
+  lastUsernameChange: string | null;
   /** @nullable */
-  bio: string | null
+  bio: string | null;
   /** @nullable */
-  linksJSON: string | null
+  linksJSON: string | null;
   /** @nullable */
-  pangeaAccount: string | null
-}
+  pangeaAccount: string | null;
+};
 
 export type UserSendVerificationEmailBody = {
-  email: string
-}
+  email: string;
+};
 
 export type UserPointsHistoryParams = {
-  userId?: string
-  startDateTime?: string
-  limit?: number
-  offset?: number
-  order?: UserPointsHistoryOrder
-  endDateTime?: string
-}
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: UserPointsHistoryOrder;
+endDateTime?: string;
+};
 
-export type UserPointsHistoryOrder = (typeof UserPointsHistoryOrder)[keyof typeof UserPointsHistoryOrder]
+export type UserPointsHistoryOrder = typeof UserPointsHistoryOrder[keyof typeof UserPointsHistoryOrder];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistoryOrder = {
-  asc: "asc",
-  desc: "desc",
-} as const
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
-export type UserPointsHistory200ItemType = (typeof UserPointsHistory200ItemType)[keyof typeof UserPointsHistory200ItemType]
+export type UserPointsHistory200ItemType = typeof UserPointsHistory200ItemType[keyof typeof UserPointsHistory200ItemType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistory200ItemType = {
-  purchase: "purchase",
-  refund: "refund",
-  comission: "comission",
-  bonus: "bonus",
-  referral: "referral",
-  commission: "commission",
-  promoCode: "promoCode",
-  createModel: "createModel",
-  cryptoDeposit: "cryptoDeposit",
-  createTrainingSet: "createTrainingSet",
-} as const
+  purchase: 'purchase',
+  refund: 'refund',
+  comission: 'comission',
+  bonus: 'bonus',
+  referral: 'referral',
+  commission: 'commission',
+  promoCode: 'promoCode',
+  createModel: 'createModel',
+  cryptoDeposit: 'cryptoDeposit',
+  createTrainingSet: 'createTrainingSet',
+} as const;
 
 export type UserPointsHistory200Item = {
-  type: UserPointsHistory200ItemType
-  id: string
-  createdAt: string
+  type: UserPointsHistory200ItemType;
+  id: string;
+  createdAt: string;
   /** @nullable */
-  memo: string | null
-  quantity: number
-  userFinalBalance: number
-}
+  memo: string | null;
+  quantity: number;
+  userFinalBalance: number;
+};
 
 export type UserFindByUsernameParams = {
-  username: string
-}
+username: string;
+};
 
 export type UserFindByEmailParams = {
-  email: string
-}
+email: string;
+};
 
 export type UserFindByPhoneParams = {
-  phone: string
-}
+phone: string;
+};
 
 export type UserFindByPrivyIdParams = {
-  privyId: string
-}
+privyId: string;
+};
 
-export type UserGetNotificationConfig200EmailFrequency = (typeof UserGetNotificationConfig200EmailFrequency)[keyof typeof UserGetNotificationConfig200EmailFrequency]
+export type UserGetNotificationConfig200EmailFrequency = typeof UserGetNotificationConfig200EmailFrequency[keyof typeof UserGetNotificationConfig200EmailFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200EmailFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
-export type UserGetNotificationConfig200PhoneFrequency = (typeof UserGetNotificationConfig200PhoneFrequency)[keyof typeof UserGetNotificationConfig200PhoneFrequency]
+export type UserGetNotificationConfig200PhoneFrequency = typeof UserGetNotificationConfig200PhoneFrequency[keyof typeof UserGetNotificationConfig200PhoneFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200PhoneFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
 export type UserGetNotificationConfig200 = {
-  emailFrequency: UserGetNotificationConfig200EmailFrequency
-  phoneFrequency: UserGetNotificationConfig200PhoneFrequency
-  userId: string
-  email: boolean
-  phone: boolean
-}
+  emailFrequency: UserGetNotificationConfig200EmailFrequency;
+  phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
+  userId: string;
+  email: boolean;
+  phone: boolean;
+};
 
-export type UserSetNotificationConfigBodyEmailFrequency = (typeof UserSetNotificationConfigBodyEmailFrequency)[keyof typeof UserSetNotificationConfigBodyEmailFrequency]
+export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyEmailFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
-export type UserSetNotificationConfigBodyPhoneFrequency = (typeof UserSetNotificationConfigBodyPhoneFrequency)[keyof typeof UserSetNotificationConfigBodyPhoneFrequency]
+export type UserSetNotificationConfigBodyPhoneFrequency = typeof UserSetNotificationConfigBodyPhoneFrequency[keyof typeof UserSetNotificationConfigBodyPhoneFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyPhoneFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
 export type UserSetNotificationConfigBody = {
-  email?: boolean
-  phone?: boolean
-  emailFrequency?: UserSetNotificationConfigBodyEmailFrequency
-  phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency
-}
+  email?: boolean;
+  phone?: boolean;
+  emailFrequency?: UserSetNotificationConfigBodyEmailFrequency;
+  phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency;
+};
 
-export type UserSetNotificationConfig200EmailFrequency = (typeof UserSetNotificationConfig200EmailFrequency)[keyof typeof UserSetNotificationConfig200EmailFrequency]
+export type UserSetNotificationConfig200EmailFrequency = typeof UserSetNotificationConfig200EmailFrequency[keyof typeof UserSetNotificationConfig200EmailFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200EmailFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
-export type UserSetNotificationConfig200PhoneFrequency = (typeof UserSetNotificationConfig200PhoneFrequency)[keyof typeof UserSetNotificationConfig200PhoneFrequency]
+export type UserSetNotificationConfig200PhoneFrequency = typeof UserSetNotificationConfig200PhoneFrequency[keyof typeof UserSetNotificationConfig200PhoneFrequency];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200PhoneFrequency = {
-  instant: "instant",
-  daily: "daily",
-  weekly: "weekly",
-  monthly: "monthly",
-} as const
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
 
 export type UserSetNotificationConfig200 = {
-  emailFrequency: UserSetNotificationConfig200EmailFrequency
-  phoneFrequency: UserSetNotificationConfig200PhoneFrequency
-  userId: string
-  email: boolean
-  phone: boolean
-}
+  emailFrequency: UserSetNotificationConfig200EmailFrequency;
+  phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
+  userId: string;
+  email: boolean;
+  phone: boolean;
+};
 
-export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown }
+export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
 
 export type UserSetAvatarBodyPosition = {
-  x: number
-  y: number
-}
+  x: number;
+  y: number;
+};
 
 export type UserSetAvatarBody = {
-  imageId: string
-  scale: number
-  position: UserSetAvatarBodyPosition
-}
+  imageId: string;
+  scale: number;
+  position: UserSetAvatarBodyPosition;
+};
 
 /**
  * @nullable
  */
 export type UserAllUsers200ItemProfile = {
   /** @nullable */
-  bio: string | null
+  bio: string | null;
   /** @nullable */
-  username: string | null
-} | null
+  username: string | null;
+} | null;
 
 export type UserAllUsers200Item = {
-  id: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  Profile: UserAllUsers200ItemProfile
-}
+  Profile: UserAllUsers200ItemProfile;
+};
 
 export type LoginLinkInitLoginLinkBody = {
-  email?: string
-  phoneNumber?: string
-  referredBy?: string
-}
+  email?: string;
+  phoneNumber?: string;
+  referredBy?: string;
+};
 
 export type LoginLinkLoginWithLinkBody = {
-  linkId: string
-}
+  linkId: string;
+};
 
 export type LoginLinkLoginWithLink200 = {
-  token: string
-  userId: string
-}
+  token: string;
+  userId: string;
+};
 
 export type StatsUsers200 = {
-  spentPoints: number
-  spentOver100Points: number
-  spentOver1000Points: number
-  spentOver10000Points: number
-  spentOver20000Points: number
-  purchasedImage: number
-  createdImage: number
-  emailVerified: number
-  phoneVerified: number
-  instagramVerified: number
-  twitterVerified: number
-  setUsername: number
-}
+  spentPoints: number;
+  spentOver100Points: number;
+  spentOver1000Points: number;
+  spentOver10000Points: number;
+  spentOver20000Points: number;
+  purchasedImage: number;
+  createdImage: number;
+  emailVerified: number;
+  phoneVerified: number;
+  instagramVerified: number;
+  twitterVerified: number;
+  setUsername: number;
+};
 
 export type _StatsImages200AverageImageQuantityPerCreateRequestAvg = {
   /** @nullable */
-  quantity: number | null
-}
+  quantity: number | null;
+};
 
 export type StatsImages200AverageImageQuantityPerCreateRequest = {
-  _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg
-}
+  _avg: _StatsImages200AverageImageQuantityPerCreateRequestAvg;
+};
 
 export type StatsImages200 = {
-  totalCreated: number
-  totalUpscaled: number
-  totalImageCreateRequests: number
-  averageImageQuantityPerCreateRequest: StatsImages200AverageImageQuantityPerCreateRequest
-  purchasedImages: number
-  totalPurchases: number
-  privateImages: number
-  imagesInAtLeastOneCollection: number
-  imageCreationFailed: number
-}
+  totalCreated: number;
+  totalUpscaled: number;
+  totalImageCreateRequests: number;
+  averageImageQuantityPerCreateRequest: StatsImages200AverageImageQuantityPerCreateRequest;
+  purchasedImages: number;
+  totalPurchases: number;
+  privateImages: number;
+  imagesInAtLeastOneCollection: number;
+  imageCreationFailed: number;
+};
 
 export type StatsCollections200 = {
-  collectionsCreated: number
-  emptyCollections: number
-}
+  collectionsCreated: number;
+  emptyCollections: number;
+};
 
 export type _StatsPayments200PaypalOrdersTotalPaidSum = {
   /** @nullable */
-  amount: number | null
-}
+  amount: number | null;
+};
 
 export type StatsPayments200PaypalOrdersTotalPaid = {
-  _sum: _StatsPayments200PaypalOrdersTotalPaidSum
-}
+  _sum: _StatsPayments200PaypalOrdersTotalPaidSum;
+};
 
 export type StatsPayments200 = {
-  incompletePayPayPalOrders: number
-  completePayPayPalOrders: number
-  paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid
-}
+  incompletePayPayPalOrders: number;
+  completePayPayPalOrders: number;
+  paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
+};
 
 export type CollectionsMediaInUsersCollectionParams = {
-  imageId?: string
-  videoId?: string
-  name: string
-}
+imageId?: string;
+videoId?: string;
+name: string;
+};
 
 export type CollectionsLikeMediaBody = {
-  imageId?: string
-  videoId?: string
-}
+  imageId?: string;
+  videoId?: string;
+};
 
 export type CollectionsUnlikeMediaBody = {
-  imageId?: string
-  videoId?: string
-}
+  imageId?: string;
+  videoId?: string;
+};
 
 export type CollectionsGetCollectionMetaParams = {
-  id: string
-}
+id: string;
+};
 
 export type _CollectionsGetCollectionMeta200Count = {
-  Images: number
-  Favorited: number
-}
+  Images: number;
+  Favorited: number;
+};
 
 export type CollectionsGetCollectionMeta200 = {
-  id: string
-  name: string
-  description: string
-  ownerId: string
-  private: boolean
-  _count: _CollectionsGetCollectionMeta200Count
-}
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  private: boolean;
+  _count: _CollectionsGetCollectionMeta200Count;
+};
 
 export type CollectionsFindCollectionByNameParams = {
-  ownerId: string
-  collectionName: string
-}
+ownerId: string;
+collectionName: string;
+};
 
 export type CollectionsFindCollectionByName200 = {
-  id: string
-}
+  id: string;
+};
 
 export type CollectionsGetCollectionImagesParams = {
-  id: string
-}
+id: string;
+};
 
 export type CollectionsGetCollectionImages200ItemImageRequest = {
-  userId: string
-}
+  userId: string;
+};
 
 export type CollectionsGetCollectionImages200Item = {
-  id: string
-  createdAt: string
-  updatedAt: string
-  imageRequestId: string
-  seed: string
-  errored: boolean
-  filtered: boolean
-  deleted: boolean
-  imageRequest: CollectionsGetCollectionImages200ItemImageRequest
-}
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  imageRequestId: string;
+  seed: string;
+  errored: boolean;
+  filtered: boolean;
+  deleted: boolean;
+  imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
+};
 
 export type CollectionsGetCollectionVideosParams = {
-  id: string
-}
+id: string;
+};
 
-export type CollectionsGetCollectionVideos200ItemStatus = (typeof CollectionsGetCollectionVideos200ItemStatus)[keyof typeof CollectionsGetCollectionVideos200ItemStatus]
+export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionVideos200ItemStatus = {
-  processing: "processing",
-  previewRendering: "previewRendering",
-  ready: "ready",
-  errored: "errored",
-} as const
+  processing: 'processing',
+  previewRendering: 'previewRendering',
+  ready: 'ready',
+  errored: 'errored',
+} as const;
 
 export type CollectionsGetCollectionVideos200ItemVideoRequest = {
-  userId: string
-}
+  userId: string;
+};
 
 export type CollectionsGetCollectionVideos200Item = {
-  status: CollectionsGetCollectionVideos200ItemStatus
-  id: string
-  createdAt: string
-  updatedAt: string
+  status: CollectionsGetCollectionVideos200ItemStatus;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
   /** @nullable */
-  seed: string | null
-  errored: boolean
-  deleted: boolean
-  videoRequestId: string
+  seed: string | null;
+  errored: boolean;
+  deleted: boolean;
+  videoRequestId: string;
   /** @nullable */
-  replicatePredictionId: string | null
+  replicatePredictionId: string | null;
   /** @nullable */
-  coconutJobId: string | null
+  coconutJobId: string | null;
   /** @nullable */
-  errorMessage: string | null
-  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest
-}
+  errorMessage: string | null;
+  VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
+};
 
 export type PromoCreatePromoCodeBody = {
-  points: number
-}
+  points: number;
+};
 
 export type PromoCreatePromoCode200 = {
-  id: string
-  points: number
+  id: string;
+  points: number;
   /** @nullable */
-  claimedByUserId: string | null
+  claimedByUserId: string | null;
   /** @nullable */
-  claimedAt: string | null
-  createdAt: string
-}
+  claimedAt: string | null;
+  createdAt: string;
+};
 
 export type PromoDeletePromoCodeBody = {
-  id: string
-}
+  id: string;
+};
 
 export type PromoGetPromoCodes200Item = {
-  id: string
-  points: number
+  id: string;
+  points: number;
   /** @nullable */
-  claimedByUserId: string | null
+  claimedByUserId: string | null;
   /** @nullable */
-  claimedAt: string | null
-  createdAt: string
-}
+  claimedAt: string | null;
+  createdAt: string;
+};
 
 export type PromoGetPromoCodeDetailsParams = {
-  id: string
-}
+id: string;
+};
 
 export type PromoGetPromoCodeDetails200 = {
-  id: string
-  points: number
+  id: string;
+  points: number;
   /** @nullable */
-  claimedByUserId: string | null
+  claimedByUserId: string | null;
   /** @nullable */
-  claimedAt: string | null
-  createdAt: string
-}
+  claimedAt: string | null;
+  createdAt: string;
+};
 
 export type PromoClaimPromoCodeBody = {
-  id: string
-}
+  id: string;
+};
 
 export type ModelsEditModelBody = {
-  id: string
+  id: string;
   /** @maxLength 30 */
-  name: string
+  name: string;
   /** @maxLength 500 */
-  description: string
-}
+  description: string;
+};
 
 export type ModelsGetUserModelsParams = {
-  trainingSetId?: string
-}
+trainingSetId?: string;
+};
 
-export type ModelsGetUserModels200ItemStatus = (typeof ModelsGetUserModels200ItemStatus)[keyof typeof ModelsGetUserModels200ItemStatus]
+export type ModelsGetUserModels200ItemStatus = typeof ModelsGetUserModels200ItemStatus[keyof typeof ModelsGetUserModels200ItemStatus];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemStatus = {
-  training: "training",
-  trained: "trained",
-  error: "error",
-  waitingForImageUpload: "waitingForImageUpload",
-} as const
+  training: 'training',
+  trained: 'trained',
+  error: 'error',
+  waitingForImageUpload: 'waitingForImageUpload',
+} as const;
 
-export type ModelsGetUserModels200ItemModelType = (typeof ModelsGetUserModels200ItemModelType)[keyof typeof ModelsGetUserModels200ItemModelType]
+export type ModelsGetUserModels200ItemModelType = typeof ModelsGetUserModels200ItemModelType[keyof typeof ModelsGetUserModels200ItemModelType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelType = {
-  faceClone: "faceClone",
-  faceForge: "faceForge",
-  fluxDev: "fluxDev",
-  fluxPro: "fluxPro",
-  fluxProUltra: "fluxProUltra",
-} as const
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
 
 /**
  * @nullable
  */
-export type ModelsGetUserModels200ItemFineTuneType = (typeof ModelsGetUserModels200ItemFineTuneType)[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null
+export type ModelsGetUserModels200ItemFineTuneType = typeof ModelsGetUserModels200ItemFineTuneType[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null;
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemFineTuneType = {
-  lora: "lora",
-  full: "full",
-} as const
+  lora: 'lora',
+  full: 'full',
+} as const;
 
-export type ModelsGetUserModels200ItemMode = (typeof ModelsGetUserModels200ItemMode)[keyof typeof ModelsGetUserModels200ItemMode]
+export type ModelsGetUserModels200ItemMode = typeof ModelsGetUserModels200ItemMode[keyof typeof ModelsGetUserModels200ItemMode];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemMode = {
-  subject: "subject",
-  style: "style",
-  object: "object",
-  general: "general",
-} as const
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
 
-export type ModelsGetUserModels200ItemModelTagsItem = (typeof ModelsGetUserModels200ItemModelTagsItem)[keyof typeof ModelsGetUserModels200ItemModelTagsItem]
+export type ModelsGetUserModels200ItemModelTagsItem = typeof ModelsGetUserModels200ItemModelTagsItem[keyof typeof ModelsGetUserModels200ItemModelTagsItem];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelTagsItem = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
 export type ModelsGetUserModels200ItemImageRequestsItemImagesItem = {
-  id: string
-}
+  id: string;
+};
 
 export type ModelsGetUserModels200ItemImageRequestsItem = {
-  id: string
-  images: ModelsGetUserModels200ItemImageRequestsItemImagesItem[]
-}
+  id: string;
+  images: ModelsGetUserModels200ItemImageRequestsItemImagesItem[];
+};
 
 export type ModelsGetUserModels200Item = {
-  status: ModelsGetUserModels200ItemStatus
-  modelType: ModelsGetUserModels200ItemModelType
+  status: ModelsGetUserModels200ItemStatus;
+  modelType: ModelsGetUserModels200ItemModelType;
   /** @nullable */
-  fineTuneType: ModelsGetUserModels200ItemFineTuneType
-  mode: ModelsGetUserModels200ItemMode
-  modelTags: ModelsGetUserModels200ItemModelTagsItem[]
-  id: string
-  createdAt: string
-  updatedAt: string
-  creatorId: string
-  name: string
-  slug: string
+  fineTuneType: ModelsGetUserModels200ItemFineTuneType;
+  mode: ModelsGetUserModels200ItemMode;
+  modelTags: ModelsGetUserModels200ItemModelTagsItem[];
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: string;
+  name: string;
+  slug: string;
   /** @nullable */
-  trainingError: string | null
+  trainingError: string | null;
   /** @nullable */
-  trainingId: string | null
+  trainingId: string | null;
   /** @nullable */
-  inferenceId: string | null
-  Public: boolean
+  inferenceId: string | null;
+  Public: boolean;
   /** @nullable */
-  trainingSetId: string | null
+  trainingSetId: string | null;
   /** @nullable */
-  description: string | null
-  featured: boolean
-  imageRequests: ModelsGetUserModels200ItemImageRequestsItem[]
-}
+  description: string | null;
+  featured: boolean;
+  imageRequests: ModelsGetUserModels200ItemImageRequestsItem[];
+};
 
-export type ModelsCreateModelBodyBaseModel = (typeof ModelsCreateModelBodyBaseModel)[keyof typeof ModelsCreateModelBodyBaseModel]
+export type ModelsCreateModelBodyBaseModel = typeof ModelsCreateModelBodyBaseModel[keyof typeof ModelsCreateModelBodyBaseModel];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyBaseModel = {
-  faceClone: "faceClone",
-  faceForge: "faceForge",
-  fluxDev: "fluxDev",
-  fluxPro: "fluxPro",
-  fluxProUltra: "fluxProUltra",
-} as const
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
 
-export type ModelsCreateModelBodyModelMode = (typeof ModelsCreateModelBodyModelMode)[keyof typeof ModelsCreateModelBodyModelMode]
+export type ModelsCreateModelBodyModelMode = typeof ModelsCreateModelBodyModelMode[keyof typeof ModelsCreateModelBodyModelMode];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyModelMode = {
-  subject: "subject",
-  style: "style",
-  object: "object",
-  general: "general",
-} as const
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
 
-export type ModelsCreateModelBodyFineTuneType = (typeof ModelsCreateModelBodyFineTuneType)[keyof typeof ModelsCreateModelBodyFineTuneType]
+export type ModelsCreateModelBodyFineTuneType = typeof ModelsCreateModelBodyFineTuneType[keyof typeof ModelsCreateModelBodyFineTuneType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyFineTuneType = {
-  lora: "lora",
-  full: "full",
-} as const
+  lora: 'lora',
+  full: 'full',
+} as const;
 
 export type ModelsCreateModelBody = {
-  name: string
-  description: string
-  baseModel: ModelsCreateModelBodyBaseModel
-  modelMode: ModelsCreateModelBodyModelMode
-  fineTuneType: ModelsCreateModelBodyFineTuneType
-  trainingSetId: string
-}
+  name: string;
+  description: string;
+  baseModel: ModelsCreateModelBodyBaseModel;
+  modelMode: ModelsCreateModelBodyModelMode;
+  fineTuneType: ModelsCreateModelBodyFineTuneType;
+  trainingSetId: string;
+};
 
 export type ModelsGetTrainingStatusParams = {
-  id: string
-}
+id: string;
+};
 
-export type ModelsGetTrainingStatus200Status = (typeof ModelsGetTrainingStatus200Status)[keyof typeof ModelsGetTrainingStatus200Status]
+export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200Status[keyof typeof ModelsGetTrainingStatus200Status];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetTrainingStatus200Status = {
-  processing: "processing",
-  trained: "trained",
-  succeeded: "succeeded",
-  failed: "failed",
-} as const
+  processing: 'processing',
+  trained: 'trained',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
 
 export type ModelsGetTrainingStatus200 = {
-  status: ModelsGetTrainingStatus200Status
+  status: ModelsGetTrainingStatus200Status;
   /** @nullable */
-  error: string | null
+  error: string | null;
   /**
    * @minimum 0
    * @maximum 100
    */
-  progress: number
-  elapsedTime: string
-  remainingTime: string
-}
+  progress: number;
+  elapsedTime: string;
+  remainingTime: string;
+};
 
 export type ModelsDeleteModelBody = {
-  id: string
-}
+  id: string;
+};
 
 export type ModelsGetCustomModelParams = {
-  id: string
-}
+id: string;
+};
 
-export type ModelsGetCustomModel200Status = (typeof ModelsGetCustomModel200Status)[keyof typeof ModelsGetCustomModel200Status]
+export type ModelsGetCustomModel200Status = typeof ModelsGetCustomModel200Status[keyof typeof ModelsGetCustomModel200Status];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Status = {
-  training: "training",
-  trained: "trained",
-  error: "error",
-  waitingForImageUpload: "waitingForImageUpload",
-} as const
+  training: 'training',
+  trained: 'trained',
+  error: 'error',
+  waitingForImageUpload: 'waitingForImageUpload',
+} as const;
 
-export type ModelsGetCustomModel200ModelType = (typeof ModelsGetCustomModel200ModelType)[keyof typeof ModelsGetCustomModel200ModelType]
+export type ModelsGetCustomModel200ModelType = typeof ModelsGetCustomModel200ModelType[keyof typeof ModelsGetCustomModel200ModelType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelType = {
-  faceClone: "faceClone",
-  faceForge: "faceForge",
-  fluxDev: "fluxDev",
-  fluxPro: "fluxPro",
-  fluxProUltra: "fluxProUltra",
-} as const
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
 
 /**
  * @nullable
  */
-export type ModelsGetCustomModel200FineTuneType = (typeof ModelsGetCustomModel200FineTuneType)[keyof typeof ModelsGetCustomModel200FineTuneType] | null
+export type ModelsGetCustomModel200FineTuneType = typeof ModelsGetCustomModel200FineTuneType[keyof typeof ModelsGetCustomModel200FineTuneType] | null;
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200FineTuneType = {
-  lora: "lora",
-  full: "full",
-} as const
+  lora: 'lora',
+  full: 'full',
+} as const;
 
-export type ModelsGetCustomModel200Mode = (typeof ModelsGetCustomModel200Mode)[keyof typeof ModelsGetCustomModel200Mode]
+export type ModelsGetCustomModel200Mode = typeof ModelsGetCustomModel200Mode[keyof typeof ModelsGetCustomModel200Mode];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Mode = {
-  subject: "subject",
-  style: "style",
-  object: "object",
-  general: "general",
-} as const
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
 
-export type ModelsGetCustomModel200ModelTagsItem = (typeof ModelsGetCustomModel200ModelTagsItem)[keyof typeof ModelsGetCustomModel200ModelTagsItem]
+export type ModelsGetCustomModel200ModelTagsItem = typeof ModelsGetCustomModel200ModelTagsItem[keyof typeof ModelsGetCustomModel200ModelTagsItem];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelTagsItem = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
 export type ModelsGetCustomModel200 = {
-  status: ModelsGetCustomModel200Status
-  modelType: ModelsGetCustomModel200ModelType
+  status: ModelsGetCustomModel200Status;
+  modelType: ModelsGetCustomModel200ModelType;
   /** @nullable */
-  fineTuneType: ModelsGetCustomModel200FineTuneType
-  mode: ModelsGetCustomModel200Mode
-  modelTags: ModelsGetCustomModel200ModelTagsItem[]
-  id: string
-  createdAt: string
-  updatedAt: string
-  creatorId: string
-  name: string
-  slug: string
+  fineTuneType: ModelsGetCustomModel200FineTuneType;
+  mode: ModelsGetCustomModel200Mode;
+  modelTags: ModelsGetCustomModel200ModelTagsItem[];
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: string;
+  name: string;
+  slug: string;
   /** @nullable */
-  trainingError: string | null
+  trainingError: string | null;
   /** @nullable */
-  trainingId: string | null
+  trainingId: string | null;
   /** @nullable */
-  inferenceId: string | null
-  Public: boolean
+  inferenceId: string | null;
+  Public: boolean;
   /** @nullable */
-  trainingSetId: string | null
+  trainingSetId: string | null;
   /** @nullable */
-  description: string | null
-  featured: boolean
-}
+  description: string | null;
+  featured: boolean;
+};
 
 export type ModelsGetPublicModelsParams = {
-  page?: number
-  tag?: ModelsGetPublicModelsTag
-}
+page?: number;
+tag?: ModelsGetPublicModelsTag;
+};
 
-export type ModelsGetPublicModelsTag = (typeof ModelsGetPublicModelsTag)[keyof typeof ModelsGetPublicModelsTag]
+export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModelsTag = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
-export type ModelsGetPublicModels200ItemStatus = (typeof ModelsGetPublicModels200ItemStatus)[keyof typeof ModelsGetPublicModels200ItemStatus]
+export type ModelsGetPublicModels200ItemStatus = typeof ModelsGetPublicModels200ItemStatus[keyof typeof ModelsGetPublicModels200ItemStatus];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemStatus = {
-  training: "training",
-  trained: "trained",
-  error: "error",
-  waitingForImageUpload: "waitingForImageUpload",
-} as const
+  training: 'training',
+  trained: 'trained',
+  error: 'error',
+  waitingForImageUpload: 'waitingForImageUpload',
+} as const;
 
-export type ModelsGetPublicModels200ItemModelType = (typeof ModelsGetPublicModels200ItemModelType)[keyof typeof ModelsGetPublicModels200ItemModelType]
+export type ModelsGetPublicModels200ItemModelType = typeof ModelsGetPublicModels200ItemModelType[keyof typeof ModelsGetPublicModels200ItemModelType];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelType = {
-  faceClone: "faceClone",
-  faceForge: "faceForge",
-  fluxDev: "fluxDev",
-  fluxPro: "fluxPro",
-  fluxProUltra: "fluxProUltra",
-} as const
+  faceClone: 'faceClone',
+  faceForge: 'faceForge',
+  fluxDev: 'fluxDev',
+  fluxPro: 'fluxPro',
+  fluxProUltra: 'fluxProUltra',
+} as const;
 
 /**
  * @nullable
  */
-export type ModelsGetPublicModels200ItemFineTuneType = (typeof ModelsGetPublicModels200ItemFineTuneType)[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null
+export type ModelsGetPublicModels200ItemFineTuneType = typeof ModelsGetPublicModels200ItemFineTuneType[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null;
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemFineTuneType = {
-  lora: "lora",
-  full: "full",
-} as const
+  lora: 'lora',
+  full: 'full',
+} as const;
 
-export type ModelsGetPublicModels200ItemMode = (typeof ModelsGetPublicModels200ItemMode)[keyof typeof ModelsGetPublicModels200ItemMode]
+export type ModelsGetPublicModels200ItemMode = typeof ModelsGetPublicModels200ItemMode[keyof typeof ModelsGetPublicModels200ItemMode];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemMode = {
-  subject: "subject",
-  style: "style",
-  object: "object",
-  general: "general",
-} as const
+  subject: 'subject',
+  style: 'style',
+  object: 'object',
+  general: 'general',
+} as const;
 
-export type ModelsGetPublicModels200ItemModelTagsItem = (typeof ModelsGetPublicModels200ItemModelTagsItem)[keyof typeof ModelsGetPublicModels200ItemModelTagsItem]
+export type ModelsGetPublicModels200ItemModelTagsItem = typeof ModelsGetPublicModels200ItemModelTagsItem[keyof typeof ModelsGetPublicModels200ItemModelTagsItem];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelTagsItem = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
 export type ModelsGetPublicModels200Item = {
-  status: ModelsGetPublicModels200ItemStatus
-  modelType: ModelsGetPublicModels200ItemModelType
+  status: ModelsGetPublicModels200ItemStatus;
+  modelType: ModelsGetPublicModels200ItemModelType;
   /** @nullable */
-  fineTuneType: ModelsGetPublicModels200ItemFineTuneType
-  mode: ModelsGetPublicModels200ItemMode
-  modelTags: ModelsGetPublicModels200ItemModelTagsItem[]
-  id: string
-  createdAt: string
-  updatedAt: string
-  creatorId: string
-  name: string
-  slug: string
+  fineTuneType: ModelsGetPublicModels200ItemFineTuneType;
+  mode: ModelsGetPublicModels200ItemMode;
+  modelTags: ModelsGetPublicModels200ItemModelTagsItem[];
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: string;
+  name: string;
+  slug: string;
   /** @nullable */
-  trainingError: string | null
+  trainingError: string | null;
   /** @nullable */
-  trainingId: string | null
+  trainingId: string | null;
   /** @nullable */
-  inferenceId: string | null
-  Public: boolean
+  inferenceId: string | null;
+  Public: boolean;
   /** @nullable */
-  trainingSetId: string | null
+  trainingSetId: string | null;
   /** @nullable */
-  description: string | null
-  featured: boolean
-  previewMediaId?: string
-}
+  description: string | null;
+  featured: boolean;
+  previewMediaId?: string;
+};
 
 export type ModelsGetBaseModelsParams = {
-  page?: number
-}
+page?: number;
+};
 
-export type ModelsGetBaseModels200ItemModelTagsItem = (typeof ModelsGetBaseModels200ItemModelTagsItem)[keyof typeof ModelsGetBaseModels200ItemModelTagsItem]
+export type ModelsGetBaseModels200ItemModelTagsItem = typeof ModelsGetBaseModels200ItemModelTagsItem[keyof typeof ModelsGetBaseModels200ItemModelTagsItem];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetBaseModels200ItemModelTagsItem = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
 export type ModelsGetBaseModels200Item = {
-  modelTags: ModelsGetBaseModels200ItemModelTagsItem[]
-  slug: string
-  updatedAt: string
-  name: string
+  modelTags: ModelsGetBaseModels200ItemModelTagsItem[];
+  slug: string;
+  updatedAt: string;
+  name: string;
   /** @nullable */
-  description: string | null
-  featured: boolean
+  description: string | null;
+  featured: boolean;
   /** @nullable */
-  blogLink: string | null
+  blogLink: string | null;
   /** @nullable */
-  longDescription: string | null
-  previewMediaId?: string
-}
+  longDescription: string | null;
+  previewMediaId?: string;
+};
 
 export type ModelsGetModelByNameParams = {
-  name: string
-  customModelId?: string
-  includeMedia?: number
-}
+name: string;
+customModelId?: string;
+includeMedia?: number;
+};
 
 export type ModelsGetModelByName200CustomModelCreator = {
-  id: string
-  userName: string
-}
+  id: string;
+  userName: string;
+};
 
-export type ModelsGetModelByName200ModelModelTagsItem = (typeof ModelsGetModelByName200ModelModelTagsItem)[keyof typeof ModelsGetModelByName200ModelModelTagsItem]
+export type ModelsGetModelByName200ModelModelTagsItem = typeof ModelsGetModelByName200ModelModelTagsItem[keyof typeof ModelsGetModelByName200ModelModelTagsItem];
 
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetModelByName200ModelModelTagsItem = {
-  Realistic: "Realistic",
-  Creative: "Creative",
-  Illustrative: "Illustrative",
-  DesignText: "DesignText",
-  Precision: "Precision",
-  Vibrant: "Vibrant",
-  Versatile: "Versatile",
-  FastBudget: "FastBudget",
-  Vector: "Vector",
-  Multimodal: "Multimodal",
-  Bilingual: "Bilingual",
-  Custom: "Custom",
-  Cinematic: "Cinematic",
-  MultiCamera: "MultiCamera",
-  Audio: "Audio",
-  Dramatic: "Dramatic",
-  Experimental: "Experimental",
-  Image: "Image",
-  Video: "Video",
-} as const
+  Realistic: 'Realistic',
+  Creative: 'Creative',
+  Illustrative: 'Illustrative',
+  DesignText: 'DesignText',
+  Precision: 'Precision',
+  Vibrant: 'Vibrant',
+  Versatile: 'Versatile',
+  FastBudget: 'FastBudget',
+  Vector: 'Vector',
+  Multimodal: 'Multimodal',
+  Bilingual: 'Bilingual',
+  Custom: 'Custom',
+  Cinematic: 'Cinematic',
+  MultiCamera: 'MultiCamera',
+  Audio: 'Audio',
+  Dramatic: 'Dramatic',
+  Experimental: 'Experimental',
+  Image: 'Image',
+  Video: 'Video',
+} as const;
 
 export type ModelsGetModelByName200Model = {
-  modelTags: ModelsGetModelByName200ModelModelTagsItem[]
-  slug: string
-  updatedAt: string
-  name: string
+  modelTags: ModelsGetModelByName200ModelModelTagsItem[];
+  slug: string;
+  updatedAt: string;
+  name: string;
   /** @nullable */
-  description: string | null
-  featured: boolean
+  description: string | null;
+  featured: boolean;
   /** @nullable */
-  blogLink: string | null
+  blogLink: string | null;
   /** @nullable */
-  longDescription: string | null
-}
+  longDescription: string | null;
+};
 
 export type ModelsGetModelByName200MediaItem = {
-  id: string
-  meta: string
-  creatorUsername?: string
-}
+  id: string;
+  meta: string;
+  creatorUsername?: string;
+};
 
 export type ModelsGetModelByName200 = {
-  customModelCreator?: ModelsGetModelByName200CustomModelCreator
-  model: ModelsGetModelByName200Model
-  media?: ModelsGetModelByName200MediaItem[]
-}
+  customModelCreator?: ModelsGetModelByName200CustomModelCreator;
+  model: ModelsGetModelByName200Model;
+  media?: ModelsGetModelByName200MediaItem[];
+};
 
 export type ModelsSetModelPrivacyBody = {
-  id: string
-  public: boolean
-}
+  id: string;
+  public: boolean;
+};
 
 export type AdminLoginAsUserBody = {
-  id: string
-}
+  id: string;
+};
 
 export type PrivyAuthenticateBody = {
-  accessToken: string
-  referrerUsername?: string
-}
+  accessToken: string;
+  referrerUsername?: string;
+};
 
 export type PrivyAuthenticate200 = {
-  token: string
-  userId: string
-}
+  token: string;
+  userId: string;
+};
 
 export type TrainingSetsCreateSetBody = {
   /** @maxLength 30 */
-  name: string
+  name: string;
   /** @maxLength 400 */
-  description: string
+  description: string;
   /**
    * @minimum 3
    * @maximum 200
    */
-  numImages: number
+  numImages: number;
   /** @maximum 800 */
-  zipSizeMb: number
-}
+  zipSizeMb: number;
+};
 
-export type TrainingSetsCreateSet200SignedZipUploadDataFields = { [key: string]: string }
+export type TrainingSetsCreateSet200SignedZipUploadDataFields = {[key: string]: string};
 
 export type TrainingSetsCreateSet200SignedZipUploadData = {
-  url: string
-  fields: TrainingSetsCreateSet200SignedZipUploadDataFields
-}
+  url: string;
+  fields: TrainingSetsCreateSet200SignedZipUploadDataFields;
+};
 
-export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields = { [key: string]: string }
+export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields = {[key: string]: string};
 
 export type TrainingSetsCreateSet200SignedThumbnailUploadDatasItem = {
-  url: string
-  fields: TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields
-}
+  url: string;
+  fields: TrainingSetsCreateSet200SignedThumbnailUploadDatasItemFields;
+};
 
 export type TrainingSetsCreateSet200 = {
-  trainingSetId: string
-  signedZipUploadData: TrainingSetsCreateSet200SignedZipUploadData
-  signedThumbnailUploadDatas: TrainingSetsCreateSet200SignedThumbnailUploadDatasItem[]
-}
+  trainingSetId: string;
+  signedZipUploadData: TrainingSetsCreateSet200SignedZipUploadData;
+  signedThumbnailUploadDatas: TrainingSetsCreateSet200SignedThumbnailUploadDatasItem[];
+};
 
 export type TrainingSetsFinalizeSetBody = {
-  trainingSetId: string
-}
+  trainingSetId: string;
+};
 
 export type TrainingSetsGetUserSetsParams = {
-  userId: string
-}
+userId: string;
+};
 
 export type TrainingSetsGetUserSets200Item = {
-  id: string
-  ownerId: string
-  createdAt: string
-  name: string
-  sizeMB: number
-  numImages: number
-  status: number
-  thumbnailIds: string[]
+  id: string;
+  ownerId: string;
+  createdAt: string;
+  name: string;
+  sizeMB: number;
+  numImages: number;
+  status: number;
+  thumbnailIds: string[];
   /** @nullable */
-  description: string | null
-  deleted: boolean
-  updatedAt: string
-}
+  description: string | null;
+  deleted: boolean;
+  updatedAt: string;
+};
 
 export type TrainingSetsGetSetParams = {
-  trainingSetId: string
-}
+trainingSetId: string;
+};
 
 export type TrainingSetsGetSet200 = {
-  id: string
-  ownerId: string
-  createdAt: string
-  name: string
-  sizeMB: number
-  numImages: number
-  status: number
-  thumbnailIds: string[]
+  id: string;
+  ownerId: string;
+  createdAt: string;
+  name: string;
+  sizeMB: number;
+  numImages: number;
+  status: number;
+  thumbnailIds: string[];
   /** @nullable */
-  description: string | null
-  deleted: boolean
-  updatedAt: string
-}
+  description: string | null;
+  deleted: boolean;
+  updatedAt: string;
+};
 
 export type TrainingSetsDeleteSetBody = {
-  trainingSetId: string
-}
+  trainingSetId: string;
+};
 
 export type TrainingSetsEditSetBody = {
-  trainingSetId: string
+  trainingSetId: string;
   /** @maxLength 32 */
-  newName: string
+  newName: string;
   /** @maxLength 400 */
-  newDescription: string
-}
+  newDescription: string;
+};
 
 export const getPkAuthRegisterStartUrl = () => {
+
+
+  
+
   return `/pkAuth/registerStart`
 }
 
 export const pkAuthRegisterStart = async (pkAuthRegisterStartBody: PkAuthRegisterStartBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPkAuthRegisterStartUrl(), {
+  
+  return fetcher<unknown>(getPkAuthRegisterStartUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pkAuthRegisterStartBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pkAuthRegisterStartBody,)
+  }
+);}
+
+
 
 export const getPkAuthRegisterFinishUrl = () => {
+
+
+  
+
   return `/pkAuth/registerFinish`
 }
 
 export const pkAuthRegisterFinish = async (pkAuthRegisterFinishBody: PkAuthRegisterFinishBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPkAuthRegisterFinishUrl(), {
+  
+  return fetcher<unknown>(getPkAuthRegisterFinishUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pkAuthRegisterFinishBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pkAuthRegisterFinishBody,)
+  }
+);}
+
+
 
 export const getPkAuthLoginStartUrl = () => {
+
+
+  
+
   return `/pkAuth/loginStart`
 }
 
 export const pkAuthLoginStart = async (pkAuthLoginStartBody: PkAuthLoginStartBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPkAuthLoginStartUrl(), {
+  
+  return fetcher<unknown>(getPkAuthLoginStartUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pkAuthLoginStartBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pkAuthLoginStartBody,)
+  }
+);}
+
+
 
 export const getPkAuthLoginFinishUrl = () => {
+
+
+  
+
   return `/pkAuth/loginFinish`
 }
 
 export const pkAuthLoginFinish = async (pkAuthLoginFinishBody: PkAuthLoginFinishBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPkAuthLoginFinishUrl(), {
+  
+  return fetcher<unknown>(getPkAuthLoginFinishUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pkAuthLoginFinishBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pkAuthLoginFinishBody,)
+  }
+);}
+
+
 
 export const getCreateImageUrl = () => {
+
+
+  
+
   return `/create/image`
 }
 
 export const createImage = async (createImageBody: CreateImageBody, options?: RequestInit): Promise<CreateImage200> => {
-  return fetcher<CreateImage200>(getCreateImageUrl(), {
+  
+  return fetcher<CreateImage200>(getCreateImageUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createImageBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createImageBody,)
+  }
+);}
+
+
 
 export const getCreateVideoUrl = () => {
+
+
+  
+
   return `/create/video`
 }
 
 export const createVideo = async (createVideoBody: CreateVideoBody, options?: RequestInit): Promise<CreateVideo200> => {
-  return fetcher<CreateVideo200>(getCreateVideoUrl(), {
+  
+  return fetcher<CreateVideo200>(getCreateVideoUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createVideoBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createVideoBody,)
+  }
+);}
+
+
 
 export const getCreateRandomPromptUrl = () => {
+
+
+  
+
   return `/create/randomPrompt`
 }
 
 export const createRandomPrompt = async (createRandomPromptBody: CreateRandomPromptBody, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreateRandomPromptUrl(), {
+  
+  return fetcher<string>(getCreateRandomPromptUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createRandomPromptBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createRandomPromptBody,)
+  }
+);}
+
+
 
 export const getCreateImprovePromptUrl = () => {
+
+
+  
+
   return `/create/improvePrompt`
 }
 
 export const createImprovePrompt = async (createImprovePromptBody: CreateImprovePromptBody, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreateImprovePromptUrl(), {
+  
+  return fetcher<string>(getCreateImprovePromptUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createImprovePromptBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createImprovePromptBody,)
+  }
+);}
 
-export const getCreationsGetCreationDataUrl = (params?: CreationsGetCreationDataParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsGetCreationDataUrl = (params?: CreationsGetCreationDataParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/getCreationData?${stringifiedParams}` : `/creations/getCreationData`
 }
 
 export const creationsGetCreationData = async (params?: CreationsGetCreationDataParams, options?: RequestInit): Promise<CreationsGetCreationData200> => {
-  return fetcher<CreationsGetCreationData200>(getCreationsGetCreationDataUrl(params), {
+  
+  return fetcher<CreationsGetCreationData200>(getCreationsGetCreationDataUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsUserImagePurchasesUrl = (params?: CreationsUserImagePurchasesParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsUserImagePurchasesUrl = (params?: CreationsUserImagePurchasesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/userImagePurchases?${stringifiedParams}` : `/creations/userImagePurchases`
 }
 
 export const creationsUserImagePurchases = async (params?: CreationsUserImagePurchasesParams, options?: RequestInit): Promise<CreationsUserImagePurchases200Item[]> => {
-  return fetcher<CreationsUserImagePurchases200Item[]>(getCreationsUserImagePurchasesUrl(params), {
+  
+  return fetcher<CreationsUserImagePurchases200Item[]>(getCreationsUserImagePurchasesUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsUserVideoPurchasesUrl = (params?: CreationsUserVideoPurchasesParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsUserVideoPurchasesUrl = (params?: CreationsUserVideoPurchasesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/userVideoPurchases?${stringifiedParams}` : `/creations/userVideoPurchases`
 }
 
 export const creationsUserVideoPurchases = async (params?: CreationsUserVideoPurchasesParams, options?: RequestInit): Promise<CreationsUserVideoPurchases200Item[]> => {
-  return fetcher<CreationsUserVideoPurchases200Item[]>(getCreationsUserVideoPurchasesUrl(params), {
+  
+  return fetcher<CreationsUserVideoPurchases200Item[]>(getCreationsUserVideoPurchasesUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsCreateImageRequestsUrl = (params?: CreationsCreateImageRequestsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsCreateImageRequestsUrl = (params?: CreationsCreateImageRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/createImageRequests?${stringifiedParams}` : `/creations/createImageRequests`
 }
 
 export const creationsCreateImageRequests = async (params?: CreationsCreateImageRequestsParams, options?: RequestInit): Promise<CreationsCreateImageRequests200Item[]> => {
-  return fetcher<CreationsCreateImageRequests200Item[]>(getCreationsCreateImageRequestsUrl(params), {
+  
+  return fetcher<CreationsCreateImageRequests200Item[]>(getCreationsCreateImageRequestsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideoRequestsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideoRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/createVideoRequests?${stringifiedParams}` : `/creations/createVideoRequests`
 }
 
 export const creationsCreateVideoRequests = async (params?: CreationsCreateVideoRequestsParams, options?: RequestInit): Promise<CreationsCreateVideoRequests200Item[]> => {
-  return fetcher<CreationsCreateVideoRequests200Item[]>(getCreationsCreateVideoRequestsUrl(params), {
+  
+  return fetcher<CreationsCreateVideoRequests200Item[]>(getCreationsCreateVideoRequestsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsGetImageRequestUrl = (params: CreationsGetImageRequestParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsGetImageRequestUrl = (params: CreationsGetImageRequestParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/getImageRequest?${stringifiedParams}` : `/creations/getImageRequest`
 }
 
 export const creationsGetImageRequest = async (params: CreationsGetImageRequestParams, options?: RequestInit): Promise<CreationsGetImageRequest200> => {
-  return fetcher<CreationsGetImageRequest200>(getCreationsGetImageRequestUrl(params), {
+  
+  return fetcher<CreationsGetImageRequest200>(getCreationsGetImageRequestUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsGetVideoRequestUrl = (params: CreationsGetVideoRequestParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsGetVideoRequestUrl = (params: CreationsGetVideoRequestParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/getVideoRequest?${stringifiedParams}` : `/creations/getVideoRequest`
 }
 
 export const creationsGetVideoRequest = async (params: CreationsGetVideoRequestParams, options?: RequestInit): Promise<CreationsGetVideoRequest200> => {
-  return fetcher<CreationsGetVideoRequest200>(getCreationsGetVideoRequestUrl(params), {
+  
+  return fetcher<CreationsGetVideoRequest200>(getCreationsGetVideoRequestUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreateRequestsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreateRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/browseCreateRequests?${stringifiedParams}` : `/creations/browseCreateRequests`
 }
 
 export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<unknown[]> => {
-  return fetcher<unknown[]>(getCreationsBrowseCreateRequestsUrl(params), {
+  
+  return fetcher<unknown[]>(getCreationsBrowseCreateRequestsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsHdImageUrl = (params: CreationsHdImageParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsHdImageUrl = (params: CreationsHdImageParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/hdImage?${stringifiedParams}` : `/creations/hdImage`
 }
 
 export const creationsHdImage = async (params: CreationsHdImageParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreationsHdImageUrl(params), {
+  
+  return fetcher<string>(getCreationsHdImageUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsHdVideoUrl = (params: CreationsHdVideoParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsHdVideoUrl = (params: CreationsHdVideoParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/hdVideo?${stringifiedParams}` : `/creations/hdVideo`
 }
 
 export const creationsHdVideo = async (params: CreationsHdVideoParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreationsHdVideoUrl(params), {
+  
+  return fetcher<string>(getCreationsHdVideoUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/originalImage?${stringifiedParams}` : `/creations/originalImage`
 }
 
 export const creationsOriginalImage = async (params: CreationsOriginalImageParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreationsOriginalImageUrl(params), {
+  
+  return fetcher<string>(getCreationsOriginalImageUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCreationsUpscaledImageUrl = (params: CreationsUpscaledImageParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCreationsUpscaledImageUrl = (params: CreationsUpscaledImageParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/creations/upscaledImage?${stringifiedParams}` : `/creations/upscaledImage`
 }
 
 export const creationsUpscaledImage = async (params: CreationsUpscaledImageParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getCreationsUpscaledImageUrl(params), {
+  
+  return fetcher<string>(getCreationsUpscaledImageUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getCreationsPurchaseMediaUrl = () => {
+
+
+  
+
   return `/creations/purchaseMedia`
 }
 
 export const creationsPurchaseMedia = async (creationsPurchaseMediaBody: CreationsPurchaseMediaBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getCreationsPurchaseMediaUrl(), {
+  
+  return fetcher<unknown>(getCreationsPurchaseMediaUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(creationsPurchaseMediaBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsPurchaseMediaBody,)
+  }
+);}
+
+
 
 export const getCreationsDeleteMediaUrl = () => {
+
+
+  
+
   return `/creations/deleteMedia`
 }
 
 export const creationsDeleteMedia = async (creationsDeleteMediaBody: CreationsDeleteMediaBody, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getCreationsDeleteMediaUrl(), {
+  
+  return fetcher<boolean>(getCreationsDeleteMediaUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(creationsDeleteMediaBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsDeleteMediaBody,)
+  }
+);}
+
+
 
 export const getCreationsDeleteRequestUrl = () => {
+
+
+  
+
   return `/creations/deleteRequest`
 }
 
 export const creationsDeleteRequest = async (creationsDeleteRequestBody: CreationsDeleteRequestBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getCreationsDeleteRequestUrl(), {
+  
+  return fetcher<unknown>(getCreationsDeleteRequestUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(creationsDeleteRequestBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsDeleteRequestBody,)
+  }
+);}
+
+
 
 export const getCreationsSetRequestPrivacyUrl = () => {
+
+
+  
+
   return `/creations/setRequestPrivacy`
 }
 
 export const creationsSetRequestPrivacy = async (creationsSetRequestPrivacyBody: CreationsSetRequestPrivacyBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getCreationsSetRequestPrivacyUrl(), {
+  
+  return fetcher<unknown>(getCreationsSetRequestPrivacyUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(creationsSetRequestPrivacyBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsSetRequestPrivacyBody,)
+  }
+);}
+
+
 
 export const getPointsPackagesAvailableUrl = () => {
+
+
+  
+
   return `/points/packagesAvailable`
 }
 
-export const pointsPackagesAvailable = async (options?: RequestInit): Promise<PointsPackagesAvailable200Item[]> => {
-  return fetcher<PointsPackagesAvailable200Item[]>(getPointsPackagesAvailableUrl(), {
+export const pointsPackagesAvailable = async ( options?: RequestInit): Promise<PointsPackagesAvailable200Item[]> => {
+  
+  return fetcher<PointsPackagesAvailable200Item[]>(getPointsPackagesAvailableUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getPointsPricesUrl = () => {
+
+
+  
+
   return `/points/prices`
 }
 
-export const pointsPrices = async (options?: RequestInit): Promise<PointsPrices200> => {
-  return fetcher<PointsPrices200>(getPointsPricesUrl(), {
+export const pointsPrices = async ( options?: RequestInit): Promise<PointsPrices200> => {
+  
+  return fetcher<PointsPrices200>(getPointsPricesUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getPointsInitBuyPackageUrl = () => {
+
+
+  
+
   return `/points/initBuyPackage`
 }
 
 export const pointsInitBuyPackage = async (pointsInitBuyPackageBody: PointsInitBuyPackageBody, options?: RequestInit): Promise<PointsInitBuyPackage200> => {
-  return fetcher<PointsInitBuyPackage200>(getPointsInitBuyPackageUrl(), {
+  
+  return fetcher<PointsInitBuyPackage200>(getPointsInitBuyPackageUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pointsInitBuyPackageBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pointsInitBuyPackageBody,)
+  }
+);}
+
+
 
 export const getPointsFinishBuyPackageUrl = () => {
+
+
+  
+
   return `/points/finishBuyPackage`
 }
 
 export const pointsFinishBuyPackage = async (pointsFinishBuyPackageBody: PointsFinishBuyPackageBody, options?: RequestInit): Promise<PointsFinishBuyPackage200> => {
-  return fetcher<PointsFinishBuyPackage200>(getPointsFinishBuyPackageUrl(), {
+  
+  return fetcher<PointsFinishBuyPackage200>(getPointsFinishBuyPackageUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(pointsFinishBuyPackageBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pointsFinishBuyPackageBody,)
+  }
+);}
+
+
 
 export const getPointsGetOrdersUrl = () => {
+
+
+  
+
   return `/points/getOrders`
 }
 
-export const pointsGetOrders = async (options?: RequestInit): Promise<PointsGetOrders200> => {
-  return fetcher<PointsGetOrders200>(getPointsGetOrdersUrl(), {
+export const pointsGetOrders = async ( options?: RequestInit): Promise<PointsGetOrders200> => {
+  
+  return fetcher<PointsGetOrders200>(getPointsGetOrdersUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getPointsGetOrderUrl = (params: PointsGetOrderParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getPointsGetOrderUrl = (params: PointsGetOrderParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/points/getOrder?${stringifiedParams}` : `/points/getOrder`
 }
 
 export const pointsGetOrder = async (params: PointsGetOrderParams, options?: RequestInit): Promise<PointsGetOrder200> => {
-  return fetcher<PointsGetOrder200>(getPointsGetOrderUrl(params), {
+  
+  return fetcher<PointsGetOrder200>(getPointsGetOrderUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserGetUrl = (params: UserGetParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserGetUrl = (params: UserGetParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/get?${stringifiedParams}` : `/user/get`
 }
 
 export const userGet = async (params: UserGetParams, options?: RequestInit): Promise<UserGet200> => {
-  return fetcher<UserGet200>(getUserGetUrl(params), {
+  
+  return fetcher<UserGet200>(getUserGetUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserProfileUrl = (params: UserProfileParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserProfileUrl = (params: UserProfileParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/profile?${stringifiedParams}` : `/user/profile`
 }
 
 export const userProfile = async (params: UserProfileParams, options?: RequestInit): Promise<UserProfile200> => {
-  return fetcher<UserProfile200>(getUserProfileUrl(params), {
+  
+  return fetcher<UserProfile200>(getUserProfileUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserPublicProfileUrl = (params: UserPublicProfileParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserPublicProfileUrl = (params: UserPublicProfileParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/publicProfile?${stringifiedParams}` : `/user/publicProfile`
 }
 
 export const userPublicProfile = async (params: UserPublicProfileParams, options?: RequestInit): Promise<UserPublicProfile200> => {
-  return fetcher<UserPublicProfile200>(getUserPublicProfileUrl(params), {
+  
+  return fetcher<UserPublicProfile200>(getUserPublicProfileUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserGetUsernameUrl = (params: UserGetUsernameParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserGetUsernameUrl = (params: UserGetUsernameParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/getUsername?${stringifiedParams}` : `/user/getUsername`
 }
 
 export const userGetUsername = async (params: UserGetUsernameParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getUserGetUsernameUrl(params), {
+  
+  return fetcher<string>(getUserGetUsernameUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getUserSetUsernameUrl = () => {
+
+
+  
+
   return `/user/setUsername`
 }
 
 export const userSetUsername = async (userSetUsernameBody: UserSetUsernameBody, options?: RequestInit): Promise<UserSetUsername200> => {
-  return fetcher<UserSetUsername200>(getUserSetUsernameUrl(), {
+  
+  return fetcher<UserSetUsername200>(getUserSetUsernameUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userSetUsernameBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSetUsernameBody,)
+  }
+);}
+
+
 
 export const getUserSetBioUrl = () => {
+
+
+  
+
   return `/user/setBio`
 }
 
 export const userSetBio = async (userSetBioBody: UserSetBioBody, options?: RequestInit): Promise<UserSetBio200> => {
-  return fetcher<UserSetBio200>(getUserSetBioUrl(), {
+  
+  return fetcher<UserSetBio200>(getUserSetBioUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userSetBioBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSetBioBody,)
+  }
+);}
+
+
 
 export const getUserSendVerificationEmailUrl = () => {
+
+
+  
+
   return `/user/sendVerificationEmail`
 }
 
 export const userSendVerificationEmail = async (userSendVerificationEmailBody: UserSendVerificationEmailBody, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getUserSendVerificationEmailUrl(), {
+  
+  return fetcher<boolean>(getUserSendVerificationEmailUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userSendVerificationEmailBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSendVerificationEmailBody,)
+  }
+);}
 
-export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/pointsHistory?${stringifiedParams}` : `/user/pointsHistory`
 }
 
 export const userPointsHistory = async (params?: UserPointsHistoryParams, options?: RequestInit): Promise<UserPointsHistory200Item[]> => {
-  return fetcher<UserPointsHistory200Item[]>(getUserPointsHistoryUrl(params), {
+  
+  return fetcher<UserPointsHistory200Item[]>(getUserPointsHistoryUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserFindByUsernameUrl = (params: UserFindByUsernameParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserFindByUsernameUrl = (params: UserFindByUsernameParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/findByUsername?${stringifiedParams}` : `/user/findByUsername`
 }
 
 export const userFindByUsername = async (params: UserFindByUsernameParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getUserFindByUsernameUrl(params), {
+  
+  return fetcher<string>(getUserFindByUsernameUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserFindByEmailUrl = (params: UserFindByEmailParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserFindByEmailUrl = (params: UserFindByEmailParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/findByEmail?${stringifiedParams}` : `/user/findByEmail`
 }
 
 export const userFindByEmail = async (params: UserFindByEmailParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getUserFindByEmailUrl(params), {
+  
+  return fetcher<string>(getUserFindByEmailUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserFindByPhoneUrl = (params: UserFindByPhoneParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserFindByPhoneUrl = (params: UserFindByPhoneParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/findByPhone?${stringifiedParams}` : `/user/findByPhone`
 }
 
 export const userFindByPhone = async (params: UserFindByPhoneParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getUserFindByPhoneUrl(params), {
+  
+  return fetcher<string>(getUserFindByPhoneUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getUserFindByPrivyIdUrl = (params: UserFindByPrivyIdParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getUserFindByPrivyIdUrl = (params: UserFindByPrivyIdParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/user/findByPrivyId?${stringifiedParams}` : `/user/findByPrivyId`
 }
 
 export const userFindByPrivyId = async (params: UserFindByPrivyIdParams, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getUserFindByPrivyIdUrl(params), {
+  
+  return fetcher<string>(getUserFindByPrivyIdUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getUserGetNotificationConfigUrl = () => {
+
+
+  
+
   return `/user/getNotificationConfig`
 }
 
-export const userGetNotificationConfig = async (options?: RequestInit): Promise<UserGetNotificationConfig200> => {
-  return fetcher<UserGetNotificationConfig200>(getUserGetNotificationConfigUrl(), {
+export const userGetNotificationConfig = async ( options?: RequestInit): Promise<UserGetNotificationConfig200> => {
+  
+  return fetcher<UserGetNotificationConfig200>(getUserGetNotificationConfigUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getUserSetNotificationConfigUrl = () => {
+
+
+  
+
   return `/user/setNotificationConfig`
 }
 
 export const userSetNotificationConfig = async (userSetNotificationConfigBody: UserSetNotificationConfigBody, options?: RequestInit): Promise<UserSetNotificationConfig200> => {
-  return fetcher<UserSetNotificationConfig200>(getUserSetNotificationConfigUrl(), {
+  
+  return fetcher<UserSetNotificationConfig200>(getUserSetNotificationConfigUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userSetNotificationConfigBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSetNotificationConfigBody,)
+  }
+);}
+
+
 
 export const getUserUnsubscribeEmailNotificationsUrl = () => {
+
+
+  
+
   return `/user/unsubscribeEmailNotifications`
 }
 
 export const userUnsubscribeEmailNotifications = async (userUnsubscribeEmailNotificationsBody: UserUnsubscribeEmailNotificationsBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getUserUnsubscribeEmailNotificationsUrl(), {
+  
+  return fetcher<unknown>(getUserUnsubscribeEmailNotificationsUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userUnsubscribeEmailNotificationsBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userUnsubscribeEmailNotificationsBody,)
+  }
+);}
+
+
 
 export const getUserSetAvatarUrl = () => {
+
+
+  
+
   return `/user/setAvatar`
 }
 
 export const userSetAvatar = async (userSetAvatarBody: UserSetAvatarBody, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getUserSetAvatarUrl(), {
+  
+  return fetcher<boolean>(getUserSetAvatarUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(userSetAvatarBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSetAvatarBody,)
+  }
+);}
+
+
 
 export const getUserAllUsersUrl = () => {
+
+
+  
+
   return `/user/allUsers`
 }
 
-export const userAllUsers = async (options?: RequestInit): Promise<UserAllUsers200Item[]> => {
-  return fetcher<UserAllUsers200Item[]>(getUserAllUsersUrl(), {
+export const userAllUsers = async ( options?: RequestInit): Promise<UserAllUsers200Item[]> => {
+  
+  return fetcher<UserAllUsers200Item[]>(getUserAllUsersUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getLoginLinkInitLoginLinkUrl = () => {
+
+
+  
+
   return `/loginLink/initLoginLink`
 }
 
 export const loginLinkInitLoginLink = async (loginLinkInitLoginLinkBody: LoginLinkInitLoginLinkBody, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getLoginLinkInitLoginLinkUrl(), {
+  
+  return fetcher<string>(getLoginLinkInitLoginLinkUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(loginLinkInitLoginLinkBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginLinkInitLoginLinkBody,)
+  }
+);}
+
+
 
 export const getLoginLinkLoginWithLinkUrl = () => {
+
+
+  
+
   return `/loginLink/loginWithLink`
 }
 
 export const loginLinkLoginWithLink = async (loginLinkLoginWithLinkBody: LoginLinkLoginWithLinkBody, options?: RequestInit): Promise<LoginLinkLoginWithLink200> => {
-  return fetcher<LoginLinkLoginWithLink200>(getLoginLinkLoginWithLinkUrl(), {
+  
+  return fetcher<LoginLinkLoginWithLink200>(getLoginLinkLoginWithLinkUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(loginLinkLoginWithLinkBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginLinkLoginWithLinkBody,)
+  }
+);}
+
+
 
 export const getStatsUsersUrl = () => {
+
+
+  
+
   return `/stats/users`
 }
 
-export const statsUsers = async (options?: RequestInit): Promise<StatsUsers200> => {
-  return fetcher<StatsUsers200>(getStatsUsersUrl(), {
+export const statsUsers = async ( options?: RequestInit): Promise<StatsUsers200> => {
+  
+  return fetcher<StatsUsers200>(getStatsUsersUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getStatsImagesUrl = () => {
+
+
+  
+
   return `/stats/images`
 }
 
-export const statsImages = async (options?: RequestInit): Promise<StatsImages200> => {
-  return fetcher<StatsImages200>(getStatsImagesUrl(), {
+export const statsImages = async ( options?: RequestInit): Promise<StatsImages200> => {
+  
+  return fetcher<StatsImages200>(getStatsImagesUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getStatsCollectionsUrl = () => {
+
+
+  
+
   return `/stats/collections`
 }
 
-export const statsCollections = async (options?: RequestInit): Promise<StatsCollections200> => {
-  return fetcher<StatsCollections200>(getStatsCollectionsUrl(), {
+export const statsCollections = async ( options?: RequestInit): Promise<StatsCollections200> => {
+  
+  return fetcher<StatsCollections200>(getStatsCollectionsUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getStatsPaymentsUrl = () => {
+
+
+  
+
   return `/stats/payments`
 }
 
-export const statsPayments = async (options?: RequestInit): Promise<StatsPayments200> => {
-  return fetcher<StatsPayments200>(getStatsPaymentsUrl(), {
+export const statsPayments = async ( options?: RequestInit): Promise<StatsPayments200> => {
+  
+  return fetcher<StatsPayments200>(getStatsPaymentsUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/collections/mediaInUsersCollection?${stringifiedParams}` : `/collections/mediaInUsersCollection`
 }
 
 export const collectionsMediaInUsersCollection = async (params: CollectionsMediaInUsersCollectionParams, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getCollectionsMediaInUsersCollectionUrl(params), {
+  
+  return fetcher<boolean>(getCollectionsMediaInUsersCollectionUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getCollectionsLikeMediaUrl = () => {
+
+
+  
+
   return `/collections/likeMedia`
 }
 
 export const collectionsLikeMedia = async (collectionsLikeMediaBody: CollectionsLikeMediaBody, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getCollectionsLikeMediaUrl(), {
+  
+  return fetcher<boolean>(getCollectionsLikeMediaUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(collectionsLikeMediaBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      collectionsLikeMediaBody,)
+  }
+);}
+
+
 
 export const getCollectionsUnlikeMediaUrl = () => {
+
+
+  
+
   return `/collections/unlikeMedia`
 }
 
 export const collectionsUnlikeMedia = async (collectionsUnlikeMediaBody: CollectionsUnlikeMediaBody, options?: RequestInit): Promise<boolean> => {
-  return fetcher<boolean>(getCollectionsUnlikeMediaUrl(), {
+  
+  return fetcher<boolean>(getCollectionsUnlikeMediaUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(collectionsUnlikeMediaBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      collectionsUnlikeMediaBody,)
+  }
+);}
 
-export const getCollectionsGetCollectionMetaUrl = (params: CollectionsGetCollectionMetaParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCollectionsGetCollectionMetaUrl = (params: CollectionsGetCollectionMetaParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/collections/getCollectionMeta?${stringifiedParams}` : `/collections/getCollectionMeta`
 }
 
 export const collectionsGetCollectionMeta = async (params: CollectionsGetCollectionMetaParams, options?: RequestInit): Promise<CollectionsGetCollectionMeta200> => {
-  return fetcher<CollectionsGetCollectionMeta200>(getCollectionsGetCollectionMetaUrl(params), {
+  
+  return fetcher<CollectionsGetCollectionMeta200>(getCollectionsGetCollectionMetaUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCollectionsFindCollectionByNameUrl = (params: CollectionsFindCollectionByNameParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCollectionsFindCollectionByNameUrl = (params: CollectionsFindCollectionByNameParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/collections/findCollectionByName?${stringifiedParams}` : `/collections/findCollectionByName`
 }
 
 export const collectionsFindCollectionByName = async (params: CollectionsFindCollectionByNameParams, options?: RequestInit): Promise<CollectionsFindCollectionByName200> => {
-  return fetcher<CollectionsFindCollectionByName200>(getCollectionsFindCollectionByNameUrl(params), {
+  
+  return fetcher<CollectionsFindCollectionByName200>(getCollectionsFindCollectionByNameUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCollectionsGetCollectionImagesUrl = (params: CollectionsGetCollectionImagesParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCollectionsGetCollectionImagesUrl = (params: CollectionsGetCollectionImagesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/collections/getCollectionImages?${stringifiedParams}` : `/collections/getCollectionImages`
 }
 
 export const collectionsGetCollectionImages = async (params: CollectionsGetCollectionImagesParams, options?: RequestInit): Promise<CollectionsGetCollectionImages200Item[]> => {
-  return fetcher<CollectionsGetCollectionImages200Item[]>(getCollectionsGetCollectionImagesUrl(params), {
+  
+  return fetcher<CollectionsGetCollectionImages200Item[]>(getCollectionsGetCollectionImagesUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getCollectionsGetCollectionVideosUrl = (params: CollectionsGetCollectionVideosParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getCollectionsGetCollectionVideosUrl = (params: CollectionsGetCollectionVideosParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/collections/getCollectionVideos?${stringifiedParams}` : `/collections/getCollectionVideos`
 }
 
 export const collectionsGetCollectionVideos = async (params: CollectionsGetCollectionVideosParams, options?: RequestInit): Promise<CollectionsGetCollectionVideos200Item[]> => {
-  return fetcher<CollectionsGetCollectionVideos200Item[]>(getCollectionsGetCollectionVideosUrl(params), {
+  
+  return fetcher<CollectionsGetCollectionVideos200Item[]>(getCollectionsGetCollectionVideosUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getPromoCreatePromoCodeUrl = () => {
+
+
+  
+
   return `/promo/createPromoCode`
 }
 
 export const promoCreatePromoCode = async (promoCreatePromoCodeBody: PromoCreatePromoCodeBody, options?: RequestInit): Promise<PromoCreatePromoCode200> => {
-  return fetcher<PromoCreatePromoCode200>(getPromoCreatePromoCodeUrl(), {
+  
+  return fetcher<PromoCreatePromoCode200>(getPromoCreatePromoCodeUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(promoCreatePromoCodeBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      promoCreatePromoCodeBody,)
+  }
+);}
+
+
 
 export const getPromoDeletePromoCodeUrl = () => {
+
+
+  
+
   return `/promo/deletePromoCode`
 }
 
 export const promoDeletePromoCode = async (promoDeletePromoCodeBody: PromoDeletePromoCodeBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPromoDeletePromoCodeUrl(), {
+  
+  return fetcher<unknown>(getPromoDeletePromoCodeUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(promoDeletePromoCodeBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      promoDeletePromoCodeBody,)
+  }
+);}
+
+
 
 export const getPromoGetPromoCodesUrl = () => {
+
+
+  
+
   return `/promo/getPromoCodes`
 }
 
-export const promoGetPromoCodes = async (options?: RequestInit): Promise<PromoGetPromoCodes200Item[]> => {
-  return fetcher<PromoGetPromoCodes200Item[]>(getPromoGetPromoCodesUrl(), {
+export const promoGetPromoCodes = async ( options?: RequestInit): Promise<PromoGetPromoCodes200Item[]> => {
+  
+  return fetcher<PromoGetPromoCodes200Item[]>(getPromoGetPromoCodesUrl(),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getPromoGetPromoCodeDetailsUrl = (params: PromoGetPromoCodeDetailsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getPromoGetPromoCodeDetailsUrl = (params: PromoGetPromoCodeDetailsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/promo/getPromoCodeDetails?${stringifiedParams}` : `/promo/getPromoCodeDetails`
 }
 
 export const promoGetPromoCodeDetails = async (params: PromoGetPromoCodeDetailsParams, options?: RequestInit): Promise<PromoGetPromoCodeDetails200> => {
-  return fetcher<PromoGetPromoCodeDetails200>(getPromoGetPromoCodeDetailsUrl(params), {
+  
+  return fetcher<PromoGetPromoCodeDetails200>(getPromoGetPromoCodeDetailsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getPromoClaimPromoCodeUrl = () => {
+
+
+  
+
   return `/promo/claimPromoCode`
 }
 
 export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPromoCodeBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getPromoClaimPromoCodeUrl(), {
+  
+  return fetcher<unknown>(getPromoClaimPromoCodeUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(promoClaimPromoCodeBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      promoClaimPromoCodeBody,)
+  }
+);}
+
+
 
 export const getModelsEditModelUrl = () => {
+
+
+  
+
   return `/models/editModel`
 }
 
 export const modelsEditModel = async (modelsEditModelBody: ModelsEditModelBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getModelsEditModelUrl(), {
+  
+  return fetcher<unknown>(getModelsEditModelUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(modelsEditModelBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      modelsEditModelBody,)
+  }
+);}
 
-export const getModelsGetUserModelsUrl = (params?: ModelsGetUserModelsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetUserModelsUrl = (params?: ModelsGetUserModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getUserModels?${stringifiedParams}` : `/models/getUserModels`
 }
 
 export const modelsGetUserModels = async (params?: ModelsGetUserModelsParams, options?: RequestInit): Promise<ModelsGetUserModels200Item[]> => {
-  return fetcher<ModelsGetUserModels200Item[]>(getModelsGetUserModelsUrl(params), {
+  
+  return fetcher<ModelsGetUserModels200Item[]>(getModelsGetUserModelsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getModelsCreateModelUrl = () => {
+
+
+  
+
   return `/models/createModel`
 }
 
 export const modelsCreateModel = async (modelsCreateModelBody: ModelsCreateModelBody, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getModelsCreateModelUrl(), {
+  
+  return fetcher<string>(getModelsCreateModelUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(modelsCreateModelBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      modelsCreateModelBody,)
+  }
+);}
 
-export const getModelsGetTrainingStatusUrl = (params: ModelsGetTrainingStatusParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetTrainingStatusUrl = (params: ModelsGetTrainingStatusParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getTrainingStatus?${stringifiedParams}` : `/models/getTrainingStatus`
 }
 
 export const modelsGetTrainingStatus = async (params: ModelsGetTrainingStatusParams, options?: RequestInit): Promise<ModelsGetTrainingStatus200> => {
-  return fetcher<ModelsGetTrainingStatus200>(getModelsGetTrainingStatusUrl(params), {
+  
+  return fetcher<ModelsGetTrainingStatus200>(getModelsGetTrainingStatusUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getModelsDeleteModelUrl = () => {
+
+
+  
+
   return `/models/deleteModel`
 }
 
 export const modelsDeleteModel = async (modelsDeleteModelBody: ModelsDeleteModelBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getModelsDeleteModelUrl(), {
+  
+  return fetcher<unknown>(getModelsDeleteModelUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(modelsDeleteModelBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      modelsDeleteModelBody,)
+  }
+);}
 
-export const getModelsGetCustomModelUrl = (params: ModelsGetCustomModelParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetCustomModelUrl = (params: ModelsGetCustomModelParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getCustomModel?${stringifiedParams}` : `/models/getCustomModel`
 }
 
 export const modelsGetCustomModel = async (params: ModelsGetCustomModelParams, options?: RequestInit): Promise<ModelsGetCustomModel200> => {
-  return fetcher<ModelsGetCustomModel200>(getModelsGetCustomModelUrl(params), {
+  
+  return fetcher<ModelsGetCustomModel200>(getModelsGetCustomModelUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getModelsGetPublicModelsUrl = (params?: ModelsGetPublicModelsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetPublicModelsUrl = (params?: ModelsGetPublicModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getPublicModels?${stringifiedParams}` : `/models/getPublicModels`
 }
 
 export const modelsGetPublicModels = async (params?: ModelsGetPublicModelsParams, options?: RequestInit): Promise<ModelsGetPublicModels200Item[]> => {
-  return fetcher<ModelsGetPublicModels200Item[]>(getModelsGetPublicModelsUrl(params), {
+  
+  return fetcher<ModelsGetPublicModels200Item[]>(getModelsGetPublicModelsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getModelsGetBaseModelsUrl = (params?: ModelsGetBaseModelsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetBaseModelsUrl = (params?: ModelsGetBaseModelsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getBaseModels?${stringifiedParams}` : `/models/getBaseModels`
 }
 
 export const modelsGetBaseModels = async (params?: ModelsGetBaseModelsParams, options?: RequestInit): Promise<ModelsGetBaseModels200Item[]> => {
-  return fetcher<ModelsGetBaseModels200Item[]>(getModelsGetBaseModelsUrl(params), {
+  
+  return fetcher<ModelsGetBaseModels200Item[]>(getModelsGetBaseModelsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getModelsGetModelByNameUrl = (params: ModelsGetModelByNameParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getModelsGetModelByNameUrl = (params: ModelsGetModelByNameParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/models/getModelByName?${stringifiedParams}` : `/models/getModelByName`
 }
 
 export const modelsGetModelByName = async (params: ModelsGetModelByNameParams, options?: RequestInit): Promise<ModelsGetModelByName200> => {
-  return fetcher<ModelsGetModelByName200>(getModelsGetModelByNameUrl(params), {
+  
+  return fetcher<ModelsGetModelByName200>(getModelsGetModelByNameUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getModelsSetModelPrivacyUrl = () => {
+
+
+  
+
   return `/models/setModelPrivacy`
 }
 
 export const modelsSetModelPrivacy = async (modelsSetModelPrivacyBody: ModelsSetModelPrivacyBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getModelsSetModelPrivacyUrl(), {
+  
+  return fetcher<unknown>(getModelsSetModelPrivacyUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(modelsSetModelPrivacyBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      modelsSetModelPrivacyBody,)
+  }
+);}
+
+
 
 export const getAdminLoginAsUserUrl = () => {
+
+
+  
+
   return `/admin/loginAsUser`
 }
 
 export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBody, options?: RequestInit): Promise<string> => {
-  return fetcher<string>(getAdminLoginAsUserUrl(), {
+  
+  return fetcher<string>(getAdminLoginAsUserUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(adminLoginAsUserBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminLoginAsUserBody,)
+  }
+);}
+
+
 
 export const getPrivyAuthenticateUrl = () => {
+
+
+  
+
   return `/privy/authenticate`
 }
 
 export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticateBody, options?: RequestInit): Promise<PrivyAuthenticate200> => {
-  return fetcher<PrivyAuthenticate200>(getPrivyAuthenticateUrl(), {
+  
+  return fetcher<PrivyAuthenticate200>(getPrivyAuthenticateUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(privyAuthenticateBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      privyAuthenticateBody,)
+  }
+);}
+
+
 
 export const getTrainingSetsCreateSetUrl = () => {
+
+
+  
+
   return `/trainingSets/createSet`
 }
 
 export const trainingSetsCreateSet = async (trainingSetsCreateSetBody: TrainingSetsCreateSetBody, options?: RequestInit): Promise<TrainingSetsCreateSet200> => {
-  return fetcher<TrainingSetsCreateSet200>(getTrainingSetsCreateSetUrl(), {
+  
+  return fetcher<TrainingSetsCreateSet200>(getTrainingSetsCreateSetUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(trainingSetsCreateSetBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trainingSetsCreateSetBody,)
+  }
+);}
+
+
 
 export const getTrainingSetsFinalizeSetUrl = () => {
+
+
+  
+
   return `/trainingSets/finalizeSet`
 }
 
 export const trainingSetsFinalizeSet = async (trainingSetsFinalizeSetBody: TrainingSetsFinalizeSetBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getTrainingSetsFinalizeSetUrl(), {
+  
+  return fetcher<unknown>(getTrainingSetsFinalizeSetUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(trainingSetsFinalizeSetBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trainingSetsFinalizeSetBody,)
+  }
+);}
 
-export const getTrainingSetsGetUserSetsUrl = (params: TrainingSetsGetUserSetsParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getTrainingSetsGetUserSetsUrl = (params: TrainingSetsGetUserSetsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/trainingSets/getUserSets?${stringifiedParams}` : `/trainingSets/getUserSets`
 }
 
 export const trainingSetsGetUserSets = async (params: TrainingSetsGetUserSetsParams, options?: RequestInit): Promise<TrainingSetsGetUserSets200Item[]> => {
-  return fetcher<TrainingSetsGetUserSets200Item[]>(getTrainingSetsGetUserSetsUrl(params), {
+  
+  return fetcher<TrainingSetsGetUserSets200Item[]>(getTrainingSetsGetUserSetsUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
 
-export const getTrainingSetsGetSetUrl = (params: TrainingSetsGetSetParams) => {
-  const normalizedParams = new URLSearchParams()
+
+
+export const getTrainingSetsGetSetUrl = (params: TrainingSetsGetSetParams,) => {
+  const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  })
+  });
 
-  const stringifiedParams = normalizedParams.toString()
+  const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0 ? `/trainingSets/getSet?${stringifiedParams}` : `/trainingSets/getSet`
 }
 
 export const trainingSetsGetSet = async (params: TrainingSetsGetSetParams, options?: RequestInit): Promise<TrainingSetsGetSet200> => {
-  return fetcher<TrainingSetsGetSet200>(getTrainingSetsGetSetUrl(params), {
+  
+  return fetcher<TrainingSetsGetSet200>(getTrainingSetsGetSetUrl(params),
+  {      
     ...options,
-    method: "GET",
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
 
 export const getTrainingSetsDeleteSetUrl = () => {
+
+
+  
+
   return `/trainingSets/deleteSet`
 }
 
 export const trainingSetsDeleteSet = async (trainingSetsDeleteSetBody: TrainingSetsDeleteSetBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getTrainingSetsDeleteSetUrl(), {
+  
+  return fetcher<unknown>(getTrainingSetsDeleteSetUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(trainingSetsDeleteSetBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trainingSetsDeleteSetBody,)
+  }
+);}
+
+
 
 export const getTrainingSetsEditSetUrl = () => {
+
+
+  
+
   return `/trainingSets/editSet`
 }
 
 export const trainingSetsEditSet = async (trainingSetsEditSetBody: TrainingSetsEditSetBody, options?: RequestInit): Promise<unknown> => {
-  return fetcher<unknown>(getTrainingSetsEditSetUrl(), {
+  
+  return fetcher<unknown>(getTrainingSetsEditSetUrl(),
+  {      
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(trainingSetsEditSetBody),
-  })
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trainingSetsEditSetBody,)
+  }
+);}

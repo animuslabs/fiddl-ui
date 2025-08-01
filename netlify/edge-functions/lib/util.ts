@@ -12,6 +12,10 @@ export const updateLinkTag = (html: string, rel: string, href: string): string =
   }
 }
 
+/* ────────── helpers ────────── */
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
 export function escapeHtml(input: string): string {
   const map: Record<string, string> = {
     "&": "&amp;",
@@ -53,11 +57,6 @@ export function setSocialMetadata(html: string, title: string, description: stri
 
   // 3 — insert just before </head>
   return html.replace(/<\/head>/i, `  ${tags}\n</head>`)
-}
-
-/* ────────── helpers ────────── */
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
 export function shortIdToLong(base64url: string): string {
@@ -177,9 +176,9 @@ export function buildMediaEls(
     .map(({ id, meta, type, creatorUsername }) => {
       const src = type === "image" ? img(id, "lg") : s3Video(id, "preview-lg")
 
-      const mediaTag = type === "image" ? `<img src="${src}" alt="${meta}" title="${meta}" loading="lazy" />` : `<video src="${src}" alt="${meta}" title="${meta}" loading="lazy" controls muted playsinline></video>`
+      const mediaTag = type === "image" ? `<img src="${src}" alt="${meta}" title="${meta}" loading="lazy" />` : `<video src="${src}" title="${meta}" loading="lazy" controls muted playsinline></video>`
 
-      return creatorUsername ? `<a href="/profile/${creatorUsername}" rel="author">${mediaTag}</a>` : mediaTag
+      return creatorUsername ? `<a href="/@${creatorUsername}" rel="author">${mediaTag}</a>` : mediaTag
     })
     .join("\n")
 }
@@ -202,7 +201,10 @@ type AnyModel = ModelsGetBaseModels200Item | ModelsGetPublicModels200Item
 
 export function buildModelFooterHtml(models: Partial<AnyModel>[]): string {
   const items = models.map((model) => {
-    const link = `<a href="/model/${model.slug}">${escapeHtml(model.name!)}</a>`
+    const link =
+      "id" in model //
+        ? `<a href="/model/custom/${model.id}">${escapeHtml(model.name || "Custom Model")}</a>`
+        : `<a href="/model/${model.slug}">${escapeHtml(model.name!)}</a>`
     const desc = model.description ? `<p>${escapeHtml(model.description)}</p>` : ""
     const tags = model.modelTags?.length ? `<small>Tags: ${model.modelTags.map((t) => escapeHtml(t)).join(", ")}</small>` : ""
     const updated = model.updatedAt ? `<small>Last updated: <time datetime="${model.updatedAt}">${new Date(model.updatedAt).toLocaleDateString()}</time></small>` : ""

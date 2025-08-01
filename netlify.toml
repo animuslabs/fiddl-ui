@@ -2,6 +2,8 @@
   base = "."
   publish = "dist/spa"
   command = "yarn build"
+[dev]
+  command = "yarn dev --port 5173"
 
 [[edge_functions]]
   function = "handleRequestPage"
@@ -15,6 +17,8 @@
   included_files = [
     "netlify/edge-functions/lib/**",
   ]
+  deno_import_map = "netlify/edge-functions/import_map.json"
+
 
 [[redirects]]
   from = "/blog/*"
@@ -29,5 +33,6 @@
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
+
 
 

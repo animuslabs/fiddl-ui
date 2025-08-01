@@ -13,11 +13,11 @@ export default defineConfig({
     output: {
       target: "./netlify/edge-functions/lib/orval.ts",
       client: "fetch",
-      fileExtension: "ts",
       override: {
         mutator: {
           path: "./netlify/edge-functions/lib/fetcher.ts",
           name: "fetcher",
+          extension: ".ts",
         },
         fetch: {
           includeHttpResponseReturnType: false,

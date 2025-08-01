@@ -7,6 +7,6 @@ export const fetcher = async <T>(url: string, options?: RequestInit): Promise<T>
   const absolute = url.startsWith("http") ? url : `${API_ROOT}${url}`
   console.log(`Fetching: ${absolute}`, options)
   const res = await fetch(absolute, options)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Error: HTTP ${res.status}, ${res.statusText} for ${absolute} ${JSON.stringify(options)}`)
   return (await res.json()) as T
 }

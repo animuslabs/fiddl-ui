@@ -25,12 +25,11 @@ export default async (request: Request, _context: Context) => {
 
     const cached = await context.cache?.get?.(cacheKey)
     if (cached) return cached
-
+    console.log("Cache miss for model page:", cacheKey)
     const [res, modelData, baseModels, publicModels] = await Promise.all([context.next(), modelsGetModelByName({ name: modelName, customModelId, includeMedia: 20 }), modelsGetBaseModels().catch(console.error), modelsGetPublicModels().catch(console.error)])
     const allModels = [...(baseModels || []), ...(publicModels || [])]
     const modelNavHtml = buildModelFooterHtml(allModels)
     const html = await res.text()
-    // Build schema and HTML metadata
     const fullUrl = `${url.origin}${url.pathname}`
     const schemaJson = buildModelSchema(modelData, fullUrl)
     const metadataHtml = buildModelMetadataInnerHtml(modelData)

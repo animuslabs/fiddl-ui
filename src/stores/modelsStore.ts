@@ -5,7 +5,7 @@ import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
 
 // Extend the base model type to include an id: string field
-type CustomModel = ModelsGetBaseModels200Item & { id: string }
+type CustomModel = ModelsGetBaseModels200Item & { id: string; creatorId: string }
 
 export const models = reactive({
   // base: LocalStorage.getItem<ModelsGetBaseModels200Item[]>("baseModels") || [],
@@ -99,6 +99,7 @@ export async function loadCustomModels() {
       slug: model.slug,
       updatedAt: model.updatedAt,
       longDescription: null,
+      creatorId: model.creatorId,
     }
   })
   models.custom = transformedModels

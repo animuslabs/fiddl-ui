@@ -18,7 +18,7 @@ q-page.absolute-position
         p {{ tag }}
   .row.q-ma-md(style="z-index:-5")
     .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in modelsStore.allModels.value" :key="model.slug")
-      ModelCard.q-ma-sm( selectable :model="model" :key="model.slug" @chipClick="selectTag" @click="toModelPage(model)")
+      ModelCard.q-ma-sm( selectable :model="model" :key="model.slug+model.name" @chipClick="selectTag" @click="toModelPage(model)")
   //- .centered
     q-btn(label="reload" @click="modelsStore.loadAllModels()")
   //- pre {{ modelsStore.loading }}
@@ -55,7 +55,7 @@ const scrollSelectedChipIntoView = () => {
 }
 
 const toModelPage = (model: Partial<ModelsGetPublicModels200Item>) => {
-  if (model.creatorId) {
+  if (model.id) {
     void router.push({ name: "model", params: { modelName: "custom", customModelId: model.id } })
   } else {
     void router.push({ name: "model", params: { modelName: model.slug } })
