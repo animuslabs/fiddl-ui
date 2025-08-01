@@ -49,14 +49,6 @@ export default async function (request: Request, context: Context) {
         jsonLd: [schemaJson],
         htmlBlocks: [topNavHtml, metaHtml, mediaHtml, footerHtml],
       },
-      cache: {
-        namespace: "models",
-        edgeTtl: 3600,
-        edgeSwr: 300,
-        browser: "revalidate",
-        tags: ["model", `model:${modelName}`, customModelId ? `custom:${customModelId}` : ""].filter(Boolean),
-        cacheId: "models-v1",
-      },
     })
   } catch (e) {
     console.error("handleModelPage error:", e)

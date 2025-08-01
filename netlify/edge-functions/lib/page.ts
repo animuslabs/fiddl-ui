@@ -96,7 +96,7 @@ function escapeAttr(value: string): string {
 }
 
 function buildHeaders(cfg?: CacheConfig): Headers {
-  const edgeTtl = cfg?.edgeTtl ?? 3600
+  const edgeTtl = cfg?.edgeTtl ?? 86400
   const edgeSwr = cfg?.edgeSwr ?? 300
   const browserCtl = cfg?.browser === "no-store" ? "no-store" : "max-age=0, must-revalidate"
 
