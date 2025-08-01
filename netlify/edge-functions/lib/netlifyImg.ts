@@ -4,7 +4,7 @@ const env = Netlify.env.toObject()
 
 const imageApiUrl = env.VITE_API_URL + "/images/" || "http://localhost:4444/images/"
 const avatarsApiUrl = env.VITE_API_URL + "/avatars/" || "http://localhost:4444/avatars/"
-const netlifyImgPath = "/.netlify/images?url=" + imageApiUrl
+const netlifyImgPath = "https://app.fiddl.art/.netlify/images?url=" + imageApiUrl
 const netlifyAvatarsPath = "/.netlify/images?url=" + avatarsApiUrl
 
 export const previewFiles = {
