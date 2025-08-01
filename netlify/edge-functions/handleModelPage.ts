@@ -56,8 +56,17 @@ export default async (request: Request, context: Context) => {
     const response = new Response(modified, {
       status: res.status,
       headers: {
-        "Content-Type": "text/html",
-        "Cache-Control": "public, s-maxage=3600",
+        "Content-Type": "text/html; charset=utf-8",
+
+        // Browser: keep conservative (SPAs shouldn’t be cached long in browsers)
+        "Cache-Control": "max-age=0, must-revalidate",
+
+        // CDN: cache aggressively at the edge
+        "Netlify-CDN-Cache-Control": "public, max-age=3600, stale-while-revalidate=300",
+
+        // Optional: make purging and deploy-persistence easier
+        "Cache-Tag": `model,model:${modelName}${customModelId ? `,custom:${customModelId}` : ""}`,
+        "Netlify-Cache-ID": "models-v1",
       },
     })
 
