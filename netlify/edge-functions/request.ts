@@ -36,7 +36,7 @@ export default async function (request: Request, context: Context) {
       social: {
         imageUrl,
         description: `View this creation ${data.creatorUsername ? "by @" + data.creatorUsername : ""} on Fiddl.art.`,
-        ogType: "website",
+        ogType: type === "video" ? "video.other" : "website",
       },
       blocks: {
         jsonLd: [buildMediaListSchema(medias, pageUrl)],

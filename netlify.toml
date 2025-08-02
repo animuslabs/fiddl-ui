@@ -15,6 +15,16 @@
   path     = "/model/:modelName/:customModelId?"
   cache = "manual"
 
+[[edge_functions]]
+  function = "models"
+  path     = "/models/:filterTag?"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "browse"
+  path     = "/browse"
+  cache = "manual"
+
 [functions]
   included_files = [
     "netlify/edge-functions/lib/**",
