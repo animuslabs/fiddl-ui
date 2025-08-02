@@ -1,6 +1,6 @@
 import type { Context } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
-import { shortIdToLong } from "./lib/util.ts"
+import { buildMediaEls, buildMediaListSchema, buildStaticTopNavHtml, renderJsonAsHtml, shortIdToLong, type MediaItem } from "./lib/util.ts"
 import { creationsGetImageRequest, creationsGetVideoRequest } from "./lib/orval.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 
@@ -21,17 +21,26 @@ export default async function (request: Request, context: Context) {
     const ids = "videoIds" in data ? data.videoIds : data.imageIds
     const mediaId = ids?.[index]
     if (!mediaId) throw new Error("No media found")
-
+    const medias: MediaItem[] = ids.map((id, i) => ({
+      id,
+      meta: `Media Index ${i} | ${data.meta || ""}`,
+      type,
+      creatorUsername: data.creatorUsername,
+    }))
     const imageUrl = type === "video" ? s3Video(mediaId, "thumbnail") : img(mediaId, "md")
-
+    const pageUrl = `${url.origin}${url.pathname}`
     return buildPageResponse({
       request,
       context,
-      pageTitle: `Fiddl.art ${type === "video" ? "Video" : "Image"} Request`,
+      pageTitle: `Fiddl.art ${type === "video" ? "Video" : "Image"} Request: ${shortId}`,
       social: {
         imageUrl,
-        description: "View this AI-generated creation on Fiddl.art.",
+        description: `View this creation ${data.creatorUsername ? "by @" + data.creatorUsername : ""} on Fiddl.art.`,
         ogType: "website",
+      },
+      blocks: {
+        jsonLd: [buildMediaListSchema(medias, pageUrl)],
+        htmlBlocks: [buildStaticTopNavHtml(), buildMediaEls(medias), renderJsonAsHtml(data, "Creation Request Metadata")],
       },
     })
   } catch (e) {

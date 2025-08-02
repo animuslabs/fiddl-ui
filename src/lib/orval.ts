@@ -549,6 +549,7 @@ export type CreationsCreateImageRequests200Item = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+  meta?: string;
 };
 
 export type CreationsCreateVideoRequestsParams = {
@@ -624,6 +625,7 @@ export type CreationsCreateVideoRequests200Item = {
   model?: string;
   seed?: number;
   prompt?: string;
+  meta?: string;
   duration?: number;
   quantity: number;
   startImageId?: string;
@@ -648,6 +650,7 @@ export type CreationsGetImageRequest200 = {
   quantity: number;
   customModelId?: string;
   customModelName?: string;
+  meta?: string;
 };
 
 export type CreationsGetVideoRequestParams = {
@@ -665,6 +668,7 @@ export type CreationsGetVideoRequest200 = {
   model?: string;
   seed?: number;
   prompt?: string;
+  meta?: string;
   duration?: number;
   quantity: number;
   startImageId?: string;

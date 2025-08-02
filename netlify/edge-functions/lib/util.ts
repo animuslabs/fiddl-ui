@@ -167,15 +167,13 @@ export function buildModelSchema(data: ModelsGetModelByName200, fullUrl: string)
 
   return JSON.stringify(schema)
 }
-
-export function buildMediaEls(
-  medias: {
-    id: string
-    meta: string
-    type: "image" | "video"
-    creatorUsername?: string
-  }[],
-): string {
+export type MediaItem = {
+  id: string
+  meta: string
+  type: "image" | "video"
+  creatorUsername?: string
+}
+export function buildMediaEls(medias: MediaItem[]): string {
   return medias
     .map(({ id, meta, type, creatorUsername }) => {
       const src = type === "image" ? img(id, "lg") : s3Video(id, "preview-lg")
@@ -234,4 +232,61 @@ export function buildStaticTopNavHtml(): string {
     <li><a href="/forge">Forge</a></li>
   </ul>
 </nav>`
+}
+
+export function buildMediaListSchema(medias: MediaItem[], pageUrl: string): string {
+  const itemListElement = medias.map((m, i) => {
+    const isImage = m.type === "image"
+    const contentUrl = isImage ? img(m.id, "lg") : s3Video(m.id, "preview-lg")
+    const obj: Record<string, unknown> = {
+      "@type": isImage ? "ImageObject" : "VideoObject",
+      contentUrl,
+      ...(isImage ? {} : { thumbnailUrl: s3Video(m.id, "thumbnail") }),
+      name: m.meta,
+      description: m.meta,
+    }
+    if (m.creatorUsername) {
+      obj.creator = {
+        "@type": "Person",
+        name: m.creatorUsername,
+        url: `https://app.fiddl.art/@${m.creatorUsername}`,
+      }
+    }
+    return {
+      "@type": "ListItem",
+      position: i + 1,
+      item: obj,
+    }
+  })
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    url: pageUrl,
+    itemListElement,
+  }
+
+  return JSON.stringify(schema)
+}
+
+export function renderJsonAsHtml(data: unknown, title?: string): string {
+  const body = renderJsonAsHtmlInner(data)
+  return title ? `<section><h2>${escapeHtml(title)}</h2>\n${body}</section>` : body
+}
+function renderJsonAsHtmlInner(data: unknown): string {
+  if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
+    return `<span>${escapeHtml(String(data))}</span>`
+  }
+
+  if (Array.isArray(data)) {
+    return `<ul>${data.map((item) => `<li>${renderJsonAsHtmlInner(item)}</li>`).join("")}</ul>`
+  }
+
+  if (data && typeof data === "object") {
+    return `<dl>${Object.entries(data)
+      .map(([key, value]) => `<dt>${escapeHtml(key)}</dt><dd>${renderJsonAsHtmlInner(value)}</dd>`)
+      .join("")}</dl>`
+  }
+
+  return `<span>null</span>`
 }

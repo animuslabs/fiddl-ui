@@ -3,12 +3,6 @@ import { buildPageResponse } from "./lib/page.ts"
 import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels } from "./lib/orval.ts"
 import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
-
-export const config: Config = {
-  path: "/model/:modelName/:customModelId?",
-  cache: "manual",
-}
-
 export default async function (request: Request, context: Context) {
   try {
     const url = new URL(request.url)

@@ -145,8 +145,12 @@ export async function buildPageResponse({ request, context, social, pageTitle, c
   let html = baseHtml
   if (blocks?.title) html = replaceTitle(html, blocks.title || pageTitle || new URL(request.url).pathname.split("/").pop() + "| Fiddl.art")
   if (blocks?.jsonLd?.length) html = injectJsonLd(html, blocks.jsonLd)
+  if (!meta.description) meta.description = "Explore AI-generated creations on Fiddl.art"
   if (social) html = setSocial(html, meta)
-  if (blocks?.htmlBlocks?.length) html = injectSsrBlocks(html, blocks.htmlBlocks)
+  const h1Block = `<h1>${escapeAttr(pageTitle || meta.title || "Fiddl.art")}</h1>`
+  const htmlBlocksWithH1 = [h1Block, ...(blocks?.htmlBlocks || [])]
+  html = injectSsrBlocks(html, htmlBlocksWithH1)
+  html = html.replace(/<html([^>]*)>/i, `<html lang="en"$1>`)
   if (transformHtml) html = transformHtml(html)
 
   // build response & headers
