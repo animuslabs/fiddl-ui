@@ -25,6 +25,11 @@
   path     = "/browse"
   cache = "manual"
 
+[[edge_functions]]
+  function = "profile"
+  path     = "/@:username"
+  cache = "manual"
+
 [functions]
   included_files = [
     "netlify/edge-functions/lib/**",
