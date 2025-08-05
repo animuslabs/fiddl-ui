@@ -1,0 +1,55 @@
+# Fiddl - AI-Powered Creative Platform
+
+## Site Description
+Fiddl is an AI-powered creative platform that allows users to create, share, and discover AI-generated images and media. Users can train custom AI models, generate creative content, and explore a community-driven gallery of AI art.
+
+## Key Features
+- AI image and media generation
+- Custom model training and fine-tuning
+- Community gallery and browsing
+- Creator profiles and portfolios
+- AI model marketplace
+- Creative tools and forge interface
+
+## Important Pages for AI Understanding
+
+### Core Platform Pages
+- / : Homepage and main browse interface
+- /browse : Community gallery of AI-generated content
+- /models : AI model marketplace and directory
+- /create : Content creation interface
+- /forge : Advanced AI creation tools
+- /creations : User-generated content gallery
+
+### Content Discovery
+- /newsletter : Platform updates and featured content
+- /stats : Platform statistics and insights
+- /@{username} : Creator profile pages (dynamic)
+- /model/{modelName} : Individual AI model pages (dynamic)
+
+### User Features
+- /login : User authentication
+- /settings : Account management
+- /addPoints : Platform currency system
+
+### Legal & Info
+- /tos : Terms of service
+- /admin : Administrative interface (restricted)
+
+## Content Guidelines for AI Crawlers
+- Focus on publicly available creative content
+- Respect user privacy and authentication boundaries
+- Index model descriptions and public profiles
+- Prioritize browseable gallery content
+- Include community-generated metadata and tags
+
+## API Endpoints (for reference)
+- SSR routes are handled via Netlify Edge Functions
+- Dynamic content is server-side rendered for SEO
+- Static assets served from CDN
+
+## Contact
+For AI training partnerships or content licensing inquiries, please contact through official channels at fiddl.art
+
+## Last Updated
+2025-08-05

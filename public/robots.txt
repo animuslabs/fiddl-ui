@@ -1,5 +1,39 @@
 User-agent: *
 Disallow: /admin/
-Disallow: /login/
+Disallow: /login
+Disallow: /settings
+Disallow: /a
+Disallow: /addPoints
+Disallow: /auth/
+Disallow: /pangeaLogin
 Allow: /
+Allow: /browse
+Allow: /models
+Allow: /create
+Allow: /forge
+Allow: /newsletter
+Allow: /stats
+Allow: /creations
+Allow: /tos
+
+# Special crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# AI/LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
 Sitemap: https://app.fiddl.art/sitemap.xml

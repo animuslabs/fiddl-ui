@@ -23,7 +23,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     // Media data
     mediaObjects: [] as MediaGalleryMeta[],
     currentIndex: 0,
-
+    muted: true,
     // Loading states
     imgLoading: true,
     hdVideoLoading: false,

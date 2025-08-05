@@ -24,6 +24,7 @@ div
         playsinline
         autoplay
         loop
+        :muted="mediaViewerStore.muted"
         @canplay="onMediaLoaded"
         @click.stop="onMediaClick"
         controls
