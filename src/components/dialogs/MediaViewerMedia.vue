@@ -26,6 +26,7 @@ div
         loop
         :muted="mediaViewerStore.muted"
         @canplay="onMediaLoaded"
+        @volumechange="onVolumeChange"
         @click.stop="onMediaClick"
         controls
       )
@@ -69,6 +70,9 @@ const props = withDefaults(defineProps<Props>(), {
   downloadMode: false,
 })
 const mediaViewerStore = useMediaViewerStore()
+
+// Load muted preference on initialization
+mediaViewerStore.loadMutedPreference()
 const currentHdUrl = computed(() => mediaViewerStore.hdVideoUrl[mediaViewerStore.currentMediaId])
 const mediaElement = ref<HTMLImageElement | HTMLVideoElement | null>(null)
 watch(currentHdUrl, (url) => {
@@ -173,6 +177,11 @@ function onMediaClick(event: MouseEvent) {
   } else {
     mediaViewerStore.nextMedia()
   }
+}
+
+function onVolumeChange(event: Event) {
+  const videoEl = event.target as HTMLVideoElement
+  mediaViewerStore.setMuted(videoEl.muted)
 }
 
 function handleTouchStart(e: TouchEvent) {

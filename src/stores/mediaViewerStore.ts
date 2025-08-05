@@ -158,6 +158,21 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.downloadMode = false
     },
 
+    // Update muted state and optionally persist it
+    setMuted(muted: boolean) {
+      this.muted = muted
+      // Persist mute preference in localStorage
+      LocalStorage.setItem("videoMuted", muted)
+    },
+
+    // Load muted preference from localStorage
+    loadMutedPreference() {
+      const savedMuted = LocalStorage.getItem<boolean>("videoMuted")
+      if (savedMuted !== null) {
+        this.muted = savedMuted
+      }
+    },
+
     // Reset creator info when changing media
     resetCreatorInfo() {
       this.creatorMeta = { userName: "", id: "" }
