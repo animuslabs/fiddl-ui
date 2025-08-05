@@ -173,9 +173,9 @@ q-page.full-height.full-width
 
       // Forge Models tab - show user's custom models
       template(v-else-if="tab === 'forgeModels'")
-        .row.q-ma-md(style="z-index:-5")
+        .row.q-ma-md
           .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in userCustomModels" :key="model.slug")
-            ModelCard.q-ma-sm(selectable :model="model" @chipClick="selectModelTag" @click="toModelPage(model)")
+            ModelCard.q-ma-sm(selectable :model="model" @click="toModelPage(model)")
         .centered.q-ma-md(v-if="userCustomModels.length === 0 && !modelsStore.loading.userModels")
           h5.text-grey-6 No custom models found
         .centered.q-ma-md(v-if="modelsStore.loading.userModels")

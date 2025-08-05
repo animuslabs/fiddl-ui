@@ -17,7 +17,7 @@ q-card.q-pa-md(
       .row.ellipsis-2-lines(style="height:50px;")
         p {{ model.description }}
       .row.q-mt-md
-        q-chip(v-for="tag in model.modelTags" :key="tag" text-color="white" clickable @click.stop="$emit('chipClick', tag)")
+        q-chip(v-for="tag in model.modelTags" :key="tag" text-color="white" :clickable="chipClickable" @click.stop="$emit('chipClick', tag)")
           small {{ tag }}
     div.q-pa-md(style="right:-20px; bottom:-20px; position: absolute;")
       q-icon(:name="isVideo?'smart_display':'image'" size="35px"  :style="iconStyle")
@@ -73,6 +73,7 @@ const props = defineProps({
   },
   selectable: { type: Boolean, default: false },
   grayscale: { type: Boolean, default: false },
+  chipClickable: { type: Boolean, default: false },
 })
 defineEmits({
   chipClick: (tag: ModelTags) => true,
