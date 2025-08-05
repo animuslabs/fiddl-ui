@@ -30,6 +30,11 @@
   path     = "/@:username"
   cache = "manual"
 
+[[edge_functions]]
+  function = "index"
+  path     = "/"
+  cache = "manual"
+
 [functions]
   included_files = [
     "netlify/edge-functions/lib/**",

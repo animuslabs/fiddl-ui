@@ -75,7 +75,19 @@ export default defineComponent({
             if (!result.token) throwErr("No token")
             const userAuth = useUserAuth()
             await userAuth.privyLogin(result.token)
-            void router.push({ name: "account" })
+
+            // Wait for user profile to load and redirect to profile with unlocked tab
+            await new Promise((resolve) => setTimeout(resolve, 100))
+            if (userAuth.userProfile?.username) {
+              void router.push({
+                name: "profile",
+                params: { username: userAuth.userProfile.username },
+                query: { tab: "unlocked" },
+              })
+            } else {
+              // Fallback to account route if username not available
+              void router.push({ name: "account" })
+            }
             Loading.hide()
             $q.notify({
               color: "positive",

@@ -1178,6 +1178,11 @@ userId: string;
 };
 
 export type UserSetUsernameBody = {
+  /**
+   * @minLength 3
+   * @maxLength 15
+   * @pattern ^[a-zA-Z0-9_]+$
+   */
   username: string;
 };
 
@@ -1944,6 +1949,7 @@ export type ModelsGetCustomModel200 = {
 export type ModelsGetPublicModelsParams = {
 page?: number;
 tag?: ModelsGetPublicModelsTag;
+creatorId?: string;
 };
 
 export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];

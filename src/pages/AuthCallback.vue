@@ -56,8 +56,20 @@ export default defineComponent({
           position: "top",
         })
 
-        // Redirect to account page
-        void router.push({ name: "account" })
+        // Redirect to user's profile with unlocked tab
+        // Wait a bit for user profile to load
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        if (userAuth.userProfile?.username) {
+          void router.push({
+            name: "profile",
+            params: { username: userAuth.userProfile.username },
+            query: { tab: "unlocked" },
+          })
+        } else {
+          // Fallback to account route if username not available
+          void router.push({ name: "account" })
+        }
       } catch (err: any) {
         console.error("Authentication error:", err)
         error.value = err.message || "Authentication failed"

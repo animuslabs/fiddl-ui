@@ -31,6 +31,15 @@ const availableAspectRatios = Object.freeze(aspectRatios)
 
 function initState() {
   const loadedRequest = LocalStorage.getItem("req") as CreateImageRequestWithCustomModel | null
+  if (loadedRequest?.customModelId) {
+    void modelsGetCustomModel({ id: loadedRequest.customModelId }).then((response) => {
+      const store = useCreateImageStore()
+      store.state.customModel = response.data
+      store.state.req.customModelName = response.data.name
+      store.state.req.customModelId = response.data.id
+    })
+  }
+
   const { anyLoading, loading } = useLoadingStates(["new", "randomize", "improve", "create"])
   return {
     req: loadedRequest ?? { ...defaultImageRequest },

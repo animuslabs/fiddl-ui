@@ -2,7 +2,7 @@
   q-card.q-pa-md
     .row(style="max-width: 90vw;")
       div
-        img(:src="profileImage" alt="Profile" style="width: 250px; height: 250px; border-radius: 50%; ")
+        q-img(:src="profileImage" alt="Profile" style="width: 250px; height: 250px; border-radius: 50%;" placeholder-src="/blankAvatar.webp")
       div.q-ml-lg
         .row.q-mb-sm.q-gutter-md.items-center
           h4 @{{profile.profile.username}}

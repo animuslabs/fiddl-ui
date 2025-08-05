@@ -11,6 +11,7 @@ export const models = reactive({
   // base: LocalStorage.getItem<ModelsGetBaseModels200Item[]>("baseModels") || [],
   base: [] as ModelsGetBaseModels200Item[],
   custom: [] as CustomModel[],
+  userModels: [] as CustomModel[], // Models filtered by specific user/creator
 })
 
 export const filteredBaseModels = computed<ModelsGetBaseModels200Item[]>(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
@@ -24,6 +25,7 @@ export const allModels = computed(() =>
 )
 export const featuredModels = computed(() => allModels.value.filter((model) => model.featured))
 export const notFeaturedModels = computed(() => allModels.value.filter((model) => !model.featured))
+export const userModels = computed(() => models.userModels)
 export const filter = reactive({
   tag: null as ModelTags | null,
   currentPage: 1,
@@ -105,6 +107,52 @@ export async function loadCustomModels() {
   models.custom = transformedModels
 }
 
+/**
+ * Fetches custom models created by a specific user
+ * @param creatorId - The ID of the user whose models to fetch
+ * @param page - The page number to fetch from the API (default: 1)
+ */
+export async function loadUserModels(creatorId: string, page: number = 1) {
+  loading.userModels = true
+  try {
+    const response = await modelsGetPublicModels({
+      page,
+      creatorId,
+    })
+
+    const newModels = response.data
+    const transformedModels: CustomModel[] = newModels.map((model) => {
+      return {
+        blogLink: null,
+        description: model.description,
+        featured: model.featured,
+        id: model.id,
+        modelTags: model.modelTags,
+        name: model.name,
+        previewMediaId: model.previewMediaId,
+        slug: model.slug,
+        updatedAt: model.updatedAt,
+        longDescription: null,
+        creatorId: model.creatorId,
+      }
+    })
+
+    // If it's page 1, replace the array; otherwise append
+    if (page === 1) {
+      models.userModels = transformedModels
+    } else {
+      // Merge and dedupe by id
+      const existing = new Map(models.userModels.map((m) => [m.id, m]))
+      transformedModels.forEach((model) => existing.set(model.id, model))
+      models.userModels = Array.from(existing.values()).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    }
+
+    return response.data
+  } finally {
+    loading.userModels = false
+  }
+}
+
 // export function addTag(tag: ModelTags | ModelTags[]) {
 //   const tags = Array.isArray(tag) ? tag : [tag]
 //   for (const t of tags) {
@@ -126,5 +174,6 @@ export async function loadCustomModels() {
 export const loading = reactive({
   base: false,
   custom: false,
+  userModels: false,
 })
 void loadAllModels()

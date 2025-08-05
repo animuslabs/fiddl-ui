@@ -76,7 +76,19 @@ export default {
         }
         await this.userAuth.pkLogin(result)
         Notify.create({ message: "Logged in", color: "positive", icon: "check" })
-        this.$router.push({ name: "account" })
+
+        // Wait for user profile to load and redirect to profile with unlocked tab
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        if (this.userAuth.userProfile?.username) {
+          this.$router.push({
+            name: "profile",
+            params: { username: this.userAuth.userProfile.username },
+            query: { tab: "unlocked" },
+          })
+        } else {
+          // Fallback to account route if username not available
+          this.$router.push({ name: "account" })
+        }
         this.hide()
       } catch (error: any) {
         console.error(error)

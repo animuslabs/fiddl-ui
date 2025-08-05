@@ -76,7 +76,17 @@ export default defineComponent({
         })
         await this.$userAuth.loadUserData()
         const redirect = this.$route.query?.redirect as string
-        await this.$router.push({ name: redirect || "account" })
+
+        // If no specific redirect and user has username, go to profile with unlocked tab
+        if (!redirect && this.$userAuth.userProfile?.username) {
+          await this.$router.push({
+            name: "profile",
+            params: { username: this.$userAuth.userProfile.username },
+            query: { tab: "unlocked" },
+          })
+        } else {
+          await this.$router.push({ name: redirect || "account" })
+        }
         umami.track("linkLogin")
       } catch (e: any) {
         console.error(e)

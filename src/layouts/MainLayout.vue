@@ -56,7 +56,7 @@ q-layout(view="lHh Lpr lFf" )
                 .row.items-center
                   q-icon(name="settings" size="20px").q-mr-md
                   div Settings
-            q-item(clickable @click="$router.push({name:'creations',params:{ accountId:$userAuth.userId }})" v-close-popup)
+            q-item(clickable @click="navToUserProfile" v-close-popup)
               q-item-section
                 .row.items-center
                   q-icon(name="photo_library" size="20px").q-mr-md
@@ -120,6 +120,10 @@ export default defineComponent({
     },
   },
   methods: {
+    async navToUserProfile() {
+      if (!this.$userAuth.userProfile) await this.$userAuth.loadUserProfile()
+      void this.$router.push({ name: "profile", params: { username: this.$userAuth.userProfile?.username } })
+    },
     login() {
       void this.$router.push({ name: "login" })
     },

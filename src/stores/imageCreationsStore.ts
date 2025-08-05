@@ -83,10 +83,10 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         customModelId: undefined,
       }
     },
-    searchCreations(includePublic: boolean = false) {
+    searchCreations(includePublic: boolean = false, targetUserId?: string) {
       // if (this.loadingCreations) return
       this.creations = []
-      void this.loadCreations(includePublic)
+      void this.loadCreations(includePublic, targetUserId)
     },
     deleteCreation(creationId: string) {
       const index = this.creations.findIndex((i) => i.id === creationId)
@@ -129,10 +129,9 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       this.creations = []
       await this.loadCreations()
     },
-    async loadCreations(includePublic: boolean = false) {
-      // if (!userId) userId = useUserAuth().userId || undefined
-      // if (!userId) return
-      const userId = useUserAuth().userId || undefined
+    async loadCreations(includePublic: boolean = false, targetUserId?: string) {
+      // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
+      const userId = targetUserId || useUserAuth().userId || undefined
       if (!userId && !includePublic) return
       if (this.loadingCreations) {
         console.log("loadingCreations already in progress")
@@ -140,11 +139,12 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       }
       this.loadingCreations = true
       try {
+        // Set activeUserId to track which user's data we're loading
         if (!includePublic && userId) this.activeUserId = userId
         const lastItem = this.creations[this.creations.length - 1]
 
         const response = await creationsCreateImageRequests({
-          userId: includePublic ? undefined : userId,
+          userId: userId,
           order: "desc",
           endDateTime: lastItem?.createdAt?.toISOString(),
           limit: 20,
@@ -252,6 +252,7 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         id: result.id,
         createdAt: new Date(),
         creatorId,
+        creatorUsername: useUserAuth().userProfile?.username || "", // Add missing creatorUsername
         customModelId: request.customModelId,
         customModelName: request.customModelName,
         type: "image",
