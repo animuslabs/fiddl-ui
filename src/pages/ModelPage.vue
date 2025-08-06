@@ -49,17 +49,15 @@ import { ref, computed, watch, shallowRef } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import ModelCard from "src/components/ModelCard.vue"
-import { models } from "src/stores/modelsStore"
+import { models, loadSingleModel } from "src/stores/modelsStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { img, s3Video, avatarImg } from "lib/netlifyImg"
 import { userGetUsername } from "lib/orval"
-import { type ImageModel, imageModels, type VideoModel, videoModels } from "lib/imageModels"
+import { type AnyModel, type ImageModel, imageModels, type VideoModel, videoModels } from "lib/imageModels"
 import mediaViwer from "lib/mediaViewer"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
-
-defineOptions({ name: "ModelPage" })
 
 const route = useRoute()
 const router = useRouter()
@@ -78,8 +76,12 @@ const modelName = computed(() => getStringParam(route.params.modelName))
 const customModelId = computed(() => getStringParam(route.params.customModelId))
 
 const currentModel = computed(() => {
+  if (currentModel.value == undefined && modelName.value) void loadSingleModel(modelName.value as AnyModel, customModelId.value)
   if (customModelId.value) return models.custom.find((m) => m.id === customModelId.value)
   if (modelName.value) return models.base.find((m) => m.slug === modelName.value)
+  if (customModelId.value || modelName.value) {
+    console.log("hi")
+  }
   return undefined
 })
 

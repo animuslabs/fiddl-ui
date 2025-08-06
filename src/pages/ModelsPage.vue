@@ -41,6 +41,7 @@ import { type ModelsGetPublicModels200Item } from "lib/orval"
 
 const router = useRouter()
 const route = useRoute()
+void modelsStore.loadAllModels()
 
 const scrollSelectedChipIntoView = () => {
   void nextTick(() => {
@@ -91,7 +92,6 @@ const selectTag = (tag: ModelTags) => {
   })
 }
 
-// On mount, scroll to selected chip if any
 void nextTick(() => {
   scrollSelectedChipIntoView()
 })

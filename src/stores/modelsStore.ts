@@ -1,5 +1,5 @@
-import type { ModelTags } from "lib/imageModels"
-import { modelsGetBaseModels, modelsGetPublicModels, type ModelsGetBaseModels200Item, type ModelsGetCustomModel200, type ModelsGetPublicModels200Item } from "lib/orval"
+import type { AnyModel, ModelTags } from "lib/imageModels"
+import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels, type ModelsGetBaseModels200Item, type ModelsGetCustomModel200, type ModelsGetModelByName200, type ModelsGetModelByNameParams, type ModelsGetPublicModels200Item } from "lib/orval"
 import { LocalStorage } from "quasar"
 import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
@@ -57,6 +57,26 @@ watch(
   },
 )
 
+export async function loadSingleModel(name: AnyModel, customModelId?: string) {
+  const { data } = await modelsGetModelByName({ name, customModelId, includeMedia: 1 })
+
+  if (customModelId) {
+    const mappedData: CustomModel = {
+      creatorId: data.customModelCreator!.id,
+      ...data.model,
+      previewMediaId: data.media![0]?.id,
+      id: customModelId,
+    }
+    models.custom.push(mappedData)
+  } else {
+    const mappedData: ModelsGetBaseModels200Item = {
+      ...data.model,
+      previewMediaId: data.media![0]?.id,
+    }
+    models.base.push(mappedData)
+  }
+}
+
 export async function loadAllModels() {
   loading.base = true
   loading.custom = true
@@ -91,17 +111,9 @@ export async function loadCustomModels() {
   const mergedSorted = (Object.values(tempObj) as ModelsGetPublicModels200Item[]).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
   const transformedModels: CustomModel[] = mergedSorted.map((model) => {
     return {
+      ...model,
       blogLink: null,
-      description: model.description,
-      featured: model.featured,
-      id: model.id,
-      modelTags: model.modelTags,
-      name: model.name,
-      previewMediaId: model.previewMediaId,
-      slug: model.slug,
-      updatedAt: model.updatedAt,
       longDescription: null,
-      creatorId: model.creatorId,
     }
   })
   models.custom = transformedModels
@@ -176,4 +188,4 @@ export const loading = reactive({
   custom: false,
   userModels: false,
 })
-void loadAllModels()
+// void loadAllModels()
