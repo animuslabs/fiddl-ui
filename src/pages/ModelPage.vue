@@ -75,13 +75,27 @@ const getStringParam = (v: unknown) => (typeof v === "string" ? v : undefined)
 const modelName = computed(() => getStringParam(route.params.modelName))
 const customModelId = computed(() => getStringParam(route.params.customModelId))
 
+watch(
+  [modelName, customModelId],
+  ([name, customId]) => {
+    if (customId) {
+      const exists = models.custom.find((m) => m.id === customId)
+      if (!exists && name) {
+        void loadSingleModel(name as AnyModel, customId)
+      }
+    } else if (name) {
+      const exists = models.base.find((m) => m.slug === name)
+      if (!exists) {
+        void loadSingleModel(name as AnyModel)
+      }
+    }
+  },
+  { immediate: true },
+)
+
 const currentModel = computed(() => {
-  if (currentModel.value == undefined && modelName.value) void loadSingleModel(modelName.value as AnyModel, customModelId.value)
   if (customModelId.value) return models.custom.find((m) => m.id === customModelId.value)
   if (modelName.value) return models.base.find((m) => m.slug === modelName.value)
-  if (customModelId.value || modelName.value) {
-    console.log("hi")
-  }
   return undefined
 })
 

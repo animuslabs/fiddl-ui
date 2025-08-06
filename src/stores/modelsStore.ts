@@ -67,13 +67,27 @@ export async function loadSingleModel(name: AnyModel, customModelId?: string) {
       previewMediaId: data.media![0]?.id,
       id: customModelId,
     }
-    models.custom.push(mappedData)
+
+    // Check if model already exists and replace it to preserve order
+    const existingIndex = models.custom.findIndex((m) => m.id === customModelId)
+    if (existingIndex !== -1) {
+      models.custom[existingIndex] = mappedData
+    } else {
+      models.custom.push(mappedData)
+    }
   } else {
     const mappedData: ModelsGetBaseModels200Item = {
       ...data.model,
       previewMediaId: data.media![0]?.id,
     }
-    models.base.push(mappedData)
+
+    // Check if model already exists and replace it to preserve order
+    const existingIndex = models.base.findIndex((m) => m.slug === name)
+    if (existingIndex !== -1) {
+      models.base[existingIndex] = mappedData
+    } else {
+      models.base.push(mappedData)
+    }
   }
 }
 
