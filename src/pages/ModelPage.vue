@@ -39,7 +39,7 @@ q-page.full-width.position-relative
     .centered.q-ma-md(v-if="imageCreations.creations.length > 9 && isImageModel")
       q-btn(
         label="Load More"
-        @click="imageCreations.loadCreations(true)"
+        @click="imageCreations.loadCreations()"
         :disable="imageCreations.creations.length < 1"
       )
 </template>
@@ -115,7 +115,7 @@ watch(
     if (isVideo) {
       // Handle video model changes
       videoCreations.filter.model = name && (videoModels as readonly string[]).includes(name) ? (name as VideoModel) : undefined
-      videoCreations.searchCreations(true)
+      videoCreations.searchCreations()
     } else {
       // Handle image model (including custom) changes
       if (customId) {
@@ -125,7 +125,7 @@ watch(
         imageCreations.filter.model = name && (imageModels as readonly string[]).includes(name) ? (name as ImageModel) : undefined
         imageCreations.filter.customModelId = undefined
       }
-      imageCreations.searchCreations(true)
+      imageCreations.searchCreations()
     }
   },
   { immediate: true },

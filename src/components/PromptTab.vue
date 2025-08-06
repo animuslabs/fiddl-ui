@@ -37,7 +37,7 @@
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")
             q-btn(
               label="Load More"
-              @click="activeCreationsStore.loadCreations()"
+              @click="activeCreationsStore.loadCreations($userAuth.userId)"
               :disable="activeCreationsStore.creations.length < 1"
             )
 
@@ -160,7 +160,7 @@ export default defineComponent({
         this.activeCreationsStore.filter.model = val as any
         if (!this.activeCreationsStore.dynamicModel) {
           this.activeCreationsStore.dynamicModel = true
-        } else this.activeCreationsStore.searchCreations()
+        } else this.activeCreationsStore.searchCreations(this.$userAuth.userId)
       },
       immediate: true,
     },
@@ -178,7 +178,7 @@ export default defineComponent({
           this.activeCreationsStore.filter.model = undefined
           if (this.currentTab == "image") this.imageCreations.filter.customModelId = undefined
         }
-        this.activeCreationsStore.searchCreations()
+        this.activeCreationsStore.searchCreations(this.$userAuth.userId)
       },
       immediate: true,
       deep: true,
@@ -204,7 +204,7 @@ export default defineComponent({
     "$userAuth.loggedIn": {
       immediate: false,
       handler(val) {
-        if (val) void this.activeCreationsStore.loadCreations()
+        if (val) void this.activeCreationsStore.loadCreations(this.$userAuth.userId)
         else {
           this.imageCreations.reset()
           this.videoCreations.reset()

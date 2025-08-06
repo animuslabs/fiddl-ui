@@ -664,8 +664,8 @@ export default defineComponent({
       if (this.tab !== "creations") return
       this.imageCreations.search = this.searchQuery || null
       this.videoCreations.search = this.searchQuery || null
-      this.imageCreations.searchCreations(true, this.userId || undefined)
-      this.videoCreations.searchCreations(true, this.userId || undefined)
+      this.imageCreations.searchCreations(this.userId || undefined)
+      this.videoCreations.searchCreations(this.userId || undefined)
     },
     onModelChange() {
       if (this.tab !== "creations") return
@@ -691,8 +691,8 @@ export default defineComponent({
         this.setMediaTypeFilter("all")
       }
 
-      this.imageCreations.searchCreations(true, this.userId || undefined)
-      this.videoCreations.searchCreations(true, this.userId || undefined)
+      this.imageCreations.searchCreations(this.userId || undefined)
+      this.videoCreations.searchCreations(this.userId || undefined)
     },
     setMediaTypeFilter(type: "all" | "image" | "video") {
       this.mediaTypeFilter = type
@@ -722,12 +722,12 @@ export default defineComponent({
 
         // Load data based on media type filter
         if (this.mediaTypeFilter === "all") {
-          void this.imageCreations.loadCreations(true, this.userId || undefined)
-          void this.videoCreations.loadCreations(true, this.userId || undefined)
+          void this.imageCreations.loadCreations(this.userId || undefined)
+          void this.videoCreations.loadCreations(this.userId || undefined)
         } else if (this.mediaTypeFilter === "image") {
-          void this.imageCreations.loadCreations(true, this.userId || undefined)
+          void this.imageCreations.loadCreations(this.userId || undefined)
         } else if (this.mediaTypeFilter === "video") {
-          void this.videoCreations.loadCreations(true, this.userId || undefined)
+          void this.videoCreations.loadCreations(this.userId || undefined)
         }
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId)
@@ -748,12 +748,12 @@ export default defineComponent({
     loadMore() {
       if (this.tab === "creations") {
         if (this.mediaTypeFilter === "all") {
-          void this.imageCreations.loadCreations(true, this.userId || undefined)
-          void this.videoCreations.loadCreations(true, this.userId || undefined)
+          void this.imageCreations.loadCreations(this.userId || undefined)
+          void this.videoCreations.loadCreations(this.userId || undefined)
         } else if (this.mediaTypeFilter === "image") {
-          void this.imageCreations.loadCreations(true, this.userId || undefined)
+          void this.imageCreations.loadCreations(this.userId || undefined)
         } else if (this.mediaTypeFilter === "video") {
-          void this.videoCreations.loadCreations(true, this.userId || undefined)
+          void this.videoCreations.loadCreations(this.userId || undefined)
         }
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId || undefined)
