@@ -12,6 +12,7 @@ export const models = reactive({
   base: [] as ModelsGetBaseModels200Item[],
   custom: [] as CustomModel[],
   userModels: [] as CustomModel[], // Models filtered by specific user/creator
+  currentModel: null as (ModelsGetBaseModels200Item | CustomModel) | null, // Single model for detail pages
 })
 
 export const filteredBaseModels = computed<ModelsGetBaseModels200Item[]>(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
@@ -57,38 +58,59 @@ watch(
   },
 )
 
-export async function loadSingleModel(name: AnyModel, customModelId?: string) {
-  const { data } = await modelsGetModelByName({ name, customModelId, includeMedia: 1 })
+/**
+ * Load a single model for detail pages. First checks existing lists, then API if not found.
+ * Stores the result in models.currentModel to avoid interfering with list management.
+ */
+export async function loadCurrentModel(name: AnyModel, customModelId?: string) {
+  loading.currentModel = true
 
-  if (customModelId) {
-    const mappedData: CustomModel = {
-      creatorId: data.customModelCreator!.id,
-      ...data.model,
-      previewMediaId: data.media![0]?.id,
-      id: customModelId,
-    }
-
-    // Check if model already exists and replace it to preserve order
-    const existingIndex = models.custom.findIndex((m) => m.id === customModelId)
-    if (existingIndex !== -1) {
-      models.custom[existingIndex] = mappedData
+  try {
+    // First, try to find the model in existing lists
+    if (customModelId) {
+      const existingCustom = models.custom.find((m) => m.id === customModelId)
+      if (existingCustom) {
+        models.currentModel = existingCustom
+        return existingCustom
+      }
     } else {
-      models.custom.push(mappedData)
-    }
-  } else {
-    const mappedData: ModelsGetBaseModels200Item = {
-      ...data.model,
-      previewMediaId: data.media![0]?.id,
+      const existingBase = models.base.find((m) => m.slug === name)
+      if (existingBase) {
+        models.currentModel = existingBase
+        return existingBase
+      }
     }
 
-    // Check if model already exists and replace it to preserve order
-    const existingIndex = models.base.findIndex((m) => m.slug === name)
-    if (existingIndex !== -1) {
-      models.base[existingIndex] = mappedData
+    // If not found in lists, fetch from API
+    const { data } = await modelsGetModelByName({ name, customModelId, includeMedia: 1 })
+
+    if (customModelId) {
+      const mappedData: CustomModel = {
+        creatorId: data.customModelCreator!.id,
+        ...data.model,
+        previewMediaId: data.media![0]?.id,
+        id: customModelId,
+      }
+      models.currentModel = mappedData
+      return mappedData
     } else {
-      models.base.push(mappedData)
+      const mappedData: ModelsGetBaseModels200Item = {
+        ...data.model,
+        previewMediaId: data.media![0]?.id,
+      }
+      models.currentModel = mappedData
+      return mappedData
     }
+  } finally {
+    loading.currentModel = false
   }
+}
+
+/**
+ * Clear the current model (useful when navigating away from model detail pages)
+ */
+export function clearCurrentModel() {
+  models.currentModel = null
 }
 
 export async function loadAllModels() {
@@ -201,5 +223,6 @@ export const loading = reactive({
   base: false,
   custom: false,
   userModels: false,
+  currentModel: false,
 })
 // void loadAllModels()

@@ -45,11 +45,11 @@ q-page.full-width.position-relative
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, shallowRef } from "vue"
+import { ref, computed, watch, shallowRef, onUnmounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import ModelCard from "src/components/ModelCard.vue"
-import { models, loadSingleModel } from "src/stores/modelsStore"
+import { models, loadCurrentModel, clearCurrentModel } from "src/stores/modelsStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { img, s3Video, avatarImg } from "lib/netlifyImg"
@@ -75,29 +75,25 @@ const getStringParam = (v: unknown) => (typeof v === "string" ? v : undefined)
 const modelName = computed(() => getStringParam(route.params.modelName))
 const customModelId = computed(() => getStringParam(route.params.customModelId))
 
+// Watch for route changes and load the current model
 watch(
   [modelName, customModelId],
   ([name, customId]) => {
-    if (customId) {
-      const exists = models.custom.find((m) => m.id === customId)
-      if (!exists && name) {
-        void loadSingleModel(name as AnyModel, customId)
-      }
-    } else if (name) {
-      const exists = models.base.find((m) => m.slug === name)
-      if (!exists) {
-        void loadSingleModel(name as AnyModel)
-      }
+    if (name) {
+      void loadCurrentModel(name as AnyModel, customId)
+    } else {
+      clearCurrentModel()
     }
   },
   { immediate: true },
 )
 
-const currentModel = computed(() => {
-  if (customModelId.value) return models.custom.find((m) => m.id === customModelId.value)
-  if (modelName.value) return models.base.find((m) => m.slug === modelName.value)
-  return undefined
+// Clean up when component unmounts
+onUnmounted(() => {
+  clearCurrentModel()
 })
+
+const currentModel = computed(() => models.currentModel)
 
 type CreatorMeta = { id: string; userName: string }
 const creatorMeta = shallowRef<CreatorMeta | null>(null)
