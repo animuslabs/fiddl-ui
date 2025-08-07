@@ -106,8 +106,8 @@ const vidStore = useCreateVideoStore()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
 const req = toRef(vidStore.state.req)
-// const disableStartingImage = computed(() => req.value.model == "veo-3")
-const disableStartingImage = computed(() => req.value.model == "veo-3")
+// veo-3 now supports image input, so we don't need to disable starting images for it
+const disableStartingImage = computed(() => false)
 
 function create() {
   void vidStore.createVideoRequest().then(() => emit("created"))
