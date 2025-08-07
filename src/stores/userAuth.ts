@@ -144,6 +144,7 @@ export const useUserAuth = defineStore("userAuth", {
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
       if (!savedLogin) {
+        tawk.init()
         return false
       }
       // await this.login(savedLogin.userId)
