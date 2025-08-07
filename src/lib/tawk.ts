@@ -97,10 +97,23 @@ export const tawk = {
     this.loadScript(() => {})
   },
 
-  setVisitorInfo(name: string, email: string, hash?: string) {
+  // Set arbitrary custom attributes for the current visitor / chat
+  // Keys must be alphanumeric or contain '-' and values ≤ 255 chars
+  // Example: tawk.setAttributes({ plan: 'pro', store: 'Midvalley' })
+  setAttributes(attributes: Record<string, any>, callback?: (err?: unknown) => void) {
+    if (this.client && typeof this.client.setAttributes === "function") {
+      this.client.setAttributes(attributes, callback ?? (() => {}))
+    }
+  },
+
+  setVisitorInfo(name: string, email: string, extraAttributes?: Record<string, any>) {
     this.unloadScript()
     window.Tawk_API = window.Tawk_API || {}
-    window.Tawk_API.visitor = { name, email, hash }
+    window.Tawk_API.visitor = { name, email }
     this.reloadScript()
+    if (extraAttributes)
+      setTimeout(() => {
+        this.setAttributes(extraAttributes)
+      }, 2000)
   },
 }

@@ -15,6 +15,7 @@ import { Dialog } from "quasar"
 import { privy } from "lib/privy"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { tawk } from "lib/tawk"
+import { avatarImg } from "lib/netlifyImg"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -44,6 +45,7 @@ export const useUserAuth = defineStore("userAuth", {
       if (!userId) userId = this.userId
       const response = await userGet({ userId })
       this.userData = response.data
+      tawk.setAttributes({ points: this.userData.availablePoints, userId: this.userId })
     },
     async loadUserProfile(userId?: string) {
       if (!userId && !this.userId) return
@@ -54,7 +56,9 @@ export const useUserAuth = defineStore("userAuth", {
         const response = await userProfile({ userId: userId! })
         this.userProfile = response.data
 
-        if (this.userProfile) umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+        if (this.userProfile) {
+          umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+        }
       } catch (error) {
         this.userProfile = null
       }
@@ -115,7 +119,7 @@ export const useUserAuth = defineStore("userAuth", {
         this.loggedIn = true
         await this.loadUserData(authResult.userId)
         void this.loadUserProfile().then(() => {
-          tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail")
+          tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
         })
       } catch (e: any) {
         this.logout()
@@ -152,9 +156,10 @@ export const useUserAuth = defineStore("userAuth", {
       this.setUserId(savedLogin.userId)
       this.loggedIn = true
       void this.loadUserProfile().then(() => {
-        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail")
+        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
     },
+
     async emailLogin(email: string) {
       const { data: userId } = await userFindByEmail({ email })
       await this.pkLogin(userId)
