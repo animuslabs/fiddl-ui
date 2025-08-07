@@ -170,11 +170,9 @@ q-page.full-height.full-width
           layout="grid"
           :mediaObjects="purchasedMediaObjects"
         )
-
-      // Forge Models tab - show user's custom models
       template(v-else-if="tab === 'forgeModels'")
-        .row.q-ma-md
-          .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in userCustomModels" :key="model.slug")
+        .row.q-ma-md.full-width
+          .col-12.col-sm-6.col-md-4.col-lg-3(v-for="model in userCustomModels" :key="model.slug" style="min-width:300px;")
             ModelCard.q-ma-sm(selectable :model="model" @click="toModelPage(model)")
         .centered.q-ma-md(v-if="userCustomModels.length === 0 && !modelsStore.loading.userModels")
           h5.text-grey-6 No custom models found
