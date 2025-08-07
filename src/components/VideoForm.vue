@@ -90,18 +90,19 @@
             q-btn(icon="upload" label="Upload Image" flat color="primary" @click="triggerFileInput")
               .badge
                 p {{ prices.image.uploadSoloImage }}
+            .col-grow
             q-btn(icon="list" label="Select from Uploads" flat color="primary" @click="showUploads = true")
           div.drag-drop-area.gt-sm(@drop.prevent="handleDrop" @dragover.prevent @dragleave.prevent)
             .centered.bg-grey-9.q-pa-xl.q-mt-md
               p Drag and drop an image here
       .q-ma-md(v-else).relative-position
-        h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:10px;") Select Starting Image
+        h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:20px;") Select Starting Image
         //- q-list.q-ma-md
         q-list.q-ma-md
           div(v-for="id of imageUploadIds")
-            q-img.q-ma-sm( :src="s3Img(`uploads/` + id)" style="max-width:400px; min-width:100px;" @click="req.uploadedStartImageId=id;showImageDialog=false")
+            q-img.q-ma-sm.cursor-pointer( :src="s3Img(`uploads/` + id)" style="max-width:400px; min-width:100px;" @click="req.uploadedStartImageId=id;showImageDialog=false")
           //- .centered
-        div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:-10px;")
+        div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:20px;")
           .centered
             q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")
 
