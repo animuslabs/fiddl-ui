@@ -23,6 +23,7 @@ export const createVideoRequestSchema = z
     aspectRatio: z.enum(aspectRatios),
     duration: z.number().int(),
     startImageId: z.string().optional(),
+    uploadedStartImageId: z.string().optional(),
   })
   .refine(
     (data) => {

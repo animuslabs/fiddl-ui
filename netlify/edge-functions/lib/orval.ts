@@ -260,6 +260,8 @@ export type CreateVideo200 = {
   error: string | null;
   /** @nullable */
   startImageId: string | null;
+  /** @nullable */
+  uploadedImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -289,6 +291,33 @@ export const CreateImprovePromptBodyType = {
 export type CreateImprovePromptBody = {
   prompt: string;
   type?: CreateImprovePromptBodyType;
+};
+
+export type CreateUploadImageBodyFileType = typeof CreateUploadImageBodyFileType[keyof typeof CreateUploadImageBodyFileType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateUploadImageBodyFileType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+  'image/gif': 'image/gif',
+} as const;
+
+export type CreateUploadImageBody = {
+  fileType: CreateUploadImageBodyFileType;
+};
+
+export type CreateUploadImage200UploadUrlFields = {[key: string]: string};
+
+export type CreateUploadImage200UploadUrl = {
+  url: string;
+  fields: CreateUploadImage200UploadUrlFields;
+};
+
+export type CreateUploadImage200 = {
+  uploadUrl: CreateUploadImage200UploadUrl;
+  imageId: string;
 };
 
 export type CreationsGetCreationDataParams = {
@@ -796,6 +825,7 @@ export type PointsPrices200Image = {
   unlock: number;
   unlockCommission: number;
   model: PointsPrices200ImageModel;
+  uploadSoloImage: number;
 };
 
 export type PointsPrices200ForgeTrainBaseModel = {
@@ -2464,6 +2494,28 @@ export const createImprovePrompt = async (createImprovePromptBody: CreateImprove
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       createImprovePromptBody,)
+  }
+);}
+
+
+
+export const getCreateUploadImageUrl = () => {
+
+
+  
+
+  return `/create/uploadImage`
+}
+
+export const createUploadImage = async (createUploadImageBody: CreateUploadImageBody, options?: RequestInit): Promise<CreateUploadImage200> => {
+  
+  return fetcher<CreateUploadImage200>(getCreateUploadImageUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createUploadImageBody,)
   }
 );}
 

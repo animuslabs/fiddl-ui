@@ -146,6 +146,7 @@ export type UnifiedRequest = {
   // Video-only optional fields
   duration?: number
   startImageId?: string
+  uploadedStartImageId?: string
 
   // Helpful for filtering or UI branching
   type: "image" | "video"

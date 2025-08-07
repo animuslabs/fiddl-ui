@@ -4,6 +4,7 @@ import { reactive } from "vue"
 
 export const prices = reactive<PointsPrices200>({
   image: {
+    uploadSoloImage: 10,
     unlock: 12, // creator earns 4
     unlockCommission: 4,
     model: {

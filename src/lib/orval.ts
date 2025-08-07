@@ -289,6 +289,8 @@ export type CreateVideo200 = {
   error: string | null;
   /** @nullable */
   startImageId: string | null;
+  /** @nullable */
+  uploadedImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -318,6 +320,33 @@ export const CreateImprovePromptBodyType = {
 export type CreateImprovePromptBody = {
   prompt: string;
   type?: CreateImprovePromptBodyType;
+};
+
+export type CreateUploadImageBodyFileType = typeof CreateUploadImageBodyFileType[keyof typeof CreateUploadImageBodyFileType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateUploadImageBodyFileType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+  'image/gif': 'image/gif',
+} as const;
+
+export type CreateUploadImageBody = {
+  fileType: CreateUploadImageBodyFileType;
+};
+
+export type CreateUploadImage200UploadUrlFields = {[key: string]: string};
+
+export type CreateUploadImage200UploadUrl = {
+  url: string;
+  fields: CreateUploadImage200UploadUrlFields;
+};
+
+export type CreateUploadImage200 = {
+  uploadUrl: CreateUploadImage200UploadUrl;
+  imageId: string;
 };
 
 export type CreationsGetCreationDataParams = {
@@ -825,6 +854,7 @@ export type PointsPrices200Image = {
   unlock: number;
   unlockCommission: number;
   model: PointsPrices200ImageModel;
+  uploadSoloImage: number;
 };
 
 export type PointsPrices200ForgeTrainBaseModel = {
@@ -2766,6 +2796,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getCreateImprovePromptMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const createUploadImage = (
+    createUploadImageBody: MaybeRef<CreateUploadImageBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreateUploadImage200>> => {
+    createUploadImageBody = unref(createUploadImageBody);
+    
+    return axios.post(
+      `/create/uploadImage`,
+      createUploadImageBody,options
+    );
+  }
+
+
+
+export const getCreateUploadImageMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUploadImage>>, TError,{data: CreateUploadImageBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof createUploadImage>>, TError,{data: CreateUploadImageBody}, TContext> => {
+
+const mutationKey = ['createUploadImage'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUploadImage>>, {data: CreateUploadImageBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createUploadImage(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUploadImageMutationResult = NonNullable<Awaited<ReturnType<typeof createUploadImage>>>
+    export type CreateUploadImageMutationBody = CreateUploadImageBody
+    export type CreateUploadImageMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCreateUploadImage = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUploadImage>>, TError,{data: CreateUploadImageBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof createUploadImage>>,
+        TError,
+        {data: CreateUploadImageBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateUploadImageMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
