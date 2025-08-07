@@ -38,6 +38,7 @@ import { Loading, LoadingBar, LocalStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
+import { tawk } from "lib/tawk"
 // import { useCreateImageStore } from "stores/createImageStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {
@@ -84,6 +85,7 @@ export default defineComponent({
       position: "top",
       reverse: false,
     })
+    // tawk.init()
   },
   methods: {
     openDialog(startingIndex = 0, images: string[]) {

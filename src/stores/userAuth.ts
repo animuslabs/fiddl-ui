@@ -14,6 +14,7 @@ import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
 import { privy } from "lib/privy"
 import { useCreateImageStore } from "src/stores/createImageStore"
+import { tawk } from "lib/tawk"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -113,6 +114,9 @@ export const useUserAuth = defineStore("userAuth", {
         jwt.save({ userId: authResult.userId, token: authResult.token })
         this.loggedIn = true
         await this.loadUserData(authResult.userId)
+        void this.loadUserProfile().then(() => {
+          tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail")
+        })
       } catch (e: any) {
         this.logout()
         console.log(e)
@@ -139,11 +143,16 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
-      if (!savedLogin) return false
+      if (!savedLogin) {
+        return false
+      }
       // await this.login(savedLogin.userId)
       await this.loadUserData(savedLogin.userId)
       this.setUserId(savedLogin.userId)
       this.loggedIn = true
+      void this.loadUserProfile().then(() => {
+        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail")
+      })
     },
     async emailLogin(email: string) {
       const { data: userId } = await userFindByEmail({ email })
