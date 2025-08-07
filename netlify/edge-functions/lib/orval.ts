@@ -209,6 +209,7 @@ export type CreateVideoBody = {
   aspectRatio: CreateVideoBodyAspectRatio;
   duration: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
@@ -261,7 +262,7 @@ export type CreateVideo200 = {
   /** @nullable */
   startImageId: string | null;
   /** @nullable */
-  uploadedImageId: string | null;
+  uploadedStartImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -629,6 +630,7 @@ export type CreationsCreateVideoRequests200Item = {
   duration?: number;
   quantity: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreationsGetImageRequestParams = {
@@ -672,6 +674,7 @@ export type CreationsGetVideoRequest200 = {
   duration?: number;
   quantity: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreationsBrowseCreateRequestsParams = {
@@ -795,6 +798,10 @@ export type CreationsSetRequestPrivacyBody = {
   videoRequestId?: string;
   imageRequestId?: string;
   public: boolean;
+};
+
+export type CreationsGetUserUploadedImagesParams = {
+limit?: number;
 };
 
 export type PointsPackagesAvailable200Item = {
@@ -2940,6 +2947,34 @@ export const creationsSetRequestPrivacy = async (creationsSetRequestPrivacyBody:
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       creationsSetRequestPrivacyBody,)
+  }
+);}
+
+
+
+export const getCreationsGetUserUploadedImagesUrl = (params?: CreationsGetUserUploadedImagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/creations/getUserUploadedImages?${stringifiedParams}` : `/creations/getUserUploadedImages`
+}
+
+export const creationsGetUserUploadedImages = async (params?: CreationsGetUserUploadedImagesParams, options?: RequestInit): Promise<string[]> => {
+  
+  return fetcher<string[]>(getCreationsGetUserUploadedImagesUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
 

@@ -238,6 +238,7 @@ export type CreateVideoBody = {
   aspectRatio: CreateVideoBodyAspectRatio;
   duration: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
@@ -290,7 +291,7 @@ export type CreateVideo200 = {
   /** @nullable */
   startImageId: string | null;
   /** @nullable */
-  uploadedImageId: string | null;
+  uploadedStartImageId: string | null;
   videos: CreateVideo200VideosItem[];
 };
 
@@ -658,6 +659,7 @@ export type CreationsCreateVideoRequests200Item = {
   duration?: number;
   quantity: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreationsGetImageRequestParams = {
@@ -701,6 +703,7 @@ export type CreationsGetVideoRequest200 = {
   duration?: number;
   quantity: number;
   startImageId?: string;
+  uploadedStartImageId?: string;
 };
 
 export type CreationsBrowseCreateRequestsParams = {
@@ -824,6 +827,10 @@ export type CreationsSetRequestPrivacyBody = {
   videoRequestId?: string;
   imageRequestId?: string;
   public: boolean;
+};
+
+export type CreationsGetUserUploadedImagesParams = {
+limit?: number;
 };
 
 export type PointsPackagesAvailable200Item = {
@@ -3776,6 +3783,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const creationsGetUserUploadedImages = (
+    params?: MaybeRef<CreationsGetUserUploadedImagesParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<string[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/getUserUploadedImages`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsGetUserUploadedImagesQueryKey = (params?: MaybeRef<CreationsGetUserUploadedImagesParams>,) => {
+    return ['creations','getUserUploadedImages', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsGetUserUploadedImagesQueryOptions = <TData = Awaited<ReturnType<typeof creationsGetUserUploadedImages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CreationsGetUserUploadedImagesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetUserUploadedImages>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsGetUserUploadedImagesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsGetUserUploadedImages>>> = ({ signal }) => creationsGetUserUploadedImages(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsGetUserUploadedImages>>, TError, TData> 
+}
+
+export type CreationsGetUserUploadedImagesQueryResult = NonNullable<Awaited<ReturnType<typeof creationsGetUserUploadedImages>>>
+export type CreationsGetUserUploadedImagesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsGetUserUploadedImages<TData = Awaited<ReturnType<typeof creationsGetUserUploadedImages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CreationsGetUserUploadedImagesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsGetUserUploadedImages>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsGetUserUploadedImagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const pointsPackagesAvailable = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PointsPackagesAvailable200Item[]>> => {

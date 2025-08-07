@@ -75,7 +75,7 @@
 
   q-dialog(v-model="showImageDialog")
     q-card
-      .q-ma-md
+      .q-ma-md(v-if="!showUploads")
         .centered
           h4.q-mb-sm Create a video from an existing image on Fiddl.art
           q-img.q-mb-sm(src="/EditIcon.jpg" style="width:200px; max-width:95vw;")
@@ -85,14 +85,26 @@
         .centered.q-ma-sm
           h4.relative-position Upload your Own Image
         .q-ma-lg
-          .centered
+          .centered.no-wrap
             input(type="file" @change="handleFileUpload" style="display: none;" ref="fileInput")
             q-btn(icon="upload" label="Upload Image" flat color="primary" @click="triggerFileInput")
               .badge
                 p {{ prices.image.uploadSoloImage }}
+            q-btn(icon="list" label="Select from Uploads" flat color="primary" @click="showUploads = true")
           div.drag-drop-area.gt-sm(@drop.prevent="handleDrop" @dragover.prevent @dragleave.prevent)
             .centered.bg-grey-9.q-pa-xl.q-mt-md
               p Drag and drop an image here
+      .q-ma-md(v-else).relative-position
+        h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:10px;") Select Starting Image
+        //- q-list.q-ma-md
+        q-list.q-ma-md
+          div(v-for="id of imageUploadIds")
+            q-img.q-ma-sm( :src="s3Img(`uploads/` + id)" style="max-width:400px; min-width:100px;" @click="req.uploadedStartImageId=id;showImageDialog=false")
+          //- .centered
+        div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:-10px;")
+          .centered
+            q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")
+
         //- .centered.q-mt-md.q-gutter-md
         //-   q-btn(label="< back" outline color="secondary" @click="showImageDialog = false")
         //-   q-btn(label="browse images" color="primary" @click="$router.push({name:'browse'})")
@@ -102,14 +114,15 @@
 import { videoModels } from "lib/imageModels"
 import { Loading, useQuasar } from "quasar"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
-import { computed, ref, toRef } from "vue"
+import { computed, ref, toRef, watch } from "vue"
 import { usePricesStore, prices } from "stores/pricesStore"
 import { img, s3Img } from "lib/netlifyImg"
 import { uploadTrainingImages } from "lib/api"
-import { createUploadImage } from "lib/orval"
+import { createUploadImage, creationsGetUserUploadedImages } from "lib/orval"
 import { catchErr, throwErr } from "lib/util"
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
+
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
 //   showBackBtn: {
@@ -124,7 +137,12 @@ const vidStore = useCreateVideoStore()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
 const req = toRef(vidStore.state.req)
-// veo-3 now supports image input, so we don't need to disable starting images for it
+const showUploads = ref(false)
+const imageUploadIds = ref<string[]>([])
+async function loadImageUploadUrls() {
+  const { data } = await creationsGetUserUploadedImages()
+  imageUploadIds.value = data
+}
 const disableStartingImage = computed(() => false)
 function clearStartingImage() {
   req.value.startImageId = undefined
@@ -137,6 +155,13 @@ function handleFileUpload(event: Event) {
   const files = (event.target as HTMLInputElement).files
   if (files && files[0]) void uploadImage(files[0])
 }
+watch(
+  () => showImageDialog.value,
+  (val) => {
+    if (!val) showUploads.value = false
+    void loadImageUploadUrls()
+  },
+)
 
 function triggerFileInput() {
   const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement

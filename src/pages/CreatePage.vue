@@ -59,19 +59,13 @@ export default defineComponent({
           if (editType == "prompt") req = { prompt: request.prompt }
           else if (editType == "all") {
             req = {
-              aspectRatio: request.aspectRatio as any,
-              model: (request.model as unknown as any) || "",
-              prompt: request.prompt || "",
+              ...(request as any),
               quantity: 1,
-              seed: request.seed,
-              duration: request.duration,
-              customModelId: request.customModelId,
-              negativePrompt: request.negativePrompt,
-              startImageId: request.startImageId,
             }
           } else if (editType == "video") {
             req = {
               startImageId: targetMediaId,
+              uploadedStartImageId: undefined,
               model: "seedance-pro",
               prompt: "",
             }
