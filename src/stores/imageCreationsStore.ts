@@ -132,26 +132,32 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     async loadCreations(targetUserId?: string | null) {
       // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
-      if (this.loadingCreations) {
-        console.log("loadingCreations already in progress")
-        return
-      }
+      console.log("load Creations Triggered,customModelModelId: ", this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined)
+      // if (this.loadingCreations) {
+      //   console.log("loadingCreations already in progress")
+      //   return
+      // }
       this.loadingCreations = true
       try {
         // Set activeUserId to track which user's data we're loading
         this.activeUserId = userId || null
         const lastItem = this.creations[this.creations.length - 1]
-
-        const response = await creationsCreateImageRequests({
+        const params = {
           userId: userId || undefined,
-          order: "desc",
+          order: "desc" as any,
           endDateTime: lastItem?.createdAt?.toISOString(),
           limit: 20,
           customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
           promptIncludes: this.search || undefined,
           aspectRatio: this.filter.aspectRatio as any,
           model: this.filter.model,
-        })
+        }
+        if (params.model == "custom" && !params.customModelId) {
+          console.error("invalid custom query", this.customModelId, this.filter.customModelId)
+          return
+        }
+        console.log(params)
+        const response = await creationsCreateImageRequests(params)
 
         const creations = response.data
         if (!creations) return

@@ -33,6 +33,7 @@ import PickModel from "components/PickModel.vue"
 import UseModel from "components/UseModel.vue"
 import WatchTraining from "components/WatchTraining.vue"
 import { CustomModel, TrainingSet, type TrainingData } from "lib/api"
+import { toCreatePage } from "lib/routeHelpers"
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
 import { modelsGetCustomModel, modelsGetTrainingStatus } from "src/lib/orval"
@@ -121,6 +122,9 @@ export default defineComponent({
       immediate: true,
     },
   },
+  unmounted() {
+    if (this.loadTrainingInterval) clearInterval(this.loadTrainingInterval)
+  },
   methods: {
     selectSet(set: TrainingSet) {
       console.log("selected set", set)
@@ -147,16 +151,39 @@ export default defineComponent({
       }
     },
     useModel(model: CustomModel) {
-      this.createStore.state.customModel = model
-      const newReq: Partial<CreateImageRequestWithCustomModel> = {
-        customModelId: model.id,
-        customModelName: model.name,
-        model: "custom",
-        prompt: "",
-        quantity: 4,
-      }
-      this.createStore.setReq(newReq)
-      void this.$router.push({ name: "create", params: { activeTab: "image" } })
+      console.log(model)
+      toCreatePage(
+        {
+          customModelId: model.id,
+          customModelName: model.name,
+          model: "custom",
+          type: "image",
+        },
+        this.$router,
+      )
+      // this.createStore.state.customModel = model
+      // const newReq: Partial<CreateImageRequestWithCustomModel> = {
+      //   customModelId: model.id,
+      //   customModelName: model.name,
+      //   model: "custom",
+      //   prompt: "",
+      //   quantity: 3,
+      // }
+      // this.createStore.setReq(newReq)
+      // void this.$router.push({ name: "create", params: { activeTab: "image" } })
+
+      //       if (isImageModel.value) {
+      //   const model = customModelId.value ? "custom" : (currentModel.value?.slug as ImageModel) || "core"
+      //   useCreateImageStore().setReq({
+      //     model,
+      //     customModelId: model === "custom" ? customModelId.value : undefined,
+      //     customModelName: model === "custom" ? currentModel.value?.name : undefined,
+      //   })
+      //   void router.push({ name: "create", params: { activeTab: "image" } })
+      // } else {
+      //   useCreateVideoStore().setReq({ model: (currentModel.value?.slug as VideoModel) || "veo-2" })
+      //   void router.push({ name: "create", params: { activeTab: "video" } })
+      // }
     },
     async loadTrainingData() {
       if (!this.targetModelId) return

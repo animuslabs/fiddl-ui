@@ -42,11 +42,11 @@ export const prices = reactive<PointsPrices200>({
     unlock: 50,
     unlockCommission: 15,
     model: {
-      "seedance-lite": 10,
-      "seedance-pro": 35,
-      kling: 15,
-      "veo-2": 130,
-      "veo-3": 195,
+      "seedance-lite": 15,
+      "seedance-pro": 45,
+      kling: 25,
+      "veo-2": 230,
+      "veo-3": 295,
     },
   },
   socialRewards: {

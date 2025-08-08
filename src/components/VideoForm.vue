@@ -75,6 +75,7 @@
 
   q-dialog(v-model="showImageDialog")
     q-card
+      input(type="file" @change="handleFileUpload" style="display: none;" ref="fileInput")
       .q-ma-md(v-if="!showUploads")
         .centered
           h4.q-mb-sm Create a video from an existing image on Fiddl.art
@@ -86,12 +87,11 @@
           h4.relative-position Upload your Own Image
         .q-ma-lg
           .centered.no-wrap
-            input(type="file" @change="handleFileUpload" style="display: none;" ref="fileInput")
             q-btn(icon="upload" label="Upload Image" flat color="primary" @click="triggerFileInput")
               .badge
                 p {{ prices.image.uploadSoloImage }}
             .col-grow
-            q-btn(icon="list" label="Select from Uploads" flat color="primary" @click="showUploads = true")
+            q-btn(icon="list" label="Select from Uploads" flat color="primary" @click="showUploads = true" :disabled="!imageUploadIds.length")
           div.drag-drop-area.gt-sm(@drop.prevent="handleDrop" @dragover.prevent @dragleave.prevent)
             .centered.bg-grey-9.q-pa-xl.q-mt-md
               p Drag and drop an image here
@@ -105,6 +105,8 @@
         div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:20px;")
           .centered
             q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")
+              .badge
+                p {{ prices.image.uploadSoloImage }}
 
         //- .centered.q-mt-md.q-gutter-md
         //-   q-btn(label="< back" outline color="secondary" @click="showImageDialog = false")

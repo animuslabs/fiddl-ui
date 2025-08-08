@@ -58,6 +58,8 @@ import { type AnyModel, type ImageModel, imageModels, type VideoModel, videoMode
 import mediaViwer from "lib/mediaViewer"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
+import { toCreatePage } from "lib/routeHelpers"
+import { toUnifiedCreation } from "lib/util"
 
 const route = useRoute()
 const router = useRouter()
@@ -152,17 +154,14 @@ function showDetails(idx: number) {
 }
 
 function createWithModel() {
-  if (isImageModel.value) {
-    const model = customModelId.value ? "custom" : (currentModel.value?.slug as ImageModel) || "core"
-    useCreateImageStore().setReq({
-      model,
-      customModelId: model === "custom" ? customModelId.value : undefined,
-      customModelName: model === "custom" ? currentModel.value?.name : undefined,
-    })
-    void router.push({ name: "create", params: { activeTab: "image" } })
-  } else {
-    useCreateVideoStore().setReq({ model: (currentModel.value?.slug as VideoModel) || "veo-2" })
-    void router.push({ name: "create", params: { activeTab: "video" } })
-  }
+  toCreatePage(
+    {
+      customModelId: customModelId.value,
+      customModelName: currentModel.value?.name,
+      model: (currentModel.value?.name as AnyModel) || "core",
+      type: isImageModel.value ? "image" : "video",
+    },
+    router,
+  )
 }
 </script>
