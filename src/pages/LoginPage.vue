@@ -79,11 +79,7 @@ export default defineComponent({
 
         // If no specific redirect and user has username, go to profile with unlocked tab
         if (!redirect && this.$userAuth.userProfile?.username) {
-          await this.$router.push({
-            name: "profile",
-            params: { username: this.$userAuth.userProfile.username },
-            query: { tab: "unlocked" },
-          })
+          await this.$router.push({ name: "settings" })
         } else {
           await this.$router.push({ name: redirect || "account" })
         }
