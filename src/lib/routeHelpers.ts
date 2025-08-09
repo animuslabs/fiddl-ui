@@ -11,8 +11,8 @@ export function toCreatePage(request: Partial<UnifiedRequest> & { model: AnyMode
     const customModelId = model === "custom" ? request.customModelId : undefined
     const customModelName = model === "custom" ? request.customModelName : undefined
     useCreateImageStore().setReq({ model, customModelId, customModelName })
-    // useImageCreations().resetFilters()
-    // useImageCreations().filter = { model: request.model as ImageModel, customModelId, aspectRatio: undefined }
+    useImageCreations().resetFilters()
+    useImageCreations().filter = { model: request.model as ImageModel, customModelId, aspectRatio: undefined }
     void router.push({ name: "create", params: { activeTab: "image" } })
   } else {
     useCreateVideoStore().setReq({ model: (request.model as VideoModel) || "veo-2" })
