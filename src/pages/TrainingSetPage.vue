@@ -20,7 +20,7 @@
           h4.text-capitalize Models Trained using this set
         q-separator
         .centered
-          CustomModelsList(style="max-width:10px;" :trainingSetId="state.selectedSet.id")
+          CustomModelsList(style="max-width:10px;" :trainingSetId="state.selectedSet.id" @modelClicked="handleModelClicked")
     template(v-else)
       q-scroll-area.full-width.q-pa-md(style="height:calc(100vh - 240px);")
         .centered.q-gutter-lg.flex-wrap
@@ -34,18 +34,30 @@
   </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect, onMounted, reactive, computed, toRef, toValue, unref } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import TrainingSetCard from "components/TrainingSetCard.vue"
 import { s3Img, trainingSetThumbnailKey } from "lib/netlifyImg"
-import { type TrainingSet } from "lib/api"
-import { trainingSetsGetUserSets, useTrainingSetsGetSet, useTrainingSetsGetUserSets } from "lib/orval"
-import { useUserAuth } from "src/stores/userAuth"
-import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { type ModelsGetCustomModel200, useTrainingSetsGetSet, useTrainingSetsGetUserSets } from "lib/orval"
+import { toCreatePage } from "lib/routeHelpers"
 import CustomModelsList from "src/components/CustomModelsList.vue"
+import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { useUserAuth } from "src/stores/userAuth"
+import { computed, reactive, toValue } from "vue"
+import { useRoute, useRouter } from "vue-router"
 const route = useRoute()
 const router = useRouter()
 const userAuth = useUserAuth()
+
+function handleModelClicked(model: ModelsGetCustomModel200) {
+  void toCreatePage(
+    {
+      model: "custom",
+      type: "image",
+      customModelId: model.id,
+      customModelName: model.name,
+    },
+    router,
+  )
+}
 
 const trainingSets = useTrainingSetsGetUserSets(
   computed(() => ({ userId: userAuth.userId ?? "" })),
