@@ -9,33 +9,31 @@
   </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, getCurrentInstance } from "vue"
+import { watch, onMounted, computed } from "vue"
 import { type TrainingSet } from "lib/api"
-import { trainingSetsGetUserSets } from "src/lib/orval"
 import { catchErr } from "lib/util"
 import TrainingSetCard from "./TrainingSetCard.vue"
 import { useUserAuth } from "src/stores/userAuth"
+import { useForgeStore } from "src/stores/forgeStore"
 
 const props = defineProps<{ readyOnly?: boolean }>()
 const emit = defineEmits<{ (e: "setClicked", set: TrainingSet): void }>()
 
-const trainingSets = ref<TrainingSet[]>([])
+const forgeStore = useForgeStore()
 const userAuth = useUserAuth()
+
+const trainingSets = computed<TrainingSet[]>(() => {
+  if (!userAuth.loggedIn) return []
+  const base = forgeStore.state.userTrainingSets || []
+  return props.readyOnly ? base.filter((m) => m.status === 1) : base
+})
 
 async function loadData() {
   try {
-    if (!userAuth.loggedIn) {
-      trainingSets.value = []
-      return
-    }
-    const res = await trainingSetsGetUserSets({
-      userId: userAuth.userId || "",
-    })
-    const models = res?.data || []
-    trainingSets.value = props.readyOnly ? models.filter((m) => m.status === 1) : models
+    if (!userAuth.loggedIn) return
+    await forgeStore.loadUserTrainingSets(true)
   } catch (e) {
     catchErr(e)
-    trainingSets.value = []
   }
 }
 
@@ -43,10 +41,11 @@ watch(
   () => userAuth.loggedIn,
   (val) => {
     if (val) void loadData()
-    else trainingSets.value = []
   },
   { immediate: true },
 )
 
-onMounted(loadData)
+onMounted(() => {
+  void loadData()
+})
 </script>

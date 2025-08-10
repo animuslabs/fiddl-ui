@@ -44,6 +44,7 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
     loadingCreations: false,
     dynamicModel: true,
     gridMode: false,
+    lastQueryKey: null as string | null,
     filter: {
       aspectRatio: undefined as AspectRatio | undefined,
       model: undefined as VideoModel | undefined,
@@ -110,25 +111,33 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
     async loadCreations(targetUserId?: string | null) {
       // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
-      if (this.loadingCreations) {
-        console.log("loadingCreations already in progress")
+
+      // Compute params and a stable query key for de-duplication
+      const lastItem = this.creations[this.creations.length - 1]
+      const params = {
+        userId: userId || undefined,
+        order: "desc" as const,
+        endDateTime: lastItem?.createdAt?.toISOString(),
+        limit: 20,
+        promptIncludes: this.search || undefined,
+        aspectRatio: this.filter.aspectRatio as any,
+        model: this.filter.model,
+      }
+      const queryKey = JSON.stringify(params)
+
+      // If an identical request is already in flight, skip
+      if (this.loadingCreations && this.lastQueryKey === queryKey) {
+        console.log("deduped identical video loadCreations")
         return
       }
+
       this.loadingCreations = true
+      this.lastQueryKey = queryKey
       try {
         // Set activeUserId to track which user's data we're loading
         this.activeUserId = userId || null
-        const lastItem = this.creations[this.creations.length - 1]
 
-        const response = await creationsCreateVideoRequests({
-          userId: userId || undefined,
-          order: "desc",
-          endDateTime: lastItem?.createdAt?.toISOString(),
-          limit: 20,
-          promptIncludes: this.search || undefined,
-          aspectRatio: this.filter.aspectRatio as any,
-          model: this.filter.model,
-        })
+        const response = await creationsCreateVideoRequests(params)
 
         const creations = response.data
         if (!creations) return

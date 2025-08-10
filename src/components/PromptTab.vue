@@ -66,28 +66,25 @@ import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import type { CreateImageRequest, CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { Dialog, LocalStorage } from "quasar"
+import { LocalStorage } from "quasar"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateImageStore } from "src/stores/createImageStore"
-import { toObject, sleep } from "lib/util"
-import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
-import { useCreateVideo } from "lib/orval"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import mediaViwer from "lib/mediaViewer"
 import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
+import { useCreateContextStore } from "src/stores/createContextStore"
 export default defineComponent({
   name: "PromptTab",
   components: {
     CreateCard,
     ImageRequestCard,
-    CreatedImageCard,
     MediaGallery,
   },
   props: {
@@ -115,6 +112,7 @@ export default defineComponent({
       ],
       imageCreations: useImageCreations(),
       videoCreations: useVideoCreations(),
+      createContext: useCreateContextStore(),
     }
   },
   computed: {
@@ -123,7 +121,6 @@ export default defineComponent({
         if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
         else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType }
       })
-      console.log(data)
       return data
     },
     activeCreateStore() {
@@ -169,7 +166,7 @@ export default defineComponent({
           void this.imageCreations.clearCustomModelId(useUserAuth().userId || undefined)
         }
       },
-      immediate: true,
+      immediate: false,
     },
     "activeCreateStore.state.req.model": {
       handler(val: string) {
@@ -178,7 +175,7 @@ export default defineComponent({
           this.activeCreationsStore.dynamicModel = true
         } else this.activeCreationsStore.searchCreations(this.$userAuth.userId)
       },
-      immediate: true,
+      immediate: false,
     },
     "$q.screen.lt.md"(val) {
       this.createMode = val
@@ -188,7 +185,6 @@ export default defineComponent({
         console.log("activeCreationsStore.dynamicModel toggled", val)
         if (val) {
           this.activeCreationsStore.filter.model = this.activeCreateStore.state.req.model
-          // if (this.activeImageStore) this.activeImageStore.filter.customModelId = this.createImageStore.state.req.customModelId
           if (this.currentTab == "image") this.imageCreations.filter.customModelId = this.createImageStore.state.req.customModelId
         } else {
           this.activeCreationsStore.filter.model = undefined
@@ -196,7 +192,7 @@ export default defineComponent({
         }
         this.activeCreationsStore.searchCreations(this.$userAuth.userId)
       },
-      immediate: true,
+      immediate: false,
       deep: true,
     },
 
@@ -205,12 +201,11 @@ export default defineComponent({
       //   const card = this.$refs[creation.id] as InstanceType<typeof ImageRequestCard>[] | undefined
       //   if (card && card[0]) card[0].minimized.value = val
       // }
-      LocalStorage.set("createPageGridMode2", this.gridMode)
+      this.createContext.setGridMode(this.gridMode)
     },
     customModel: {
-      immediate: true,
+      immediate: false,
       handler(val) {
-        // this.creationsStore.reset()
         if (this.activeImageStore) {
           if (val) void this.activeImageStore.setCustomModelId(val.id, useUserAuth().userId || undefined)
           else void this.activeImageStore.clearCustomModelId(useUserAuth().userId || undefined)
@@ -229,12 +224,9 @@ export default defineComponent({
     },
   },
   async mounted() {
-    console.log("mounted promptTab, customModel", this.customModel)
     if (this.quasar.screen.lt.md) this.createMode = true
-    console.log("grid mode", LocalStorage.getItem("createPageGridMode2"))
-    // await sleep(1000)
     void this.$nextTick(() => {
-      this.gridMode = LocalStorage.getItem("createPageGridMode2") || "grid"
+      this.gridMode = this.createContext.state.gridMode
     })
   },
   methods: {
@@ -242,7 +234,6 @@ export default defineComponent({
       return "filter" in store && "customModelId" in store.filter
     },
     setActiveCreationsStore(activeTab: "image" | "video") {
-      console.log("set active creations store:", activeTab)
       this.currentTab = activeTab
     },
     showDetails(imageIndex: number) {
@@ -265,10 +256,6 @@ export default defineComponent({
         // if(request.)
         this.activeCreateStore.setReq(request as any)
       })
-    },
-    setMediaMode(mode: MediaType) {
-      const createCard = this.$refs.createCard as typeof CreateCard
-      console.log("set mode on prompttab:", createCard)
     },
     addImage(data: string) {
       if (this.createMode) this.createMode = false

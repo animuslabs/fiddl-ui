@@ -81,9 +81,10 @@ import { CustomModel, CustomModelWithRequests } from "lib/api"
 import { catchErr } from "lib/util"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { defineComponent } from "vue"
-import { modelsSetModelPrivacy, modelsGetUserModels, modelsDeleteModel, modelsEditModel } from "src/lib/orval"
+import { modelsSetModelPrivacy, modelsDeleteModel, modelsEditModel } from "src/lib/orval"
 import { timeSince } from "lib/util"
 import { img } from "lib/netlifyImg"
+import { useForgeStore } from "src/stores/forgeStore"
 
 export default defineComponent({
   components: {},
@@ -105,6 +106,7 @@ export default defineComponent({
   data: function () {
     return {
       quasar: useQuasar(),
+      forgeStore: useForgeStore(),
       models: [] as CustomModelWithRequests[] | null,
       timeSince,
       img,
@@ -122,6 +124,27 @@ export default defineComponent({
         await this.loadData()
       },
       immediate: true,
+    },
+    trainedOnly: {
+      handler() {
+        void this.loadData()
+      },
+    },
+    trainingSetId: {
+      handler() {
+        void this.loadData()
+      },
+    },
+    "forgeStore.state.userModels": {
+      handler() {
+        const base = this.forgeStore.state.userModels || []
+        let models = base
+        if (this.trainedOnly) models = models.filter((m) => m.status === "trained")
+        if (this.trainingSetId) models = models.filter((m) => m.trainingSetId === this.trainingSetId)
+        this.models = models as any
+      },
+      immediate: true,
+      deep: true,
     },
   },
   mounted() {
@@ -164,15 +187,20 @@ export default defineComponent({
     async loadData() {
       console.log("loadData")
       try {
-        const response = await modelsGetUserModels()
-        const models = response?.data || []
+        // show cached instantly
+        const cached = this.forgeStore.state.userModels || []
+        let list = cached
+        if (this.trainedOnly) list = list.filter((m) => m.status === "trained")
+        if (this.trainingSetId) list = list.filter((m) => m.trainingSetId === this.trainingSetId)
+        this.models = list as any
 
-        if (!this.trainedOnly) {
-          this.models = models
-        } else {
-          this.models = models?.filter((m) => m.status === "trained")
-        }
-        if (this.trainingSetId) this.models = models?.filter((m) => m.trainingSetId === this.trainingSetId)
+        // refresh in background (stale-while-revalidate)
+        await this.forgeStore.loadUserModels(true)
+        const refreshed = this.forgeStore.state.userModels || []
+        let list2 = refreshed
+        if (this.trainedOnly) list2 = list2.filter((m) => m.status === "trained")
+        if (this.trainingSetId) list2 = list2.filter((m) => m.trainingSetId === this.trainingSetId)
+        this.models = list2 as any
       } catch (error) {
         catchErr(error)
         this.models = []

@@ -54,6 +54,7 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     loadingCreations: false,
     dynamicModel: true,
     gridMode: false,
+    lastQueryKey: null as string | null,
     filter: {
       aspectRatio: undefined as AspectRatio | undefined,
       model: undefined as ImageModel | undefined,
@@ -84,8 +85,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       }
     },
     searchCreations(targetUserId?: string | null) {
-      console.log("searchCreations userId:", targetUserId)
-
       // if (this.loadingCreations) return
       this.creations = []
       void this.loadCreations(targetUserId)
@@ -99,7 +98,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       const creation = this.creations.find((i) => i.id === creationId)
       if (!creation) return
       const index = creation.mediaIds.findIndex((id) => id === imageId)
-      console.log("deleted image index", index)
       if (index === -1) return
       creation.mediaIds.splice(index, 1)
     },
@@ -132,34 +130,37 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       await this.loadCreations(targetUserId)
     },
     async loadCreations(targetUserId?: string | null) {
-      console.log("load creations userId:", targetUserId)
-      // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
-      console.log("load Creations Triggered,customModelModelId: ", this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined)
-      // if (this.loadingCreations) {
-      //   console.log("loadingCreations already in progress")
-      //   return
-      // }
+
+      // Build params and compute a query key for de-duplication
+      const lastItem = this.creations[this.creations.length - 1]
+      const params = {
+        userId: userId || undefined,
+        order: "desc" as const,
+        endDateTime: lastItem?.createdAt?.toISOString(),
+        limit: 20,
+        customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
+        promptIncludes: this.search || undefined,
+        aspectRatio: this.filter.aspectRatio as any,
+        model: this.filter.model,
+      }
+
+      if (params.model == "custom" && !params.customModelId) {
+        console.error("invalid custom query", this.customModelId, this.filter.customModelId)
+        return
+      }
+
+      const queryKey = JSON.stringify(params)
+      if (this.loadingCreations && this.lastQueryKey === queryKey) {
+        return
+      }
+
       this.loadingCreations = true
+      this.lastQueryKey = queryKey
       try {
         // Set activeUserId to track which user's data we're loading
         this.activeUserId = userId || null
-        const lastItem = this.creations[this.creations.length - 1]
-        const params = {
-          userId: userId || undefined,
-          order: "desc" as any,
-          endDateTime: lastItem?.createdAt?.toISOString(),
-          limit: 20,
-          customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
-          promptIncludes: this.search || undefined,
-          aspectRatio: this.filter.aspectRatio as any,
-          model: this.filter.model,
-        }
-        if (params.model == "custom" && !params.customModelId) {
-          console.error("invalid custom query", this.customModelId, this.filter.customModelId)
-          return
-        }
-        console.log(params)
+
         const response = await creationsCreateImageRequests(params)
 
         const creations = response.data
@@ -183,7 +184,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       if (!userId) return
       this.activeUserId = userId
       const lastItem = this.imagePurchases[this.imagePurchases.length - 1]
-      console.log("lastItem", lastItem)
 
       try {
         const response = await creationsUserImagePurchases({
@@ -194,7 +194,6 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         })
 
         const purchases = response.data
-        console.log("purchases", purchases)
 
         for (const purchase of purchases) {
           const idExists = this.imagePurchases.some((i) => i.id === purchase.id)

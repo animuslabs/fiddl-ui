@@ -133,13 +133,16 @@ watch(
     } else {
       // Handle image model (including custom) changes
       if (customId) {
+        // Ensure the store's internal customModelId is updated so queries use the new custom model
         imageCreations.filter.model = "custom"
         imageCreations.filter.customModelId = customId
+        void imageCreations.setCustomModelId(customId)
+        // setCustomModelId clears the list and triggers loadCreations; no need to call searchCreations here
       } else {
         imageCreations.filter.model = name && (imageModels as readonly string[]).includes(name) ? (name as ImageModel) : undefined
         imageCreations.filter.customModelId = undefined
+        imageCreations.searchCreations()
       }
-      imageCreations.searchCreations()
     }
   },
   { immediate: true },
@@ -154,14 +157,27 @@ function showDetails(idx: number) {
 }
 
 function createWithModel() {
-  toCreatePage(
-    {
-      customModelId: customModelId.value,
-      customModelName: currentModel.value?.name,
-      model: (currentModel.value?.name as AnyModel) || "core",
-      type: isImageModel.value ? "image" : "video",
-    },
-    router,
-  )
+  if (customModelId.value) {
+    // Custom model: send model="custom" + customModelId (name is optional for label)
+    toCreatePage(
+      {
+        model: "custom" as AnyModel,
+        type: "image",
+        customModelId: customModelId.value,
+        customModelName: currentModel.value?.name,
+      },
+      router,
+    )
+  } else {
+    // Public model: send the model slug as model
+    const slug = (modelName.value as AnyModel) || ("core" as AnyModel)
+    toCreatePage(
+      {
+        model: slug,
+        type: isImageModel.value ? "image" : "video",
+      },
+      router,
+    )
+  }
 }
 </script>
