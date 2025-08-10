@@ -26,6 +26,7 @@ import VideoForm from "components/VideoForm.vue"
 import CustomModelsList from "./CustomModelsList.vue"
 import type { MediaType } from "lib/types"
 import { createCardStore } from "src/stores/createCardStore"
+import { useUserAuth } from "src/stores/userAuth"
 const props = defineProps<{ showBackBtn?: boolean; customModel?: CustomModel | null }>()
 const emit = defineEmits(["created", "back", "activeTab"])
 
@@ -77,7 +78,7 @@ async function setCustomModel(model: CustomModel) {
   showModelPicker.value = false
   createStore.state.req.customModelId = model.id
   createStore.state.req.customModelName = model.name
-  await creationsStore.setCustomModelId(model.id)
+  await creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
   // LocalStorage.set("req", createStore.state.req)

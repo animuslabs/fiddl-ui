@@ -45,11 +45,6 @@
     "AccountSettings"
   ],
   [
-    "creations",
-    "/creations/:accountId?",
-    "CreationsPage"
-  ],
-  [
     "addPoints",
     "/addPoints",
     "AddPointsPage"

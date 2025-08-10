@@ -81,6 +81,7 @@ import mediaViwer from "lib/mediaViewer"
 import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
 import type { MediaType, UnifiedRequest } from "lib/types"
+import { useUserAuth } from "src/stores/userAuth"
 export default defineComponent({
   name: "PromptTab",
   components: {
@@ -155,6 +156,21 @@ export default defineComponent({
     },
   },
   watch: {
+    "createImageStore.state.req.customModelId": {
+      handler(val: string | undefined) {
+        // React to changes in selected custom model while dynamic model filter is active
+        if (this.currentTab !== "image") return
+        if (!this.activeCreationsStore.dynamicModel) return
+        if (val) {
+          // Update store and reload creations for the newly selected custom model
+          void this.imageCreations.setCustomModelId(val, useUserAuth().userId || undefined)
+        } else {
+          // Clear custom model filter if no model is selected
+          void this.imageCreations.clearCustomModelId(useUserAuth().userId || undefined)
+        }
+      },
+      immediate: true,
+    },
     "activeCreateStore.state.req.model": {
       handler(val: string) {
         this.activeCreationsStore.filter.model = val as any
@@ -196,8 +212,8 @@ export default defineComponent({
       handler(val) {
         // this.creationsStore.reset()
         if (this.activeImageStore) {
-          if (val) void this.activeImageStore.setCustomModelId(val.id)
-          else void this.activeImageStore.clearCustomModelId()
+          if (val) void this.activeImageStore.setCustomModelId(val.id, useUserAuth().userId || undefined)
+          else void this.activeImageStore.clearCustomModelId(useUserAuth().userId || undefined)
         }
       },
     },

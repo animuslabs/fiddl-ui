@@ -84,6 +84,8 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       }
     },
     searchCreations(targetUserId?: string | null) {
+      console.log("searchCreations userId:", targetUserId)
+
       // if (this.loadingCreations) return
       this.creations = []
       void this.loadCreations(targetUserId)
@@ -118,18 +120,19 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       this.activeUserId = null
       this.customModelId = null
     },
-    async setCustomModelId(customModelId: string) {
+    async setCustomModelId(customModelId: string, targetUserId?: string) {
       if (customModelId === this.customModelId) return
       this.customModelId = customModelId
       this.creations = []
-      await this.loadCreations()
+      await this.loadCreations(targetUserId)
     },
-    async clearCustomModelId() {
+    async clearCustomModelId(targetUserId?: string) {
       this.customModelId = null
       this.creations = []
-      await this.loadCreations()
+      await this.loadCreations(targetUserId)
     },
     async loadCreations(targetUserId?: string | null) {
+      console.log("load creations userId:", targetUserId)
       // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
       console.log("load Creations Triggered,customModelModelId: ", this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined)

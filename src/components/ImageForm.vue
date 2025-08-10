@@ -93,6 +93,7 @@ import CustomModelsList from "./CustomModelsList.vue"
 import { type CustomModel } from "lib/api"
 import { useQuasar } from "quasar"
 import { prices } from "stores/pricesStore"
+import { useUserAuth } from "src/stores/userAuth"
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
 const quasar = useQuasar()
@@ -114,9 +115,12 @@ function setCustomModel(model: CustomModel) {
   req.customModelId = model.id
   req.customModelName = model.name
   createStore.state.customModel = model
-  void creationsStore.setCustomModelId(model.id)
+  void creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
+  // this.activeCreationsStore.searchCreations(this.$userAuth.userId)
+
+  // creationsStore.searchCreations()
 }
 </script>
 
