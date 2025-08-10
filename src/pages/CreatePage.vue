@@ -24,6 +24,7 @@ import { defineComponent } from "vue"
 import { CreateImageRequest, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
 import { CreateEditType, MediaType } from "lib/types"
 import { createCardStore } from "src/stores/createCardStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
 
 export default defineComponent({
   components: {
@@ -119,6 +120,13 @@ export default defineComponent({
     // },
   },
   mounted() {
+    setTimeout(() => {
+      useImageCreations().dynamicModel = false
+    }, 100)
+    setTimeout(() => {
+      useImageCreations().dynamicModel = true
+    }, 500)
+
     console.log()
   },
   methods: {
