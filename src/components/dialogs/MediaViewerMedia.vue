@@ -10,7 +10,7 @@ div
       q-linear-progress.absolute-top.full-width.image-darken(
         style="top:-2px;"
         indeterminate
-        v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading"
+        v-if=" mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading"
         color="primary"
         track-color="transparent"
       )

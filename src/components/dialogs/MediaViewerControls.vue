@@ -280,7 +280,7 @@ function showDownloadWindow() {
   }).onDismiss(() => {
     mediaViewerStore.triedHdLoad = false
     mediaViewerStore.hdMediaLoaded = false
-    mediaViewerStore.imgLoading = true
+    // mediaViewerStore.imgLoading = true
     void mediaViewerStore.loadHdMedia()
   })
 }

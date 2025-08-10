@@ -241,7 +241,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const mediaId = id || this.currentMediaId
       if (this.triedHdLoad || this.hdMediaLoaded) return
       this.triedHdLoad = true
-      this.loading = true
+      // this.loading = true
       this.userOwnsMedia = false
 
       let timer: any | null = null
