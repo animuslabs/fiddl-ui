@@ -54,6 +54,7 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     loadingCreations: false,
     dynamicModel: true,
     gridMode: false,
+    lastQueryKey: null as string | null,
     filter: {
       aspectRatio: undefined as AspectRatio | undefined,
       model: undefined as ImageModel | undefined,
@@ -133,32 +134,39 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     },
     async loadCreations(targetUserId?: string | null) {
       console.log("load creations userId:", targetUserId)
-      // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
       console.log("load Creations Triggered,customModelModelId: ", this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined)
-      // if (this.loadingCreations) {
-      //   console.log("loadingCreations already in progress")
-      //   return
-      // }
+
+      // Build params and compute a query key for de-duplication
+      const lastItem = this.creations[this.creations.length - 1]
+      const params = {
+        userId: userId || undefined,
+        order: "desc" as any,
+        endDateTime: lastItem?.createdAt?.toISOString(),
+        limit: 20,
+        customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
+        promptIncludes: this.search || undefined,
+        aspectRatio: this.filter.aspectRatio as any,
+        model: this.filter.model,
+      }
+
+      if (params.model == "custom" && !params.customModelId) {
+        console.error("invalid custom query", this.customModelId, this.filter.customModelId)
+        return
+      }
+
+      const queryKey = JSON.stringify(params)
+      if (this.loadingCreations && this.lastQueryKey === queryKey) {
+        console.log("deduped identical loadCreations")
+        return
+      }
+
       this.loadingCreations = true
+      this.lastQueryKey = queryKey
       try {
         // Set activeUserId to track which user's data we're loading
         this.activeUserId = userId || null
-        const lastItem = this.creations[this.creations.length - 1]
-        const params = {
-          userId: userId || undefined,
-          order: "desc" as any,
-          endDateTime: lastItem?.createdAt?.toISOString(),
-          limit: 20,
-          customModelId: this.filter.model === "custom" ? this.customModelId || this.filter.customModelId : undefined,
-          promptIncludes: this.search || undefined,
-          aspectRatio: this.filter.aspectRatio as any,
-          model: this.filter.model,
-        }
-        if (params.model == "custom" && !params.customModelId) {
-          console.error("invalid custom query", this.customModelId, this.filter.customModelId)
-          return
-        }
+
         console.log(params)
         const response = await creationsCreateImageRequests(params)
 

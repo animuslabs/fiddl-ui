@@ -11,124 +11,30 @@ q-page.full-width
 </template>
 
 <script lang="ts">
-import CreateCard from "components/CreateCard.vue"
-import CreatedImageCard from "components/CreatedImageCard.vue"
-import ImageRequestCard from "src/components/MediaRequestCard.vue"
-import { getCreationRequest, throwErr, timeSince } from "lib/util"
-import { Dialog, useQuasar } from "quasar"
-import PromptTab from "src/components/PromptTab.vue"
-import UploaderCard from "src/components/UploaderCard.vue"
-import { creationsGetCreationData, modelsGetCustomModel } from "src/lib/orval"
-import { useCreateImageStore } from "src/stores/createImageStore"
 import { defineComponent } from "vue"
+import { useQuasar } from "quasar"
+import PromptTab from "src/components/PromptTab.vue"
+import { useCreateImageStore } from "src/stores/createImageStore"
 import { CreateImageRequest, CreateVideoRequest } from "../../../fiddl-server/dist/lib/types/serverTypes"
-import { CreateEditType, MediaType } from "lib/types"
-import { createCardStore } from "src/stores/createCardStore"
-import { useImageCreations } from "src/stores/imageCreationsStore"
+import { useCreateOrchestrator } from "src/lib/composables/useCreateOrchestrator"
 
 export default defineComponent({
   components: {
-    CreateCard,
-    CreatedImageCard,
-    ImageRequestCard,
-    UploaderCard,
     PromptTab,
   },
   setup() {
     const quasar = useQuasar()
+    useCreateOrchestrator()
     return { quasar }
   },
   data() {
     return {
-      timeSince,
       createStore: useCreateImageStore(),
       images: [] as string[],
       createMode: false,
     }
   },
-  watch: {
-    "$route.query": {
-      async handler(val) {
-        const targetMediaId = this.$route.query?.mediaId
-        const encodedRequestData = this.$route.query?.requestData
-        const mediaType = this.$route.query?.type as MediaType
-        const editType = this.$route.query?.editType as CreateEditType
-        if (targetMediaId && typeof targetMediaId == "string") {
-          const { data: mediaData } = await creationsGetCreationData({ videoId: mediaType == "video" ? targetMediaId : undefined, imageId: mediaType == "image" ? targetMediaId : undefined })
-          const request = await getCreationRequest(mediaData.requestId, mediaType)
-          let req: Partial<CreateVideoRequest | CreateImageRequest>
-          if (editType == "prompt") req = { prompt: request.prompt }
-          else if (editType == "all") {
-            req = {
-              ...(request as any),
-              quantity: 1,
-            }
-          } else if (editType == "video") {
-            req = {
-              startImageId: targetMediaId,
-              uploadedStartImageId: undefined,
-              model: "seedance-pro",
-              prompt: "",
-            }
-          } else throwErr("invalid edit request")
-          if (req.model == "custom" && req.customModelId) {
-            const modelData = await modelsGetCustomModel({ id: req.customModelId }).catch(console.error)
-            const customModel = modelData?.data
-            if (!customModel) {
-              req.customModelId = undefined
-              // req.customModelName = undefined
-              req.model = "flux-dev"
-              Dialog.create({
-                message: "Custom model is private, using flux-dev model instead",
-                color: "negative",
-                persistent: true,
-              })
-            }
-          }
-          createCardStore.activeTab = editType == "video" ? "video" : mediaType
-          this.setReq(req, this.quasar.screen.lt.md)
-          // const promptTab = this.$refs.promptTab as InstanceType<typeof PromptTab>
-          // promptTab.setMediaMode(mediaType)
-
-          Dialog.create({
-            title: "Image Parameters Applied",
-            message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
-          }).onDismiss(async () => {
-            await this.$router.replace({ query: {} })
-          })
-        } else if (encodedRequestData && typeof encodedRequestData == "string") {
-          const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
-          this.setReq(decoded, this.quasar.screen.lt.md)
-          Dialog.create({
-            title: "Image Parameters Applied",
-            message: "The create panel has been updated with the details of the image request.",
-          }).onDismiss(async () => {
-            await this.$router.replace({ query: {} })
-          })
-        }
-        console.log("current tab?:", createCardStore.activeTab)
-        // }
-      },
-      immediate: true,
-    },
-    // "$userAuth.loggedIn": {
-    //   immediate: true,
-    //   handler(val) {
-    //     if (val) void this.loadCreations()
-    //     else this.createSession.reset()
-    //   },
-    // },
-  },
-  mounted() {
-    setTimeout(() => {
-      useImageCreations().dynamicModel = false
-    }, 100)
-    setTimeout(() => {
-      useImageCreations().dynamicModel = true
-    }, 500)
-
-    console.log()
-  },
+  watch: {},
   methods: {
     setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       console.log("setReq", toggleCreateMode)
