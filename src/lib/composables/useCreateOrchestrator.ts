@@ -187,6 +187,25 @@ export function useCreateOrchestrator() {
       await applyRequestFromMediaId(mediaId, mediaType, editType)
     } else if (encodedRequestData) {
       await applyRequestFromEncoded(encodedRequestData)
+    } else {
+      // Route-level preselection for model/customModelId/customModelName
+      const modelParam = typeof route.query.model === "string" ? (route.query.model as string) : undefined
+      const customModelIdParam = typeof route.query.customModelId === "string" ? (route.query.customModelId as string) : undefined
+      const customModelNameParam = typeof route.query.customModelName === "string" ? (route.query.customModelName as string) : undefined
+
+      if (modelParam) {
+        if (activeTab.value === "image") {
+          imgCreate.setReq({
+            model: modelParam as any,
+            customModelId: customModelIdParam,
+            customModelName: customModelNameParam,
+          } as Partial<CreateImageRequest>)
+        } else {
+          vidCreate.setReq({
+            model: modelParam as any,
+          } as Partial<CreateVideoRequest>)
+        }
+      }
     }
 
     // Bind filters AFTER request is applied

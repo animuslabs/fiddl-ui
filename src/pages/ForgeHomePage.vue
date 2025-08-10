@@ -36,8 +36,9 @@ import { CustomModel, TrainingSet, type TrainingData } from "lib/api"
 import { toCreatePage } from "lib/routeHelpers"
 import { catchErr } from "lib/util"
 import PickTrainingSet from "src/components/PickTrainingSet.vue"
-import { modelsGetCustomModel, modelsGetTrainingStatus } from "src/lib/orval"
+import { modelsGetCustomModel } from "src/lib/orval"
 import { CreateImageRequestWithCustomModel, useCreateImageStore } from "src/stores/createImageStore"
+import { useForgeStore } from "src/stores/forgeStore"
 import { defineComponent } from "vue"
 type forgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
@@ -57,6 +58,7 @@ export default defineComponent({
       targetModelData: undefined as CustomModel | undefined,
       loadTrainingInterval: null as any,
       createStore: useCreateImageStore(),
+      forgeStore: useForgeStore(),
     }
   },
   computed: {},
@@ -187,11 +189,11 @@ export default defineComponent({
     },
     async loadTrainingData() {
       if (!this.targetModelId) return
-      const trainingResponse = await modelsGetTrainingStatus({ id: this.targetModelId }).catch(() => undefined)
-      this.trainingData = trainingResponse?.data || undefined
+      const data = await this.forgeStore.getTrainingStatus(this.targetModelId).catch(() => undefined)
+      this.trainingData = data || undefined
     },
     async loadUserModels() {
-      // Load user models if needed
+      await Promise.all([this.forgeStore.loadUserModels(), this.forgeStore.loadUserTrainingSets()])
     },
   },
 })

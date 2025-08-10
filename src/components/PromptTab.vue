@@ -66,16 +66,13 @@ import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import type { CreateImageRequest, CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { Dialog, LocalStorage } from "quasar"
+import { LocalStorage } from "quasar"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { CustomModel } from "lib/api"
 import { useCreateImageStore } from "src/stores/createImageStore"
-import { toObject, sleep } from "lib/util"
-import CreatedImageCard from "components/CreatedImageCard.vue"
 import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
-import { useCreateVideo } from "lib/orval"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import mediaViwer from "lib/mediaViewer"
 import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
@@ -88,7 +85,6 @@ export default defineComponent({
   components: {
     CreateCard,
     ImageRequestCard,
-    CreatedImageCard,
     MediaGallery,
   },
   props: {
@@ -125,7 +121,6 @@ export default defineComponent({
         if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
         else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType }
       })
-      console.log(data)
       return data
     },
     activeCreateStore() {
@@ -229,9 +224,7 @@ export default defineComponent({
     },
   },
   async mounted() {
-    console.log("mounted promptTab, customModel", this.customModel)
     if (this.quasar.screen.lt.md) this.createMode = true
-    console.log("grid mode", LocalStorage.getItem("createPageGridMode2"))
     void this.$nextTick(() => {
       this.gridMode = this.createContext.state.gridMode
     })
@@ -241,7 +234,6 @@ export default defineComponent({
       return "filter" in store && "customModelId" in store.filter
     },
     setActiveCreationsStore(activeTab: "image" | "video") {
-      console.log("set active creations store:", activeTab)
       this.currentTab = activeTab
     },
     showDetails(imageIndex: number) {
@@ -264,10 +256,6 @@ export default defineComponent({
         // if(request.)
         this.activeCreateStore.setReq(request as any)
       })
-    },
-    setMediaMode(mode: MediaType) {
-      const createCard = this.$refs.createCard as typeof CreateCard
-      console.log("set mode on prompttab:", createCard)
     },
     addImage(data: string) {
       if (this.createMode) this.createMode = false
