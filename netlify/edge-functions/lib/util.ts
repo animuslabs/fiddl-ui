@@ -76,6 +76,7 @@ export function shortIdToLong(base64url: string): string {
   // Convert the byte array to a hex string
   let hexStr = ""
   for (let i = 0; i < bytes.length; i++) {
+    // @ts-ignore
     hexStr += bytes[i].toString(16).padStart(2, "0")
   }
   // Re-insert hyphens to format it as a UUID

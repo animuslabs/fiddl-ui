@@ -350,6 +350,120 @@ export type CreateUploadImage200 = {
   imageId: string;
 };
 
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
+  prompt: string;
+  negativePrompt?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateQueueAsyncBatchBodyRequestsItemAnyOfModel;
+  public?: boolean;
+  aspectRatio?: CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio;
+  customModelId?: string;
+};
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
+  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFour = {
+  prompt: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel;
+  public: boolean;
+  aspectRatio: CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio;
+  duration: number;
+  startImageId?: string;
+  uploadedStartImageId?: string;
+};
+
+export type CreateQueueAsyncBatchBodyRequestsItem = CreateQueueAsyncBatchBodyRequestsItemAnyOf | CreateQueueAsyncBatchBodyRequestsItemAnyOfFour;
+
+export type CreateQueueAsyncBatchBody = {
+  /** @minItems 1 */
+  requests: CreateQueueAsyncBatchBodyRequestsItem[];
+  emailNotify?: boolean;
+};
+
+export type CreateQueueAsyncBatch200 = {
+  batchId: string;
+  accepted: number;
+};
+
 export type CreationsGetCreationDataParams = {
 imageId?: string;
 videoId?: string;
@@ -1890,6 +2004,7 @@ export const ModelsGetTrainingStatus200Status = {
   trained: 'trained',
   succeeded: 'succeeded',
   failed: 'failed',
+  starting: 'starting',
 } as const;
 
 export type ModelsGetTrainingStatus200 = {
@@ -2271,13 +2386,58 @@ export type PrivyAuthenticate200 = {
   userId: string;
 };
 
-export type TrainingSetsCreateSetBody = {
-  /** @maxLength 30 */
+export type PromptTemplatesListParams = {
+tag?: string;
+kind?: PromptTemplatesListKind;
+page?: number;
+pageSize?: number;
+};
+
+export type PromptTemplatesListKind = typeof PromptTemplatesListKind[keyof typeof PromptTemplatesListKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PromptTemplatesListKind = {
+  subject: 'subject',
+  setting: 'setting',
+  style: 'style',
+  effect: 'effect',
+} as const;
+
+export type PromptTemplatesList200ItemKind = typeof PromptTemplatesList200ItemKind[keyof typeof PromptTemplatesList200ItemKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PromptTemplatesList200ItemKind = {
+  subject: 'subject',
+  setting: 'setting',
+  style: 'style',
+  effect: 'effect',
+} as const;
+
+export type PromptTemplatesList200ItemSlots = {[key: string]: string | string[]};
+
+export type PromptTemplatesList200Item = {
+  id: string;
   name: string;
-  /** @maxLength 400 */
+  kind: PromptTemplatesList200ItemKind;
+  tags: string[];
+  /** @nullable */
+  previewUrl: string | null;
+  /** @nullable */
+  previewUrlMale: string | null;
+  /** @nullable */
+  previewUrlFemale: string | null;
+  slots: PromptTemplatesList200ItemSlots;
+};
+
+export type TrainingSetsCreateSetBody = {
+  /** @maxLength 100 */
+  name: string;
+  /** @maxLength 1400 */
   description: string;
   /**
-   * @minimum 3
+   * @minimum 1
    * @maximum 200
    */
   numImages: number;
@@ -2313,7 +2473,43 @@ export type TrainingSetsGetUserSetsParams = {
 userId: string;
 };
 
+/**
+ * @nullable
+ */
+export type TrainingSetsGetUserSets200ItemSubjectGender = typeof TrainingSetsGetUserSets200ItemSubjectGender[keyof typeof TrainingSetsGetUserSets200ItemSubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemSubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsGetUserSets200ItemSubjectCategory = typeof TrainingSetsGetUserSets200ItemSubjectCategory[keyof typeof TrainingSetsGetUserSets200ItemSubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemSubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
 export type TrainingSetsGetUserSets200Item = {
+  /** @nullable */
+  subjectGender: TrainingSetsGetUserSets200ItemSubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsGetUserSets200ItemSubjectCategory;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -2326,13 +2522,51 @@ export type TrainingSetsGetUserSets200Item = {
   description: string | null;
   deleted: boolean;
   updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export type TrainingSetsGetSetParams = {
 trainingSetId: string;
 };
 
+/**
+ * @nullable
+ */
+export type TrainingSetsGetSet200SubjectGender = typeof TrainingSetsGetSet200SubjectGender[keyof typeof TrainingSetsGetSet200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsGetSet200SubjectCategory = typeof TrainingSetsGetSet200SubjectCategory[keyof typeof TrainingSetsGetSet200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
 export type TrainingSetsGetSet200 = {
+  /** @nullable */
+  subjectGender: TrainingSetsGetSet200SubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsGetSet200SubjectCategory;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -2345,6 +2579,8 @@ export type TrainingSetsGetSet200 = {
   description: string | null;
   deleted: boolean;
   updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export type TrainingSetsDeleteSetBody = {
@@ -2357,6 +2593,63 @@ export type TrainingSetsEditSetBody = {
   newName: string;
   /** @maxLength 400 */
   newDescription: string;
+};
+
+export type TrainingSetsDescribeSetParams = {
+trainingSetId: string;
+};
+
+/**
+ * @nullable
+ */
+export type TrainingSetsDescribeSet200SubjectGender = typeof TrainingSetsDescribeSet200SubjectGender[keyof typeof TrainingSetsDescribeSet200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsDescribeSet200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsDescribeSet200SubjectCategory = typeof TrainingSetsDescribeSet200SubjectCategory[keyof typeof TrainingSetsDescribeSet200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsDescribeSet200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
+export type TrainingSetsDescribeSet200 = {
+  /** @nullable */
+  subjectGender: TrainingSetsDescribeSet200SubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsDescribeSet200SubjectCategory;
+  id: string;
+  ownerId: string;
+  createdAt: string;
+  name: string;
+  sizeMB: number;
+  numImages: number;
+  status: number;
+  thumbnailIds: string[];
+  /** @nullable */
+  description: string | null;
+  deleted: boolean;
+  updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export const pkAuthRegisterStart = (
@@ -2859,6 +3152,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getCreateUploadImageMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const createQueueAsyncBatch = (
+    createQueueAsyncBatchBody: MaybeRef<CreateQueueAsyncBatchBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreateQueueAsyncBatch200>> => {
+    createQueueAsyncBatchBody = unref(createQueueAsyncBatchBody);
+    
+    return axios.post(
+      `/create/queueAsyncBatch`,
+      createQueueAsyncBatchBody,options
+    );
+  }
+
+
+
+export const getCreateQueueAsyncBatchMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQueueAsyncBatch>>, TError,{data: CreateQueueAsyncBatchBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof createQueueAsyncBatch>>, TError,{data: CreateQueueAsyncBatchBody}, TContext> => {
+
+const mutationKey = ['createQueueAsyncBatch'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createQueueAsyncBatch>>, {data: CreateQueueAsyncBatchBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createQueueAsyncBatch(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateQueueAsyncBatchMutationResult = NonNullable<Awaited<ReturnType<typeof createQueueAsyncBatch>>>
+    export type CreateQueueAsyncBatchMutationBody = CreateQueueAsyncBatchBody
+    export type CreateQueueAsyncBatchMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCreateQueueAsyncBatch = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQueueAsyncBatch>>, TError,{data: CreateQueueAsyncBatchBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof createQueueAsyncBatch>>,
+        TError,
+        {data: CreateQueueAsyncBatchBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateQueueAsyncBatchMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -6853,6 +7202,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const promptTemplatesList = (
+    params?: MaybeRef<PromptTemplatesListParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<PromptTemplatesList200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/promptTemplates/list`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getPromptTemplatesListQueryKey = (params?: MaybeRef<PromptTemplatesListParams>,) => {
+    return ['promptTemplates','list', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getPromptTemplatesListQueryOptions = <TData = Awaited<ReturnType<typeof promptTemplatesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<PromptTemplatesListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promptTemplatesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getPromptTemplatesListQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof promptTemplatesList>>> = ({ signal }) => promptTemplatesList(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof promptTemplatesList>>, TError, TData> 
+}
+
+export type PromptTemplatesListQueryResult = NonNullable<Awaited<ReturnType<typeof promptTemplatesList>>>
+export type PromptTemplatesListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function usePromptTemplatesList<TData = Awaited<ReturnType<typeof promptTemplatesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<PromptTemplatesListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promptTemplatesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPromptTemplatesListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const trainingSetsCreateSet = (
     trainingSetsCreateSetBody: MaybeRef<TrainingSetsCreateSetBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TrainingSetsCreateSet200>> => {
@@ -7192,3 +7599,58 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
       return useMutation(mutationOptions , queryClient);
     }
+    
+export const trainingSetsDescribeSet = (
+    params: MaybeRef<TrainingSetsDescribeSetParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TrainingSetsDescribeSet200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/trainingSets/describeSet`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getTrainingSetsDescribeSetQueryKey = (params: MaybeRef<TrainingSetsDescribeSetParams>,) => {
+    return ['trainingSets','describeSet', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getTrainingSetsDescribeSetQueryOptions = <TData = Awaited<ReturnType<typeof trainingSetsDescribeSet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<TrainingSetsDescribeSetParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trainingSetsDescribeSet>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getTrainingSetsDescribeSetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trainingSetsDescribeSet>>> = ({ signal }) => trainingSetsDescribeSet(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trainingSetsDescribeSet>>, TError, TData> 
+}
+
+export type TrainingSetsDescribeSetQueryResult = NonNullable<Awaited<ReturnType<typeof trainingSetsDescribeSet>>>
+export type TrainingSetsDescribeSetQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useTrainingSetsDescribeSet<TData = Awaited<ReturnType<typeof trainingSetsDescribeSet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<TrainingSetsDescribeSetParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trainingSetsDescribeSet>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrainingSetsDescribeSetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}

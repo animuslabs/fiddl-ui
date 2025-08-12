@@ -96,7 +96,7 @@ const emit = defineEmits<{
 }>()
 
 // Config
-const targetFrames = 8
+const targetFrames = 4
 const totalDurationMs = 3000
 const countdownSeconds = 1
 const mimeType = "image/jpeg"
@@ -132,6 +132,7 @@ function triggerFlashAndSound() {
   // Sound
   if (shutterAudioRef.value) {
     // Restart sound if already playing
+    shutterAudioRef.value.volume = 0.3
     shutterAudioRef.value.currentTime = 0
     shutterAudioRef.value.play().catch(() => {})
   }

@@ -40,12 +40,21 @@ q-page.q-pa-sm
         div Link your email to get a notification when results are ready
         q-btn(flat color="primary" label="Link Email" class="q-ml-sm" @click="goLinkEmail" no-caps)
     //- Template picker
-    MagicTemplatePicker.q-mt-sm(
-      :templates="visibleTemplates"
-      v-model:selected="selectedTemplates"
-      :disabled="templatesConfirmed"
-      :max-select="3"
-    )
+    .q-mt-sm
+      .centered(v-if="!promptTplStore.loaded")
+        q-spinner(color="primary")
+        p.text-secondary.q-mt-xs Loading templates...
+      template(v-else)
+        .template-grid(:style="templatesGridStyle")
+          PromptTemplateCard(
+            v-for="t in displayTemplates"
+            :key="t.id"
+            :template="t"
+            :gender="genderForTemplates || 'male'"
+            :selectable="!templatesConfirmed"
+            :selected="selectedTemplates.includes(t.id)"
+            @click="toggleTemplate(t.id)"
+          )
     .centered.q-mt-md
       q-btn(
         color="primary"
@@ -73,15 +82,16 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
 import { useQuasar, Loading } from "quasar"
 import { useUserAuth } from "src/stores/userAuth"
 import MagicMirrorCamera from "src/components/magic/MagicMirrorCamera.vue"
-import MagicTemplatePicker from "src/components/magic/MagicTemplatePicker.vue"
+import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicResultsViewer from "src/components/magic/MagicResultsViewer.vue"
-import { magicTemplates } from "src/lib/magic/magicTemplates"
 import { createMagicTrainingSet } from "src/lib/magic/magicTrainingSet"
 import { scheduleMagicRenders } from "src/lib/magic/magicApi"
-import { modelsCreateModel, modelsGetTrainingStatus } from "lib/orval"
+import { modelsCreateModel, modelsGetCustomModel, modelsGetTrainingStatus, trainingSetsDescribeSet, trainingSetsGetSet } from "lib/orval"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useRouter } from "vue-router"
+import { type Gender, resolveGenderedTemplates } from "src/lib/promptTemplates"
+import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 
 type Step = "capture" | "training" | "selectTemplates" | "results"
 
@@ -98,6 +108,7 @@ const trainingSetId = ref<string | null>(null)
 const customModelId = ref<string | null>(null)
 const trainingStatus = ref<string>("processing")
 const trainingProgress = ref<number>(0)
+const trainingGender = ref<string | null>(null)
 const elapsedTime = ref<string>("0:00")
 const remainingTime = ref<string>("0:00")
 let pollTimer: number | null = null
@@ -108,8 +119,25 @@ const scheduledAt = ref<number | null>(null)
 
 const SESSION_KEY = "mmState"
 
-// Show 9 curated templates for v1
-const visibleTemplates = computed(() => magicTemplates.slice(0, 9))
+const promptTplStore = usePromptTemplatesStore()
+
+const genderForTemplates = computed<Gender | null>(() => {
+  const g = (trainingGender.value || "").toLowerCase()
+  if (g === "male" || g === "female") return g as Gender
+  if (g === "unknown") return "female"
+  return null
+})
+
+const displayTemplates = computed(() => {
+  if (!genderForTemplates.value) return []
+  return resolveGenderedTemplates(promptTplStore.templates, genderForTemplates.value)
+})
+
+const templatesGridStyle = computed(() => ({
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+  gap: "10px",
+}))
 
 function saveSession() {
   const data = {
@@ -119,6 +147,7 @@ function saveSession() {
     templatesConfirmed: templatesConfirmed.value,
     scheduled: scheduled.value,
     scheduledAt: scheduledAt.value,
+    trainingGender: trainingGender.value,
     step: step.value,
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
@@ -139,14 +168,62 @@ function loadSession() {
     templatesConfirmed.value = !!data.templatesConfirmed
     scheduled.value = !!data.scheduled
     scheduledAt.value = typeof data.scheduledAt === "number" ? data.scheduledAt : null
+    trainingGender.value = data.trainingGender || null
     const sessStep = data.step as typeof step.value | undefined
     if (sessStep) step.value = sessStep
+    console.log("here", trainingGender.value)
+    if (((trainingSetId.value || customModelId.value) && !trainingGender.value) || trainingGender.value == "unknown") {
+      void ensureTrainingSetGenderLoaded()
+    }
     if (customModelId.value) {
       startTrainingPoll()
       if (scheduled.value && templatesConfirmed.value) startCreationsPoll()
     }
   } catch (e) {
     console.warn("failed to load session", e)
+  }
+}
+
+async function ensureTrainingSetGenderLoaded() {
+  try {
+    if (trainingGender.value && trainingGender.value != "unknown") return console.log(trainingGender.value)
+    // If we don't have a trainingSetId but we do have a customModelId, resolve it
+    if (!trainingSetId.value && customModelId.value) {
+      const resp = await modelsGetCustomModel({ id: customModelId.value })
+      const tsid = resp.data?.trainingSetId || null
+      if (tsid) {
+        trainingSetId.value = tsid
+        saveSession()
+      }
+    }
+    if (!trainingSetId.value) return
+
+    // Prefer describeSet but be defensive about response shape / nulls
+    try {
+      console.log("called describeset")
+      const { data } = await trainingSetsDescribeSet({ trainingSetId: trainingSetId.value })
+      if (data && typeof data.subjectGender === "string") {
+        trainingGender.value = data.subjectGender || null
+        saveSession()
+        return
+      }
+    } catch (e) {
+      console.warn("trainingSetsDescribeSet failed, will try getSet as fallback", e)
+    }
+
+    // Fallback: use trainingSetsGetSet which may be available in some API versions
+    try {
+      const { data } = await trainingSetsGetSet({ trainingSetId: trainingSetId.value } as any)
+      if (data && typeof data.subjectGender === "string") {
+        trainingGender.value = data.subjectGender || null
+        saveSession()
+        return
+      }
+    } catch (e) {
+      console.warn("trainingSetsGetSet fallback failed", e)
+    }
+  } catch (e) {
+    console.warn("failed to resolve training set gender", e)
   }
 }
 
@@ -201,6 +278,7 @@ async function startTraining() {
   if (!trainingSetId.value) return
   try {
     Loading.show({ message: "Starting training..." })
+    await ensureTrainingSetGenderLoaded()
     const { data: modelId } = await modelsCreateModel({
       baseModel: "fluxDev",
       description: "",
@@ -260,13 +338,25 @@ function stopTrainingPoll() {
   pollTimer = null
 }
 
-// template selection handled by MagicTemplatePicker via v-model
+// Template selection
+function toggleTemplate(id: string) {
+  if (templatesConfirmed.value) return
+  const next = [...selectedTemplates.value]
+  const idx = next.indexOf(id)
+  if (idx >= 0) next.splice(idx, 1)
+  else {
+    if (next.length >= 3) return
+    next.push(id)
+  }
+  selectedTemplates.value = next
+}
 
 function confirmTemplates() {
   if (selectedTemplates.value.length !== 3) return
   templatesConfirmed.value = true
   saveSession()
   quasar.notify({ message: "Templates saved", color: "primary" })
+  // If training already succeeded, try to schedule now; otherwise wait for poll to flip it.
   maybeGenerateIfReady()
 }
 
@@ -284,7 +374,12 @@ async function scheduleAndPollIfReady() {
   }
   try {
     Loading.show({ message: "Scheduling your images..." })
-    await scheduleMagicRenders({ customModelId: customModelId.value, templates: selectedTemplates.value })
+    await ensureTrainingSetGenderLoaded()
+    await scheduleMagicRenders({
+      customModelId: customModelId.value,
+      templates: displayTemplates.value.filter((el) => selectedTemplates.value.includes(el.id)),
+    })
+
     scheduled.value = true
     scheduledAt.value = Date.now()
     saveSession()
@@ -330,51 +425,10 @@ function stopCreationsPoll() {
   creationsPollTimer = null
 }
 
-async function generateImagesForSelectedTemplates() {
-  try {
-    Loading.show({ message: "Generating your images..." })
-    generatedImageIds.value = []
-    for (const id of selectedTemplates.value) {
-      const tpl = magicTemplates.find((t) => t.id === id) || { prompt: "portrait, cinematic lighting", aspect: "3:4" }
-      // Prepare request in create store
-      createStore.state.req.model = "custom"
-      createStore.state.req.customModelId = customModelId.value || undefined
-      createStore.state.req.customModelName = "Magic Mirror"
-      // @ts-ignore accessing common shape from MagicTemplate
-      createStore.state.req.prompt = (tpl as any).prompt
-      // @ts-ignore
-      createStore.state.req.negativePrompt = (tpl as any).negative || ""
-      // @ts-ignore
-      createStore.state.req.aspectRatio = (tpl as any).aspect || "3:4"
-      createStore.state.req.quantity = 1
-      createStore.state.req.public = true
-      // Ensure seed is undefined to let server pick
-      createStore.state.req.seed = undefined
-
-      const creationsBefore = imageCreations.creations?.[0]?.id
-      await createStore.createImage()
-      await nextTick()
-
-      const latestReq = imageCreations.creations?.[0]
-      // Avoid race: ensure we got a new request
-      const isNew = latestReq && latestReq.id !== creationsBefore
-      const newId = latestReq?.mediaIds?.[0]
-      if (isNew && newId && !generatedImageIds.value.includes(newId)) {
-        generatedImageIds.value.push(newId)
-      }
-    }
-    step.value = "results"
-  } catch (e: any) {
-    console.error(e)
-    quasar.notify({ message: e?.message || "Failed to generate images", color: "negative" })
-  } finally {
-    Loading.hide()
-  }
-}
-
 onMounted(() => {
   // TODO: umami.track('mm_page_open')
   loadSession()
+  void promptTplStore.loadSubjectFaceTemplates()
 })
 
 onBeforeUnmount(() => {
