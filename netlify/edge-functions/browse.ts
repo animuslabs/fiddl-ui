@@ -3,6 +3,7 @@ import { buildPageResponse } from "./lib/page.ts"
 import { creationsBrowseCreateRequests } from "./lib/orval.ts"
 import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
 interface BrowseRow {
   mediaType: "image" | "video"
@@ -36,7 +37,7 @@ function aspectRatioToNumber(raw?: string | null): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
     const searchParams = url.searchParams
@@ -66,7 +67,7 @@ export default async function (request: Request, context: Context) {
     const pageTitle = buildPageTitle(sortMethod, mediaType, search, model)
     const description = buildPageDescription(sortMethod, mediaType, search, model)
 
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle,
@@ -81,7 +82,7 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleBrowsePage error:", e)
+    logEdgeError(request, context, "browse", e)
     return context.next()
   }
 }
@@ -313,6 +314,8 @@ function buildBrowseFiltersHtml(): string {
     </div>
   `
 }
+
+export default safeEdge(handler, "browse")
 
 export const config: Config = {
   path: "/browse",

@@ -3,6 +3,7 @@ import { buildPageResponse } from "./lib/page.ts"
 import { userFindByUsername, userPublicProfile, creationsCreateImageRequests, collectionsFindCollectionByName, collectionsGetCollectionImages } from "./lib/orval.ts"
 import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema } from "./lib/util.ts"
 import { img, s3Video, avatarImg } from "./lib/netlifyImg.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
 interface ProfileData {
   userId: string
@@ -33,7 +34,7 @@ interface MediaItem {
   requestId: string
 }
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
     const [, username] = url.pathname.split("/")
@@ -82,7 +83,7 @@ export default async function (request: Request, context: Context) {
       ? `${profileData.bio} | @${cleanUsername} on Fiddl.art - ${profileData.imagesCreated} images created, ${profileData.imagesFavorited} images favorited.`
       : `@${cleanUsername} on Fiddl.art - ${profileData.imagesCreated} images created, ${profileData.imagesFavorited} images favorited. Discover their AI-generated creations.`
 
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle,
@@ -98,7 +99,7 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleProfilePage error:", e)
+    logEdgeError(request, context, "profile", e)
     return context.next()
   }
 }
@@ -276,6 +277,8 @@ function buildProfileMediaHtml(mediaItems: MediaItem[]): string {
     </div>
   `
 }
+
+export default safeEdge(handler, "profile")
 
 export const config: Config = {
   path: "/@:username",

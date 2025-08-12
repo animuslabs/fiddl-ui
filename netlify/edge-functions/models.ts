@@ -3,10 +3,11 @@ import { buildPageResponse } from "./lib/page.ts"
 import { modelsGetBaseModels, modelsGetPublicModels, type ModelsGetBaseModels200Item, type ModelsGetPublicModels200Item } from "./lib/orval.ts"
 import { buildStaticTopNavHtml, escapeHtml, type MediaItem } from "./lib/util.ts"
 import { img } from "./lib/netlifyImg.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
 type AnyModel = ModelsGetBaseModels200Item | (ModelsGetPublicModels200Item & { creatorId: string })
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
     const [, , filterTag] = url.pathname.split("/")
@@ -38,7 +39,7 @@ export default async function (request: Request, context: Context) {
       ? `Explore ${filterTag} AI models on Fiddl.art. Create stunning ${filterTag.toLowerCase()} content with our curated selection of AI models.`
       : "Discover and use powerful AI models for image and video generation. Browse our collection of base models and community-created custom models on Fiddl.art."
 
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle,
@@ -53,7 +54,7 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleModelsPage error:", e)
+    logEdgeError(request, context, "models", e)
     return context.next()
   }
 }
@@ -201,6 +202,8 @@ function buildModelsCategoryHtml(): string {
     </div>
   `
 }
+
+export default safeEdge(handler, "models")
 
 export const config: Config = {
   path: "/models/:filterTag?",
