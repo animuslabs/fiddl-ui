@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { creationsBrowseCreateRequests } from "./lib/orval.ts"
-import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema } from "./lib/util.ts"
+import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
@@ -25,6 +25,8 @@ interface MediaItem {
   creatorUsername?: string
   prompt?: string
   model?: string
+  requestId: string
+  index?: number
 }
 
 function aspectRatioToNumber(raw?: string | null): number | undefined {
@@ -109,7 +111,8 @@ function processBrowseData(rows: BrowseRow[]): MediaItem[] {
 
     const t = row.mediaType
 
-    for (const m of medias) {
+    for (let i = 0; i < medias.length; i++) {
+      const m = medias[i]
       if (mediaItems.find((e) => e.id === m.id)) continue
 
       const item: MediaItem = {
@@ -121,6 +124,8 @@ function processBrowseData(rows: BrowseRow[]): MediaItem[] {
         creatorUsername: row.creatorUsername,
         prompt: row.prompt,
         model: row.model,
+        requestId: row.id,
+        index: i,
       }
 
       mediaItems.push(item)
@@ -161,7 +166,8 @@ function buildPageDescription(sortMethod: string, mediaType: string, search?: st
 
 function buildBrowseListSchema(mediaItems: MediaItem[], pageUrl: string, filters: { sortMethod: string; mediaType: string; search?: string; model?: string }): string {
   const itemListElement = mediaItems.map((item, index) => {
-    const mediaUrl = `https://app.fiddl.art/request/${item.type}/${item.id.slice(-8)}`
+    const shortId = longIdToShort(item.requestId)
+    const mediaUrl = `https://app.fiddl.art/request/${item.type}/${shortId}${typeof item.index === "number" ? `/${item.index}` : ""}`
 
     return {
       "@type": "ListItem",
@@ -233,7 +239,8 @@ function buildBrowsePageHtml(mediaItems: MediaItem[], filters: { sortMethod: str
 
   const mediaHtml = mediaItems
     .map((item) => {
-      const mediaUrl = `/request/${item.type}/${item.id.slice(-8)}`
+      const shortId = longIdToShort(item.requestId)
+      const mediaUrl = `/request/${item.type}/${shortId}${typeof item.index === "number" ? `/${item.index}` : ""}`
       const authorLink = item.creatorUsername ? `<a href="/@${escapeHtml(item.creatorUsername)}" class="media-author">@${escapeHtml(item.creatorUsername)}</a>` : ""
       const promptText = item.prompt ? escapeHtml(item.prompt.slice(0, 100) + (item.prompt.length > 100 ? "..." : "")) : ""
       const modelInfo = item.model ? `<span class="media-model">Model: ${escapeHtml(item.model)}</span>` : ""

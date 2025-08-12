@@ -13,7 +13,21 @@ const handler = async (request: Request, context: Context) => {
 
     const type = typeRaw === "video" ? "video" : "image"
     const index = Number(indexRaw || "0")
-    const longId = shortIdToLong(shortId)
+
+    // decode and validate shortId -> uuid
+    let longId = ""
+    try {
+      longId = shortIdToLong(shortId)
+    } catch (err) {
+      logEdgeError(request, context, "request:shortIdDecodeError", { error: err, shortId })
+      return context.next()
+    }
+
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRe.test(longId)) {
+      logEdgeError(request, context, "request:invalidUuid", { shortId, longId })
+      return context.next()
+    }
 
     const data = type === "video" ? await creationsGetVideoRequest({ videoRequestId: longId }) : await creationsGetImageRequest({ imageRequestId: longId })
 
@@ -48,6 +62,6 @@ const handler = async (request: Request, context: Context) => {
     logEdgeError(request, context, "request", e)
     return context.next()
   }
-  
-  export default safeEdge(handler, "request")
 }
+
+export default safeEdge(handler, "request")

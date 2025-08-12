@@ -82,6 +82,22 @@ export function shortIdToLong(base64url: string): string {
   const uuid = `${hexStr.substr(0, 8)}-${hexStr.substr(8, 4)}-${hexStr.substr(12, 4)}-${hexStr.substr(16, 4)}-${hexStr.substr(20)}`
   return uuid
 }
+export function longIdToShort(uuid: string): string {
+  try {
+    const hex = uuid.replace(/-/g, "").toLowerCase()
+    if (!/^[0-9a-f]{32}$/.test(hex)) return ""
+    const bytes = new Uint8Array(16)
+    for (let i = 0; i &lt; 16; i++) {
+      bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+    }
+    let binary = ""
+    for (let i = 0; i &lt; bytes.length; i++) binary += String.fromCharCode(bytes[i])
+    const base64 = btoa(binary)
+    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
+  } catch {
+    return ""
+  }
+}
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64)

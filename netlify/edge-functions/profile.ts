@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { userFindByUsername, userPublicProfile, creationsCreateImageRequests, collectionsFindCollectionByName, collectionsGetCollectionImages } from "./lib/orval.ts"
-import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema } from "./lib/util.ts"
+import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort } from "./lib/util.ts"
 import { img, s3Video, avatarImg } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
@@ -32,6 +32,7 @@ interface MediaItem {
   model?: string
   createdAt: Date
   requestId: string
+  index: number
 }
 
 const handler = async (request: Request, context: Context) => {
@@ -110,7 +111,8 @@ function processCreations(creations: CreationItem[]): MediaItem[] {
   for (const creation of creations) {
     if (!creation.public || !creation.imageIds?.length) continue
 
-    for (const imageId of creation.imageIds) {
+    for (let i = 0; i < creation.imageIds.length; i++) {
+      const imageId = creation.imageIds[i]
       mediaItems.push({
         id: imageId,
         url: img(imageId, "lg"),
@@ -119,6 +121,7 @@ function processCreations(creations: CreationItem[]): MediaItem[] {
         model: creation.customModelName || creation.model,
         createdAt: new Date(creation.createdAt),
         requestId: creation.id,
+        index: i,
       })
     }
   }
@@ -138,27 +141,31 @@ async function checkImageExists(url: string): Promise<boolean> {
 function buildProfileSchema(profile: ProfileData, mediaItems: MediaItem[], pageUrl: string): string {
   const profileUrl = `https://app.fiddl.art/@${profile.username}`
 
-  const creativeWorks = mediaItems.slice(0, 10).map((item, index) => ({
-    "@type": "ImageObject",
-    "@id": `https://app.fiddl.art/request/image/${item.id.slice(-8)}`,
-    contentUrl: item.url,
-    name: item.prompt || "AI-generated image",
-    description: item.prompt || `AI-generated image by @${profile.username}`,
-    dateCreated: item.createdAt.toISOString(),
-    creator: {
-      "@type": "Person",
-      "@id": profileUrl,
-      name: profile.username,
-      url: profileUrl,
-    },
-    ...(item.model && {
-      additionalProperty: {
-        "@type": "PropertyValue",
-        name: "model",
-        value: item.model,
+  const creativeWorks = mediaItems.slice(0, 10).map((item) => {
+    const shortId = longIdToShort(item.requestId)
+    const idUrl = `https://app.fiddl.art/request/image/${shortId}${typeof item.index === "number" ? `/${item.index}` : ""}`
+    return {
+      "@type": "ImageObject",
+      "@id": idUrl,
+      contentUrl: item.url,
+      name: item.prompt || "AI-generated image",
+      description: item.prompt || `AI-generated image by @${profile.username}`,
+      dateCreated: item.createdAt.toISOString(),
+      creator: {
+        "@type": "Person",
+        "@id": profileUrl,
+        name: profile.username,
+        url: profileUrl,
       },
-    }),
-  }))
+      ...(item.model && {
+        additionalProperty: {
+          "@type": "PropertyValue",
+          name: "model",
+          value: item.model,
+        },
+      }),
+    }
+  })
 
   const schema = {
     "@context": "https://schema.org",
@@ -245,7 +252,8 @@ function buildProfileMediaHtml(mediaItems: MediaItem[]): string {
 
   const mediaHtml = mediaItems
     .map((item) => {
-      const mediaUrl = `/request/image/${item.id.slice(-8)}`
+      const shortId = longIdToShort(item.requestId)
+      const mediaUrl = `/request/image/${shortId}${typeof item.index === "number" ? `/${item.index}` : ""}`
       const promptText = item.prompt ? escapeHtml(item.prompt.slice(0, 150) + (item.prompt.length > 150 ? "..." : "")) : ""
       const modelInfo = item.model ? `<span class="media-model">Model: ${escapeHtml(item.model)}</span>` : ""
 
