@@ -13,13 +13,10 @@ export function buildCreateRoute(request: Partial<UnifiedRequest> & { model: Any
     const query: Record<string, string> = { model }
     if (request.customModelId) query.customModelId = String(request.customModelId)
     if (request.customModelName) query.customModelName = String(request.customModelName)
-    // Optionally allow caller to pre-bind dynamic model to current selection
-    if ("dynamicModel" in (request as any)) query.dynamicModel = String((request as any).dynamicModel ? 1 : 0)
     return { name: "create", params: { activeTab: "image" }, query }
   } else {
     const model = ((request.model as VideoModel) || "veo-2") as string
     const query: Record<string, string> = { model }
-    if ("dynamicModel" in (request as any)) query.dynamicModel = String((request as any).dynamicModel ? 1 : 0)
     return { name: "create", params: { activeTab: "video" }, query }
   }
 }
