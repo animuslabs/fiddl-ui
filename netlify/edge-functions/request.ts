@@ -3,8 +3,9 @@ import { buildPageResponse } from "./lib/page.ts"
 import { buildMediaEls, buildMediaListSchema, buildStaticTopNavHtml, renderJsonAsHtml, shortIdToLong, type MediaItem } from "./lib/util.ts"
 import { creationsGetImageRequest, creationsGetVideoRequest } from "./lib/orval.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
     const [, , typeRaw, shortId, indexRaw] = url.pathname.split("/")
@@ -29,7 +30,7 @@ export default async function (request: Request, context: Context) {
     }))
     const imageUrl = type === "video" ? s3Video(mediaId, "thumbnail") : img(mediaId, "md")
     const pageUrl = `${url.origin}${url.pathname}`
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle: `Fiddl.art ${type === "video" ? "Video" : "Image"} Request: ${shortId}`,
@@ -44,7 +45,9 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleRequestPage error:", e)
+    logEdgeError(request, context, "request", e)
     return context.next()
   }
+  
+  export default safeEdge(handler, "request")
 }

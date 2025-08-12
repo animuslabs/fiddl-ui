@@ -1,15 +1,16 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { buildStaticTopNavHtml, escapeHtml } from "./lib/util.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
 
     const pageTitle = "Fiddl.art - Create and Earn with AI Art"
     const description = "Create stunning AI-generated images and videos, discover amazing artwork from the community, and earn money from your creations. Join thousands of artists using cutting-edge AI tools."
 
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle,
@@ -24,7 +25,7 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleHomePage error:", e)
+    logEdgeError(request, context, "index", e)
     return context.next()
   }
 }
@@ -173,6 +174,8 @@ function buildFeaturesHtml(): string {
     </div>
   `
 }
+
+export default safeEdge(handler, "index")
 
 export const config: Config = {
   path: "/",
