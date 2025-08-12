@@ -32,6 +32,12 @@ routeData.forEach((el: any) =>
     component: () => import(`../pages/${el[2] as string}.vue`),
   }),
 )
+// // Magic Mirror route (appended without modifying routeData.json)
+// routes[0]?.children?.push({
+//   name: "magicMirror",
+//   path: "/magic",
+//   component: () => import("../pages/MagicMirrorPage.vue"),
+// })
 // setTimeout(() => {
 //   //@ts-ignore
 //   console.log("start routes preload", routes[0]?.children.length)

@@ -2,15 +2,16 @@ import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { buildStaticTopNavHtml, escapeHtml } from "./lib/util.ts"
 import { imageModels, videoModels, modelTags, aspectRatios } from "../../src/lib/imageModels.ts"
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
-export default async function (request: Request, context: Context) {
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
 
     const pageTitle = "Create AI Art | Fiddl.art"
     const description = "Create stunning AI-generated images and videos with advanced AI models. Choose from multiple models, aspect ratios, and customization options. Free and paid plans available."
 
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle,
@@ -25,7 +26,7 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleCreatePage error:", e)
+    logEdgeError(request, context, "create", e)
     return context.next()
   }
 }
@@ -327,6 +328,8 @@ function getAspectRatioDescription(ratio: string): string {
   }
   return descriptions[ratio] || ""
 }
+
+export default safeEdge(handler, "create")
 
 export const config: Config = {
   path: "/create",

@@ -3,7 +3,8 @@ import { buildPageResponse } from "./lib/page.ts"
 import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels } from "./lib/orval.ts"
 import { buildMediaEls, buildModelFooterHtml, buildModelMetadataInnerHtml, buildModelSchema, buildStaticTopNavHtml } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
-export default async function (request: Request, context: Context) {
+import { safeEdge, logEdgeError } from "./lib/safe.ts"
+const handler = async (request: Request, context: Context) => {
   try {
     const url = new URL(request.url)
     const [, , modelName, customModelId] = url.pathname.split("/")
@@ -12,7 +13,7 @@ export default async function (request: Request, context: Context) {
     const isVideo = modelData.model.modelTags.some((t: string) => t.toLowerCase().includes("video"))
     const media = modelData.media || []
     const first = media[0]
-    return buildPageResponse({
+    return await buildPageResponse({
       request,
       context,
       pageTitle: modelData.model.name + " Model | Fiddl.art",
@@ -33,7 +34,9 @@ export default async function (request: Request, context: Context) {
       },
     })
   } catch (e) {
-    console.error("handleModelPage error:", e)
+    logEdgeError(request, context, "model", e)
     return context.next()
   }
+  
+  export default safeEdge(handler, "model")
 }
