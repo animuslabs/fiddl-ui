@@ -456,28 +456,10 @@ export function normalizeCreation(creation: CreateImageRequestData | CreateVideo
 
 export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedRequest {
   const isImage = "imageIds" in creation
-
   return {
-    id: creation.id,
+    ...creation,
     mediaIds: isImage ? creation.imageIds : creation.videoIds,
-    createdAt: creation.createdAt,
-    aspectRatio: creation.aspectRatio,
-    public: creation.public,
-    creatorId: creation.creatorId,
-    prompt: creation.prompt,
-    seed: creation.seed,
-    model: creation.model,
-    quantity: creation.quantity,
     type: isImage ? "image" : "video",
-    ...(isImage
-      ? {
-          negativePrompt: creation.negativePrompt,
-          customModelId: creation.customModelId,
-          customModelName: creation.customModelName,
-        }
-      : {
-          duration: creation.duration,
-        }),
   }
 }
 

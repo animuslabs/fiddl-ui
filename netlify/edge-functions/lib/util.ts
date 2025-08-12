@@ -76,27 +76,38 @@ export function shortIdToLong(base64url: string): string {
   // Convert the byte array to a hex string
   let hexStr = ""
   for (let i = 0; i < bytes.length; i++) {
+    //@ts-ignore
     hexStr += bytes[i].toString(16).padStart(2, "0")
   }
   // Re-insert hyphens to format it as a UUID
   const uuid = `${hexStr.substr(0, 8)}-${hexStr.substr(8, 4)}-${hexStr.substr(12, 4)}-${hexStr.substr(16, 4)}-${hexStr.substr(20)}`
   return uuid
 }
-export function longIdToShort(uuid: string): string {
-  try {
-    const hex = uuid.replace(/-/g, "").toLowerCase()
-    if (!/^[0-9a-f]{32}$/.test(hex)) return ""
-    const bytes = new Uint8Array(16)
-    for (let i = 0; i &lt; 16; i++) {
-      bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-    }
-    let binary = ""
-    for (let i = 0; i &lt; bytes.length; i++) binary += String.fromCharCode(bytes[i])
-    const base64 = btoa(binary)
-    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
-  } catch {
-    return ""
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = ""
+  const bytes = new Uint8Array(buffer)
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i++) {
+    //@ts-ignore
+    binary += String.fromCharCode(bytes[i])
   }
+  return btoa(binary)
+}
+
+export function longIdToShort(uuid: string): string {
+  // Remove hyphens from the UUID
+  const hexStr = uuid.replace(/-/g, "")
+  // Convert the hex string to a Uint8Array
+  const bytes = new Uint8Array(16)
+  for (let i = 0; i < 16; i++) {
+    bytes[i] = parseInt(hexStr.substr(i * 2, 2), 16)
+  }
+  // Convert the byte array to a Base64 string
+  const base64 = arrayBufferToBase64(bytes.buffer)
+  // Convert Base64 to Base64 URL encoding
+  const base64url = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+  return base64url
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
