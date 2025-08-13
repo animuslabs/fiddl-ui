@@ -63,11 +63,10 @@ export default defineComponent({
     "$route.query": {
       immediate: false,
       handler(newQuery) {
-        // console.log(newQuery)
         const referredBy = this.$route.query?.referredBy as string | undefined
-        // console.log(this.$route.query)
-        if (!referredBy) return
-        LocalStorage.set("referredBy", referredBy)
+        if (referredBy) LocalStorage.set("referredBy", referredBy)
+        const claimCode = this.$route.query?.claimCode as string | undefined
+        // if(claimCode)
       },
     },
   },

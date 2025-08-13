@@ -22,6 +22,7 @@ const props = withDefaults(
     selectable?: boolean
     rowHeightRatio?: number
     showLoading?: boolean
+    centerAlign?: boolean
   }>(),
   {
     layout: "grid",
@@ -33,6 +34,7 @@ const props = withDefaults(
     selectable: false,
     rowHeightRatio: 1.2,
     showLoading: true,
+    centerAlign: false,
   },
 )
 
@@ -47,24 +49,34 @@ const emit = defineEmits<{
 const $q = useQuasar()
 const isMobile = computed(() => $q.screen.lt.md)
 const cols = computed(() => {
-  if ($q.screen.lt.sm) return 2
-  if ($q.screen.lt.md) return 5
+  if ($q.screen.lt.md) return props.colsMobile
   return props.colsDesktop
 })
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 
-const wrapperStyles = computed(() => ({
-  display: "grid",
-  gridTemplateColumns: `repeat(${cols.value}, 1fr)`,
-  gap: gapValue.value,
-  ...(props.layout === "mosaic"
-    ? {
-        gridAutoRows: `${thumbSize.value * props.rowHeightRatio}px`,
-        gridAutoFlow: "dense",
-      }
-    : {}),
-}))
+const wrapperStyles = computed(() => {
+  const isMosaic = props.layout === "mosaic"
+  const base: Record<string, string> = {
+    display: "grid",
+    gap: gapValue.value,
+  }
+
+  if (isMosaic && props.centerAlign) {
+    base.gridTemplateColumns = `repeat(${cols.value}, ${thumbSize.value}px)`
+    base.gridAutoRows = `${thumbSize.value * props.rowHeightRatio}px`
+    base.gridAutoFlow = "dense"
+    base.justifyContent = "center"
+  } else {
+    base.gridTemplateColumns = `repeat(${cols.value}, 1fr)`
+    if (isMosaic) {
+      base.gridAutoRows = `${thumbSize.value * props.rowHeightRatio}px`
+      base.gridAutoFlow = "dense"
+    }
+  }
+
+  return base
+})
 
 const mediaStyles = computed(() => {
   const style =
@@ -178,9 +190,10 @@ function markVideoErrored(id: string) {
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
   const aspect = m.aspectRatio ?? 1
+  const colSpan = aspect > 1.5 && cols.value > 1 ? 2 : undefined
   return {
     gridRowEnd: `span ${Math.ceil((1 / aspect) * props.rowHeightRatio)}`,
-    gridColumnEnd: aspect > 1.5 ? "span 2" : undefined,
+    gridColumnEnd: colSpan ? `span ${colSpan}` : undefined,
   }
 }
 
@@ -194,8 +207,8 @@ setInterval(() => {
 
 function videoClass(media: MediaGalleryMeta) {
   return {
-    "cursor-pointer": props.selectable && !videoLoading[media.id],
-    display: videoLoading[media.id] ? "none" : "block",
+    "cursor-pointer": props.selectable && !videoLoading.value[media.id],
+    display: videoLoading.value[media.id] ? "none" : "block",
   }
 }
 </script>
@@ -281,7 +294,7 @@ function videoClass(media: MediaGalleryMeta) {
   display: flex;
   justify-content: center;
   gap: 6px;
-  background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.2), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
   z-index: 2;
   pointer-events: auto;
 }

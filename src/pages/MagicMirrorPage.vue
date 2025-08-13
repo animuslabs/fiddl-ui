@@ -1,15 +1,14 @@
 <template lang="pug">
-q-page.q-pa-sm
-  .centered.q-mt-md.q-mb-md
+q-page.full-width
+  .centered.q-mt-md
     h2 Magic Mirror
+  .centered.q-ma-md
     p.text-primary Transform your selfie into different characters in minutes
-  div(v-if="step === 'capture'")
+  div(v-if="sessionLoaded && step === 'capture'")
     .centered
       MagicMirrorCamera(@captured="onCaptured" @error="onCaptureError")
   div(v-else-if="step === 'training'")
     .centered.q-mt-lg
-      //- h5 Training your model...
-      //- p This usually takes 5–45 minutes. You can safely leave and come back.
       .full-width(style="max-width:600px")
         h6 Status: {{ trainingStatus }}
         div(v-if="(trainingProgress||0)>0").q-mt-sm
@@ -26,7 +25,6 @@ q-page.q-pa-sm
         div(v-else).row.items-center.q-gutter-sm
           q-spinner(color="primary")
           span Training...
-  //- Step: Select Templates
   div(v-else-if="step === 'selectTemplates'")
     .centered(v-if="!templatesConfirmed")
       h4 Choose 3 looks
@@ -38,101 +36,69 @@ q-page.q-pa-sm
       q-banner(dense class="bg-grey-10 text-white" style="max-width:600px;")
         div Link your email to get a notification when results are ready
         q-btn(flat color="primary" label="Link Email" class="q-ml-sm" @click="goLinkEmail" no-caps)
-    //- Template picker
-    .q-mt-sm
-      .centered(v-if="!promptTplStore.loaded")
-        q-spinner(color="primary")
-        p.text-secondary.q-mt-xs Loading templates...
-      template(v-else)
+    .centered.q-mt-sm(v-if="!templatesConfirmed")
+      q-btn(color="primary" label="Pick Looks" no-caps @click="openTemplatesDialog('initial')")
+    //- Preview the three chosen templates while waiting for training
+    .centered.q-mt-md(v-if="templatesConfirmed && trainingStatus !== 'succeeded'")
+      .full-width(style="max-width:720px")
         .template-grid(:style="templatesGridStyle")
-          PromptTemplateCard(
-            v-for="t in displayTemplates"
-            :key="t.id"
-            :template="t"
-            :gender="genderForTemplates || 'male'"
-            :selectable="!templatesConfirmed"
-            :selected="selectedTemplates.includes(t.id)"
-            @click="toggleTemplate(t.id)"
-          )
-    .centered.q-mt-md.bg-blur.q-pa-md.q-mb-xl(style="position:sticky; bottom:70px;")
-      div.q-mb-sm(v-if="selectedTemplates.length < 3")
-        p Picked {{ selectedTemplates.length }} / 3
-      q-btn(
-        color="primary"
-        label="Confirm Choices"
-        :disable="selectedTemplates.length !== 3 || templatesConfirmed"
-        @click="confirmTemplates"
-        no-caps
-        size="lg"
-      )
-    .absolute-center
-      .centered.q-mt-sm.bg-blur.q-pa-xl(v-if="templatesConfirmed")
-        p.q-mb-md Your images will be ready shortly.
-        q-spinner-grid(color="primary" size="50px").q-mt-sm
-  //- Step: Results
-  div(v-else-if="step === 'results'").relative-position
-    .sticky-actions.row.items-center.q-gutter-sm
-      q-btn(flat icon="refresh" label="Start again" no-caps @click="startAgain")
-      q-btn(flat icon="home_repair_service" label="Forge" no-caps @click="goToForge")
-    // Content
-    div(v-if="generatedImageIds.length > 0" style="width:100%")
-      // Desktop: mosaic gallery with per-item actions
-      MediaGallery.q-pl-md.q-pr-md(
-        v-if="isDesktop"
-        :mediaObjects="mediaObjects"
-        layout="mosaic"
-        :rowHeightRatio="1.2"
-        :cols-desktop="5"
-        :gap="8"
-      )
-        template(#actions="{ media }")
-          .actions-inline.slot-actions.row.items-center.justify-center.q-gutter-sm
-            q-btn(flat color="primary" icon="share" label="Share" size="sm" no-caps @click="shareImage(media.id)")
-            q-btn(flat color="primary" icon="download" label="Download" size="sm" no-caps @click="downloadImage(media.id)")
-            q-btn(flat color="accent" icon="movie" label="Animate" size="sm" no-caps @click="animateImage(media.id)")
-      // Mobile: scrollable list of images that fit viewport height
-      .mobile-list(v-else)
-        .image-block(v-for="id in generatedImageIds" :key="id")
-          q-img.fit-image(
-            :src="img(id, 'md')"
-            spinner-color="white"
-            placeholder-src="/blankAvatar.webp"
-          )
-          .actions-inline.row.items-center.justify-center.q-gutter-sm
-            q-btn(flat color="primary" icon="share" label="Share" size="sm" no-caps @click="shareImage(id)")
-            q-btn(flat color="primary" icon="download" label="Download" size="sm" no-caps @click="downloadImage(id)")
-            q-btn(flat color="accent" icon="movie" label="Animate" size="sm" no-caps @click="animateImage(id)")
-
-      // Unified templates grid (persistent before/after)
-      .q-mt-lg.q-pl-md.q-pr-md
-        h6 Try more looks
-        .template-grid(:style="templatesGridStyle")
-          .template-item(v-for="t in displayTemplates" :key="t.id")
+          .template-item(v-for="t in selectedTemplateObjs" :key="t.id")
             .template-card-box
-              PromptTemplateCard(
-                :template="t"
-                :gender="genderForTemplates || 'male'"
-                :selectable="!templatesConfirmed"
-                :selected="selectedTemplates.includes(t.id)"
-                @click="!templatesConfirmed ? toggleTemplate(t.id) : undefined"
-              )
-            div.q-mt-xs
-              q-btn(
-                v-if="templatesConfirmed && !additionalLoadingTemplates.includes(t.id)"
-                color="primary"
-                flat
-                dense
-                label="Generate"
-                icon="play_arrow"
-                no-caps
-                @click="generateMoreForTemplate(t)"
-              )
-              div(v-else-if="templatesConfirmed && additionalLoadingTemplates.includes(t.id)").row.items-center.q-gutter-xs
-                q-linear-progress(indeterminate color="primary" size="6px" class="col")
-                small.text-secondary Generating...
-    div.absolute-center.bg-blur(v-else class="centered q-pa-lg")
+              PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false")
+  div(v-else-if="step === 'results'").relative-position.full-width
+    .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px;")
+      .centered.col-12.full-width
+        q-btn(flat icon="refresh" label="Start again" size="lg" no-caps @click="startAgain")
+        q-btn(flat icon="group" label="More Looks" size="lg" no-caps @click="openMoreLooks")
+        q-btn(flat icon="home_repair_service" label="Advanced" size="lg" no-caps @click="goToForge")
+    div(v-if="generatedImageIds.length > 0" style="width:100%;")
+      .centered.full-width.q-mt-lg
+        MediaGallery.q-pl-md.q-pr-md(
+          :mediaObjects="mediaObjects"
+          layout="mosaic"
+          :rowHeightRatio="1"
+          :colsDesktop="3"
+          :colsMobile="1"
+          :thumbSizeDesktop="400"
+          :thumbSizeMobile="400"
+          :gap="8"
+          :centerAlign="true"
+        )
+          template(#actions="{ media }")
+            .row.items-center.justify-center.q-gutter-sm.q-pt-sm.bg-black.q-pa-md
+              q-btn(flat size="sm"  icon="share" label="Share"  no-caps @click="shareImage(media.id)")
+              q-btn(flat size="sm"  icon="download" label="Download"  no-caps @click="downloadImage(media.id)")
+              q-btn(flat size="sm"  icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
+
+    div.absolute-center.bg-blur(v-else)
       q-spinner-grid(color="primary" size="50px")
       p.text-secondary.q-mt-sm Generating your images...
+
+  q-dialog(v-model="dialogOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Pick looks
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        PromptTemplatesPicker(
+          :gender="genderForTemplates"
+          :selected="dialogSelection"
+          :maxSelected="3"
+          :selectionMode="'multi'"
+          :selectable="true"
+          :showConfirm="true"
+          :confirmLabel="dialogMode === 'initial' ? 'Confirm Choices' : 'Generate'"
+          @update:selected="dialogSelection = $event"
+          @confirm="onDialogConfirm"
+        )
+
+  .bg-blur.q-pa-lg.full-width( v-if="isWaitingForImages || generatingMore" style="position:fixed; bottom:100px;")
+    .centered
+      p.q-mb-md Your images will be ready shortly.
+    .centered
+      q-spinner-grid(color="primary" size="50px")
 </template>
 
 <script setup lang="ts">
@@ -142,6 +108,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import MagicMirrorCamera from "src/components/magic/MagicMirrorCamera.vue"
 import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicResultsViewer from "src/components/magic/MagicResultsViewer.vue"
+import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img } from "lib/netlifyImg"
 import { createMagicTrainingSet } from "src/lib/magic/magicTrainingSet"
@@ -154,7 +121,7 @@ import { type Gender, resolveGenderedTemplates } from "src/lib/promptTemplates"
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 
-type Step = "capture" | "training" | "selectTemplates" | "results"
+type Step = "init" | "capture" | "training" | "selectTemplates" | "results"
 
 const quasar = useQuasar()
 const userAuth = useUserAuth()
@@ -162,7 +129,12 @@ const createStore = useCreateImageStore()
 const imageCreations = useImageCreations()
 const router = useRouter()
 
-const step = ref<Step>("capture")
+const step = ref<Step>("init")
+const sessionLoaded = ref(false)
+const dialogOpen = ref(false)
+const dialogSelection = ref<string[]>([])
+const dialogMode = ref<"initial" | "additional">("initial")
+const generatingMore = ref(false)
 const selectedTemplates = ref<string[]>([])
 const generatedImageIds = ref<string[]>([])
 const trainingSetId = ref<string | null>(null)
@@ -183,6 +155,7 @@ const additionalLoadingTemplates = ref<string[]>([])
 const renderedTemplates = ref<string[]>([])
 const pendingNewCount = ref<number>(0)
 const lastKnownIds = ref<string[]>([])
+const isWaitingForImages = ref(false)
 
 const SESSION_KEY = "mmState"
 
@@ -205,6 +178,11 @@ const templatesGridStyle = computed(() => ({
   gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
   gap: "10px",
 }))
+
+const selectedTemplateObjs = computed(() => {
+  const byId = new Map(displayTemplates.value.map((t: any) => [t.id, t]))
+  return selectedTemplates.value.map((id) => byId.get(id)).filter(Boolean)
+})
 
 // Results view helpers
 const isDesktop = computed(() => quasar.screen.gt.sm)
@@ -230,8 +208,13 @@ function clearSession() {
 
 function loadSession() {
   try {
+    console.log("loading session")
     const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return
+    if (!raw) {
+      sessionLoaded.value = true
+      step.value = "capture"
+      return
+    }
     const data = JSON.parse(raw)
     trainingSetId.value = data.trainingSetId || null
     customModelId.value = data.customModelId || null
@@ -250,6 +233,7 @@ function loadSession() {
       startTrainingPoll()
       if (scheduled.value && templatesConfirmed.value) startCreationsPoll()
     }
+    sessionLoaded.value = true
   } catch (e) {
     console.warn("failed to load session", e)
   }
@@ -364,6 +348,7 @@ async function startTraining() {
     // Allow user to pick templates while training runs
     step.value = "selectTemplates"
     saveSession()
+    void nextTick(() => openTemplatesDialog("initial"))
     startTrainingPoll()
   } catch (e: any) {
     Loading.hide()
@@ -407,27 +392,10 @@ function stopTrainingPoll() {
   pollTimer = null
 }
 
-// Template selection
-function toggleTemplate(id: string) {
-  if (templatesConfirmed.value) return
-  const next = [...selectedTemplates.value]
-  const idx = next.indexOf(id)
-  if (idx >= 0) next.splice(idx, 1)
-  else {
-    if (next.length >= 3) return
-    next.push(id)
-  }
-  selectedTemplates.value = next
-}
-
-function confirmTemplates() {
-  if (selectedTemplates.value.length !== 3) return
-  templatesConfirmed.value = true
-  saveSession()
-  quasar.notify({ message: "Templates saved", color: "primary" })
-  // If training already succeeded, try to schedule now; otherwise wait for poll to flip it.
-  maybeGenerateIfReady()
-}
+/**
+ * Template selection is unified via dialog
+ * See: openTemplatesDialog / onDialogConfirm
+ */
 
 function maybeGenerateIfReady() {
   if (templatesConfirmed.value && trainingStatus.value === "succeeded" && customModelId.value) {
@@ -464,6 +432,7 @@ function startCreationsPoll() {
   stopCreationsPoll()
   const poll = async () => {
     if (!customModelId.value) return
+    const prevWaiting = isWaitingForImages.value
     // Configure filters on the store
     imageCreations.filter.model = "custom"
     imageCreations.filter.customModelId = customModelId.value
@@ -473,7 +442,7 @@ function startCreationsPoll() {
       if (imageCreations.customModelId !== customModelId.value) {
         await imageCreations.setCustomModelId(customModelId.value, userAuth.userId || undefined)
       } else {
-        // Refresh latest page explicitly
+        // Refresh latest page explicitly; clear list to force fresh page fetch and UI update
         imageCreations.creations = []
         await imageCreations.loadCreations(userAuth.userId || undefined)
       }
@@ -494,6 +463,7 @@ function startCreationsPoll() {
     const deltaNew = ids.filter((id) => !oldSet.has(id))
 
     // Update reactive list and last-known set
+    const prevCount = generatedImageIds.value.length
     generatedImageIds.value = ids.slice(0, 16)
     lastKnownIds.value = generatedImageIds.value.slice()
 
@@ -501,12 +471,33 @@ function startCreationsPoll() {
     if (pendingNewCount.value > 0 && deltaNew.length >= pendingNewCount.value) {
       additionalLoadingTemplates.value = []
       pendingNewCount.value = 0
+      generatingMore.value = false
     }
+
+    // Update waiting state and scroll when transitioning from waiting -> visible
+    const expectingInitial = scheduled.value && generatedImageIds.value.length < 3
+    const expectingAdditional = pendingNewCount.value > 0
+    const expecting = expectingInitial || expectingAdditional
+    if (prevWaiting && !expecting && (deltaNew.length > 0 || prevCount === 0) && generatedImageIds.value.length > 0) {
+      void nextTick(() => {
+        try {
+          scrollToTopSmooth()
+        } catch {
+          console.error("scroll error")
+        }
+      })
+    }
+    isWaitingForImages.value = expecting
 
     // Wait for the first batch to complete (all three images) before showing results
     if (generatedImageIds.value.length >= 3 && step.value !== "results") {
       step.value = "results"
       saveSession()
+    }
+
+    if (!expecting) {
+      stopCreationsPoll()
+      return
     }
 
     creationsPollTimer = window.setTimeout(poll, 8000)
@@ -536,6 +527,7 @@ function startAgain() {
   scheduledAt.value = null
   clearSession()
   step.value = "capture"
+  window.location.reload()
 }
 
 function goToForge() {
@@ -586,6 +578,72 @@ function animateImage(id: string) {
   quasar.notify({ message: "Animate coming soon ✨", color: "accent" })
 }
 
+// Robust scroll-to-top helper (handles various scroll containers)
+function scrollToTopSmooth() {
+  try {
+    const el: any = document.scrollingElement || document.documentElement || document.body
+    if (el && typeof el.scrollTo === "function") {
+      el.scrollTo({ top: 0, behavior: "smooth" })
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+    const page = document.querySelector(".q-page") as HTMLElement | null
+    if (page) page.scrollIntoView({ behavior: "smooth", block: "start" })
+  } catch {
+    console.error("scroll error")
+  }
+}
+
+/**
+ * Templates dialog handlers (unified)
+ */
+function openTemplatesDialog(mode: "initial" | "additional") {
+  dialogMode.value = mode
+  dialogSelection.value = mode === "initial" ? selectedTemplates.value.slice() : []
+  dialogOpen.value = true
+}
+
+function openMoreLooks() {
+  openTemplatesDialog("additional")
+}
+
+async function onDialogConfirm() {
+  if (dialogMode.value === "initial") {
+    if (dialogSelection.value.length !== 3) return
+    selectedTemplates.value = dialogSelection.value.slice()
+    templatesConfirmed.value = true
+    saveSession()
+    quasar.notify({ message: "Templates saved", color: "primary" })
+    dialogOpen.value = false
+    maybeGenerateIfReady()
+    return
+  }
+  if (!customModelId.value) return
+  const ids = dialogSelection.value.slice()
+  if (!ids.length) return
+  try {
+    generatingMore.value = true
+    dialogOpen.value = false
+    const byId = new Map(displayTemplates.value.map((t) => [t.id, t]))
+    const templates = ids.map((id) => byId.get(id)).filter(Boolean) as any
+    if (!templates.length) {
+      generatingMore.value = false
+      return
+    }
+    // Track loading state and expected arrivals
+    additionalLoadingTemplates.value = [...new Set([...additionalLoadingTemplates.value, ...ids])]
+    pendingNewCount.value += templates.length
+    await scheduleMagicRenders({
+      customModelId: customModelId.value,
+      templates,
+    })
+    if (!creationsPollTimer) startCreationsPoll()
+  } catch (e: any) {
+    catchErr(e)
+    generatingMore.value = false
+  }
+}
+
 // Trigger more renders for a specific template
 async function generateMoreForTemplate(t: any) {
   if (!customModelId.value) return
@@ -621,24 +679,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.sticky-actions {
-  position: sticky;
-  top: 50px;
-  z-index: 5;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
 .mobile-list {
   padding: 8px 12px 24px;
 }
@@ -656,7 +696,7 @@ onBeforeUnmount(() => {
 }
 
 .actions-inline {
-  padding: 8px 0 4px;
+  padding: 0px 0 0px;
 }
 
 .desktop-grid {
