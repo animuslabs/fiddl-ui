@@ -1,36 +1,34 @@
 <template lang="pug">
 div
-  //- Live camera section
-  div(v-if="mode === 'camera'")
+  div
     .centered
-      h5.q-mb-xs Camera
     .q-pa-sm.flex.column.items-center
-      div(style="position:relative; width:100%; max-width:520px;")
-        //- Tips and countdown overlay
-        div#countdownOverlay.bg-blur-lite(
+      div(:class="['video-container', { fullscreen: !isDesktop }]")
+        div#countdownOverlay(
           v-if="showTipsOverlay"
           :class="{ active: showTipsOverlay }"
         )
           .countdown-content
-            .countdown-tips
+            .countdown-tips.lt-sm
               .q-ma-md
-                h4.q-mb-md The Magic Mirror will capture your essence.
-                h4 #[strong Be Natural!]
+                h2.q-mb-md.text-primary Magic Mirror
             .countdown-number(v-if="countdownActive") {{ countdownValue }}
-            q-btn.z-top(
+            q-btn.z-top.q-pt-sm.bg-blur(
               color="primary"
-              :label="isCapturing ? 'Capturing…' : 'Start Capture'"
+
               :disable="isCapturing || !cameraReady"
               @click="startAutoCapture"
               icon="photo_camera"
               stack
               outline
               size="lg"
-              padding="20px"
               no-caps
             )
-            .centered.q-mt-md
-              p For best results, move your head to provide multiple angles.
+             | Start Capture
+
+            .centered.q-ma-md
+              small For best results, move your head to provide multiple angles.
+
         //- Flash overlay
         div#flashOverlay(
           v-show="flashActive"
@@ -42,11 +40,21 @@ div
           muted
           :style="videoStyle"
         )
+
         //- Overlay counter / hint
         div.absolute-top-left.q-pa-sm(v-if="isCapturing")
           q-chip(color="primary" text-color="white" icon="photo_camera")
             | {{ captured.length }} / {{ targetFrames }}
-      .row.q-gutter-sm.justify-center.q-mt-md
+      .row.q-gutter-sm.justify-center.q-mt-md(:class="{ 'floating-controls': !isDesktop }" :style="!isDesktop ? floatingControlsStyle : undefined")
+        q-btn(
+          v-if="isDesktop && videoDevices.length > 1"
+          outline
+          color="primary"
+          label="Switch Camera"
+          @click="switchToNextCamera"
+          icon="switch_camera"
+          no-caps
+        )
         q-btn(
           outline
           color="primary"
@@ -55,34 +63,33 @@ div
           icon="photo_library"
           no-caps
         )
+        q-btn.z-top(
+          v-if="!isDesktop && videoDevices.length > 1"
+          round
+          dense
+          outline
+          color="grey"
+          icon="switch_camera"
+          @click="switchToNextCamera"
+          :disable="false"
+          aria-label="Switch camera"
+          style="position:absolute; bottom:0px; left:20px; z-index:21; pointer-events:auto; touch-action:manipulation;"
+        )
     .centered.q-mt-md
       p.text-secondary(v-if="!cameraReady && permissionDenied") Camera permission is blocked. Enable it in your browser settings, then reload. You can also pick a selfie from your gallery.
       p.text-secondary(v-else-if="!cameraReady") Allow camera permission and ensure the front camera is available
 
     //- Audio element for shutter sound
     audio#shutterAudio(ref="shutterAudioRef" src="/audio/camera-shutter.mp3" preload="auto")
-
-  //- Gallery picker section
-  div(v-else)
-    .centered
-      .q-pa-sm.flex.column.items-center
-        q-uploader(
-          ref="uploaderRef"
-          accept="image/*"
-          label="Select selfie"
-          :max-files="10"
-          :auto-upload="false"
-          @added="onFilesAdded"
-          style="max-width:520px; width:100%;"
-        )
-        .row.q-gutter-sm.justify-center.q-mt-md
-          q-btn(outline color="primary" label="Back to Camera" @click="switchToCamera" icon="photo_camera" no-caps)
+    //- Hidden file input for instant gallery selection
+    input#filePicker(type="file" accept="image/*" ref="fileInputRef" @change="onFileInputChange" style="display:none")
 
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
-import { Dialog, useQuasar } from "quasar"
+import { useQuasar, LocalStorage } from "quasar"
+import { catchErr } from "lib/util"
 
 const emit = defineEmits<{
   (e: "captured", blobs: Blob[]): void
@@ -96,15 +103,19 @@ const countdownSeconds = 1
 const mimeType = "image/jpeg"
 const quality = 0.97
 
-// State
-const mode = ref<"camera" | "gallery">("camera")
+/** State */
 const videoRef = ref<HTMLVideoElement | null>(null)
 const streamRef = ref<MediaStream | null>(null)
 const isCapturing = ref(false)
 const cameraReady = ref(false)
 const permissionDenied = ref(false)
 const captured = ref<Blob[]>([])
-const uploaderRef = ref()
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+// Camera device management
+const videoDevices = ref<MediaDeviceInfo[]>([])
+const currentDeviceId = ref<string | null>(null)
+const LAST_VIDEO_DEVICE_KEY = "mmVideoDeviceId"
 
 // Flash and sound
 const flashActive = ref(false)
@@ -114,8 +125,8 @@ const shutterAudioRef = ref<HTMLAudioElement | null>(null)
 const countdownActive = ref(false)
 const countdownValue = ref(countdownSeconds)
 
-// Show tips overlay if in camera mode, not capturing, and not in countdown
-const showTipsOverlay = computed(() => mode.value === "camera" && !isCapturing.value && !countdownActive.value)
+// Show tips overlay when not capturing and not in countdown
+const showTipsOverlay = computed(() => !isCapturing.value && !countdownActive.value)
 
 function triggerFlashAndSound() {
   // Flash
@@ -126,7 +137,7 @@ function triggerFlashAndSound() {
   // Sound
   if (shutterAudioRef.value) {
     // Restart sound if already playing
-    shutterAudioRef.value.volume = 0.05
+    shutterAudioRef.value.volume = 0.1
     shutterAudioRef.value.currentTime = 0
     shutterAudioRef.value.play().catch(() => {})
   }
@@ -134,24 +145,58 @@ function triggerFlashAndSound() {
 
 const $q = useQuasar()
 
-const videoStyle = computed(
+const isDesktop = computed(() => $q.screen.gt.sm)
+const floatingControlsStyle = computed(
   (): Record<string, string> => ({
-    width: "100%",
-    maxWidth: "520px",
-    borderRadius: "8px",
-    objectFit: "cover",
-    transform: "scaleX(-1)",
+    bottom: `calc(env(safe-area-inset-bottom, 0px) + ${$q.screen.gt.sm ? "16px" : "88px"})`,
   }),
 )
+
+const videoStyle = computed((): Record<string, string> => {
+  if ($q.screen.gt.sm) {
+    return {
+      width: "100%",
+      maxWidth: "520px",
+      borderRadius: "8px",
+      objectFit: "cover",
+      transform: "scaleX(-1)",
+    }
+  } else {
+    return {
+      position: "absolute",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100vh",
+      maxHeight: "900px",
+      borderRadius: "0",
+      objectFit: "cover",
+      transform: "scaleX(-1)",
+    }
+  }
+})
 
 onMounted(() => {
   // ensure playsinline for iOS
   if (videoRef.value) videoRef.value.setAttribute("playsinline", "true")
-  void initCamera()
+
+  // Try to use last-selected device on desktop
+  const saved = (LocalStorage.getItem(LAST_VIDEO_DEVICE_KEY) as string) || null
+  if ($q.screen.gt.sm && saved) currentDeviceId.value = saved
+
+  void initCamera(currentDeviceId.value || undefined)
+
+  // Keep device list up-to-date
+  if (navigator.mediaDevices && "addEventListener" in navigator.mediaDevices) {
+    navigator.mediaDevices.addEventListener("devicechange", fetchVideoDevices)
+  }
 })
 
 onBeforeUnmount(() => {
   stopStream()
+  if (navigator.mediaDevices && "removeEventListener" in navigator.mediaDevices) {
+    navigator.mediaDevices.removeEventListener("devicechange", fetchVideoDevices)
+  }
 })
 
 function isPermissionDeniedError(err: any): boolean {
@@ -159,35 +204,37 @@ function isPermissionDeniedError(err: any): boolean {
   const msg = String(err?.message || "").toLowerCase()
   return name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError" || msg.includes("permission denied") || msg.includes("denied by system")
 }
-async function initCamera() {
+async function initCamera(deviceId?: string) {
   try {
-    const constraints: MediaStreamConstraints = {
-      audio: false,
-      video: {
-        facingMode: { ideal: "user" },
-        width: { ideal: 512 },
-        height: { ideal: 512 },
-      },
-    }
+    const videoConstraint: MediaTrackConstraints = deviceId ? { deviceId: { exact: deviceId }, width: { ideal: 1024 }, height: { ideal: 1024 } } : { facingMode: { ideal: "user" }, width: { ideal: 1024 }, height: { ideal: 1024 } }
+
+    const constraints: MediaStreamConstraints = { audio: false, video: videoConstraint }
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     streamRef.value = stream
+
+    // Persist the actual active deviceId when available
+    const settings = stream.getVideoTracks()[0]?.getSettings?.()
+    if (settings?.deviceId) {
+      currentDeviceId.value = settings.deviceId
+      LocalStorage.set(LAST_VIDEO_DEVICE_KEY, settings.deviceId)
+    }
+
     if (videoRef.value) {
       videoRef.value.srcObject = stream
       await videoRef.value.play().catch(() => {})
       cameraReady.value = true
     }
+
+    // Refresh devices list after we have permission
+    await fetchVideoDevices()
   } catch (err: any) {
-    console.error(err)
     cameraReady.value = false
     const denied = isPermissionDeniedError(err)
     permissionDenied.value = denied
     emit("error", denied ? "camera_permission_denied" : "camera_unavailable")
-    Dialog.create({
-      title: denied ? "Camera permission needed" : "Camera unavailable",
-      message: denied ? "Camera access is blocked. Enable camera permission in your browser settings, then reload. You can also pick a selfie from your gallery." : "We couldn't access your camera. You can pick a selfie from your gallery instead.",
-      ok: true,
-    })
-    mode.value = "gallery"
+    catchErr(new Error(denied ? "Camera access is blocked. Enable camera permission in your browser settings, then reload. You can also pick a selfie from your gallery." : "We couldn't access your camera. You can pick a selfie from your gallery instead."))
+    // Offer gallery picker immediately if camera unavailable
+    openGalleryPicker()
   }
 }
 
@@ -199,12 +246,8 @@ function stopStream() {
 }
 
 function switchToGallery() {
-  stopStream()
-  mode.value = "gallery"
-}
-function switchToCamera() {
-  mode.value = "camera"
-  void initCamera()
+  // Do not stop stream yet; allow user to cancel picker and continue camera
+  openGalleryPicker()
 }
 
 async function startAutoCapture() {
@@ -233,8 +276,8 @@ async function startAutoCapture() {
       triggerFlashAndSound()
       await wait(step)
     }
-  } catch (err) {
-    console.error(err)
+  } catch (err: any) {
+    catchErr(err)
     emit("error", "capture_failed")
   } finally {
     isCapturing.value = false
@@ -271,24 +314,65 @@ function wait(ms: number) {
   return new Promise((res) => setTimeout(res, ms))
 }
 
-function onFilesAdded(files: readonly any[]) {
-  // q-uploader passes a file wrapper; normalize to File[]
-  const normalized = Array.from(files || [])
-    .map((f: any) => f.__file || f.file || f)
-    .filter((f: any) => f instanceof File) as File[]
+// Enumerate available video input devices
+async function fetchVideoDevices() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const videos = devices.filter((d) => d.kind === "videoinput")
+    videoDevices.value = videos
 
-  if (!normalized.length) {
-    emit("error", "gallery_no_file")
-    return
+    // If we don't have a current deviceId, try to detect from active track
+    if (!currentDeviceId.value && streamRef.value) {
+      const activeId = streamRef.value.getVideoTracks()[0]?.getSettings?.().deviceId
+      if (activeId) currentDeviceId.value = activeId
+    }
+
+    // If saved device no longer exists, drop it
+    if (currentDeviceId.value && !videos.find((d) => d.deviceId === currentDeviceId.value)) {
+      currentDeviceId.value = null
+      LocalStorage.remove(LAST_VIDEO_DEVICE_KEY)
+    }
+  } catch (e) {
+    catchErr(e)
   }
+}
+async function switchToNextCamera() {
+  console.log("switch camera")
+  if (!videoDevices.value.length) {
+    await fetchVideoDevices()
+  }
+  const vids = videoDevices.value
+  if (!vids.length) return
 
-  // For simplicity in v1, duplicate with minor transforms to reach targetFrames
-  const file = normalized[0]!
+  const idx = Math.max(0, currentDeviceId.value ? vids.findIndex((d) => d.deviceId === currentDeviceId.value) : -1)
+  const nextIndex = (idx + 1) % vids.length
+  const nextDevice = vids[nextIndex]
+  if (!nextDevice) return
+
+  currentDeviceId.value = nextDevice.deviceId
+  LocalStorage.set(LAST_VIDEO_DEVICE_KEY, nextDevice.deviceId)
+
+  stopStream()
+  await initCamera(currentDeviceId.value)
+}
+
+function openGalleryPicker() {
+  fileInputRef.value?.click()
+}
+
+function onFileInputChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  if (!file) return
   readAsImageAndSynthesize(file)
     .then((blobs) => emit("captured", blobs))
-    .catch((e) => {
-      console.error(e)
+    .catch((err) => {
+      catchErr(err)
       emit("error", "gallery_failed")
+    })
+    .finally(() => {
+      // Reset input so selecting the same file again will re-trigger change
+      if (fileInputRef.value) fileInputRef.value.value = ""
     })
 }
 
@@ -322,12 +406,6 @@ async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
 </script>
 
 <style scoped>
-.centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
 #mmVideo {
   background: #111;
 }
@@ -393,5 +471,27 @@ async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
 }
 #flashOverlay.active {
   opacity: 0.3;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.video-container.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+}
+
+.floating-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 2001;
+  padding: 0 12px;
 }
 </style>

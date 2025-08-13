@@ -8,8 +8,8 @@ q-page.q-pa-sm
       MagicMirrorCamera(@captured="onCaptured" @error="onCaptureError")
   div(v-else-if="step === 'training'")
     .centered.q-mt-lg
-      h5 Training your model...
-      p This usually takes 5–45 minutes. You can safely leave and come back.
+      //- h5 Training your model...
+      //- p This usually takes 5–45 minutes. You can safely leave and come back.
       .full-width(style="max-width:600px")
         h6 Status: {{ trainingStatus }}
         div(v-if="(trainingProgress||0)>0").q-mt-sm
@@ -28,11 +28,10 @@ q-page.q-pa-sm
           span Training...
   //- Step: Select Templates
   div(v-else-if="step === 'selectTemplates'")
-    .centered
-      h5 Choose 3 looks
-      p.text-secondary We'll render these as soon as training completes
+    .centered(v-if="!templatesConfirmed")
+      h4 Choose 3 looks
     .centered.q-mt-sm(v-if="trainingStatus !== 'succeeded'")
-      p.text-secondary Training in background — {{ trainingStatus }} {{ trainingProgress }}%
+      p.text-primary {{ trainingStatus }} {{ trainingProgress }}%
       q-linear-progress(:value="trainingProgress/100" stripe size="10px" color="primary" class="q-mt-xs")
     //- Email link banner
     .centered.q-mt-sm(v-if="!userAuth.userProfile?.email")
@@ -55,20 +54,23 @@ q-page.q-pa-sm
             :selected="selectedTemplates.includes(t.id)"
             @click="toggleTemplate(t.id)"
           )
-    .centered.q-mt-md
+    .centered.q-mt-md.bg-blur.q-pa-md.q-mb-xl(style="position:sticky; bottom:70px;")
+      div.q-mb-sm(v-if="selectedTemplates.length < 3")
+        p Picked {{ selectedTemplates.length }} / 3
       q-btn(
         color="primary"
         label="Confirm Choices"
         :disable="selectedTemplates.length !== 3 || templatesConfirmed"
         @click="confirmTemplates"
         no-caps
+        size="lg"
       )
-    .centered.q-mt-sm(v-if="templatesConfirmed")
-      p Your images are being prepared. We’ll email you when they’re ready.
-      q-spinner-grid(color="primary" size="50px").q-mt-sm
+    .absolute-center
+      .centered.q-mt-sm.bg-blur.q-pa-xl(v-if="templatesConfirmed")
+        p.q-mb-md Your images will be ready shortly.
+        q-spinner-grid(color="primary" size="50px").q-mt-sm
   //- Step: Results
-  div(v-else-if="step === 'results'")
-    // Sticky actions at top (avoid footer overlap on mobile)
+  div(v-else-if="step === 'results'").relative-position
     .sticky-actions.row.items-center.q-gutter-sm
       q-btn(flat icon="refresh" label="Start again" no-caps @click="startAgain")
       q-btn(flat icon="home_repair_service" label="Forge" no-caps @click="goToForge")
@@ -128,7 +130,7 @@ q-page.q-pa-sm
               div(v-else-if="templatesConfirmed && additionalLoadingTemplates.includes(t.id)").row.items-center.q-gutter-xs
                 q-linear-progress(indeterminate color="primary" size="6px" class="col")
                 small.text-secondary Generating...
-    div(v-else class="centered q-pa-lg")
+    div.absolute-center.bg-blur(v-else class="centered q-pa-lg")
       q-spinner-grid(color="primary" size="50px")
       p.text-secondary.q-mt-sm Generating your images...
 </template>
@@ -150,6 +152,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useRouter } from "vue-router"
 import { type Gender, resolveGenderedTemplates } from "src/lib/promptTemplates"
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
+import { catchErr } from "lib/util"
 
 type Step = "capture" | "training" | "selectTemplates" | "results"
 
@@ -321,8 +324,7 @@ async function onCaptured(blobs: Blob[]) {
     saveSession()
     await startTraining()
   } catch (e: any) {
-    console.error(e)
-    quasar.notify({ message: e?.message || "Failed to prepare training set", color: "negative" })
+    catchErr(e)
     step.value = "capture"
   } finally {
     Loading.hide()
@@ -330,7 +332,7 @@ async function onCaptured(blobs: Blob[]) {
 }
 
 function onCaptureError(reason: string) {
-  quasar.notify({ message: "Capture error: " + reason, color: "negative" })
+  catchErr(new Error("Capture error: " + reason))
 }
 
 function generateModelName() {
@@ -365,8 +367,7 @@ async function startTraining() {
     startTrainingPoll()
   } catch (e: any) {
     Loading.hide()
-    console.error(e)
-    quasar.notify({ message: e?.message || "Failed to start training", color: "negative" })
+    catchErr(e)
     step.value = "capture"
   }
 }
@@ -453,8 +454,7 @@ async function scheduleAndPollIfReady() {
     saveSession()
     startCreationsPoll()
   } catch (e: any) {
-    console.error(e)
-    quasar.notify({ message: e?.message || "Failed to schedule images", color: "negative" })
+    catchErr(e)
   } finally {
     Loading.hide()
   }
@@ -559,8 +559,7 @@ async function shareImage(id: string) {
       quasar.notify({ message: "Link copied to clipboard", color: "primary" })
     }
   } catch (e: any) {
-    console.warn("share failed", e)
-    quasar.notify({ message: "Unable to share", color: "negative" })
+    catchErr(e)
   }
 }
 
@@ -579,8 +578,7 @@ async function downloadImage(id: string) {
     document.body.removeChild(a)
     URL.revokeObjectURL(objectUrl)
   } catch (e: any) {
-    console.warn("download failed", e)
-    quasar.notify({ message: "Download failed", color: "negative" })
+    catchErr(e)
   }
 }
 
@@ -602,8 +600,7 @@ async function generateMoreForTemplate(t: any) {
     // Keep polling running; results handler will clear loading state when new image arrives
     if (!creationsPollTimer) startCreationsPoll()
   } catch (e: any) {
-    console.error(e)
-    quasar.notify({ message: e?.message || "Failed to schedule template", color: "negative" })
+    catchErr(e)
     // rollback loading state
     const idx = additionalLoadingTemplates.value.indexOf(t.id)
     if (idx >= 0) additionalLoadingTemplates.value.splice(idx, 1)
@@ -633,7 +630,7 @@ onBeforeUnmount(() => {
 
 .sticky-actions {
   position: sticky;
-  top: 0;
+  top: 50px;
   z-index: 5;
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.35);
