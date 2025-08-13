@@ -103,5 +103,10 @@
     "model",
     "/model/:modelName/:customModelId?",
     "ModelPage"
+  ],
+  [
+    "magicMirror",
+    "/magicMirror",
+    "MagicMirrorPage"
   ]
 ]

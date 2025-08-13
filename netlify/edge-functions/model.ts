@@ -37,6 +37,8 @@ const handler = async (request: Request, context: Context) => {
     logEdgeError(request, context, "model", e)
     return context.next()
   }
+  
+  export default safeEdge(handler, "model")
 }
 
 export default safeEdge(handler, "model")

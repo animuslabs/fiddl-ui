@@ -321,6 +321,120 @@ export type CreateUploadImage200 = {
   imageId: string;
 };
 
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
+  prompt: string;
+  negativePrompt?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateQueueAsyncBatchBodyRequestsItemAnyOfModel;
+  public?: boolean;
+  aspectRatio?: CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio;
+  customModelId?: string;
+};
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
+  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
+
+export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFour = {
+  prompt: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  quantity: number;
+  seed?: number;
+  model: CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel;
+  public: boolean;
+  aspectRatio: CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio;
+  duration: number;
+  startImageId?: string;
+  uploadedStartImageId?: string;
+};
+
+export type CreateQueueAsyncBatchBodyRequestsItem = CreateQueueAsyncBatchBodyRequestsItemAnyOf | CreateQueueAsyncBatchBodyRequestsItemAnyOfFour;
+
+export type CreateQueueAsyncBatchBody = {
+  /** @minItems 1 */
+  requests: CreateQueueAsyncBatchBodyRequestsItem[];
+  emailNotify?: boolean;
+};
+
+export type CreateQueueAsyncBatch200 = {
+  batchId: string;
+  accepted: number;
+};
+
 export type CreationsGetCreationDataParams = {
 imageId?: string;
 videoId?: string;
@@ -1861,6 +1975,7 @@ export const ModelsGetTrainingStatus200Status = {
   trained: 'trained',
   succeeded: 'succeeded',
   failed: 'failed',
+  starting: 'starting',
 } as const;
 
 export type ModelsGetTrainingStatus200 = {
@@ -2242,13 +2357,58 @@ export type PrivyAuthenticate200 = {
   userId: string;
 };
 
-export type TrainingSetsCreateSetBody = {
-  /** @maxLength 30 */
+export type PromptTemplatesListParams = {
+tag?: string;
+kind?: PromptTemplatesListKind;
+page?: number;
+pageSize?: number;
+};
+
+export type PromptTemplatesListKind = typeof PromptTemplatesListKind[keyof typeof PromptTemplatesListKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PromptTemplatesListKind = {
+  subject: 'subject',
+  setting: 'setting',
+  style: 'style',
+  effect: 'effect',
+} as const;
+
+export type PromptTemplatesList200ItemKind = typeof PromptTemplatesList200ItemKind[keyof typeof PromptTemplatesList200ItemKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PromptTemplatesList200ItemKind = {
+  subject: 'subject',
+  setting: 'setting',
+  style: 'style',
+  effect: 'effect',
+} as const;
+
+export type PromptTemplatesList200ItemSlots = {[key: string]: string | string[]};
+
+export type PromptTemplatesList200Item = {
+  id: string;
   name: string;
-  /** @maxLength 400 */
+  kind: PromptTemplatesList200ItemKind;
+  tags: string[];
+  /** @nullable */
+  previewUrl: string | null;
+  /** @nullable */
+  previewUrlMale: string | null;
+  /** @nullable */
+  previewUrlFemale: string | null;
+  slots: PromptTemplatesList200ItemSlots;
+};
+
+export type TrainingSetsCreateSetBody = {
+  /** @maxLength 100 */
+  name: string;
+  /** @maxLength 1400 */
   description: string;
   /**
-   * @minimum 3
+   * @minimum 1
    * @maximum 200
    */
   numImages: number;
@@ -2284,7 +2444,43 @@ export type TrainingSetsGetUserSetsParams = {
 userId: string;
 };
 
+/**
+ * @nullable
+ */
+export type TrainingSetsGetUserSets200ItemSubjectGender = typeof TrainingSetsGetUserSets200ItemSubjectGender[keyof typeof TrainingSetsGetUserSets200ItemSubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemSubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsGetUserSets200ItemSubjectCategory = typeof TrainingSetsGetUserSets200ItemSubjectCategory[keyof typeof TrainingSetsGetUserSets200ItemSubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetUserSets200ItemSubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
 export type TrainingSetsGetUserSets200Item = {
+  /** @nullable */
+  subjectGender: TrainingSetsGetUserSets200ItemSubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsGetUserSets200ItemSubjectCategory;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -2297,13 +2493,51 @@ export type TrainingSetsGetUserSets200Item = {
   description: string | null;
   deleted: boolean;
   updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export type TrainingSetsGetSetParams = {
 trainingSetId: string;
 };
 
+/**
+ * @nullable
+ */
+export type TrainingSetsGetSet200SubjectGender = typeof TrainingSetsGetSet200SubjectGender[keyof typeof TrainingSetsGetSet200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsGetSet200SubjectCategory = typeof TrainingSetsGetSet200SubjectCategory[keyof typeof TrainingSetsGetSet200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsGetSet200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
 export type TrainingSetsGetSet200 = {
+  /** @nullable */
+  subjectGender: TrainingSetsGetSet200SubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsGetSet200SubjectCategory;
   id: string;
   ownerId: string;
   createdAt: string;
@@ -2316,6 +2550,8 @@ export type TrainingSetsGetSet200 = {
   description: string | null;
   deleted: boolean;
   updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export type TrainingSetsDeleteSetBody = {
@@ -2328,6 +2564,63 @@ export type TrainingSetsEditSetBody = {
   newName: string;
   /** @maxLength 400 */
   newDescription: string;
+};
+
+export type TrainingSetsDescribeSetParams = {
+trainingSetId: string;
+};
+
+/**
+ * @nullable
+ */
+export type TrainingSetsDescribeSet200SubjectGender = typeof TrainingSetsDescribeSet200SubjectGender[keyof typeof TrainingSetsDescribeSet200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsDescribeSet200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TrainingSetsDescribeSet200SubjectCategory = typeof TrainingSetsDescribeSet200SubjectCategory[keyof typeof TrainingSetsDescribeSet200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrainingSetsDescribeSet200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
+export type TrainingSetsDescribeSet200 = {
+  /** @nullable */
+  subjectGender: TrainingSetsDescribeSet200SubjectGender;
+  /** @nullable */
+  subjectCategory: TrainingSetsDescribeSet200SubjectCategory;
+  id: string;
+  ownerId: string;
+  createdAt: string;
+  name: string;
+  sizeMB: number;
+  numImages: number;
+  status: number;
+  thumbnailIds: string[];
+  /** @nullable */
+  description: string | null;
+  deleted: boolean;
+  updatedAt: string;
+  /** @nullable */
+  subjectDescription: string | null;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -2523,6 +2816,28 @@ export const createUploadImage = async (createUploadImageBody: CreateUploadImage
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       createUploadImageBody,)
+  }
+);}
+
+
+
+export const getCreateQueueAsyncBatchUrl = () => {
+
+
+  
+
+  return `/create/queueAsyncBatch`
+}
+
+export const createQueueAsyncBatch = async (createQueueAsyncBatchBody: CreateQueueAsyncBatchBody, options?: RequestInit): Promise<CreateQueueAsyncBatch200> => {
+  
+  return fetcher<CreateQueueAsyncBatch200>(getCreateQueueAsyncBatchUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createQueueAsyncBatchBody,)
   }
 );}
 
@@ -4268,6 +4583,34 @@ export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticate
 
 
 
+export const getPromptTemplatesListUrl = (params?: PromptTemplatesListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/promptTemplates/list?${stringifiedParams}` : `/promptTemplates/list`
+}
+
+export const promptTemplatesList = async (params?: PromptTemplatesListParams, options?: RequestInit): Promise<PromptTemplatesList200Item[]> => {
+  
+  return fetcher<PromptTemplatesList200Item[]>(getPromptTemplatesListUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getTrainingSetsCreateSetUrl = () => {
 
 
@@ -4407,5 +4750,33 @@ export const trainingSetsEditSet = async (trainingSetsEditSetBody: TrainingSetsE
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       trainingSetsEditSetBody,)
+  }
+);}
+
+
+
+export const getTrainingSetsDescribeSetUrl = (params: TrainingSetsDescribeSetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/trainingSets/describeSet?${stringifiedParams}` : `/trainingSets/describeSet`
+}
+
+export const trainingSetsDescribeSet = async (params: TrainingSetsDescribeSetParams, options?: RequestInit): Promise<TrainingSetsDescribeSet200> => {
+  
+  return fetcher<TrainingSetsDescribeSet200>(getTrainingSetsDescribeSetUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
