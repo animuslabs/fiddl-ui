@@ -712,9 +712,7 @@ async function triggerAnimation() {
       quantity: 1,
       duration: defaultVideoDuration,
       startImageId: animateDialogImageId.value,
-      uploadedStartImageId: undefined,
-      seed: undefined,
-    } as any)
+    })
     await vidStore.createVideoRequest()
     if (!triggeredVideoIds.value.includes(animateDialogImageId.value)) {
       triggeredVideoIds.value.push(animateDialogImageId.value)
