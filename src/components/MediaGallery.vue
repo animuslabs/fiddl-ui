@@ -235,7 +235,7 @@ function videoClass(media: MediaGalleryMeta) {
           // default empty
     template(v-else)
       .media-wrapper(:style="mediaStyles")
-        div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative" )
+        div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative;" ).full-height
           div
             .absolute-center.z-top
               h4 Loading
@@ -254,7 +254,7 @@ function videoClass(media: MediaGalleryMeta) {
             :class="videoClass(m)"
           )
         // Per-item actions slot (optional)
-        slot(name="actions" :media="m" :index="index")
+        //- slot(name="actions" :media="m" :index="index")
           // default empty
 </template>
 

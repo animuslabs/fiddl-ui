@@ -69,9 +69,11 @@ export async function verifySmsCode(phone: string, code: string): Promise<PrivyV
 }
 
 // OAuth login (Google, Discord, etc.)
-export async function handleOauthLogin(provider: OAuthProviderType) {
+export async function handleOauthLogin(provider: OAuthProviderType, returnTo?: string) {
   await privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
-  const oauthUrl = await privy.auth.oauth.generateURL(provider, `${window.location.origin}/auth/callback`)
+  const rt = returnTo || window.location.pathname + window.location.search
+  const redirectUri = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(rt)}`
+  const oauthUrl = await privy.auth.oauth.generateURL(provider, redirectUri)
   window.location.href = oauthUrl.url
 }
 

@@ -34,11 +34,12 @@ router-view(style="z-index:1")
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import { Loading, LoadingBar, LocalStorage } from "quasar"
+import { Loading, LoadingBar, LocalStorage, Notify } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
-import { toObject } from "lib/util"
+import { shortIdToLong, toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
 import { tawk } from "lib/tawk"
+import { promoClaimPromoCode } from "lib/orval"
 // import { useCreateImageStore } from "stores/createImageStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {
@@ -61,12 +62,37 @@ export default defineComponent({
   },
   watch: {
     "$route.query": {
-      immediate: false,
+      immediate: true,
       handler(newQuery) {
         const referredBy = this.$route.query?.referredBy as string | undefined
         if (referredBy) LocalStorage.set("referredBy", referredBy)
         const claimCode = this.$route.query?.claimCode as string | undefined
-        // if(claimCode)
+        if (typeof claimCode == "string") {
+          console.log("claimCode", claimCode)
+          const longCode = shortIdToLong(claimCode)
+          // const handledKey = `promo:claimed:${longCode}`
+          // if (sessionStorage.getItem(handledKey)) return
+          // sessionStorage.setItem(handledKey, "1")
+          // remove claimCode from URL to prevent re-processing on navigation/refresh
+          try {
+            const q: any = { ...this.$route.query }
+            delete q.claimCode
+            void this.$router.replace({ query: q })
+          } catch {
+            console.error()
+          }
+          setTimeout(() => {
+            const auth = useUserAuth()
+            if (auth.loggedIn)
+              void promoClaimPromoCode({ id: longCode })
+                .catch(console.error)
+                .then(() => {
+                  void auth.loadUserData()
+                  Notify.create({ message: "You received Fiddl Points" })
+                })
+            else void auth.registerWithPromoCode(longCode)
+          }, 2000)
+        }
       },
     },
   },

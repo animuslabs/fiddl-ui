@@ -1800,6 +1800,16 @@ export type PromoClaimPromoCodeBody = {
   id: string;
 };
 
+export type PromoCreateAccountWithPromoBody = {
+  id: string;
+  referrerUsername?: string;
+};
+
+export type PromoCreateAccountWithPromo200 = {
+  token: string;
+  userId: string;
+};
+
 export type ModelsEditModelBody = {
   id: string;
   /** @maxLength 30 */
@@ -2353,6 +2363,15 @@ export type PrivyAuthenticateBody = {
 };
 
 export type PrivyAuthenticate200 = {
+  token: string;
+  userId: string;
+};
+
+export type PrivyLinkCurrentUserBody = {
+  accessToken: string;
+};
+
+export type PrivyLinkCurrentUser200 = {
   token: string;
   userId: string;
 };
@@ -4283,6 +4302,28 @@ export const promoClaimPromoCode = async (promoClaimPromoCodeBody: PromoClaimPro
 
 
 
+export const getPromoCreateAccountWithPromoUrl = () => {
+
+
+  
+
+  return `/promo/createAccountWithPromo`
+}
+
+export const promoCreateAccountWithPromo = async (promoCreateAccountWithPromoBody: PromoCreateAccountWithPromoBody, options?: RequestInit): Promise<PromoCreateAccountWithPromo200> => {
+  
+  return fetcher<PromoCreateAccountWithPromo200>(getPromoCreateAccountWithPromoUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      promoCreateAccountWithPromoBody,)
+  }
+);}
+
+
+
 export const getModelsEditModelUrl = () => {
 
 
@@ -4578,6 +4619,28 @@ export const privyAuthenticate = async (privyAuthenticateBody: PrivyAuthenticate
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       privyAuthenticateBody,)
+  }
+);}
+
+
+
+export const getPrivyLinkCurrentUserUrl = () => {
+
+
+  
+
+  return `/privy/linkCurrentUser`
+}
+
+export const privyLinkCurrentUser = async (privyLinkCurrentUserBody: PrivyLinkCurrentUserBody, options?: RequestInit): Promise<PrivyLinkCurrentUser200> => {
+  
+  return fetcher<PrivyLinkCurrentUser200>(getPrivyLinkCurrentUserUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      privyLinkCurrentUserBody,)
   }
 );}
 

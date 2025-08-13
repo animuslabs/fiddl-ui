@@ -14,7 +14,8 @@ q-page.full-height.full-width
           .q-ma-md
             q-input(v-model.number="promoPoints" type="number" label="Points")
           .centered
-            q-btn(label="create" @click="createPromoCode()" icon="add")
+            q-btn(label="Create + Copy Claim Link" @click="createPromoCode('claim')" icon="add")
+            q-btn(label="Create + Copy MagicMirror Link" class="q-ml-sm" @click="createPromoCode('mm')" icon="add")
       .centered.q-gutter-md
         q-card.q-pa-md(style="max-width:400px; overflow: auto;")
           .centered
@@ -23,7 +24,8 @@ q-page.full-height.full-width
             q-item(v-for="code in unclaimedPromoCodes" :key="code.id")
               pre(style="font-size:10px;") {{ code }}
               div
-                q-btn(label="copy" @click="copyCode(code.id)" icon="content_copy" flat)
+                q-btn(label="copy claim" @click="copyCode(code.id)" icon="content_copy" flat)
+                q-btn(label="copy MM link" @click="copyMagicMirror(code.id)" icon="content_copy" flat class="q-ml-sm")
         q-card.q-pa-md
           .centered
             h4 Claimed Promo Codes
@@ -101,19 +103,30 @@ export default defineComponent({
       const claimUrl = `${window.location.origin}/claim/${longIdToShort(codeId)}`
       void copyToClipboard(claimUrl)
     },
-    async createPromoCode() {
+    copyMagicMirror(codeId: string) {
+      const mmUrl = `${window.location.origin}/magicMirror?claimCode=${longIdToShort(codeId)}`
+      void copyToClipboard(mmUrl)
+      Notify.create({ message: "Magic Mirror promo link copied to clipboard", color: "positive", icon: "check" })
+    },
+    async createPromoCode(kind: 'claim' | 'mm' = 'claim') {
       try {
         const response = await promoCreatePromoCode({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
         const code = response?.data
         if (!code) return
-        
-        const claimUrl = `${window.location.origin}/claim/${longIdToShort(code.id)}`
-        void copyToClipboard(claimUrl)
+
+        const shortId = longIdToShort(code.id)
+        const claimUrl = `${window.location.origin}/claim/${shortId}`
+        const mmUrl = `${window.location.origin}/magicMirror?claimCode=${shortId}`
+        const urlToCopy = kind === 'mm' ? mmUrl : claimUrl
+        void copyToClipboard(urlToCopy)
         void this.load()
         Notify.create({
-          message: `Promo code with ${this.promoPoints} points created, copied URL to clipboard`,
+          message: kind === 'mm'
+            ? `Promo created (${this.promoPoints} points). Magic Mirror link copied`
+            : `Promo created (${this.promoPoints} points). Claim link copied`,
           type: "success",
           color: "positive",
+          icon: "check",
         })
       } catch (error) {
         catchErr(error)

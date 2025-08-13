@@ -21,17 +21,19 @@
                 .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   q-separator(vertical)
-                  //- small Model Filter:
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
+                  q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="$router.push({name:'magicMirror'})")
                 .centered.q-mt-md(v-if="quasar.screen.lt.md")
                   q-btn(label="create" size="md" color="primary" rounded  @click="createMode = true")
+                  .col-grow
+                  q-btn(label="Magic Mirror" color="primary" rounded @click="$router.push({name:'magicMirror'})")
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
                 ImageRequestCard(:creation="creation")
-              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="8" :thumb-size-desktop="165"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
-              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" style="width:400px;" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'mosaic'" @selected-index="showDetails" selectable  :cols-desktop="8" :cols-mobile="4" :thumb-size-desktop="125"  :rowHeightRatio="1" layout="mosaic" :mediaObjects="allMediaObjects")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")

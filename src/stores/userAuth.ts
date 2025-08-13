@@ -8,7 +8,7 @@ import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useImageCreations } from "src/stores/imageCreationsStore"
-import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
+import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
@@ -144,6 +144,23 @@ export const useUserAuth = defineStore("userAuth", {
       this.setUserId(userId)
       jwt.save({ userId, token })
       this.loggedIn = true
+      await this.loadUserData(userId)
+      void this.loadUserProfile().then(() => {
+        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+      })
+    },
+
+    async registerWithPromoCode(promoCode: string) {
+      const { data } = await promoCreateAccountWithPromo({ id: promoCode, referrerUsername: getReferredBy() })
+      const { token, userId } = data
+      // this.logout()
+      this.setUserId(userId)
+      jwt.save({ userId, token })
+      this.loggedIn = true
+      await this.loadUserData(userId)
+      void this.loadUserProfile().then(() => {
+        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+      })
     },
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
@@ -184,8 +201,8 @@ export const useUserAuth = defineStore("userAuth", {
       this.userProfile = null
       umami.identify({ userId: "logged-out" })
       void clearImageCache()
-      useCreateImageStore().$reset()
-      useImageCreations().$reset()
+      // useCreateImageStore().$reset()
+      // useImageCreations().$reset()
     },
   },
 })

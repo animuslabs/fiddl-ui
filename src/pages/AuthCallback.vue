@@ -56,11 +56,15 @@ export default defineComponent({
           position: "top",
         })
 
-        // Redirect to user's profile with unlocked tab
+        // Redirect back if returnTo provided; else fallback to profile/account
         // Wait a bit for user profile to load
         await new Promise((resolve) => setTimeout(resolve, 100))
 
-        if (userAuth.userProfile?.username) {
+        const returnTo = (route.query.returnTo as string) || sessionStorage.getItem("returnTo") || null
+        if (returnTo && typeof returnTo === "string") {
+          sessionStorage.removeItem("returnTo")
+          void router.replace(returnTo)
+        } else if (userAuth.userProfile?.username) {
           void router.push({
             name: "profile",
             params: { username: userAuth.userProfile.username },

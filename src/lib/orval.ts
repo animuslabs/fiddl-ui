@@ -1829,6 +1829,16 @@ export type PromoClaimPromoCodeBody = {
   id: string;
 };
 
+export type PromoCreateAccountWithPromoBody = {
+  id: string;
+  referrerUsername?: string;
+};
+
+export type PromoCreateAccountWithPromo200 = {
+  token: string;
+  userId: string;
+};
+
 export type ModelsEditModelBody = {
   id: string;
   /** @maxLength 30 */
@@ -2382,6 +2392,15 @@ export type PrivyAuthenticateBody = {
 };
 
 export type PrivyAuthenticate200 = {
+  token: string;
+  userId: string;
+};
+
+export type PrivyLinkCurrentUserBody = {
+  accessToken: string;
+};
+
+export type PrivyLinkCurrentUser200 = {
   token: string;
   userId: string;
 };
@@ -6518,6 +6537,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const promoCreateAccountWithPromo = (
+    promoCreateAccountWithPromoBody: MaybeRef<PromoCreateAccountWithPromoBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<PromoCreateAccountWithPromo200>> => {
+    promoCreateAccountWithPromoBody = unref(promoCreateAccountWithPromoBody);
+    
+    return axios.post(
+      `/promo/createAccountWithPromo`,
+      promoCreateAccountWithPromoBody,options
+    );
+  }
+
+
+
+export const getPromoCreateAccountWithPromoMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCreateAccountWithPromo>>, TError,{data: PromoCreateAccountWithPromoBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof promoCreateAccountWithPromo>>, TError,{data: PromoCreateAccountWithPromoBody}, TContext> => {
+
+const mutationKey = ['promoCreateAccountWithPromo'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof promoCreateAccountWithPromo>>, {data: PromoCreateAccountWithPromoBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  promoCreateAccountWithPromo(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PromoCreateAccountWithPromoMutationResult = NonNullable<Awaited<ReturnType<typeof promoCreateAccountWithPromo>>>
+    export type PromoCreateAccountWithPromoMutationBody = PromoCreateAccountWithPromoBody
+    export type PromoCreateAccountWithPromoMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const usePromoCreateAccountWithPromo = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCreateAccountWithPromo>>, TError,{data: PromoCreateAccountWithPromoBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof promoCreateAccountWithPromo>>,
+        TError,
+        {data: PromoCreateAccountWithPromoBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPromoCreateAccountWithPromoMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const modelsEditModel = (
     modelsEditModelBody: MaybeRef<ModelsEditModelBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown>> => {
@@ -7198,6 +7273,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getPrivyAuthenticateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const privyLinkCurrentUser = (
+    privyLinkCurrentUserBody: MaybeRef<PrivyLinkCurrentUserBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<PrivyLinkCurrentUser200>> => {
+    privyLinkCurrentUserBody = unref(privyLinkCurrentUserBody);
+    
+    return axios.post(
+      `/privy/linkCurrentUser`,
+      privyLinkCurrentUserBody,options
+    );
+  }
+
+
+
+export const getPrivyLinkCurrentUserMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privyLinkCurrentUser>>, TError,{data: PrivyLinkCurrentUserBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof privyLinkCurrentUser>>, TError,{data: PrivyLinkCurrentUserBody}, TContext> => {
+
+const mutationKey = ['privyLinkCurrentUser'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof privyLinkCurrentUser>>, {data: PrivyLinkCurrentUserBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  privyLinkCurrentUser(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrivyLinkCurrentUserMutationResult = NonNullable<Awaited<ReturnType<typeof privyLinkCurrentUser>>>
+    export type PrivyLinkCurrentUserMutationBody = PrivyLinkCurrentUserBody
+    export type PrivyLinkCurrentUserMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const usePrivyLinkCurrentUser = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privyLinkCurrentUser>>, TError,{data: PrivyLinkCurrentUserBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof privyLinkCurrentUser>>,
+        TError,
+        {data: PrivyLinkCurrentUserBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPrivyLinkCurrentUserMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

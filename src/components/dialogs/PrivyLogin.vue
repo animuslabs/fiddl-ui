@@ -76,9 +76,14 @@ export default defineComponent({
             const userAuth = useUserAuth()
             await userAuth.privyLogin(result.token)
 
-            // Wait for user profile to load and redirect to profile with unlocked tab
+            // Wait for user profile to load
             await new Promise((resolve) => setTimeout(resolve, 100))
-            if (userAuth.userProfile?.username) {
+            // Prefer returning to the page that initiated login
+            const returnTo = sessionStorage.getItem("returnTo")
+            if (returnTo) {
+              sessionStorage.removeItem("returnTo")
+              void router.replace(returnTo)
+            } else if (userAuth.userProfile?.username) {
               void router.push({
                 name: "profile",
                 params: { username: userAuth.userProfile.username },
@@ -116,7 +121,9 @@ export default defineComponent({
     const loginWithOAuth = async (provider: OAuthProviderType) => {
       loading.value = true
       try {
-        await handleOauthLogin(provider)
+        const rt = window.location.pathname + window.location.search
+        sessionStorage.setItem("returnTo", rt)
+        await handleOauthLogin(provider, rt)
       } catch (error) {
         $q.notify({
           color: "negative",

@@ -8,23 +8,6 @@ q-page.full-width
     .centered
       MagicMirrorCamera(@captured="onCaptured" @error="onCaptureError")
   div(v-else-if="step === 'training'")
-    .centered.q-mt-lg
-      .full-width(style="max-width:600px")
-        h6 Status: {{ trainingStatus }}
-        div(v-if="(trainingProgress||0)>0").q-mt-sm
-          h4 {{ trainingProgress }}%
-          q-linear-progress(:value="trainingProgress/100" stripe size="20px" color="primary" track-color="grey")
-          .row.q-gutter-md.q-mt-sm
-            div
-              h6 Elapsed:
-              h4 {{ elapsedTime }}
-            .col-grow
-            div
-              h6 Remaining:
-              h4 {{ remainingTime }}
-        div(v-else).row.items-center.q-gutter-sm
-          q-spinner(color="primary")
-          span Training...
   div(v-else-if="step === 'selectTemplates'")
     .centered(v-if="!templatesConfirmed")
       h4 Choose 3 looks
@@ -36,21 +19,22 @@ q-page.full-width
       q-banner(dense class="bg-grey-10 text-white" style="max-width:600px;")
         div Link your email to get a notification when results are ready
         q-btn(flat color="primary" label="Link Email" class="q-ml-sm" @click="goLinkEmail" no-caps)
+        q-btn(flat color="primary" label="Login" class="q-ml-sm" @click="openLogin" no-caps)
     .centered.q-mt-sm(v-if="!templatesConfirmed")
       q-btn(color="primary" label="Pick Looks" no-caps @click="openTemplatesDialog('initial')")
     //- Preview the three chosen templates while waiting for training
     .centered.q-mt-md(v-if="templatesConfirmed && trainingStatus !== 'succeeded'")
-      .full-width(style="max-width:720px")
-        .template-grid(:style="templatesGridStyle")
+      .full-width.q-mx-auto.preview-flex-center(style="max-width:720px")
+        .template-preview-grid(:style="templatesPreviewGridStyle")
           .template-item(v-for="t in selectedTemplateObjs" :key="t.id")
             .template-card-box
               PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false")
   div(v-else-if="step === 'results'").relative-position.full-width
     .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px;")
       .centered.col-12.full-width
-        q-btn(flat icon="refresh" label="Start again" size="lg" no-caps @click="startAgain")
-        q-btn(flat icon="group" label="More Looks" size="lg" no-caps @click="openMoreLooks")
-        q-btn(flat icon="home_repair_service" label="Advanced" size="lg" no-caps @click="goToForge")
+        q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
+        q-btn(flat icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
+        q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
     div(v-if="generatedImageIds.length > 0" style="width:100%;")
       .centered.full-width.q-mt-lg
         MediaGallery.q-pl-md.q-pr-md(
@@ -59,7 +43,7 @@ q-page.full-width
           :rowHeightRatio="1"
           :colsDesktop="3"
           :colsMobile="1"
-          :thumbSizeDesktop="400"
+          :thumbSizeDesktop="350"
           :thumbSizeMobile="400"
           :gap="8"
           :centerAlign="true"
@@ -69,8 +53,10 @@ q-page.full-width
               q-btn(flat size="sm"  icon="share" label="Share"  no-caps @click="shareImage(media.id)")
               q-btn(flat size="sm"  icon="download" label="Download"  no-caps @click="downloadImage(media.id)")
               q-btn(flat size="sm"  icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
+                q-tooltip(v-if="triggeredVideoIds.includes(media.id)") Animation already triggered
 
-    div.absolute-center.bg-blur(v-else)
+    // Centered loading placeholder while waiting for initial images
+    div.full-width.column.items-center.justify-center.bg-blur(v-else style="min-height: 55vh;")
       q-spinner-grid(color="primary" size="50px")
       p.text-secondary.q-mt-sm Generating your images...
 
@@ -93,12 +79,46 @@ q-page.full-width
           @update:selected="dialogSelection = $event"
           @confirm="onDialogConfirm"
         )
+  q-dialog(v-model="animateDialogOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Animate Image
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .centered.q-mb-md
+          q-img(v-if="animateDialogImageId" :src="img(animateDialogImageId, 'md')" style="max-height:220px; max-width:100%;")
+        .q-mt-sm
+          p Animate this image into a short video using the Kling model.
+          p.q-mt-sm It costs {{ prices.video.model.kling }} points per second. Estimated cost for 5s:
+            strong {{ estimatedVideoCost }} points
+          p.q-mt-sm Rendering can take a few minutes. You can continue browsing Magic Mirror and check the Create page later.
+      q-separator
+      q-card-actions(align="right")
+        q-btn(flat color="primary" label="See Video Creations" no-caps @click="goToCreateVideo")
+        q-btn(color="primary" :disable="hasAnimatedSelected" :loading="animating" label="Animate now" no-caps @click="triggerAnimation")
+        q-tooltip(v-if="hasAnimatedSelected") Animation was already triggered for this image
 
   .bg-blur.q-pa-lg.full-width( v-if="isWaitingForImages || generatingMore" style="position:fixed; bottom:100px;")
     .centered
       p.q-mb-md Your images will be ready shortly.
     .centered
       q-spinner-grid(color="primary" size="50px")
+
+  // Floating video prompt after animation trigger
+  div(v-if="animPromptVisible" style="position:fixed; bottom:60px; left:0; right:0; z-index:1000;")
+    .centered
+      q-btn(
+        color="primary"
+        :disable="!animPromptReady"
+        :label="animPromptLabel"
+        icon="movie"
+        unelevated
+        rounded
+        no-caps
+        @click="goToCreateVideo"
+      )
 </template>
 
 <script setup lang="ts">
@@ -120,6 +140,9 @@ import { useRouter } from "vue-router"
 import { type Gender, resolveGenderedTemplates } from "src/lib/promptTemplates"
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
+import { toCreatePage } from "lib/routeHelpers"
+import { useCreateVideoStore } from "src/stores/createVideoStore"
+import { prices } from "src/stores/pricesStore"
 
 type Step = "init" | "capture" | "training" | "selectTemplates" | "results"
 
@@ -161,6 +184,67 @@ const SESSION_KEY = "mmState"
 
 const promptTplStore = usePromptTemplatesStore()
 
+// Video animation dialog state
+const vidStore = useCreateVideoStore()
+const animateDialogOpen = ref(false)
+const animateDialogImageId = ref<string | null>(null)
+const animating = ref(false)
+
+// Floating countdown prompt for video navigation
+const animPromptVisible = ref(false)
+const animPromptSecondsLeft = ref(60)
+let animPromptTimer: number | null = null
+const animPromptReady = computed(() => animPromptSecondsLeft.value <= 0)
+const animPromptLabel = computed(() => (animPromptReady.value ? "Go to Video" : `Video available in ${formatMMSS(animPromptSecondsLeft.value)}`))
+function formatMMSS(total: number) {
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return `${m}:${s.toString().padStart(2, "0")}`
+}
+function startAnimPromptCountdown() {
+  stopAnimPromptCountdown()
+  animPromptSecondsLeft.value = 180
+  animPromptVisible.value = true
+  const tick = () => {
+    if (animPromptSecondsLeft.value <= 0) {
+      stopAnimPromptCountdown()
+      return
+    }
+    animPromptSecondsLeft.value -= 1
+    animPromptTimer = window.setTimeout(tick, 1000)
+  }
+  animPromptTimer = window.setTimeout(tick, 1000)
+}
+function stopAnimPromptCountdown() {
+  if (animPromptTimer) window.clearTimeout(animPromptTimer)
+  animPromptTimer = null
+}
+
+// Track which images have had animation triggered to disable repeat
+const ANIMATED_KEY = "mmAnimatedVideoIds"
+const triggeredVideoIds = ref<string[]>([])
+function loadAnimatedIds() {
+  try {
+    const raw = sessionStorage.getItem(ANIMATED_KEY)
+    triggeredVideoIds.value = raw ? JSON.parse(raw) : []
+  } catch {
+    console.error("sessionLoad error")
+  }
+}
+function saveAnimatedIds() {
+  try {
+    sessionStorage.setItem(ANIMATED_KEY, JSON.stringify(triggeredVideoIds.value))
+  } catch {
+    console.error("session setItem error")
+  }
+}
+
+// Pricing helpers (Kling model)
+const defaultVideoDuration = 5
+const klingCostPerSecond = computed(() => prices.video.model.kling)
+const estimatedVideoCost = computed(() => klingCostPerSecond.value * defaultVideoDuration)
+const hasAnimatedSelected = computed(() => (animateDialogImageId.value ? triggeredVideoIds.value.includes(animateDialogImageId.value) : false))
+
 const genderForTemplates = computed<Gender | null>(() => {
   const g = (trainingGender.value || "").toLowerCase()
   if (g === "male" || g === "female") return g as Gender
@@ -177,6 +261,8 @@ const templatesGridStyle = computed(() => ({
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
   gap: "10px",
+  justifyContent: "center",
+  justifyItems: "center",
 }))
 
 const selectedTemplateObjs = computed(() => {
@@ -184,9 +270,24 @@ const selectedTemplateObjs = computed(() => {
   return selectedTemplates.value.map((id) => byId.get(id)).filter(Boolean)
 })
 
+const templatesPreviewGridStyle = computed(() => {
+  const n = selectedTemplateObjs.value.length || 3
+  const count = Math.min(3, Math.max(1, n))
+  return {
+    display: "grid",
+    gridTemplateColumns: `repeat(${count}, 180px)`,
+    gap: "10px",
+    justifyItems: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+    width: "fit-content",
+    maxWidth: "100%",
+  }
+})
+
 // Results view helpers
 const isDesktop = computed(() => quasar.screen.gt.sm)
-const mediaObjects = computed<MediaGalleryMeta[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "md"), type: "image" })))
+const mediaObjects = computed<MediaGalleryMeta[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "lg"), type: "image" })))
 
 function saveSession() {
   const data = {
@@ -325,6 +426,22 @@ function generateModelName() {
 }
 
 function goLinkEmail() {
+  try {
+    const rt = router.currentRoute.value.fullPath
+    sessionStorage.setItem("returnTo", rt)
+  } catch {
+    console.error()
+  }
+  void router.push({ name: "login" })
+}
+
+function openLogin() {
+  try {
+    const rt = router.currentRoute.value.fullPath
+    sessionStorage.setItem("returnTo", rt)
+  } catch {
+    console.error()
+  }
   void router.push({ name: "login" })
 }
 
@@ -530,9 +647,8 @@ function startAgain() {
   window.location.reload()
 }
 
-function goToForge() {
-  // Take user to Forge landing; they can see/use previous models
-  void router.push({ name: "forge", params: { mode: "pick" } })
+function goToCreatePage() {
+  void toCreatePage({ model: "custom", type: "image", customModelId: customModelId.value!, customModelName: "Magic Mirror" }, router)
 }
 
 // Per-image actions
@@ -575,7 +691,46 @@ async function downloadImage(id: string) {
 }
 
 function animateImage(id: string) {
-  quasar.notify({ message: "Animate coming soon ✨", color: "accent" })
+  animateDialogImageId.value = id
+  animateDialogOpen.value = true
+}
+
+async function triggerAnimation() {
+  if (!animateDialogImageId.value) return
+  try {
+    animating.value = true
+    // Prepare a minimal Kling video request seeded by the selected image
+    vidStore.setReq({
+      prompt: "Animate this image",
+      model: "kling",
+      aspectRatio: "16:9",
+      public: true,
+      quantity: 1,
+      duration: defaultVideoDuration,
+      startImageId: animateDialogImageId.value,
+      uploadedStartImageId: undefined,
+      seed: undefined,
+    } as any)
+    await vidStore.createVideoRequest()
+    if (!triggeredVideoIds.value.includes(animateDialogImageId.value)) {
+      triggeredVideoIds.value.push(animateDialogImageId.value)
+      saveAnimatedIds()
+    }
+    animateDialogOpen.value = false
+    startAnimPromptCountdown()
+    quasar.notify({ message: "Video animation started. It may take a few minutes to complete.", color: "primary" })
+  } catch (e: any) {
+    catchErr(e)
+  } finally {
+    animating.value = false
+  }
+}
+
+function goToCreateVideo() {
+  animateDialogOpen.value = false
+  animPromptVisible.value = false
+  stopAnimPromptCountdown()
+  void toCreatePage({ model: "kling", type: "video" }, router)
 }
 
 // Robust scroll-to-top helper (handles various scroll containers)
@@ -669,12 +824,14 @@ async function generateMoreForTemplate(t: any) {
 onMounted(() => {
   // TODO: umami.track('mm_page_open')
   loadSession()
+  loadAnimatedIds()
   void promptTplStore.loadSubjectFaceTemplates()
 })
 
 onBeforeUnmount(() => {
   stopTrainingPoll()
   stopCreationsPoll()
+  stopAnimPromptCountdown()
 })
 </script>
 
@@ -711,6 +868,27 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
   gap: 10px;
+  justify-content: center;
+  justify-items: center;
+  /* Center the grid by shrinking to content width while respecting container */
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Dedicated preview grid to ensure centering and fixed columns without !important collisions */
+.template-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 180px);
+  gap: 10px;
+  justify-items: center;
+  justify-content: center;
+  align-content: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .template-card-box {
@@ -727,6 +905,7 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  justify-self: center;
 }
 
 .template-item :deep(h6),
@@ -794,12 +973,17 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
 }
-
 .grid-image {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   background: #000;
   border-radius: 8px;
+}
+
+.preview-flex-center {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 </style>
