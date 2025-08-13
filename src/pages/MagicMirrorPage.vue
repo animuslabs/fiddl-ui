@@ -151,7 +151,7 @@ const userAuth = useUserAuth()
 const createStore = useCreateImageStore()
 const imageCreations = useImageCreations()
 const router = useRouter()
-
+let subjectDescription: string | undefined = undefined
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
 const dialogOpen = ref(false)
@@ -360,6 +360,7 @@ async function ensureTrainingSetGenderLoaded() {
       const { data } = await trainingSetsDescribeSet({ trainingSetId: trainingSetId.value })
       if (data && typeof data.subjectGender === "string") {
         trainingGender.value = data.subjectGender || null
+        subjectDescription = data.subjectDescription || undefined
         saveSession()
         return
       }
@@ -372,6 +373,8 @@ async function ensureTrainingSetGenderLoaded() {
       const { data } = await trainingSetsGetSet({ trainingSetId: trainingSetId.value } as any)
       if (data && typeof data.subjectGender === "string") {
         trainingGender.value = data.subjectGender || null
+        subjectDescription = data.subjectDescription || undefined
+
         saveSession()
         return
       }
@@ -532,6 +535,7 @@ async function scheduleAndPollIfReady() {
     await scheduleMagicRenders({
       customModelId: customModelId.value,
       templates: displayTemplates.value.filter((el) => selectedTemplates.value.includes(el.id)),
+      subjectDescription,
     })
 
     scheduled.value = true
@@ -791,33 +795,12 @@ async function onDialogConfirm() {
     await scheduleMagicRenders({
       customModelId: customModelId.value,
       templates,
+      subjectDescription,
     })
     if (!creationsPollTimer) startCreationsPoll()
   } catch (e: any) {
     catchErr(e)
     generatingMore.value = false
-  }
-}
-
-// Trigger more renders for a specific template
-async function generateMoreForTemplate(t: any) {
-  if (!customModelId.value) return
-  if (additionalLoadingTemplates.value.includes(t.id)) return
-  try {
-    additionalLoadingTemplates.value = [...additionalLoadingTemplates.value, t.id]
-    pendingNewCount.value += 1
-    await scheduleMagicRenders({
-      customModelId: customModelId.value,
-      templates: [t],
-    })
-    // Keep polling running; results handler will clear loading state when new image arrives
-    if (!creationsPollTimer) startCreationsPoll()
-  } catch (e: any) {
-    catchErr(e)
-    // rollback loading state
-    const idx = additionalLoadingTemplates.value.indexOf(t.id)
-    if (idx >= 0) additionalLoadingTemplates.value.splice(idx, 1)
-    pendingNewCount.value = Math.max(0, pendingNewCount.value - 1)
   }
 }
 
