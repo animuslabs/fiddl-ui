@@ -22,7 +22,7 @@ export type MagicScheduleParams = {
  * Each template becomes one request item (quantity default = 1).
  */
 export function buildImageRequestsFromTemplates(params: { customModelId: string; templates: PromptTemplate[]; quantity?: number; public?: boolean; aspectRatio?: MagicScheduleParams["aspectRatio"] }) {
-  const { customModelId, templates, quantity = 1, public: isPublic = true, aspectRatio = "9:16" } = params
+  const { customModelId, templates, quantity = 1, public: isPublic = false, aspectRatio = "9:16" } = params
 
   // Map the templates into concrete requests the batch API expects
   // Shape matches CreateQueueAsyncBatchBodyRequestsItemAnyOf (image variant)
