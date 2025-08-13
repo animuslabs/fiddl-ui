@@ -84,12 +84,6 @@ div
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
 import { Dialog, useQuasar } from "quasar"
 
-/**
- * NOTE: To enable the camera shutter sound, place a short sound file at:
- *   public/camera-shutter.mp3
- * You can use any royalty-free camera shutter sound.
- */
-
 const emit = defineEmits<{
   (e: "captured", blobs: Blob[]): void
   (e: "error", reason: string): void
@@ -100,7 +94,7 @@ const targetFrames = 4
 const totalDurationMs = 3000
 const countdownSeconds = 1
 const mimeType = "image/jpeg"
-const quality = 0.9
+const quality = 0.97
 
 // State
 const mode = ref<"camera" | "gallery">("camera")
@@ -132,7 +126,7 @@ function triggerFlashAndSound() {
   // Sound
   if (shutterAudioRef.value) {
     // Restart sound if already playing
-    shutterAudioRef.value.volume = 0.3
+    shutterAudioRef.value.volume = 0.05
     shutterAudioRef.value.currentTime = 0
     shutterAudioRef.value.play().catch(() => {})
   }
@@ -171,8 +165,8 @@ async function initCamera() {
       audio: false,
       video: {
         facingMode: { ideal: "user" },
-        width: { ideal: 720 },
-        height: { ideal: 720 },
+        width: { ideal: 512 },
+        height: { ideal: 512 },
       },
     }
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
@@ -308,7 +302,7 @@ async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
     img.src = imgUrl
   })
 
-  const s = 720
+  const s = 512
   const canvas = document.createElement("canvas")
   canvas.width = s
   canvas.height = s
@@ -317,9 +311,7 @@ async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
 
   const blobs: Blob[] = []
   for (let i = 0; i < targetFrames; i++) {
-    // Slight random brightness/contrast to simulate variety
     ctx.clearRect(0, 0, s, s)
-    ctx.filter = `brightness(${100 + (Math.random() * 10 - 5)}%) contrast(${100 + (Math.random() * 10 - 5)}%)`
     ctx.drawImage(img, 0, 0, s, s)
     const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b as Blob), mimeType, quality))
     blobs.push(blob)
@@ -400,6 +392,6 @@ async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
   transition: opacity 0.12s;
 }
 #flashOverlay.active {
-  opacity: 1;
+  opacity: 0.3;
 }
 </style>

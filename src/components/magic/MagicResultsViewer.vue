@@ -1,41 +1,49 @@
 <template lang="pug">
-div.fullscreen-wrapper
-  //- Image area
-  div.viewer-area
-    q-img(
-      v-if="currentImageUrl"
-      :src="currentImageUrl"
-      spinner-color="white"
-      style="width:100%; height:100%; object-fit:contain; background:#000"
-      :ratio="0"
-    )
-    //- Dots pagination
-    div.dots
-      span.dot(
-        v-for="(id, idx) in imageIds"
-        :key="id + '-' + idx"
-        :class="{ active: idx === currentIndex }"
-        @click="currentIndex = idx"
+h1 {{ isDesktop }}
+//- div.fullscreen-wrapper
+  MediaGallery.q-pa-md(
+    v-if="isDesktop"
+    :mediaObjects="mediaObjects"
+  ).bg-red
+  // Mobile: keep swipe-style viewer with actions
+  template(v-else)
+    //- Image area
+    div.viewer-area
+      q-img(
+        v-if="currentImageUrl"
+        :src="currentImageUrl"
+        spinner-color="white"
+        style="width:100%; height:100%; object-fit:contain; background:#000"
+        :ratio="0"
       )
-  //- Bottom actions
-  div.actions
-    q-btn.action-btn( color="primary" icon="share" label="Share" size="lg" no-caps @click="share" )
-    q-btn(
-      outline
-      color="primary"
-      icon="download"
-      label="Download"
-      class="action-btn"
-      size="lg"
-      no-caps
-      @click="download"
-    )
+      //- Dots pagination
+      div.dots
+        span.dot(
+          v-for="(id, idx) in imageIds"
+          :key="id + '-' + idx"
+          :class="{ active: idx === currentIndex }"
+          @click="currentIndex = idx"
+        )
+    //- Bottom actions
+    div.actions
+      q-btn.action-btn( color="primary" icon="share" label="Share" size="lg" no-caps @click="share" )
+      q-btn(
+        outline
+        color="primary"
+        icon="download"
+        label="Download"
+        class="action-btn"
+        size="lg"
+        no-caps
+        @click="download"
+      )
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
 import { img } from "lib/netlifyImg"
+import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 
 const props = withDefaults(
   defineProps<{
@@ -46,6 +54,7 @@ const props = withDefaults(
 )
 
 const $q = useQuasar()
+const isDesktop = computed(() => $q.screen.gt.sm)
 const currentIndex = ref<number>(props.startIndex || 0)
 
 watch(
@@ -57,6 +66,8 @@ watch(
 
 const currentImageId = computed(() => props.imageIds?.[currentIndex.value] || null)
 const currentImageUrl = computed(() => (currentImageId.value ? img(currentImageId.value, "lg") : ""))
+
+const mediaObjects = computed<MediaGalleryMeta[]>(() => (props.imageIds || []).map((id) => ({ id, url: img(id, "lg"), type: "image" })))
 
 async function share() {
   try {
@@ -76,14 +87,21 @@ async function share() {
   }
 }
 
-function download() {
+async function download() {
   try {
+    const url = currentImageUrl.value
+    if (!url) throw new Error("No image")
+    // Fetch as blob for reliable downloading (mirrors MediaViewerControls approach)
+    const resp = await fetch(url, { mode: "cors" })
+    const blob = await resp.blob()
+    const objectUrl = URL.createObjectURL(blob)
     const a = document.createElement("a")
-    a.href = currentImageUrl.value
+    a.href = objectUrl
     a.download = (currentImageId.value || "image") + ".webp"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    URL.revokeObjectURL(objectUrl)
   } catch (e: any) {
     console.warn("download failed", e)
     $q.notify({ message: "Download failed", color: "negative" })

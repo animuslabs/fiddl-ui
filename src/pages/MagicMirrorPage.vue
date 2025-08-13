@@ -68,10 +68,66 @@ q-page.q-pa-sm
       q-spinner-grid(color="primary" size="50px").q-mt-sm
   //- Step: Results
   div(v-else-if="step === 'results'")
-    .centered.q-mt-lg
-      h5 Your images are ready
+    // Sticky actions at top (avoid footer overlap on mobile)
+    .sticky-actions.row.items-center.q-gutter-sm
+      q-btn(flat icon="refresh" label="Start again" no-caps @click="startAgain")
+      q-btn(flat icon="home_repair_service" label="Forge" no-caps @click="goToForge")
+    // Content
     div(v-if="generatedImageIds.length > 0" style="width:100%")
-      MagicResultsViewer(:image-ids="generatedImageIds")
+      // Desktop: mosaic gallery with per-item actions
+      MediaGallery.q-pl-md.q-pr-md(
+        v-if="isDesktop"
+        :mediaObjects="mediaObjects"
+        layout="mosaic"
+        :rowHeightRatio="1.2"
+        :cols-desktop="5"
+        :gap="8"
+      )
+        template(#actions="{ media }")
+          .actions-inline.slot-actions.row.items-center.justify-center.q-gutter-sm
+            q-btn(flat color="primary" icon="share" label="Share" size="sm" no-caps @click="shareImage(media.id)")
+            q-btn(flat color="primary" icon="download" label="Download" size="sm" no-caps @click="downloadImage(media.id)")
+            q-btn(flat color="accent" icon="movie" label="Animate" size="sm" no-caps @click="animateImage(media.id)")
+      // Mobile: scrollable list of images that fit viewport height
+      .mobile-list(v-else)
+        .image-block(v-for="id in generatedImageIds" :key="id")
+          q-img.fit-image(
+            :src="img(id, 'md')"
+            spinner-color="white"
+            placeholder-src="/blankAvatar.webp"
+          )
+          .actions-inline.row.items-center.justify-center.q-gutter-sm
+            q-btn(flat color="primary" icon="share" label="Share" size="sm" no-caps @click="shareImage(id)")
+            q-btn(flat color="primary" icon="download" label="Download" size="sm" no-caps @click="downloadImage(id)")
+            q-btn(flat color="accent" icon="movie" label="Animate" size="sm" no-caps @click="animateImage(id)")
+
+      // Unified templates grid (persistent before/after)
+      .q-mt-lg.q-pl-md.q-pr-md
+        h6 Try more looks
+        .template-grid(:style="templatesGridStyle")
+          .template-item(v-for="t in displayTemplates" :key="t.id")
+            .template-card-box
+              PromptTemplateCard(
+                :template="t"
+                :gender="genderForTemplates || 'male'"
+                :selectable="!templatesConfirmed"
+                :selected="selectedTemplates.includes(t.id)"
+                @click="!templatesConfirmed ? toggleTemplate(t.id) : undefined"
+              )
+            div.q-mt-xs
+              q-btn(
+                v-if="templatesConfirmed && !additionalLoadingTemplates.includes(t.id)"
+                color="primary"
+                flat
+                dense
+                label="Generate"
+                icon="play_arrow"
+                no-caps
+                @click="generateMoreForTemplate(t)"
+              )
+              div(v-else-if="templatesConfirmed && additionalLoadingTemplates.includes(t.id)").row.items-center.q-gutter-xs
+                q-linear-progress(indeterminate color="primary" size="6px" class="col")
+                small.text-secondary Generating...
     div(v-else class="centered q-pa-lg")
       q-spinner-grid(color="primary" size="50px")
       p.text-secondary.q-mt-sm Generating your images...
@@ -84,6 +140,8 @@ import { useUserAuth } from "src/stores/userAuth"
 import MagicMirrorCamera from "src/components/magic/MagicMirrorCamera.vue"
 import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicResultsViewer from "src/components/magic/MagicResultsViewer.vue"
+import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { img } from "lib/netlifyImg"
 import { createMagicTrainingSet } from "src/lib/magic/magicTrainingSet"
 import { scheduleMagicRenders } from "src/lib/magic/magicApi"
 import { modelsCreateModel, modelsGetCustomModel, modelsGetTrainingStatus, trainingSetsDescribeSet, trainingSetsGetSet } from "lib/orval"
@@ -117,6 +175,12 @@ const templatesConfirmed = ref(false)
 const scheduled = ref(false)
 const scheduledAt = ref<number | null>(null)
 
+// Additional results/expansion state
+const additionalLoadingTemplates = ref<string[]>([])
+const renderedTemplates = ref<string[]>([])
+const pendingNewCount = ref<number>(0)
+const lastKnownIds = ref<string[]>([])
+
 const SESSION_KEY = "mmState"
 
 const promptTplStore = usePromptTemplatesStore()
@@ -138,6 +202,10 @@ const templatesGridStyle = computed(() => ({
   gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
   gap: "10px",
 }))
+
+// Results view helpers
+const isDesktop = computed(() => quasar.screen.gt.sm)
+const mediaObjects = computed<MediaGalleryMeta[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "md"), type: "image" })))
 
 function saveSession() {
   const data = {
@@ -396,26 +464,52 @@ function startCreationsPoll() {
   stopCreationsPoll()
   const poll = async () => {
     if (!customModelId.value) return
+    // Configure filters on the store
     imageCreations.filter.model = "custom"
     imageCreations.filter.customModelId = customModelId.value
-    imageCreations.searchCreations(userAuth.userId || undefined)
-    await nextTick()
-    const cutoff = scheduledAt.value ? new Date(scheduledAt.value) : null
+
+    // Ensure the store constrains by custom model using its own API
+    try {
+      if (imageCreations.customModelId !== customModelId.value) {
+        await imageCreations.setCustomModelId(customModelId.value, userAuth.userId || undefined)
+      } else {
+        // Refresh latest page explicitly
+        imageCreations.creations = []
+        await imageCreations.loadCreations(userAuth.userId || undefined)
+      }
+    } catch (e) {
+      console.warn("loadCreations failed", e)
+    }
+
+    // Collect image IDs from the refreshed list (store already filtered by model/customModelId)
     const ids: string[] = []
     for (const req of imageCreations.creations) {
-      if (cutoff && req.createdAt < cutoff) continue
       for (const id of req.mediaIds) {
         if (!ids.includes(id)) ids.push(id)
       }
     }
+
+    // Track new arrivals for additional template batches
+    const oldSet = new Set(lastKnownIds.value)
+    const deltaNew = ids.filter((id) => !oldSet.has(id))
+
+    // Update reactive list and last-known set
     generatedImageIds.value = ids.slice(0, 16)
-    if (generatedImageIds.value.length >= 3) {
+    lastKnownIds.value = generatedImageIds.value.slice()
+
+    // If we had queued additional templates, clear their loading state once enough new images arrive
+    if (pendingNewCount.value > 0 && deltaNew.length >= pendingNewCount.value) {
+      additionalLoadingTemplates.value = []
+      pendingNewCount.value = 0
+    }
+
+    // Wait for the first batch to complete (all three images) before showing results
+    if (generatedImageIds.value.length >= 3 && step.value !== "results") {
       step.value = "results"
       saveSession()
-      stopCreationsPoll()
-      return
     }
-    creationsPollTimer = window.setTimeout(poll, 10000)
+
+    creationsPollTimer = window.setTimeout(poll, 8000)
   }
   void poll()
 }
@@ -423,6 +517,98 @@ function startCreationsPoll() {
 function stopCreationsPoll() {
   if (creationsPollTimer) window.clearTimeout(creationsPollTimer)
   creationsPollTimer = null
+}
+
+// UX actions
+function startAgain() {
+  // Clear state and go back to capture
+  stopTrainingPoll()
+  stopCreationsPoll()
+  selectedTemplates.value = []
+  generatedImageIds.value = []
+  trainingSetId.value = null
+  customModelId.value = null
+  trainingStatus.value = "processing"
+  trainingProgress.value = 0
+  trainingGender.value = null
+  templatesConfirmed.value = false
+  scheduled.value = false
+  scheduledAt.value = null
+  clearSession()
+  step.value = "capture"
+}
+
+function goToForge() {
+  // Take user to Forge landing; they can see/use previous models
+  void router.push({ name: "forge", params: { mode: "pick" } })
+}
+
+// Per-image actions
+async function shareImage(id: string) {
+  try {
+    const url = img(id, "lg")
+    const nav: any = navigator as any
+    if (nav && typeof nav.share === "function") {
+      await nav.share({
+        title: "My Magic Mirror image",
+        text: "Check out my Magic Mirror result",
+        url,
+      })
+    } else {
+      await navigator.clipboard.writeText(url)
+      quasar.notify({ message: "Link copied to clipboard", color: "primary" })
+    }
+  } catch (e: any) {
+    console.warn("share failed", e)
+    quasar.notify({ message: "Unable to share", color: "negative" })
+  }
+}
+
+async function downloadImage(id: string) {
+  try {
+    const url = img(id, "lg")
+    // Fetch as blob for reliable downloading across browsers/origins
+    const resp = await fetch(url, { mode: "cors" })
+    const blob = await resp.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = objectUrl
+    a.download = id + ".webp"
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(objectUrl)
+  } catch (e: any) {
+    console.warn("download failed", e)
+    quasar.notify({ message: "Download failed", color: "negative" })
+  }
+}
+
+function animateImage(id: string) {
+  quasar.notify({ message: "Animate coming soon ✨", color: "accent" })
+}
+
+// Trigger more renders for a specific template
+async function generateMoreForTemplate(t: any) {
+  if (!customModelId.value) return
+  if (additionalLoadingTemplates.value.includes(t.id)) return
+  try {
+    additionalLoadingTemplates.value = [...additionalLoadingTemplates.value, t.id]
+    pendingNewCount.value += 1
+    await scheduleMagicRenders({
+      customModelId: customModelId.value,
+      templates: [t],
+    })
+    // Keep polling running; results handler will clear loading state when new image arrives
+    if (!creationsPollTimer) startCreationsPoll()
+  } catch (e: any) {
+    console.error(e)
+    quasar.notify({ message: e?.message || "Failed to schedule template", color: "negative" })
+    // rollback loading state
+    const idx = additionalLoadingTemplates.value.indexOf(t.id)
+    if (idx >= 0) additionalLoadingTemplates.value.splice(idx, 1)
+    pendingNewCount.value = Math.max(0, pendingNewCount.value - 1)
+  }
 }
 
 onMounted(() => {
@@ -443,5 +629,140 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.sticky-actions {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-list {
+  padding: 8px 12px 24px;
+}
+
+.image-block {
+  margin-bottom: 16px;
+}
+
+.fit-image {
+  width: 100%;
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
+  background: #000;
+  border-radius: 8px;
+}
+
+.actions-inline {
+  padding: 8px 0 4px;
+}
+
+.desktop-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+/* Template grid card sizing/consistency */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  gap: 10px;
+}
+
+.template-card-box {
+  /* Keep a consistent shape for template tiles across the grid */
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Try to constrain internal card content text from changing tile height */
+.template-item :deep(.q-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-item :deep(h6),
+.template-item :deep(.title),
+.template-item :deep(.q-card__section) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Render actions below the image visually by reserving space within each tile */
+.slot-actions {
+  position: absolute !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 6px 4px !important;
+  background: transparent !important;
+  pointer-events: auto;
+}
+
+/* Reserve space for the actions bar inside each MediaGallery tile on this page */
+:deep(.media-wrapper) {
+  padding-bottom: 48px;
+}
+
+/* Shrink media height to make room for the reserved actions area (works for q-img and video) */
+:deep(.media-wrapper) > .q-img,
+:deep(.media-wrapper) > div > video {
+  height: calc(100% - 48px) !important;
+}
+
+/* Unify template tile heights in the "Try more looks" grid */
+.template-grid > .template-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.template-grid > .template-item .template-card-box {
+  flex: 1 1 auto;
+  display: block;
+}
+
+/* Make inner PromptTemplateCard fill the fixed aspect-ratio box */
+.template-grid > .template-item .template-card-box :deep(.template-item) {
+  height: 100%;
+}
+
+.template-grid > .template-item .template-card-box :deep(.q-img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Give the action area a consistent height to normalize total tile height */
+.template-grid > .template-item > .q-mt-xs {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grid-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #000;
+  border-radius: 8px;
 }
 </style>

@@ -206,34 +206,43 @@ function videoClass(media: MediaGalleryMeta) {
     v-for="(m, index) in filteredGalleryItems"
     :key="m.id"
     :style="getItemStyle(m)"
+    class="media-cell"
   )
-    q-img(
-      v-if="m.type === 'image'"
-      :src="m.url"
-      :style="mediaStyles"
-      spinner-color="white"
-      :class="props.selectable ? 'cursor-pointer' : ''"
-      @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
-    )
-    template(v-else)
-      div(v-if="props.showLoading && videoLoading[m.id]" :style="mediaStyles" style="position: relative" )
-        div
-          .absolute-center.z-top
-            h4 Loading
-          q-spinner-gears.absolute-center(color="grey-10" size="150px")
-      //- div {{ !!videoLoading[m.id] }}
-      div(v-show="!videoLoading[m.id]" :style="mediaStyles" style="position: relative; overflow: hidden;")
-        video(
+    template(v-if="m.type === 'image'")
+      .media-wrapper(:style="mediaStyles")
+        q-img(
           :src="m.url"
-          :key="videoReloadKey[m.id]"
-          :data-id="m.id"
-          loop autoplay muted playsinline
-          @canplay="markVideoLoaded(m.id)"
-          @loadeddata="markVideoLoaded(m.id)"
-          @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-          style="width: 100%; height: 100%; object-fit: cover; display: block"
-          :class="videoClass(m)"
+          style="width:100%; height:100%; object-fit: cover; display:block"
+          spinner-color="white"
+          :class="props.selectable ? 'cursor-pointer' : ''"
+          @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
         )
+        // Per-item actions slot (optional)
+        slot(name="actions" :media="m" :index="index")
+          // default empty
+    template(v-else)
+      .media-wrapper(:style="mediaStyles")
+        div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative" )
+          div
+            .absolute-center.z-top
+              h4 Loading
+            q-spinner-gears.absolute-center(color="grey-10" size="150px")
+        //- div {{ !!videoLoading[m.id] }}
+        div(v-show="!videoLoading[m.id]" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+          video(
+            :src="m.url"
+            :key="videoReloadKey[m.id]"
+            :data-id="m.id"
+            loop autoplay muted playsinline
+            @canplay="markVideoLoaded(m.id)"
+            @loadeddata="markVideoLoaded(m.id)"
+            @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
+            style="width: 100%; height: 100%; object-fit: cover; display: block"
+            :class="videoClass(m)"
+          )
+        // Per-item actions slot (optional)
+        slot(name="actions" :media="m" :index="index")
+          // default empty
 </template>
 
 <style>
@@ -250,5 +259,30 @@ function videoClass(media: MediaGalleryMeta) {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.media-cell {
+  position: relative;
+}
+
+.media-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.media-wrapper > [slot="actions"],
+.media-wrapper ::v-slotted([name="actions"]) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 6px 4px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.2), transparent);
+  z-index: 2;
+  pointer-events: auto;
 }
 </style>
