@@ -707,8 +707,8 @@ async function triggerAnimation() {
     vidStore.setReq({
       prompt: "Animate this image",
       model: "kling",
-      aspectRatio: "16:9",
-      public: true,
+      aspectRatio: "9:16",
+      public: false,
       quantity: 1,
       duration: defaultVideoDuration,
       startImageId: animateDialogImageId.value,
