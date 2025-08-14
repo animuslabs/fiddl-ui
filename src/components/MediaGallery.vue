@@ -60,6 +60,7 @@ const wrapperStyles = computed(() => {
   const base: Record<string, string> = {
     display: "grid",
     gap: gapValue.value,
+    width: "100%",
   }
 
   if (isMosaic && props.centerAlign) {
@@ -68,6 +69,7 @@ const wrapperStyles = computed(() => {
     base.gridAutoFlow = "dense"
     base.justifyContent = "center"
   } else {
+    // Revert to fluid columns that shrink to fit container to avoid overflow at tablet sizes
     base.gridTemplateColumns = `repeat(${cols.value}, 1fr)`
     if (isMosaic) {
       base.gridAutoRows = `${thumbSize.value * props.rowHeightRatio}px`
@@ -85,7 +87,6 @@ const mediaStyles = computed(() => {
           height: "100%",
           width: "100%",
           // maxHeight: "100px",
-          maxWidth: "400px",
           aspectRatio: "1 / 1",
           "object-fit": "cover",
           display: "block",
@@ -93,7 +94,6 @@ const mediaStyles = computed(() => {
       : {
           width: "100%",
           height: "100%",
-          maxWidth: "400px",
           "object-fit": "cover",
           display: "block",
         }
@@ -191,8 +191,14 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
   if (props.layout !== "mosaic") return {}
   const aspect = m.aspectRatio ?? 1
   const colSpan = aspect > 1.5 && cols.value > 1 ? 2 : undefined
+
+  // When an item spans multiple columns, also increase its vertical span proportionally
+  // so wide media aren’t visually cropped. We scale rows by the number of columns taken.
+  const colFactor = colSpan ?? 1
+  const rows = Math.max(1, Math.ceil(((colFactor / aspect) * props.rowHeightRatio)))
+
   return {
-    gridRowEnd: `span ${Math.ceil((1 / aspect) * props.rowHeightRatio)}`,
+    gridRowEnd: `span ${rows}`,
     gridColumnEnd: colSpan ? `span ${colSpan}` : undefined,
   }
 }

@@ -8,12 +8,12 @@ div
         :mediaObjects="mediaObjects"
         layout="mosaic"
         :rowHeightRatio="1"
-        :colsDesktop="10"
+        :colsDesktop="desktopCols"
         :colsMobile="2"
         :thumbSizeDesktop="165"
-        :thumbSizeMobile="140"
+        :thumbSizeMobile="120"
         :gap="8"
-        :centerAlign="true"
+        :centerAlign="false"
         selectable
         @select="onSelect"
       )
@@ -23,6 +23,7 @@ div
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from "vue"
+import { useQuasar } from "quasar"
 import MediaGallery from "components/MediaGallery.vue"
 import { s3Img } from "lib/netlifyImg"
 import { creationsGetUserUploadedImages } from "lib/orval"
@@ -31,6 +32,17 @@ const emit = defineEmits<{ (e: "select", id: string): void }>()
 
 const loading = ref(true)
 const imageUploadIds = ref<string[]>([])
+const $q = useQuasar()
+
+// Compute a responsive desktop column count so the gallery fills space without overflowing
+const desktopCols = computed(() => {
+  // approximate available width (dialog ~90vw with max 1400px)
+  const containerWidth = Math.min($q.screen.width * 0.9, 1400)
+  const thumb = 165
+  const gap = 8
+  const cols = Math.max(2, Math.floor(containerWidth / (thumb + gap)))
+  return Math.min(12, cols)
+})
 
 onMounted(async () => {
   try {
@@ -48,5 +60,4 @@ function onSelect(payload: { id: string; type: "image" | "video" }) {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -97,9 +97,8 @@
               p Drag and drop an image here
       .q-ma-md(v-else).relative-position
         h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:20px;") Select Starting Image
-        //- q-list.q-ma-md
-        .q-ma-md
-          UploadedImageViewer(@select="onUploadedSelected")
+        .q-ma-md()
+          UploadedImageViewer.full-width(@select="onUploadedSelected" )
         div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:20px;")
           .centered
             q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")

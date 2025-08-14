@@ -9,16 +9,18 @@ q-page.full-height.full-width.relative-position
           indeterminate
           :style="{ visibility: browserStore.loading ? 'visible' : 'hidden' }"
         ).q-mr-md.q-ml-md
-    .centered
+    .centered.full-width
       MediaGallery(
         selectable
         :mediaObjects="browserStore.media"
         :layout="viewMode"
-        :rowHeightRatio="1"
+        :rowHeightRatio="1.2"
         gap="8px"
         @select="handleSelect"
         :cols-desktop="8"
-        :thumb-size-desktop="200"
+        :thumb-size-desktop="90"
+        :cols-mobile="3"
+        :thumb-size-mobile="60"
       )
   q-scroll-observer(@scroll="handleScroll")
 </template>
