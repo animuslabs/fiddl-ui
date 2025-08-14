@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-width
   .centered.q-mt-md
-    h2 Magic Mirror
+    h1.lobster-font Magic Mirror
   .centered.q-ma-md
     p.text-primary Transform your selfie into different characters in minutes
 
@@ -25,21 +25,21 @@ q-page.full-width
     .centered(v-if="!templatesConfirmed")
       h4 Choose 3 looks
     .centered.q-mt-sm(v-if="trainingStatus !== 'succeeded'")
-      .centered.q-mb-md
-        p.text-primary.text-capitalize {{ trainingStatus }} {{ trainingProgress }}%
+      .centered.q-mb-xs
+        p.text-white.text-capitalize Training {{ trainingStatus }} {{ trainingProgress == 0?'': trainingProgress+`%`}}
       .centered.full-width
         q-linear-progress(:value="trainingProgress/100" stripe size="10px" color="primary" class="q-mt-xs" style="max-width:600px;")
     .centered.q-mt-sm(v-if="!templatesConfirmed")
       q-btn.q-mt-md(color="primary" label="Pick Looks" no-caps @click="openTemplatesDialog('initial')")
 
     //- Show preview of selected templates during training
-    .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showInitialPreview")
+    .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showInitialPreview || additionalLoadingTemplates.length > 0")
       .full-width.bg-blur.q-pa-lg(style="max-width:720px;")
         .template-preview-grid(:style="templatesPreviewGridStyle")
           .template-item(v-for="t in selectedTemplateObjs" :key="`${t.id}-${t.name}`")
-            .template-card-box(style="width:150px;")
+            .template-card-box
               //- Hidden element to trigger Vue reactivity
-              PromptTemplateCard.full-width(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" style="width:400px;" no-title)
+              PromptTemplateCard.full-width(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" no-title)
               span {{ t.name[0] }}
         .row.items-center.justify-center.q-mt-md(v-if="trainingStatus !== 'succeeded'")
           q-spinner-dots(color="primary" size="24px")
@@ -52,20 +52,20 @@ q-page.full-width
     .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px;")
       .centered.col-12.full-width
         q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
-        q-btn(flat icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
+        q-btn(color="primary" square icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
         q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
 
     .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showTemplatePreview")
       .full-width.bg-blur.q-pa-lg(style="max-width:720px;")
-        .template-preview-grid(v-if="currentPreviewTemplates.length > 0" :style="previewGridStyle")
+        .template-preview-grid(v-if="currentPreviewTemplates.length > 0 || additionalLoadingTemplates.length > 0" :style="previewGridStyle")
           .template-item(v-for="t in currentPreviewTemplates" :key="`${t.id}-${t.name}`")
-            .template-card-box(style="width:150px;")
+            .template-card-box
               //- Hidden element to trigger Vue reactivity
               PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false")
               span {{ t.name[0] }}
-        .template-preview-grid(v-else :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 180px)', gap: '10px' }")
+        .template-preview-grid(v-else :style="{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }")
           .template-item(v-for="i in previewSkeletonCount" :key="i")
-            q-skeleton(type="rect" style="width:180px; aspect-ratio:3/4; border-radius:8px;")
+            q-skeleton(type="rect" style="width:100%; aspect-ratio:3/4; border-radius:8px;")
         .row.items-center.justify-center.q-mt-md
           q-spinner-dots(color="primary" size="24px")
           span.text-primary.q-ml-sm {{ previewLoadingMessage }}
@@ -84,10 +84,10 @@ q-page.full-width
           :centerAlign="true"
         )
           template(#actions="{ media }")
-            .row.items-center.justify-center.q-gutter-sm.q-pt-sm.bg-black.q-pa-md
+            .row.items-center.justify-center.q-gutter-sm.q-pt-sm.bg-grey-10.q-pa-md
               q-btn(flat size="sm" icon="share" label="Share" no-caps @click="shareImage(media.id)")
               q-btn(flat size="sm" icon="download" label="Download" no-caps @click="downloadImage(media.id)")
-              q-btn(flat size="sm" icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
+              q-btn(color="primary"  flat square size="sm" icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
                 q-tooltip(v-if="triggeredVideoIds.includes(media.id)") Animation already triggered
 
   q-dialog(v-model="dialogOpen")
@@ -99,7 +99,7 @@ q-page.full-width
       q-separator
       q-card-section
         PromptTemplatesPicker(
-          :gender="genderForTemplates"
+          :gender="genderForTemplates || 'female'"
           :selected="dialogSelection"
           :maxSelected="3"
           :selectionMode="'multi'"
@@ -277,35 +277,60 @@ const displayTemplates = computed<PromptTemplate[]>(() => {
   const g = genderForTemplates.value
   return g ? resolveGenderedTemplates(rawTemplates.value, g) : []
 })
+
 const templatesById = computed(() => new Map(displayTemplates.value.map((t) => [t.id, t] as [string, PromptTemplate])))
 
+// Resolve a template by either its stored id (gender-suffixed) or a base id
+function getTemplateByAnyId(id: string): PromptTemplate | undefined {
+  const direct = templatesById.value.get(id)
+  if (direct) return direct
+  const g = genderForTemplates.value
+  if (g && !id.endsWith(`-${g}`)) {
+    const suffixed = `${id}-${g}`
+    return templatesById.value.get(suffixed)
+  }
+  return undefined
+}
+
 const selectedTemplateObjs = computed<PromptTemplate[]>(() => {
-  return selectedTemplates.value.map((id) => templatesById.value.get(id)).filter(Boolean) as PromptTemplate[]
+  return selectedTemplates.value.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[]
 })
 
 const templatesPreviewGridStyle = computed(() => {
-  const n = selectedTemplateObjs.value.length || 3
-  const count = Math.min(3, Math.max(1, n))
-  return { display: "grid", gridTemplateColumns: `repeat(${count}, 180px)`, gap: "10px", justifyItems: "center", marginLeft: "auto", marginRight: "auto", width: "fit-content", maxWidth: "100%" }
+  return {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: "10px",
+    justifyItems: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+    width: "100%",
+    maxWidth: "100%",
+  }
 })
 
 // Unified preview templates logic
 const currentPreviewTemplates = computed<PromptTemplate[]>(() => {
-  // Show initial templates if they're being generated
   if (initialLoadingTemplates.value.length > 0) {
-    return initialLoadingTemplates.value.map((id) => templatesById.value.get(id)).filter(Boolean) as PromptTemplate[]
+    return initialLoadingTemplates.value.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[]
   }
-  // Show additional templates if they're being generated
   if (additionalLoadingTemplates.value.length > 0) {
-    return additionalLoadingTemplates.value.map((id) => templatesById.value.get(id)).filter(Boolean) as PromptTemplate[]
+    return additionalLoadingTemplates.value.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[]
   }
   return []
 })
 
 const previewGridStyle = computed(() => {
-  const n = currentPreviewTemplates.value.length || 3
-  const count = Math.min(3, Math.max(1, n))
-  return { display: "grid", gridTemplateColumns: `repeat(${count}, 180px)`, gap: "10px", justifyItems: "center", marginLeft: "auto", marginRight: "auto", width: "fit-content", maxWidth: "100%" }
+  return {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: "10px",
+    justifyItems: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+    width: "100%",
+    maxWidth: "100%",
+  }
 })
 
 const previewSkeletonCount = computed(() => {
@@ -320,7 +345,7 @@ const previewLoadingMessage = computed(() => {
 })
 
 const showInitialPreview = computed(() => templatesConfirmed.value && (trainingStatus.value !== "succeeded" || (scheduled.value && generatedImageIds.value.length === 0)))
-const showTemplatePreview = computed(() => initialLoadingTemplates.value.length > 0 || additionalLoadingTemplates.value.length > 0 || pendingNewCount.value > 0)
+const showTemplatePreview = computed(() => initialLoadingTemplates.value.length > 0 || additionalLoadingTemplates.value.length > 0 || pendingNewCount.value > 0 || generatingMore.value || isWaitingForImages.value)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
 const mediaObjects = computed<MediaGalleryMeta[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "lg"), type: "image" })))
@@ -334,6 +359,7 @@ function saveSession() {
     scheduled: scheduled.value,
     scheduledAt: scheduledAt.value,
     trainingGender: trainingGender.value,
+    subjectDescription,
     step: step.value,
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
@@ -367,9 +393,10 @@ async function loadSession() {
     scheduled.value = !!data.scheduled
     scheduledAt.value = typeof data.scheduledAt === "number" ? data.scheduledAt : null
     trainingGender.value = data.trainingGender || null
+    subjectDescription = data.subjectDescription || undefined
     const sessStep = data.step as Step | undefined
     if (sessStep) step.value = sessStep
-    if (((trainingSetId.value || customModelId.value) && !trainingGender.value) || trainingGender.value === "unknown") {
+    if ((trainingSetId.value || customModelId.value) && (!trainingGender.value || trainingGender.value === "unknown" || !subjectDescription)) {
       await ensureTrainingSetGenderLoaded()
     }
     if (customModelId.value) {
@@ -384,7 +411,10 @@ async function loadSession() {
 
 async function ensureTrainingSetGenderLoaded() {
   try {
-    if (trainingGender.value && trainingGender.value !== "unknown") return
+    const needGender = !trainingGender.value || trainingGender.value === "unknown"
+    const needSubject = !subjectDescription
+    if (!needGender && !needSubject) return
+
     if (!trainingSetId.value && customModelId.value) {
       const resp = await modelsGetCustomModel({ id: customModelId.value })
       const tsid = resp.data?.trainingSetId || null
@@ -394,25 +424,16 @@ async function ensureTrainingSetGenderLoaded() {
       }
     }
     if (!trainingSetId.value) return
-    try {
-      const { data } = await trainingSetsDescribeSet({ trainingSetId: trainingSetId.value })
-      if (data && typeof data.subjectGender === "string") {
-        trainingGender.value = data.subjectGender || null
-        subjectDescription = data.subjectDescription || undefined
-        saveSession()
-        return
-      }
-    } catch {}
-    try {
-      const { data } = await trainingSetsGetSet({ trainingSetId: trainingSetId.value } as any)
-      if (data && typeof data.subjectGender === "string") {
-        trainingGender.value = data.subjectGender || null
-        subjectDescription = data.subjectDescription || undefined
-        saveSession()
-      }
-    } catch {}
+    let data: any | null = null
+    const resp = await trainingSetsDescribeSet({ trainingSetId: trainingSetId.value })
+    data = resp.data || null
+    if (data) {
+      if (needGender && typeof data.subjectGender === "string") trainingGender.value = data.subjectGender || null
+      if (needSubject && typeof data.subjectDescription === "string") subjectDescription = data.subjectDescription || undefined
+      saveSession()
+    }
   } catch (e) {
-    console.warn("failed to resolve training set gender", e)
+    console.warn("failed to resolve training set meta", e)
   }
 }
 
@@ -522,10 +543,11 @@ async function scheduleAndPollIfReady() {
   try {
     Loading.show({ message: "Scheduling your images..." })
     await ensureTrainingSetGenderLoaded()
+    const templates = selectedTemplates.value.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[]
     await scheduleMagicRenders({
       customModelId: customModelId.value,
-      templates: displayTemplates.value.filter((el) => selectedTemplates.value.includes(el.id)),
-      subjectDescription,
+      templates,
+      subjectDescription: subjectDescription ?? "",
     })
     scheduled.value = true
     scheduledAt.value = Date.now()
@@ -635,7 +657,7 @@ function startAgain() {
 }
 
 function goToCreatePage() {
-  void toCreatePage({ model: "custom", type: "image", customModelId: customModelId.value!, customModelName: "Magic Mirror" }, router)
+  void toCreatePage({ model: "custom", type: "image", customModelId: customModelId.value!, customModelName: undefined }, router)
 }
 
 async function shareImage(id: string) {
@@ -745,8 +767,7 @@ async function onDialogConfirm() {
     dialogOpen.value = false
     // Set the templates we're generating
     additionalLoadingTemplates.value = ids.slice()
-    const byId = templatesById.value
-    const templates = ids.map((id) => byId.get(id)).filter(Boolean) as PromptTemplate[]
+    const templates = ids.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[]
     if (!templates.length) {
       generatingMore.value = false
       additionalLoadingTemplates.value = []
@@ -755,7 +776,9 @@ async function onDialogConfirm() {
     pendingBaselineIds.value = generatedImageIds.value.slice()
 
     pendingNewCount.value += templates.length
-    await scheduleMagicRenders({ customModelId: customModelId.value, templates, subjectDescription })
+    await ensureTrainingSetGenderLoaded()
+    await scheduleMagicRenders({ customModelId: customModelId.value, templates, subjectDescription: subjectDescription ?? "" })
+    quasar.notify({ color: "primary", message: `Rendering ${templates.length} new looks…` })
     if (!creationsPollTimer) startCreationsPoll()
     void userAuth.loadUserData()
   } catch (e: any) {
@@ -778,24 +801,42 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Responsive grid for template preview */
 .template-preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, 180px);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
   justify-items: center;
   justify-content: center;
   align-content: center;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
+/* Cards fill their grid column, but don't explode on desktop */
 .template-card-box {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 3/5;
   width: 100%;
   overflow: hidden;
   border-radius: 8px;
   display: block;
+  max-width: 240px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .template-card-box {
+    max-width: 260px;
+  }
+}
+.template-item {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 599px) {
+  .template-preview-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
 }
 .template-item :deep(.q-card) {
   height: 100%;

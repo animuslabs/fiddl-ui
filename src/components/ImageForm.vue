@@ -64,6 +64,7 @@
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
           q-btn.q-mt-md(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Image Models")
+
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
       div(style="position:absolute; left:15px; top:15px;")
@@ -105,6 +106,7 @@ const req = createStore.state.req
 const loading = createStore.state.loading
 
 const showModelPicker = ref(false)
+
 
 function createImage() {
   void createStore.createImage().then(() => emit("created"))

@@ -74,7 +74,7 @@
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   q-dialog(v-model="showImageDialog")
-    q-card
+    q-card(style="width:90vw; max-width:1400px;")
       input(type="file" @change="handleFileUpload" style="display: none;" ref="fileInput")
       .q-ma-md(v-if="!showUploads")
         .centered
@@ -98,10 +98,8 @@
       .q-ma-md(v-else).relative-position
         h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:20px;") Select Starting Image
         //- q-list.q-ma-md
-        q-list.q-ma-md
-          div(v-for="id of imageUploadIds")
-            q-img.q-ma-sm.cursor-pointer( :src="s3Img(`uploads/` + id)" style="max-width:400px; min-width:100px;" @click="req.uploadedStartImageId=id;showImageDialog=false")
-          //- .centered
+        .q-ma-md
+          UploadedImageViewer(@select="onUploadedSelected")
         div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:20px;")
           .centered
             q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")
@@ -125,6 +123,7 @@ import { createUploadImage, creationsGetUserUploadedImages } from "lib/orval"
 import { catchErr, throwErr } from "lib/util"
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
+import UploadedImageViewer from "components/UploadedImageViewer.vue"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -177,6 +176,11 @@ function handleDrop(event: DragEvent) {
   event.preventDefault()
   const files = event.dataTransfer?.files
   if (files && files[0]) void uploadImage(files[0])
+}
+
+function onUploadedSelected(id: string) {
+  req.value.uploadedStartImageId = id
+  showImageDialog.value = false
 }
 
 async function uploadImage(file: File) {

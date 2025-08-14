@@ -83,7 +83,7 @@ export function resolveGenderedTemplates(list: GenderedPromptTemplate[], gender:
   return list.map((t) => resolveGenderedTemplate(t, gender))
 }
 
-const DEFAULT_SLOT_ORDER: Exclude<Slot, "negative">[] = ["subject", "setting", "style", "lighting", "camera", "mood", "composition", "color", "postprocess"]
+const DEFAULT_SLOT_ORDER: Exclude<Slot, "negative">[] = ["composition", "setting", "camera", "subject", "style", "lighting", "mood", "color", "postprocess"]
 
 export function promptFromTemplates(templates: PromptTemplate[], opts?: { slotOrder?: Exclude<Slot, "negative">[]; joiner?: string }): ResolvedPrompt {
   const order = opts?.slotOrder ?? DEFAULT_SLOT_ORDER
