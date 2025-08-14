@@ -1,16 +1,6 @@
 // Frontend helpers for Prompt Templates: gender resolution and prompt building
 
-export type Slot =
-  | "subject"
-  | "setting"
-  | "style"
-  | "lighting"
-  | "camera"
-  | "mood"
-  | "composition"
-  | "color"
-  | "postprocess"
-  | "negative"
+export type Slot = "subject" | "setting" | "style" | "lighting" | "camera" | "mood" | "composition" | "color" | "postprocess" | "negative"
 
 export type TemplateKind = "subject" | "setting" | "style" | "effect"
 
@@ -46,16 +36,7 @@ export interface ResolvedPrompt {
 
 // Map an API item into our GenderedPromptTemplate shape
 // Accepts the minimal shape we rely on to avoid tight coupling to generated types
-export function asGenderedTemplateFromApi(item: {
-  id: string
-  name: string
-  kind: string
-  tags?: string[]
-  previewUrl?: string | null
-  previewUrlMale?: string | null
-  previewUrlFemale?: string | null
-  slots?: Record<string, string | string[]>
-}): GenderedPromptTemplate {
+export function asGenderedTemplateFromApi(item: { id: string; name: string; kind: string; tags?: string[]; previewUrl?: string | null; previewUrlMale?: string | null; previewUrlFemale?: string | null; slots?: Record<string, string | string[]> }): GenderedPromptTemplate {
   const { id, name, kind, tags, previewUrl, previewUrlMale, previewUrlFemale } = item
   const rawSlots = item.slots || {}
 
@@ -80,18 +61,14 @@ export function asGenderedTemplateFromApi(item: {
 }
 
 export function resolveGenderedTemplate(t: GenderedPromptTemplate, gender: Gender): PromptTemplate {
-  const subject =
-    (gender === "male" ? t.slots.maleSubject : t.slots.femaleSubject) ?? t.slots.subject
+  const subject = (gender === "male" ? t.slots.maleSubject : t.slots.femaleSubject) ?? t.slots.subject
 
   const { maleSubject, femaleSubject, ...restSlots } = t.slots
-  const previewUrl =
-    (gender === "male" ? t.previewUrlMale : t.previewUrlFemale) ||
-    (gender === "male" ? t.previewUrlFemale : t.previewUrlMale) ||
-    "" // frontend can show placeholder if empty
+  const previewUrl = (gender === "male" ? t.previewUrlMale : t.previewUrlFemale) || (gender === "male" ? t.previewUrlFemale : t.previewUrlMale) || "" // frontend can show placeholder if empty
 
   return {
     id: `${t.id}-${gender}`,
-    name: `${t.name} (${gender})`,
+    name: `${t.name}`,
     kind: t.kind,
     previewUrl,
     tags: [...(t.tags || []), "face", gender],
@@ -106,22 +83,9 @@ export function resolveGenderedTemplates(list: GenderedPromptTemplate[], gender:
   return list.map((t) => resolveGenderedTemplate(t, gender))
 }
 
-const DEFAULT_SLOT_ORDER: Exclude<Slot, "negative">[] = [
-  "subject",
-  "setting",
-  "style",
-  "lighting",
-  "camera",
-  "mood",
-  "composition",
-  "color",
-  "postprocess",
-]
+const DEFAULT_SLOT_ORDER: Exclude<Slot, "negative">[] = ["subject", "setting", "style", "lighting", "camera", "mood", "composition", "color", "postprocess"]
 
-export function promptFromTemplates(
-  templates: PromptTemplate[],
-  opts?: { slotOrder?: Exclude<Slot, "negative">[]; joiner?: string },
-): ResolvedPrompt {
+export function promptFromTemplates(templates: PromptTemplate[], opts?: { slotOrder?: Exclude<Slot, "negative">[]; joiner?: string }): ResolvedPrompt {
   const order = opts?.slotOrder ?? DEFAULT_SLOT_ORDER
   const joiner = opts?.joiner ?? ", "
 

@@ -83,14 +83,19 @@ export default defineComponent({
           }
           setTimeout(() => {
             const auth = useUserAuth()
-            if (auth.loggedIn)
-              void promoClaimPromoCode({ id: longCode })
-                .catch(console.error)
-                .then(() => {
-                  void auth.loadUserData()
+            if (auth.loggedIn) {
+              void (async () => {
+                try {
+                  await promoClaimPromoCode({ id: longCode })
+                  await auth.loadUserData()
                   Notify.create({ message: "You received Fiddl Points" })
-                })
-            else void auth.registerWithPromoCode(longCode)
+                } catch (e) {
+                  console.error(e)
+                }
+              })()
+            } else {
+              void auth.registerWithPromoCode(longCode)
+            }
           }, 2000)
         }
       },

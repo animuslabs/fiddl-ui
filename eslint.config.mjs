@@ -17,6 +17,7 @@ export default ts.config(
       },
     },
     rules: {
+      "no-empty": "off",
       "vue/require-default-prop": "off",
       "vue/no-mutating-props": "off",
       "vue/component-tags-order": "off",

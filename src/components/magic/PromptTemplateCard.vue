@@ -1,22 +1,23 @@
 <template lang="pug">
 div.template-item.cursor-pointer(:class="itemClass" @click="$emit('click')")
-  //- Thumbnail
   q-img(
-    v-if="template.previewUrl"
-    :src="template.previewUrl"
-    :ratio="4/5"
+    v-if="imageUrl"
+    :src="imageUrl"
+    :ratio="3/5"
+    position="top"
     no-spinner
     placeholder-src="/blankAvatar.png"
     style="border-radius: 8px; overflow: hidden"
   )
-  //- Fallback when no preview
+  // Fallback when no preview
   div(v-else class="fallback-thumb flex column items-center justify-center")
     q-icon(name="image" size="42px" color="grey-6")
-    p.text-grey-5.q-mt-xs {{ template.name }}
-  //- Title overlay
-  div.title-overlay
-    span {{ template.name }}
-  //- Selected overlay
+    //- p.text-grey-5.q-mt-xs {{ template.name }}
+  // Title overlay
+  div.title-overlay(v-if="!noTitle")
+    span {{ template.name.split("—")[0] }}
+    span {{ template.name.split("—")[1] }}
+  // Selected overlay
   q-icon.selected-check(
     v-if="selected"
     name="check_circle"
@@ -35,8 +36,9 @@ const props = withDefaults(
     gender: Gender
     selectable?: boolean
     selected?: boolean
+    noTitle?: boolean
   }>(),
-  { selectable: true, selected: false },
+  { selectable: true, selected: false, noTitle: false },
 )
 
 defineEmits<{
@@ -47,6 +49,18 @@ const itemClass = computed(() => ({
   selected: props.selected,
   disabled: props.selectable === false,
 }))
+
+// Prefer already-resolved previewUrl when available; otherwise pick gendered preview
+const imageUrl = computed(() => {
+  const t: any = props.template
+  const direct = t.previewUrl
+  if (direct) return direct
+  const male = t.previewUrlMale || null
+  const female = t.previewUrlFemale || null
+  const primary = props.gender === "male" ? male : female
+  const secondary = props.gender === "male" ? female : male
+  return primary || secondary || ""
+})
 </script>
 
 <style scoped>

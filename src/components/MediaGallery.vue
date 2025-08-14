@@ -225,7 +225,8 @@ function videoClass(media: MediaGalleryMeta) {
       .media-wrapper(:style="mediaStyles")
         q-img(
           :src="m.url"
-          style="width:100%; height:100%; object-fit: cover; display:block"
+          position="top"
+          style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
           spinner-color="white"
           :class="props.selectable ? 'cursor-pointer' : ''"
           @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
@@ -250,7 +251,7 @@ function videoClass(media: MediaGalleryMeta) {
             @canplay="markVideoLoaded(m.id)"
             @loadeddata="markVideoLoaded(m.id)"
             @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-            style="width: 100%; height: 100%; object-fit: cover; display: block"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
             :class="videoClass(m)"
           )
         // Per-item actions slot (optional)
