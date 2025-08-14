@@ -1,6 +1,6 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="mediaViewerStore.isPersistent")
-  q-card.bg-transparent(style="width:90vw;" @click="hide()")
+  q-card.bg-transparent(style="width:90vw;" @click.self="hide()")
     .centered
       .col-auto
         .full-width

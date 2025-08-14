@@ -1,6 +1,6 @@
 <template lang="pug">
 .row.items-center.cursor-pointer(
-  @click="goToCreator()"
+  @click.stop="goToCreator()"
   v-if="creatorMeta.userName"
   :class="wrapperClass"
 )
