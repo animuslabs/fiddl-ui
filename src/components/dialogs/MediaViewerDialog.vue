@@ -10,7 +10,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="mediaViewerSto
               @close="hide"
             )
 
-    .centered
+    .centered(@click="hide")
       MediaViewerMedia
 </template>
 
@@ -48,7 +48,7 @@ const userAuth = useUserAuth()
 const { updateRouteIndex } = useMediaNavigation()
 
 onMounted(async () => {
-  mediaViewerStore.initializeMediaViewer(props.mediaObjects, props.startIndex)
+  await mediaViewerStore.initializeMediaViewer(props.mediaObjects, props.startIndex)
   if (userAuth.loggedIn) await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadHdMedia()])
 })
 

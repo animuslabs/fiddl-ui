@@ -41,7 +41,7 @@ div
       .centered(v-if="mediaViewerStore.hdVideoLoading")
         h6.text-white HD Loading
   .centered.q-mt-md(v-if="showCreatorInfo")
-    .q-pa-sm.r-xl.bg-blur
+    .q-pa-sm.r-xl.bg-blur(@click.stop)
       CreatorInfo(
         :creatorMeta="mediaViewerStore.creatorMeta"
         usernameClass="text-white q-mr-sm"
