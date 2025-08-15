@@ -244,9 +244,9 @@ function videoClass(media: MediaGalleryMeta) {
       .media-wrapper(:style="mediaStyles")
         div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative;" ).full-height
           div
-            .absolute-center.z-top
+            .absolute-center.z-top.offset-down
               h4 Loading
-            q-spinner-gears.absolute-center(color="grey-10" size="150px")
+            q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
         //- div {{ !!videoLoading[m.id] }}
         div(v-show="!videoLoading[m.id]" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
           video(
@@ -304,5 +304,10 @@ function videoClass(media: MediaGalleryMeta) {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
   z-index: 2;
   pointer-events: auto;
+}
+
+/* Lower the absolute-center slightly to appear visually centered within varying thumbnails */
+.absolute-center.offset-down {
+  top: 58% !important;
 }
 </style>

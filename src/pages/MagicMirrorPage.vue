@@ -5,15 +5,7 @@ q-page.full-width
   .centered.q-ma-md
     p.text-primary Transform your selfie into different characters in minutes
 
-  div(v-if="!userAuth.userProfile?.email").q-mb-lg
-    .centered.q-mt-sm
-      q-card(style="width:520px; max-width:100vw;")
-        q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
-          .centered
-            h6.q-mt-none.q-mb-none Login to save your creations and receive 100 Fiddl Points
-        q-separator
-        q-card-section
-          PrivyLogin
+
 
   div(v-if="sessionLoaded && step === 'capture'")
     .centered
@@ -143,6 +135,15 @@ q-page.full-width
         no-caps
         @click="goToCreateVideo"
       )
+  div(v-if="!userAuth.userProfile?.email && step != 'capture'").q-mb-lg
+    .centered.q-mt-sm
+      q-card(style="width:520px; max-width:100vw;")
+        q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+          .centered
+            h6.q-mt-none.q-mb-none Login to save your creations and receive 100 Fiddl Points
+        q-separator
+        q-card-section
+          PrivyLogin
 </template>
 
 <script setup lang="ts">
@@ -622,6 +623,8 @@ function startCreationsPoll() {
 
     if (generatedImageIds.value.length >= 3 && step.value !== "results") {
       step.value = "results"
+      Loading.show({ message: "Images Loading" })
+      setTimeout(() => Loading.hide(), 4000)
       saveSession()
     }
 
