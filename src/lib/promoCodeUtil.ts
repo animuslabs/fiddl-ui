@@ -94,8 +94,7 @@ function openLoginAndClaim(id: string) {
   timeoutId = window.setTimeout(stop, 3 * 60 * 1000)
 
   // Show login dialog; close when the child emits "close"
-  let dlg: any
-  dlg = Dialog.create({
+  const dlg = Dialog.create({
     component: PrivyLogin,
     componentProps: {
       onClose: () => dlg.hide(),

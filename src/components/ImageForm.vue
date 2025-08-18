@@ -1,6 +1,6 @@
 <template lang="pug">
   q-form.create-form.col.fit(@submit.prevent="createImage")
-    component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md}")
+    component(:is="scrollWrapperComponent" :class="{'form-scroll':$q.screen.lt.md}")
       .centered.relative-position
         q-input(
           v-model="req.prompt"
@@ -11,11 +11,11 @@
           filled
           type="textarea"
           placeholder="Enter a description of the image to create"
-          :autogrow="quasar.screen.lt.md"
+          :autogrow="$q.screen.lt.md"
         ).full-width
         .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
           q-btn(icon="clear" flat @click="req.prompt = ''" :disable="createStore.anyLoading" round)
-          q-tooltip Clear Prompt
+          q-tooltip(v-if="$q.screen.gt.sm") Clear Prompt
 
       .centered.q-ma-md.q-pt-md
         q-btn(icon="lightbulb" flat @click="createStore.newPrompt()" :loading="loading.new" :disable="createStore.anyLoading").q-mr-md
@@ -26,10 +26,13 @@
           .badge-sm {{ prices.promptTools.randomPrompt }}
           q-tooltip
             p Randomize an element of the prompt
-        q-btn(icon="arrow_upward" flat @click="createStore.improvePrompt()" :loading="loading.improve" :disable="createStore.anyLoading || req.prompt?.length < 10")
+        q-btn(icon="arrow_upward" flat @click="createStore.improvePrompt()" :loading="loading.improve" :disable="createStore.anyLoading || req.prompt?.length < 10").q-mr-md
           .badge-sm {{ prices.promptTools.improvePrompt }}
           q-tooltip
             p Improve the prompt
+        q-btn(icon="dashboard_customize" flat @click="openTemplates" :disable="createStore.anyLoading")
+          q-tooltip(v-if="$q.screen.gt.sm")
+            p Browse Templates
 
       q-separator(color="grey-9" spaced="20px" inset)
       .centered.q-gutter-md
@@ -37,7 +40,7 @@
           p Quantity
           .row
             q-input(v-model.number="req.quantity" type="number" :min="1" :max="100" style="width:45px; max-width:20vw;" no-error-icon :disable="createStore.anyLoading || req.seed != undefined")
-            q-tooltip(v-if="req.seed != undefined") Can't adjust quantity when using custom seed
+            q-tooltip(v-if="$q.screen.gt.sm && req.seed != undefined") Can't adjust quantity when using custom seed
             .column
               q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >= 100 || req.seed != undefined")
               q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <= 1 || req.seed != undefined")
@@ -84,6 +87,12 @@
           q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'forge', params:{mode:'create'}})")
         q-separator(color="primary").q-mb-lg
         CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
+
+  q-dialog(v-model="templatesDialogOpen")
+    PromptTemplatesDialog(
+      @apply="applyResolvedPrompt"
+      @close="templatesDialogOpen = false"
+    )
   </template>
 
 <script lang="ts" setup>
@@ -95,9 +104,11 @@ import { type CustomModel } from "lib/api"
 import { useQuasar } from "quasar"
 import { prices } from "stores/pricesStore"
 import { useUserAuth } from "src/stores/userAuth"
+import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.vue"
+
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
-const quasar = useQuasar()
+const $q = useQuasar()
 
 const createStore = useCreateImageStore()
 const creationsStore = useImageCreations()
@@ -106,12 +117,22 @@ const req = createStore.state.req
 const loading = createStore.state.loading
 
 const showModelPicker = ref(false)
+const templatesDialogOpen = ref(false)
 
+function openTemplates() {
+  templatesDialogOpen.value = true
+}
+
+function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string }) {
+  req.prompt = payload.prompt || ""
+  // If you want to wire negativePrompt later to req.negativePrompt, do so here
+  templatesDialogOpen.value = false
+}
 
 function createImage() {
   void createStore.createImage().then(() => emit("created"))
 }
-const scrollWrapperComponent = computed(() => (quasar.screen.lt.md ? "q-scroll-area" : "div"))
+const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))
 function setCustomModel(model: CustomModel) {
   showModelPicker.value = false
   req.customModelId = model.id

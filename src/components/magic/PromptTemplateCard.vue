@@ -3,7 +3,7 @@ div.template-item.cursor-pointer(:class="itemClass" @click="$emit('click')")
   q-img(
     v-if="imageUrl"
     :src="imageUrl"
-    :ratio="3/5"
+    :ratio="imgRatio"
     position="top"
     no-spinner
     placeholder-src="/blankAvatar.png"
@@ -37,6 +37,7 @@ const props = withDefaults(
     selectable?: boolean
     selected?: boolean
     noTitle?: boolean
+    ratio?: number
   }>(),
   { selectable: true, selected: false, noTitle: false },
 )
@@ -49,6 +50,9 @@ const itemClass = computed(() => ({
   selected: props.selected,
   disabled: props.selectable === false,
 }))
+
+// runtime ratio override when provided (used by dialog mosaic)
+const imgRatio = computed(() => props.ratio || 3 / 5)
 
 // Prefer already-resolved previewUrl when available; otherwise pick gendered preview
 const imageUrl = computed(() => {

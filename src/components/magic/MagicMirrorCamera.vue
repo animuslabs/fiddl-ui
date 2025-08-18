@@ -90,10 +90,14 @@ div
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { catchErr } from "lib/util"
+import { useUserAuth } from "src/stores/userAuth"
+import { prices } from "src/stores/pricesStore"
 
 const emit = defineEmits<{
   (e: "captured", blobs: Blob[]): void
   (e: "error", reason: string): void
+  (e: "auth-required"): void
+  (e: "insufficient-points"): void
 }>()
 
 // Config
@@ -144,6 +148,10 @@ function triggerFlashAndSound() {
 }
 
 const quasar = useQuasar()
+
+const userAuth = useUserAuth()
+const mmRequiredPoints = computed(() => prices.forge.createTrainingSet + prices.forge.trainBaseModel.fluxDev + 3 * prices.image.model.custom)
+const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
 const floatingControlsStyle = computed(
@@ -243,6 +251,16 @@ function switchToGallery() {
 }
 
 async function startAutoCapture() {
+  // Prevent capture when not authenticated
+  if (!userAuth.userProfile?.email) {
+    emit("auth-required")
+    return
+  }
+  // Prevent capture when not enough points
+  if (availablePoints.value < mmRequiredPoints.value) {
+    emit("insufficient-points")
+    return
+  }
   if (!videoRef.value) return
   // Start countdown (tips overlay is already visible)
   countdownActive.value = true
@@ -353,6 +371,16 @@ function openGalleryPicker() {
 }
 
 function onFileInputChange(e: Event) {
+  if (!userAuth.userProfile?.email) {
+    emit("auth-required")
+    if (fileInputRef.value) fileInputRef.value.value = ""
+    return
+  }
+  if (availablePoints.value < mmRequiredPoints.value) {
+    emit("insufficient-points")
+    if (fileInputRef.value) fileInputRef.value.value = ""
+    return
+  }
   const input = e.target as HTMLInputElement
   const file = input.files && input.files[0]
   if (!file) return

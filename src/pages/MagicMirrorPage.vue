@@ -6,7 +6,12 @@ q-page.full-width
     p.text-primary Transform your selfie into different characters in minutes
   div(v-if="sessionLoaded && step === 'capture'")
     .centered
-      MagicMirrorCamera(@captured="onCaptured" @error="onCaptureError")
+      MagicMirrorCamera(
+        @captured="onCaptured"
+        @error="onCaptureError"
+        @auth-required="onAuthRequired"
+        @insufficient-points="onInsufficientPoints"
+      )
 
   div(v-else-if="step === 'training'")
 
@@ -79,6 +84,30 @@ q-page.full-width
               q-btn(color="primary"  flat square size="sm" icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
                 q-tooltip(v-if="triggeredVideoIds.includes(media.id)") Animation already triggered
 
+  q-dialog(v-model="loginDialogOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Login or Register
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mt-sm
+          p.text-primary Please login or register to use Magic Mirror.
+        PrivyLogin
+  q-dialog(v-model="insufficientDialogOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Not enough points
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        p.text-primary You need {{ mmRequiredPoints }} Fiddl Points to use Magic Mirror (training set + model + 3 images).
+        p.text-secondary You have {{ availablePoints }} points. Missing {{ missingPoints }} points.
+      q-card-actions(align="right")
+        q-btn(flat label="Cancel" v-close-popup)
+        q-btn(color="primary" label="Add Points" no-caps @click="goToAddPoints")
   q-dialog(v-model="dialogOpen")
     q-card(style="width:520px; max-width:100vw;")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
@@ -175,6 +204,11 @@ const router = useRouter()
 let subjectDescription: string | undefined
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
+const loginDialogOpen = ref(false)
+const insufficientDialogOpen = ref(false)
+const mmRequiredPoints = computed(() => prices.forge.createTrainingSet + prices.forge.trainBaseModel.fluxDev + 3 * prices.image.model.custom)
+const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
+const missingPoints = computed(() => Math.max(0, mmRequiredPoints.value - availablePoints.value))
 
 const dialogOpen = ref(false)
 const dialogSelection = ref<string[]>([])
@@ -459,6 +493,21 @@ async function onCaptured(blobs: Blob[]) {
 }
 function onCaptureError(reason: string) {
   catchErr(new Error("Capture error: " + reason))
+}
+
+function onAuthRequired() {
+  quasar.notify({ color: "primary", message: "Please login or register to start capturing" })
+  loginDialogOpen.value = true
+}
+
+function onInsufficientPoints() {
+  quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror" })
+  insufficientDialogOpen.value = true
+}
+
+function goToAddPoints() {
+  insufficientDialogOpen.value = false
+  void router.push({ name: "addPoints" })
 }
 
 function generateModelName() {
