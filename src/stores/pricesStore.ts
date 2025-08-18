@@ -63,10 +63,10 @@ export const prices = reactive<PointsPrices200>({
 })
 async function reloadPrices() {
   const newPrices = await pointsPrices().catch(console.error)
-  console.log("[pricesStore] API response (newPrices):", newPrices)
-  console.log("[pricesStore] prices before update:", JSON.parse(JSON.stringify(prices)))
+  // console.log("[pricesStore] API response (newPrices):", newPrices)
+  // console.log("[pricesStore] prices before update:", JSON.parse(JSON.stringify(prices)))
   if (newPrices?.data) Object.assign(prices, newPrices.data)
-  console.log("[pricesStore] prices after update:", JSON.parse(JSON.stringify(prices)))
+  // console.log("[pricesStore] prices after update:", JSON.parse(JSON.stringify(prices)))
 }
 
 export function usePricesStore() {

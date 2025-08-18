@@ -1,119 +1,152 @@
+// src/lib/tawk.ts
 declare global {
   interface Window {
     Tawk_API: any
   }
 }
 
+const TAWK_EMBED_URL = "https://embed.tawk.to/68943cd8b89c23192f895677/1j21grc1q"
+let timeoutId: number
+
+let loadPromise: Promise<void> | null = null
+
+function isClientReady() {
+  return typeof window !== "undefined" && !!window.Tawk_API
+}
+
+function injectScript(timeoutMs = 15000): Promise<void> {
+  if (isClientReady()) return Promise.resolve()
+  if (loadPromise) return loadPromise
+
+  loadPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${TAWK_EMBED_URL}"]`) as HTMLScriptElement | null
+
+    function done(ok: boolean) {
+      window.clearTimeout(timeoutId)
+      if (!ok) {
+        loadPromise = null
+        reject(new Error("Tawk failed to load"))
+      } else {
+        resolve()
+      }
+    }
+
+    window.Tawk_API = window.Tawk_API || {}
+    const prevOnLoad = window.Tawk_API.onLoad
+    window.Tawk_API.onLoad = () => {
+      try {
+        prevOnLoad?.()
+      } finally {
+        done(true)
+      }
+    }
+
+    if (!existing) {
+      const s = document.createElement("script")
+      s.src = TAWK_EMBED_URL
+      s.async = true
+      s.charset = "UTF-8"
+      s.setAttribute("crossorigin", "*")
+      s.onerror = () => done(false)
+      document.head.appendChild(s)
+    }
+
+    timeoutId = window.setTimeout(() => done(false), timeoutMs)
+  })
+
+  return loadPromise
+}
+
 export const tawk = {
   get client() {
-    return window.Tawk_API
+    return window.Tawk_API || undefined
   },
 
-  init() {
-    if (!document.querySelector('script[src*="tawk"]')) {
-      this.loadScript(() => {
-        this.start()
-        this.showWidget()
-      })
-    } else {
-      this.start()
-      this.showWidget()
-    }
+  init(timeoutMs?: number) {
+    return injectScript(timeoutMs)
   },
 
-  loadScript(callback: () => void) {
-    const script = document.createElement("script")
-    script.src = "https://embed.tawk.to/68943cd8b89c23192f895677/1j21grc1q"
-    script.async = true
-    script.charset = "UTF-8"
-    script.setAttribute("crossorigin", "*")
-    script.onload = callback
-    document.head.appendChild(script)
+  whenReady(timeoutMs?: number) {
+    return injectScript(timeoutMs)
   },
 
   start() {
-    this.client.start()
+    this.client?.start?.()
   },
-
   shutdown() {
-    this.client.shutdown()
+    this.client?.shutdown?.()
   },
-
   showWidget() {
-    this.client.showWidget()
+    this.client?.showWidget?.()
   },
-
   hideWidget() {
-    this.client.hideWidget()
+    this.client?.hideWidget?.()
   },
-
   toggleVisibility() {
-    this.client.toggleVisibility()
+    this.client?.toggleVisibility?.()
   },
 
-  onStatusChange(callback: (status: string) => void) {
-    this.client.onStatusChange = callback
+  onStatusChange(cb: (status: string) => void) {
+    if (!isClientReady()) return
+    this.client.onStatusChange = cb
+  },
+  onLoad(cb: () => void) {
+    if (!isClientReady()) return
+    this.client.onLoad = cb
+  },
+  onChatStarted(cb: () => void) {
+    if (!isClientReady()) return
+    this.client.onChatStarted = cb
+  },
+  onChatEnded(cb: () => void) {
+    if (!isClientReady()) return
+    this.client.onChatEnded = cb
   },
 
-  onLoad(callback: () => void) {
-    this.client.onLoad = callback
-  },
-
-  onChatStarted(callback: () => void) {
-    this.client.onChatStarted = callback
-  },
-
-  onChatEnded(callback: () => void) {
-    this.client.onChatEnded = callback
+  setAttributes(attributes: Record<string, any>, callback?: (err?: unknown) => void) {
+    if (!isClientReady()) return
+    this.client.setAttributes?.(attributes, callback ?? (() => {}))
   },
 
   unloadScript() {
-    const script = document.querySelector('script[src*="tawk"]')
-    if (script) {
-      script.remove()
-    }
-    delete window.Tawk_API
+    const script = document.querySelector(`script[src="${TAWK_EMBED_URL}"]`)
+    if (script) script.remove()
 
-    // Clear Tawk-related cookies
+    try {
+      delete (window as any).Tawk_API
+    } catch {
+      ;(window as any).Tawk_API = undefined
+    }
+
     document.cookie.split(";").forEach((cookie) => {
-      const parts = cookie.split("=")
-      if (parts[0]) {
-        const name = parts[0].trim()
-        if (name.startsWith("twk_") || name.includes("Tawk")) {
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-        }
+      const [rawName] = cookie.split("=")
+      const name = rawName?.trim()
+      if (name && (name.startsWith("twk_") || name.includes("Tawk"))) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
       }
     })
 
-    // Clear Tawk-related local storage
-    Object.keys(localStorage).forEach((key) => {
+    for (const key of Object.keys(localStorage)) {
       if (key.startsWith("twk_") || key.includes("Tawk")) {
         localStorage.removeItem(key)
       }
-    })
-  },
-
-  reloadScript() {
-    this.loadScript(() => {})
-  },
-
-  // Set arbitrary custom attributes for the current visitor / chat
-  // Keys must be alphanumeric or contain '-' and values ≤ 255 chars
-  // Example: tawk.setAttributes({ plan: 'pro', store: 'Midvalley' })
-  setAttributes(attributes: Record<string, any>, callback?: (err?: unknown) => void) {
-    if (this.client && typeof this.client.setAttributes === "function") {
-      this.client.setAttributes(attributes, callback ?? (() => {}))
     }
+
+    loadPromise = null
   },
 
-  setVisitorInfo(name: string, email: string, extraAttributes?: Record<string, any>) {
+  reloadScript(timeoutMs?: number) {
+    this.unloadScript()
+    return injectScript(timeoutMs)
+  },
+
+  async setVisitorInfo(name: string, email: string, extraAttributes?: Record<string, any>) {
     this.unloadScript()
     window.Tawk_API = window.Tawk_API || {}
     window.Tawk_API.visitor = { name, email }
-    this.reloadScript()
-    if (extraAttributes)
-      setTimeout(() => {
-        this.setAttributes(extraAttributes)
-      }, 2000)
+    if (extraAttributes) {
+      window.Tawk_API.attributes = { ...(window.Tawk_API.attributes || {}), ...extraAttributes }
+    }
+    await this.reloadScript()
   },
 }

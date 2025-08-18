@@ -33,14 +33,14 @@ import { throwErr } from "lib/util"
 export default defineComponent({
   emits: ["close"],
   setup(_, { emit }) {
-    const $q = useQuasar()
+    const quasar = useQuasar()
     const router = useRouter()
     const email = ref("")
     const loading = ref(false)
 
     const sendEmailCode = async () => {
       if (!email.value || email.value.trim() === "") {
-        $q.notify({
+        quasar.notify({
           color: "negative",
           message: "Please enter your email address",
         })
@@ -51,64 +51,66 @@ export default defineComponent({
       try {
         await handleEmailLogin(email.value)
         // await privy.auth.email.send
-        $q.notify({
+        quasar.notify({
           color: "positive",
           message: "Check your email for a verification code",
         })
         emit("close")
         // Use a simpler dialog approach
-        $q.dialog({
-          title: "Verification",
-          message: `Enter the code sent to your email: ${email.value}`,
-          prompt: {
-            model: "",
-            type: "text",
-          },
-          cancel: true,
-          persistent: true,
-        }).onOk(async (code) => {
-          try {
-            Loading.show({
-              message: "Logging you in...",
-            })
-            const result = await verifyEmailCode(email.value, code)
-            if (!result.token) throwErr("No token")
-            const userAuth = useUserAuth()
-            await userAuth.privyLogin(result.token)
-
-            // Wait for user profile to load
-            await new Promise((resolve) => setTimeout(resolve, 100))
-            // Prefer returning to the page that initiated login
-            const returnTo = sessionStorage.getItem("returnTo")
-            if (returnTo) {
-              sessionStorage.removeItem("returnTo")
-              void router.replace(returnTo)
-            } else if (userAuth.userProfile?.username) {
-              void router.push({
-                name: "profile",
-                params: { username: userAuth.userProfile.username },
-                query: { tab: "unlocked" },
+        quasar
+          .dialog({
+            title: "Verification",
+            message: `Enter the code sent to your email: ${email.value}`,
+            prompt: {
+              model: "",
+              type: "text",
+            },
+            cancel: true,
+            persistent: true,
+          })
+          .onOk(async (code) => {
+            try {
+              Loading.show({
+                message: "Logging you in...",
               })
-            } else {
-              // Fallback to account route if username not available
-              void router.push({ name: "account" })
+              const result = await verifyEmailCode(email.value, code)
+              if (!result.token) throwErr("No token")
+              const userAuth = useUserAuth()
+              await userAuth.privyLogin(result.token)
+
+              // Wait for user profile to load
+              await new Promise((resolve) => setTimeout(resolve, 100))
+              // Prefer returning to the page that initiated login
+              const returnTo = sessionStorage.getItem("returnTo")
+              if (returnTo) {
+                sessionStorage.removeItem("returnTo")
+                void router.replace(returnTo)
+              } else if (userAuth.userProfile?.username) {
+                void router.push({
+                  name: "profile",
+                  params: { username: userAuth.userProfile.username },
+                  query: { tab: "unlocked" },
+                })
+              } else {
+                // Fallback to account route if username not available
+                void router.push({ name: "settings" })
+              }
+              Loading.hide()
+              quasar.notify({
+                color: "positive",
+                message: "Successfully verified",
+              })
+            } catch (error: any) {
+              Loading.hide()
+              quasar.notify({
+                color: "negative",
+                message: "Failed to verify code: " + error.message,
+              })
+              console.error(error)
             }
-            Loading.hide()
-            $q.notify({
-              color: "positive",
-              message: "Successfully verified",
-            })
-          } catch (error: any) {
-            Loading.hide()
-            $q.notify({
-              color: "negative",
-              message: "Failed to verify code: " + error.message,
-            })
-            console.error(error)
-          }
-        })
+          })
       } catch (error) {
-        $q.notify({
+        quasar.notify({
           color: "negative",
           message: "Failed to send verification code",
         })
@@ -125,7 +127,7 @@ export default defineComponent({
         sessionStorage.setItem("returnTo", rt)
         await handleOauthLogin(provider, rt)
       } catch (error) {
-        $q.notify({
+        quasar.notify({
           color: "negative",
           message: "Failed to initiate OAuth login",
         })
@@ -139,12 +141,12 @@ export default defineComponent({
       try {
         // We'll need to implement the passkey login in the lib/privy.ts file
         // This is a placeholder for now
-        $q.notify({
+        quasar.notify({
           color: "info",
           message: "Passkey login not yet implemented",
         })
       } catch (error) {
-        $q.notify({
+        quasar.notify({
           color: "negative",
           message: "Failed to initiate passkey login",
         })

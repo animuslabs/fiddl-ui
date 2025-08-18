@@ -119,7 +119,7 @@ export const useUserAuth = defineStore("userAuth", {
         this.loggedIn = true
         await this.loadUserData(authResult.userId)
         void this.loadUserProfile().then(() => {
-          tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+          void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
         })
       } catch (e: any) {
         this.logout()
@@ -146,7 +146,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
       await this.loadUserData(userId)
       void this.loadUserProfile().then(() => {
-        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
     },
 
@@ -159,13 +159,13 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
       await this.loadUserData(userId)
       void this.loadUserProfile().then(() => {
-        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
     },
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
       if (!savedLogin) {
-        tawk.init()
+        void tawk.init()
         return false
       }
       // await this.login(savedLogin.userId)
@@ -173,7 +173,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.setUserId(savedLogin.userId)
       this.loggedIn = true
       void this.loadUserProfile().then(() => {
-        tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
     },
 

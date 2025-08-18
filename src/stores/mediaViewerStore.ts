@@ -126,6 +126,11 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       }
     },
 
+    // Optimistically mark current media as owned (call when user unlocks in a dialog)
+    setOwnedOptimistic() {
+      this.userOwnsMedia = true
+    },
+
     // Initialize media viewer
     async initializeMediaViewer(mediaObjects: MediaGalleryMeta[], startIndex = 0) {
       this.mediaObjects = [...mediaObjects]

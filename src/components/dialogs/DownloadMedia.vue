@@ -48,6 +48,7 @@ import { creationsHdVideo } from "src/lib/orval"
 import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
+import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 export default defineComponent({
   props: { ...dialogProps, requestId: { type: String, required: false } },
   emits: ["unlocked", "hide", "ok"],
@@ -121,6 +122,12 @@ export default defineComponent({
       if (!this.currentMediaId) return
       await purchaseMedia(this.currentMediaId, this.type!)
       this.mediaUnlocked = true
+      // Optimistically mark as owned immediately
+      const store = useMediaViewerStore()
+      store.userOwnsMedia = true
+      store.triedHdLoad = false
+      void store.loadHdMedia()
+      // Keep dialog open to show downloads section and still notify listeners
       this.$emit("unlocked")
     },
     show() {

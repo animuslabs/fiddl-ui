@@ -34,12 +34,19 @@ router-view(style="z-index:1")
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import { Loading, LoadingBar, LocalStorage, Notify } from "quasar"
+import { Dialog, Loading, LoadingBar, LocalStorage, Notify } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { shortIdToLong, toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
 import { tawk } from "lib/tawk"
 import { promoClaimPromoCode } from "lib/orval"
+import { handleClaimCode } from "lib/promoCodeUtil"
+LoadingBar.setDefaults({
+  color: "primary",
+  size: "1px",
+  position: "top",
+  reverse: false,
+})
 // import { useCreateImageStore } from "stores/createImageStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {
@@ -66,38 +73,6 @@ export default defineComponent({
       handler(newQuery) {
         const referredBy = this.$route.query?.referredBy as string | undefined
         if (referredBy) LocalStorage.set("referredBy", referredBy)
-        const claimCode = this.$route.query?.claimCode as string | undefined
-        if (typeof claimCode == "string") {
-          console.log("claimCode", claimCode)
-          const longCode = shortIdToLong(claimCode)
-          // const handledKey = `promo:claimed:${longCode}`
-          // if (sessionStorage.getItem(handledKey)) return
-          // sessionStorage.setItem(handledKey, "1")
-          // remove claimCode from URL to prevent re-processing on navigation/refresh
-          try {
-            const q: any = { ...this.$route.query }
-            delete q.claimCode
-            void this.$router.replace({ query: q })
-          } catch {
-            console.error()
-          }
-          setTimeout(() => {
-            const auth = useUserAuth()
-            if (auth.loggedIn) {
-              void (async () => {
-                try {
-                  await promoClaimPromoCode({ id: longCode })
-                  await auth.loadUserData()
-                  Notify.create({ message: "You received Fiddl Points" })
-                } catch (e) {
-                  console.error(e)
-                }
-              })()
-            } else {
-              void auth.registerWithPromoCode(longCode)
-            }
-          }, 2000)
-        }
       },
     },
   },
@@ -106,16 +81,10 @@ export default defineComponent({
     // console.log(this.$route.query)
   },
 
-  mounted() {
+  async mounted() {
     void usePricesStore().reloadPrices().catch(console.error)
-    void useUserAuth().attemptAutoLogin()
-    LoadingBar.setDefaults({
-      color: "primary",
-      size: "1px",
-      position: "top",
-      reverse: false,
-    })
-    // tawk.init()
+    await this.$userAuth.attemptAutoLogin()
+    await handleClaimCode(this.$userAuth.loggedIn)
   },
   methods: {
     openDialog(startingIndex = 0, images: string[]) {

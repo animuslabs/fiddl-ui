@@ -4,9 +4,6 @@ q-page.full-width
     h1.lobster-font Magic Mirror
   .centered.q-ma-md
     p.text-primary Transform your selfie into different characters in minutes
-
-
-
   div(v-if="sessionLoaded && step === 'capture'")
     .centered
       MagicMirrorCamera(@captured="onCaptured" @error="onCaptureError")
@@ -407,6 +404,7 @@ async function loadSession() {
     sessionLoaded.value = true
   } catch (e) {
     console.warn("failed to load session", e)
+    step.value = "capture"
   }
 }
 

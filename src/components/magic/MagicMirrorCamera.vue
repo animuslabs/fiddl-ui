@@ -98,8 +98,8 @@ const emit = defineEmits<{
 
 // Config
 const targetFrames = 4
-const totalDurationMs = 3000
-const countdownSeconds = 1
+const totalDurationMs = 2000
+const countdownSeconds = 0.5
 const mimeType = "image/jpeg"
 const quality = 0.97
 
@@ -143,17 +143,17 @@ function triggerFlashAndSound() {
   }
 }
 
-const $q = useQuasar()
+const quasar = useQuasar()
 
-const isDesktop = computed(() => $q.screen.gt.sm)
+const isDesktop = computed(() => quasar.screen.gt.sm)
 const floatingControlsStyle = computed(
   (): Record<string, string> => ({
-    bottom: `calc(env(safe-area-inset-bottom, 0px) + ${$q.screen.gt.sm ? "16px" : "88px"})`,
+    bottom: `calc(env(safe-area-inset-bottom, 0px) + ${quasar.screen.gt.sm ? "16px" : "88px"})`,
   }),
 )
 
 const videoStyle = computed((): Record<string, string> => {
-  if ($q.screen.gt.sm) {
+  if (quasar.screen.gt.sm) {
     return {
       width: "100%",
       maxWidth: "520px",
@@ -177,16 +177,8 @@ const videoStyle = computed((): Record<string, string> => {
 })
 
 onMounted(() => {
-  // ensure playsinline for iOS
   if (videoRef.value) videoRef.value.setAttribute("playsinline", "true")
-
-  // Try to use last-selected device on desktop
-  const saved = (LocalStorage.getItem(LAST_VIDEO_DEVICE_KEY) as string) || null
-  if ($q.screen.gt.sm && saved) currentDeviceId.value = saved
-
-  void initCamera(currentDeviceId.value || undefined)
-
-  // Keep device list up-to-date
+  void initCamera()
   if (navigator.mediaDevices && "addEventListener" in navigator.mediaDevices) {
     navigator.mediaDevices.addEventListener("devicechange", fetchVideoDevices)
   }
@@ -288,7 +280,7 @@ async function startAutoCapture() {
     emit("captured", captured.value.slice())
   } else {
     emit("error", "no_frames")
-    $q.notify({ message: "No frames captured", color: "negative" })
+    quasar.notify({ message: "No frames captured", color: "negative" })
   }
 }
 

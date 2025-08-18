@@ -30,6 +30,7 @@ import { purchaseMedia } from "lib/util"
 import { QDialog } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { prices } from "stores/pricesStore"
+import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 
 export default defineComponent({
   props: {
@@ -61,6 +62,12 @@ export default defineComponent({
     async unlock() {
       await purchaseMedia(this.currentMediaId, this.type)
       this.mediaUnlocked = true
+      // Optimistically mark as owned immediately
+      const store = useMediaViewerStore()
+      store.userOwnsMedia = true
+      store.triedHdLoad = false
+      void store.loadHdMedia()
+      // Close like dialog after unlock as before
       this.onOKClick()
     },
     startEditing() {

@@ -241,6 +241,7 @@ async function toggleLike() {
       component: LikeMedia,
       componentProps: mediaViewerStore.getDialogParams(),
     }).onOk(() => {
+      mediaViewerStore.userOwnsMedia = true
       mediaViewerStore.triedHdLoad = false
       void mediaViewerStore.loadHdMedia()
       mediaViewerStore.userLikedMedia = true
@@ -267,6 +268,10 @@ function editMedia() {
   Dialog.create({
     component: EditMedia,
     componentProps: mediaViewerStore.getDialogParams(),
+  }).onOk(() => {
+    mediaViewerStore.userOwnsMedia = true
+    mediaViewerStore.triedHdLoad = false
+    void mediaViewerStore.loadHdMedia()
   })
 }
 
@@ -277,6 +282,10 @@ function showDownloadWindow() {
       ...mediaViewerStore.getDialogParams(),
       requestId: mediaViewerStore.loadedRequestId,
     },
+  }).onOk(() => {
+    mediaViewerStore.userOwnsMedia = true
+    mediaViewerStore.triedHdLoad = false
+    void mediaViewerStore.loadHdMedia()
   }).onDismiss(() => {
     mediaViewerStore.triedHdLoad = false
     mediaViewerStore.hdMediaLoaded = false

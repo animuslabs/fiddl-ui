@@ -46,6 +46,7 @@ import { creationsOriginalImage, creationsUpscaledImage } from "src/lib/orval"
 import { CreateEditType, MediaType } from "lib/types"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
+import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { match } from "ts-pattern"
 
 export default defineComponent({
@@ -68,6 +69,13 @@ export default defineComponent({
       try {
         await purchaseMedia(this.currentMediaId, this.type)
         this.mediaUnlocked = true
+        // Optimistically mark as owned immediately
+        const store = useMediaViewerStore()
+        store.userOwnsMedia = true
+        store.triedHdLoad = false
+        void store.loadHdMedia()
+        // Do not close the dialog; user may choose an editing path
+        this.$emit("unlocked")
       } catch (error) {
         catchErr(error)
       }
