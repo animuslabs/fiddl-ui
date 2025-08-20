@@ -2,7 +2,7 @@
 
 export type Slot = "subject" | "setting" | "style" | "lighting" | "camera" | "mood" | "composition" | "color" | "postprocess" | "negative"
 
-export type TemplateKind = "subject" | "setting" | "style" | "effect"
+export type TemplateKind = "subject" | "setting" | "style" | "mood"
 
 export type Gender = "male" | "female"
 

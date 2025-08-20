@@ -36,9 +36,9 @@ export const usePromptTemplatesStore = defineStore("promptTemplatesStore", {
     },
 
     // Generic loader by kind without tag constraints (for Create page)
-    async loadByKind(kind: KindKey) {
+    async loadByKind(kind: KindKey, force = false) {
       const slot = this.byKind[kind] || { items: [], loaded: false, loading: false, error: null }
-      if (slot.loaded || slot.loading) {
+      if (!force && (slot.loaded || slot.loading)) {
         this.byKind[kind] = slot
         return
       }

@@ -7,9 +7,9 @@ q-card(style="width:980px; max-width:100vw;")
     .row.items-center.justify-between.q-mt-sm
       q-tabs(v-model="activeTab" dense active-color="primary" indicator-color="primary")
         q-tab(name="subject" label="Subject")
-        q-tab(name="setting" label="Setting")
-        q-tab(name="style" label="Style")
-        q-tab(name="effect" label="Effect")
+        //- q-tab(name="setting" label="Setting")
+        //- q-tab(name="style" label="Style")
+        //- q-tab(name="effect" label="Effect")
       q-btn-toggle(v-if="isSubjectTab" v-model="genderMode" :options="genderOptions" flat unelevated color="grey" toggle-color="primary")
     q-separator
   q-card-section
@@ -20,6 +20,7 @@ q-card(style="width:980px; max-width:100vw;")
         div(v-else-if="slotFor(k).error" class="q-pa-md")
           p.text-negative {{ slotFor(k).error }}
         div(v-else-if="isSubjectTab")
+          //- h4 hi
           div(v-if="genderMode === 'split'")
             .row.q-col-gutter-md
               .col-12.col-md-6
@@ -53,7 +54,7 @@ const emit = defineEmits<{
 const quasar = useQuasar()
 const store = usePromptTemplatesStore()
 
-const kinds = ["subject", "setting", "style", "effect"] as TemplateKind[]
+const kinds: TemplateKind[] = ["subject", "setting", "style", "effect"]
 const activeTab = ref<TemplateKind>("subject")
 const genderMode = ref<"female" | "male" | "split">("split")
 const genderOptions = [
@@ -135,7 +136,8 @@ onMounted(() => {
 })
 
 watch(activeTab, (k) => {
-  void ensureLoaded(k)
+  // Force-refresh on tab change so we always query when switching tabs
+  void store.loadByKind(k, true)
 })
 
 function applyTemplate(t: PromptTemplate) {

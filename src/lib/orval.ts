@@ -1832,6 +1832,7 @@ export type PromoClaimPromoCodeBody = {
 export type PromoCreateAccountWithPromoBody = {
   id: string;
   referrerUsername?: string;
+  email?: string;
 };
 
 export type PromoCreateAccountWithPromo200 = {
@@ -2420,7 +2421,7 @@ export const PromptTemplatesListKind = {
   subject: 'subject',
   setting: 'setting',
   style: 'style',
-  effect: 'effect',
+  mood: 'mood',
 } as const;
 
 export type PromptTemplatesList200ItemKind = typeof PromptTemplatesList200ItemKind[keyof typeof PromptTemplatesList200ItemKind];
@@ -2431,7 +2432,7 @@ export const PromptTemplatesList200ItemKind = {
   subject: 'subject',
   setting: 'setting',
   style: 'style',
-  effect: 'effect',
+  mood: 'mood',
 } as const;
 
 export type PromptTemplatesList200ItemSlots = {[key: string]: string | string[]};
