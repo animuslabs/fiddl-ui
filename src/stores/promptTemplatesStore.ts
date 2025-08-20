@@ -10,8 +10,13 @@ export const usePromptTemplatesStore = defineStore("promptTemplatesStore", {
     loading: false,
     loaded: false,
     error: null as string | null,
-    // Cache per kind for Create page usage
-    byKind: {} as Record<KindKey, { items: GenderedPromptTemplate[]; loaded: boolean; loading: boolean; error: string | null }>,
+    // Cache per kind for Create page usage (pre-initialize keys to ensure reactivity)
+    byKind: {
+      subject: { items: [] as GenderedPromptTemplate[], loaded: false, loading: false, error: null },
+      setting: { items: [] as GenderedPromptTemplate[], loaded: false, loading: false, error: null },
+      style:   { items: [] as GenderedPromptTemplate[], loaded: false, loading: false, error: null },
+      mood:    { items: [] as GenderedPromptTemplate[], loaded: false, loading: false, error: null },
+    } as Record<KindKey, { items: GenderedPromptTemplate[]; loaded: boolean; loading: boolean; error: string | null }>,
   }),
   actions: {
     async loadSubjectFaceTemplates() {
@@ -39,12 +44,12 @@ export const usePromptTemplatesStore = defineStore("promptTemplatesStore", {
     async loadByKind(kind: KindKey, force = false) {
       const slot = this.byKind[kind] || { items: [], loaded: false, loading: false, error: null }
       if (!force && (slot.loaded || slot.loading)) {
-        this.byKind[kind] = slot
+        this.byKind[kind] = { ...slot }
         return
       }
       slot.loading = true
       slot.error = null
-      this.byKind[kind] = slot
+      this.byKind[kind] = { ...slot }
       try {
         const { data } = await promptTemplatesList({
           kind: PromptTemplatesListKind[kind],

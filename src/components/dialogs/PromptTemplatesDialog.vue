@@ -9,7 +9,7 @@ q-card(style="width:980px; max-width:100vw;")
         q-tab(name="subject" label="Subject")
         //- q-tab(name="setting" label="Setting")
         //- q-tab(name="style" label="Style")
-        //- q-tab(name="effect" label="Effect")
+        //- q-tab(name="mood" label="Mood")
       q-btn-toggle(v-if="isSubjectTab" v-model="genderMode" :options="genderOptions" flat unelevated color="grey" toggle-color="primary")
     q-separator
   q-card-section
@@ -35,8 +35,12 @@ q-card(style="width:980px; max-width:100vw;")
                     PromptTemplateCard(:template="t" :gender="'male'" :ratio="aspectOf(t) || undefined" @click="applyTemplate(t)")
           div(v-else)
             .template-grid(:style="gridStyle")
-              .template-item(v-for="t in resolved(k, genderMode)" :key="t.id" :style="itemStyle(t)")
-                PromptTemplateCard(:template="t" :gender="isSubjectTab ? (genderMode === 'male' ? 'male' : 'female') : 'female'" :ratio="aspectOf(t) || undefined" @click="applyTemplate(t)")
+              .template-item(v-for="t in resolved(k, genderForList)" :key="t.id" :style="itemStyle(t)")
+                PromptTemplateCard(:template="t" :gender="genderForList" :ratio="aspectOf(t) || undefined" @click="applyTemplate(t)")
+        div(v-else)
+          .template-grid(:style="gridStyle")
+            .template-item(v-for="t in resolved(k, genderForList)" :key="t.id" :style="itemStyle(t)")
+              PromptTemplateCard(:template="t" :gender="genderForList" :ratio="aspectOf(t) || undefined" @click="applyTemplate(t)")
 </template>
 
 <script setup lang="ts">
@@ -54,7 +58,7 @@ const emit = defineEmits<{
 const quasar = useQuasar()
 const store = usePromptTemplatesStore()
 
-const kinds: TemplateKind[] = ["subject", "setting", "style", "effect"]
+const kinds: TemplateKind[] = ["subject", "setting", "style", "mood"]
 const activeTab = ref<TemplateKind>("subject")
 const genderMode = ref<"female" | "male" | "split">("split")
 const genderOptions = [
@@ -84,8 +88,10 @@ const gridStyle = computed(() => {
 })
 
 function slotFor(kind: TemplateKind) {
-  return store.byKind[kind] || { items: [], loading: false, loaded: false, error: null }
+  return store.byKind[kind]
 }
+
+const genderForList = computed<Gender>(() => (isSubjectTab.value ? (genderMode.value === "male" ? "male" : "female") : "female"))
 
 function resolved(kind: TemplateKind, gender: Gender): PromptTemplate[] {
   const slot = slotFor(kind)
