@@ -2643,6 +2643,98 @@ export type TrainingSetsDescribeSet200 = {
   subjectDescription: string | null;
 };
 
+export type UpvotesGetWallet200 = {
+  allowance: number;
+  usedToday: number;
+  remainingToday: number;
+  resetAt: string;
+};
+
+export type UpvotesUpvoteBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesUpvote200 = {
+  allowance: number;
+  remainingToday: number;
+};
+
+export type UpvotesGetMediaUpvoteCountParams = {
+imageId?: string;
+videoId?: string;
+since?: string;
+};
+
+export type UpvotesGetMediaUpvoteCount200 = {
+  total: number;
+};
+
+export type UpvotesDownvoteBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesDownvote200 = {
+  hidden: boolean;
+};
+
+export type UpvotesUnhideBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesUnhide200 = {
+  hidden: boolean;
+};
+
+export type UpvotesGetHiddenListParams = {
+limit?: number;
+offset?: number;
+};
+
+export type UpvotesGetHiddenList200 = {
+  images: string[];
+  videos: string[];
+};
+
+export type PopularityBatchBodyItemsItemMediaType = typeof PopularityBatchBodyItemsItemMediaType[keyof typeof PopularityBatchBodyItemsItemMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PopularityBatchBodyItemsItemMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type PopularityBatchBodyItemsItem = {
+  id: string;
+  mediaType: PopularityBatchBodyItemsItemMediaType;
+};
+
+export type PopularityBatchBody = {
+  /**
+   * @minItems 1
+   * @maxItems 100
+   */
+  items: PopularityBatchBodyItemsItem[];
+  /**
+   * @minimum 1
+   * @maximum 365
+   */
+  upvotesSinceDays?: number;
+};
+
+export type PopularityBatch200Item = {
+  id: string;
+  favorites: number;
+  upvotes: number;
+  downvotes: number;
+  isFavoritedByMe?: boolean;
+  isUpvotedByMe?: boolean;
+  hidden?: boolean;
+};
+
 export const getPkAuthRegisterStartUrl = () => {
 
 
@@ -4842,5 +4934,170 @@ export const trainingSetsDescribeSet = async (params: TrainingSetsDescribeSetPar
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getUpvotesGetWalletUrl = () => {
+
+
+  
+
+  return `/upvotes/getWallet`
+}
+
+export const upvotesGetWallet = async ( options?: RequestInit): Promise<UpvotesGetWallet200> => {
+  
+  return fetcher<UpvotesGetWallet200>(getUpvotesGetWalletUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUpvotesUpvoteUrl = () => {
+
+
+  
+
+  return `/upvotes/upvote`
+}
+
+export const upvotesUpvote = async (upvotesUpvoteBody: UpvotesUpvoteBody, options?: RequestInit): Promise<UpvotesUpvote200> => {
+  
+  return fetcher<UpvotesUpvote200>(getUpvotesUpvoteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upvotesUpvoteBody,)
+  }
+);}
+
+
+
+export const getUpvotesGetMediaUpvoteCountUrl = (params?: UpvotesGetMediaUpvoteCountParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/upvotes/getMediaUpvoteCount?${stringifiedParams}` : `/upvotes/getMediaUpvoteCount`
+}
+
+export const upvotesGetMediaUpvoteCount = async (params?: UpvotesGetMediaUpvoteCountParams, options?: RequestInit): Promise<UpvotesGetMediaUpvoteCount200> => {
+  
+  return fetcher<UpvotesGetMediaUpvoteCount200>(getUpvotesGetMediaUpvoteCountUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUpvotesDownvoteUrl = () => {
+
+
+  
+
+  return `/upvotes/downvote`
+}
+
+export const upvotesDownvote = async (upvotesDownvoteBody: UpvotesDownvoteBody, options?: RequestInit): Promise<UpvotesDownvote200> => {
+  
+  return fetcher<UpvotesDownvote200>(getUpvotesDownvoteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upvotesDownvoteBody,)
+  }
+);}
+
+
+
+export const getUpvotesUnhideUrl = () => {
+
+
+  
+
+  return `/upvotes/unhide`
+}
+
+export const upvotesUnhide = async (upvotesUnhideBody: UpvotesUnhideBody, options?: RequestInit): Promise<UpvotesUnhide200> => {
+  
+  return fetcher<UpvotesUnhide200>(getUpvotesUnhideUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upvotesUnhideBody,)
+  }
+);}
+
+
+
+export const getUpvotesGetHiddenListUrl = (params?: UpvotesGetHiddenListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/upvotes/getHiddenList?${stringifiedParams}` : `/upvotes/getHiddenList`
+}
+
+export const upvotesGetHiddenList = async (params?: UpvotesGetHiddenListParams, options?: RequestInit): Promise<UpvotesGetHiddenList200> => {
+  
+  return fetcher<UpvotesGetHiddenList200>(getUpvotesGetHiddenListUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getPopularityBatchUrl = () => {
+
+
+  
+
+  return `/popularity/batch`
+}
+
+export const popularityBatch = async (popularityBatchBody: PopularityBatchBody, options?: RequestInit): Promise<PopularityBatch200Item[]> => {
+  
+  return fetcher<PopularityBatch200Item[]>(getPopularityBatchUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      popularityBatchBody,)
   }
 );}

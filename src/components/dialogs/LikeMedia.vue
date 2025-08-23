@@ -26,8 +26,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 
 <script lang="ts">
 import { MediaType } from "lib/types"
-import { purchaseMedia } from "lib/util"
-import { QDialog } from "quasar"
+import { catchErr, purchaseMedia } from "lib/util"
+import { Loading, QDialog } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { prices } from "stores/pricesStore"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
@@ -60,15 +60,21 @@ export default defineComponent({
       this.hide()
     },
     async unlock() {
-      await purchaseMedia(this.currentMediaId, this.type)
-      this.mediaUnlocked = true
-      // Optimistically mark as owned immediately
-      const store = useMediaViewerStore()
-      store.userOwnsMedia = true
-      store.triedHdLoad = false
-      void store.loadHdMedia()
-      // Close like dialog after unlock as before
-      this.onOKClick()
+      Loading.show()
+      try {
+        await purchaseMedia(this.currentMediaId, this.type)
+        this.mediaUnlocked = true
+        // Optimistically mark as owned immediately
+        const store = useMediaViewerStore()
+        store.userOwnsMedia = true
+        store.triedHdLoad = false
+        void store.loadHdMedia()
+        // Close like dialog after unlock as before
+        this.onOKClick()
+      } catch (err) {
+        catchErr(err)
+      }
+      Loading.hide()
     },
     startEditing() {
       this.onOKClick()

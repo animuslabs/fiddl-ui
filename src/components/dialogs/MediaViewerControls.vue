@@ -56,13 +56,20 @@
   )
 
   q-btn(
-    icon="sym_o_favorite"
+    icon="favorite"
     flat
     round
-    @click.stop="toggleLike()"
-    :color="mediaViewerStore.favoriteBtnColor"
-    :loading="mediaViewerStore.loadingLike"
+    @click.stop="toggleFavorite()"
+    :color="popularity.get(mediaViewerStore.currentMediaId)?.isFavoritedByMe ? 'red-5' : 'grey-5'"
   )
+  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.favorites") {{ popularity.get(mediaViewerStore.currentMediaId)?.favorites ?? 0 }}
+  q-btn(
+    flat
+    round
+    :icon="popularity.get(mediaViewerStore.currentMediaId)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
+    @click.stop="onUpvote()"
+  )
+  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.upvotes") {{ popularity.get(mediaViewerStore.currentMediaId)?.upvotes ?? 0 }}
 
   div.relative-position
     q-btn(
@@ -118,13 +125,14 @@ import { useUserAuth } from "src/stores/userAuth"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
-import { collectionsLikeMedia, collectionsUnlikeMedia, creationsDeleteMedia, creationsGetCreationData } from "src/lib/orval"
+import { creationsDeleteMedia, creationsGetCreationData } from "src/lib/orval"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
 import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
 import EditMedia from "./EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
 import { useRouter } from "vue-router"
+import { usePopularityStore } from "src/stores/popularityStore"
 
 interface Props {
   allowDelete?: boolean
@@ -145,6 +153,7 @@ const userAuth = useUserAuth()
 const router = useRouter()
 const shareMenuOpen = ref(true)
 const moreMenuOpen = ref(true)
+const popularity = usePopularityStore()
 
 const userCreatedImage = computed(() => {
   if (!mediaViewerStore.creatorMeta) return false
@@ -223,7 +232,7 @@ function goToRequestPage() {
   })
 }
 
-async function toggleLike() {
+async function toggleFavorite() {
   if (!userAuth.loggedIn) {
     Dialog.create({
       title: "Login required",
@@ -235,33 +244,11 @@ async function toggleLike() {
     })
     return
   }
+  void popularity.toggleFavorite(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
+}
 
-  if (!mediaViewerStore.userOwnsMedia) {
-    Dialog.create({
-      component: LikeMedia,
-      componentProps: mediaViewerStore.getDialogParams(),
-    }).onOk(() => {
-      mediaViewerStore.userOwnsMedia = true
-      mediaViewerStore.triedHdLoad = false
-      void mediaViewerStore.loadHdMedia()
-      mediaViewerStore.userLikedMedia = true
-      collectionsLikeMedia(mediaViewerStore.getMediaParams()).catch(catchErr)
-    })
-    return
-  }
-
-  mediaViewerStore.userLikedMedia = !mediaViewerStore.userLikedMedia
-
-  try {
-    if (mediaViewerStore.userLikedMedia) {
-      await collectionsLikeMedia(mediaViewerStore.getMediaParams())
-    } else {
-      await collectionsUnlikeMedia(mediaViewerStore.getMediaParams())
-    }
-  } catch (error) {
-    mediaViewerStore.userLikedMedia = !mediaViewerStore.userLikedMedia
-    catchErr(error)
-  }
+function onUpvote() {
+  void popularity.addUpvote(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
 }
 
 function editMedia() {

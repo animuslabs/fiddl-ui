@@ -11,6 +11,7 @@ q-page.full-height.full-width.relative-position
         ).q-mr-md.q-ml-md
     .centered.full-width
       MediaGallery(
+        show-popularity
         selectable
         :mediaObjects="browserStore.media"
         :layout="viewMode"

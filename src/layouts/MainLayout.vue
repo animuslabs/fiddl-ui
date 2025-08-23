@@ -29,6 +29,12 @@ q-layout(view="lHh Lpr lFf" )
         //- q-separator(color="white" vertical)
         //- q-btn(flat @click="register()" label="register" size="sm")
       .row.justify-end.full-width.q-gutter-sm(v-else)
+        q-btn(rounded padding="0px" :color="upvotesColor" v-if="$userAuth.upvotesWallet")
+          .row.items-center
+            div.q-ml-md {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
+            q-img.q-ml-sm.q-mr-sm(:src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'" style="width:30px; height:30px;" alt="available upvotes" no-spinner)
+          q-tooltip
+            p Available Upvotes
         q-btn(rounded padding="0px" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
           .row.items-center
             div.q-ml-md {{ $userAuth?.userData?.availablePoints || 0 }}
@@ -117,6 +123,10 @@ export default defineComponent({
     pointsColor() {
       if (!this.$userAuth.userData) return "negative"
       return this.$userAuth.userData?.availablePoints > 10 ? "grey-9" : "accent"
+    },
+    upvotesColor() {
+      if (!this.$userAuth.upvotesWallet) return "negative"
+      return this.$userAuth.upvotesWallet.remainingToday > 0 ? "grey-9" : "accent"
     },
   },
   methods: {

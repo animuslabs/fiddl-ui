@@ -8,7 +8,7 @@ import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useImageCreations } from "src/stores/imageCreationsStore"
-import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, type PrivyAuthenticate200 } from "lib/orval"
+import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, upvotesGetWallet, type PrivyAuthenticate200, type UpvotesGetWallet200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
@@ -26,6 +26,7 @@ export const useUserAuth = defineStore("userAuth", {
       userProfile: null as UserProfile | null,
       notificationConfig: null as NotificationConfig | null,
       pointsHistory: [] as PointsTransfer[],
+      upvotesWallet: null as UpvotesGetWallet200 | null,
     }
   },
   actions: {
@@ -71,6 +72,14 @@ export const useUserAuth = defineStore("userAuth", {
       const response = await userPointsHistory({ userId, limit: 100 })
       this.pointsHistory = response.data
     },
+    async loadUpvotesWallet() {
+      try {
+        const response = await upvotesGetWallet()
+        this.upvotesWallet = response.data
+      } catch (e) {
+        console.error("Failed to load upvotes wallet", e)
+      }
+    },
     setUserId(userId: string) {
       // clearImageCache()
       this.userId = userId
@@ -84,6 +93,8 @@ export const useUserAuth = defineStore("userAuth", {
       await this.loadUserData(userData.userId)
       this.setUserId(userData.userId)
       this.loggedIn = true
+      await this.loadUpvotesWallet()
+      await this.loadUpvotesWallet()
     },
     async linkLogin(loginLinkId: string) {
       const response = await loginLinkLoginWithLink({ linkId: loginLinkId })
@@ -118,6 +129,7 @@ export const useUserAuth = defineStore("userAuth", {
         jwt.save({ userId: authResult.userId, token: authResult.token })
         this.loggedIn = true
         await this.loadUserData(authResult.userId)
+        await this.loadUpvotesWallet()
         void this.loadUserProfile().then(() => {
           void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
         })
@@ -145,6 +157,7 @@ export const useUserAuth = defineStore("userAuth", {
       jwt.save({ userId, token })
       this.loggedIn = true
       await this.loadUserData(userId)
+      await this.loadUpvotesWallet()
       void this.loadUserProfile().then(() => {
         void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
@@ -158,6 +171,7 @@ export const useUserAuth = defineStore("userAuth", {
       jwt.save({ userId, token })
       this.loggedIn = true
       await this.loadUserData(userId)
+      await this.loadUpvotesWallet()
       void this.loadUserProfile().then(() => {
         void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
@@ -172,6 +186,7 @@ export const useUserAuth = defineStore("userAuth", {
       await this.loadUserData(savedLogin.userId)
       this.setUserId(savedLogin.userId)
       this.loggedIn = true
+      await this.loadUpvotesWallet()
       void this.loadUserProfile().then(() => {
         void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       })
@@ -199,6 +214,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.userData = null
       this.notificationConfig = null
       this.userProfile = null
+      this.upvotesWallet = null
       umami.identify({ userId: "logged-out" })
       void clearImageCache()
       // useCreateImageStore().$reset()

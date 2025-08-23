@@ -22,10 +22,12 @@ q-page.full-height.full-width
             h4 Unclaimed Promo Codes
           q-list
             q-item(v-for="code in unclaimedPromoCodes" :key="code.id")
-              pre(style="font-size:10px;") {{ code }}
-              div
-                q-btn(label="copy claim" @click="copyCode(code.id)" icon="content_copy" flat)
-                q-btn(label="copy MM link" @click="copyMagicMirror(code.id)" icon="content_copy" flat class="q-ml-sm")
+              pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto;") {{ code }}
+              .row.q-gutter-xs.q-mt-xs
+                q-btn(size="sm" label="copy claim" @click="copyCode(code.id)" icon="content_copy" flat)
+                q-btn(size="sm" label="copy MM" @click="copyMagicMirror(code.id)" icon="content_copy" flat)
+                q-btn(size="sm" label="claim QR" @click="showClaimQr(code.id)" icon="qr_code" color="primary" flat)
+                q-btn(size="sm" label="MM QR" @click="showMmQr(code.id)" icon="qr_code" color="accent" flat)
         q-card.q-pa-md
           .centered
             h4 Claimed Promo Codes
@@ -57,6 +59,21 @@ q-page.full-height.full-width
 
 
 
+// Fullscreen QR dialog
+q-dialog(v-model="qrDialogOpen" maximized)
+  q-card.q-dialog-plugin(style="width:100vw; max-width:100vw; background-color:#000;")
+    .centered.full-width.q-pa-lg(style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;")
+      h5.text-white.q-mb-md {{ qrTitle }}
+      q-spinner(color="primary" size="120px" v-if="qrLoading || !qrDataUrl")
+      q-img(
+        v-if="qrDataUrl && !qrLoading"
+        :src="qrDataUrl"
+        style="width:min(92vw, 600px); height:auto;"
+        no-spinner
+      )
+      .row.justify-center.q-gutter-sm.q-mt-lg
+        q-btn(color="primary" icon="content_copy" label="Copy Link" @click="copyQrLink" rounded)
+        q-btn(color="grey-7" icon="close" label="Close" @click="qrDialogOpen = false" flat rounded)
 </template>
 
 <script lang="ts">
@@ -67,6 +84,7 @@ import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import { defineComponent } from "vue"
 import { promoCreatePromoCode, promoGetPromoCodes, userAllUsers } from "src/lib/orval"
+import QRCode from "qrcode"
 
 export default defineComponent({
   components: {},
@@ -78,6 +96,11 @@ export default defineComponent({
       tab: "promo-codes",
       users: [] as User[],
       avatarImg,
+      qrDialogOpen: false as boolean,
+      qrLink: '' as string,
+      qrTitle: '' as string,
+      qrDataUrl: '' as string,
+      qrLoading: false as boolean,
     }
   },
   watch: {
@@ -108,6 +131,37 @@ export default defineComponent({
       void copyToClipboard(mmUrl)
       Notify.create({ message: "Magic Mirror promo link copied to clipboard", color: "positive", icon: "check" })
     },
+    showClaimQr(codeId: string) {
+      const claimUrl = `${window.location.origin}/claim/${longIdToShort(codeId)}`
+      void this.openQr(claimUrl, 'Claim Promo')
+    },
+    showMmQr(codeId: string) {
+      const mmUrl = `${window.location.origin}/magicMirror?claimCode=${longIdToShort(codeId)}`
+      void this.openQr(mmUrl, 'Magic Mirror')
+    },
+    async openQr(link: string, title = 'Scan QR') {
+      try {
+        this.qrDialogOpen = true
+        this.qrLink = link
+        this.qrTitle = title
+        this.qrLoading = true
+        this.qrDataUrl = await QRCode.toDataURL(link, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 1024,
+          color: { dark: '#000000', light: '#ffffff' },
+        })
+      } catch (error) {
+        catchErr(error)
+      } finally {
+        this.qrLoading = false
+      }
+    },
+    copyQrLink() {
+      if (!this.qrLink) return
+      void copyToClipboard(this.qrLink)
+      Notify.create({ message: "Link copied", color: "positive", icon: "check" })
+    },
     async createPromoCode(kind: 'claim' | 'mm' = 'claim') {
       try {
         const response = await promoCreatePromoCode({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
@@ -119,6 +173,7 @@ export default defineComponent({
         const mmUrl = `${window.location.origin}/magicMirror?claimCode=${shortId}`
         const urlToCopy = kind === 'mm' ? mmUrl : claimUrl
         void copyToClipboard(urlToCopy)
+        void this.openQr(urlToCopy, kind === 'mm' ? 'Magic Mirror' : 'Claim Promo')
         void this.load()
         Notify.create({
           message: kind === 'mm'

@@ -113,8 +113,8 @@ function processBrowseData(rows: BrowseRow[]): MediaItem[] {
 
     for (let i = 0; i < medias.length; i++) {
       const m = medias[i]
+      if (!m) continue
       if (mediaItems.find((e) => e.id === m.id)) continue
-
       const item: MediaItem = {
         id: m.id,
         url: t === "image" ? img(m.id, "lg") : s3Video(m.id, "preview-lg"),

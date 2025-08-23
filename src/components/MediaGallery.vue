@@ -2,6 +2,8 @@
 import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
 import { img, s3Video } from "lib/netlifyImg"
+import { usePopularityStore } from "src/stores/popularityStore"
+import type { MediaType } from "lib/types"
 
 export interface MediaGalleryMeta {
   id: string
@@ -23,6 +25,7 @@ const props = withDefaults(
     rowHeightRatio?: number
     showLoading?: boolean
     centerAlign?: boolean
+    showPopularity?: boolean
   }>(),
   {
     layout: "grid",
@@ -35,6 +38,7 @@ const props = withDefaults(
     rowHeightRatio: 1.2,
     showLoading: true,
     centerAlign: false,
+    showPopularity: false,
   },
 )
 
@@ -54,6 +58,29 @@ const cols = computed(() => {
 })
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
+const popularity = usePopularityStore()
+const requestedIds = new Set<string>()
+const popIconSize = ref("8px")
+
+// Ephemeral "+N" burst UI for upvotes
+type UpvoteBurst = { count: number; visible: boolean; timer?: number }
+const upvoteBursts = ref<Record<string, UpvoteBurst>>({})
+
+function onUpvote(id: string, type: MediaType) {
+  triggerUpvoteBurst(id)
+  void popularity.addUpvote(id, type)
+}
+
+function triggerUpvoteBurst(id: string) {
+  const cur = upvoteBursts.value[id] || { count: 0, visible: false }
+  const next: UpvoteBurst = { ...cur, count: cur.count + 1, visible: true }
+  if (next.timer) window.clearTimeout(next.timer)
+  next.timer = window.setTimeout(() => {
+    // hide and reset count after a short delay
+    upvoteBursts.value[id] = { count: 0, visible: false }
+  }, 1800) as unknown as number
+  upvoteBursts.value[id] = next
+}
 
 const wrapperStyles = computed(() => {
   const isMosaic = props.layout === "mosaic"
@@ -143,6 +170,20 @@ async function buildItems(src: MediaGalleryMeta[]) {
       return { ...item, type, aspectRatio }
     }),
   )
+  if (props.showPopularity) {
+    const ids = galleryItems.value.map((i) => i.id)
+    const newIds = ids.filter((id) => !requestedIds.has(id))
+    if (newIds.length) {
+      const items = galleryItems.value
+        .filter((i) => newIds.includes(i.id))
+        .map((i) => ({
+          id: i.id,
+          mediaType: i.type === "video" ? "video" : ("image" as MediaType),
+        }))
+      void popularity.fetchBatchByItems(items)
+      for (const id of newIds) requestedIds.add(id)
+    }
+  }
 }
 
 function getMediaType(url: string): "image" | "video" {
@@ -195,7 +236,7 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
   // When an item spans multiple columns, also increase its vertical span proportionally
   // so wide media aren’t visually cropped. We scale rows by the number of columns taken.
   const colFactor = colSpan ?? 1
-  const rows = Math.max(1, Math.ceil(((colFactor / aspect) * props.rowHeightRatio)))
+  const rows = Math.max(1, Math.ceil((colFactor / aspect) * props.rowHeightRatio))
 
   return {
     gridRowEnd: `span ${rows}`,
@@ -211,10 +252,15 @@ setInterval(() => {
   }
 }, 10000)
 
+function isVideoMedia(m: MediaGalleryMeta): boolean {
+  const url = m.url || ""
+  const t = m.type ?? getMediaType(url)
+  return t === "video"
+}
+
 function videoClass(media: MediaGalleryMeta) {
   return {
     "cursor-pointer": props.selectable && !videoLoading.value[media.id],
-    display: videoLoading.value[media.id] ? "none" : "block",
   }
 }
 </script>
@@ -227,7 +273,7 @@ function videoClass(media: MediaGalleryMeta) {
     :style="getItemStyle(m)"
     class="media-cell"
   )
-    template(v-if="m.type === 'image'")
+    template(v-if="!isVideoMedia(m)")
       .media-wrapper(:style="mediaStyles")
         q-img(
           :src="m.url"
@@ -237,6 +283,20 @@ function videoClass(media: MediaGalleryMeta) {
           :class="props.selectable ? 'cursor-pointer' : ''"
           @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
         )
+        .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+          .hidden-text Hidden
+          q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
+        // Popularity overlay controls
+        .popularity-overlay(v-if="props.showPopularity")
+          .pop-row
+            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="popularity.toggleFavorite(m.id, 'image')")
+            span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            .upvote-burst-wrap
+              q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
+              transition(name="burst")
+                .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+            span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+            q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
         // Per-item actions slot (optional)
         slot(name="actions" :media="m" :index="index")
           // default empty
@@ -260,6 +320,21 @@ function videoClass(media: MediaGalleryMeta) {
             style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
             :class="videoClass(m)"
           )
+        // Hidden overlay - keeps layout stable
+        .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+          .hidden-text Hidden
+          q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
+        // Popularity overlay controls
+        .popularity-overlay(v-if="props.showPopularity")
+          .pop-row
+            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="popularity.toggleFavorite(m.id, 'video')")
+            span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            .upvote-burst-wrap
+              q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+              transition(name="burst")
+                .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+            span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+            q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
         // Per-item actions slot (optional)
         //- slot(name="actions" :media="m" :index="index")
           // default empty
@@ -309,5 +384,110 @@ function videoClass(media: MediaGalleryMeta) {
 /* Lower the absolute-center slightly to appear visually centered within varying thumbnails */
 .absolute-center.offset-down {
   top: 58% !important;
+}
+
+.popularity-overlay {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, 0);
+
+  color: white;
+  border-radius: 12px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  max-width: 80%;
+  z-index: 3;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+.popularity-overlay .pop-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.popularity-overlay .count {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.popularity-overlay .q-btn,
+.popularity-overlay .count {
+  pointer-events: auto;
+}
+
+.hidden-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 4;
+  pointer-events: auto;
+  text-align: center;
+}
+.hidden-overlay .hidden-text {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+/* Upvote "+N" burst */
+.upvote-burst-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.popularity-overlay .upvote-burst-wrap {
+  pointer-events: auto;
+}
+.upvote-burst {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(0, 0, 0, 0.45);
+  color: #d68834;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* transition for the burst popup */
+.burst-enter-active,
+.burst-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.burst-enter-from {
+  opacity: 0;
+  transform: translate(-50%, 6px) scale(0.95);
+}
+.burst-enter-to {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+.burst-leave-from {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+.burst-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -10px) scale(0.98);
 }
 </style>

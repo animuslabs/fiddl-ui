@@ -1,6 +1,7 @@
 import { Dialog } from "quasar"
 import MediaViewer from "src/components/dialogs/MediaViewer.vue"
 import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { usePopularityStore } from "src/stores/popularityStore"
 type Props = InstanceType<typeof MediaViewer>["$props"]
 
 const mediaViwer = {
@@ -9,6 +10,13 @@ const mediaViwer = {
       mediaObjects,
       startIndex,
       allowDelete,
+    }
+    try {
+      const popularity = usePopularityStore()
+      const items = mediaObjects.map((m) => ({ id: m.id, mediaType: m.type === "video" ? "video" : "image" }))
+      void popularity.fetchBatchByItems(items)
+    } catch (e) {
+      console.error("[mediaViewer] failed to prefetch popularity", e)
     }
     return new Promise<void>((res) => {
       Dialog.create({

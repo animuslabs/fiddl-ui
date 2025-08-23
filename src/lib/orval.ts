@@ -2672,6 +2672,98 @@ export type TrainingSetsDescribeSet200 = {
   subjectDescription: string | null;
 };
 
+export type UpvotesGetWallet200 = {
+  allowance: number;
+  usedToday: number;
+  remainingToday: number;
+  resetAt: string;
+};
+
+export type UpvotesUpvoteBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesUpvote200 = {
+  allowance: number;
+  remainingToday: number;
+};
+
+export type UpvotesGetMediaUpvoteCountParams = {
+imageId?: string;
+videoId?: string;
+since?: string;
+};
+
+export type UpvotesGetMediaUpvoteCount200 = {
+  total: number;
+};
+
+export type UpvotesDownvoteBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesDownvote200 = {
+  hidden: boolean;
+};
+
+export type UpvotesUnhideBody = {
+  imageId?: string;
+  videoId?: string;
+};
+
+export type UpvotesUnhide200 = {
+  hidden: boolean;
+};
+
+export type UpvotesGetHiddenListParams = {
+limit?: number;
+offset?: number;
+};
+
+export type UpvotesGetHiddenList200 = {
+  images: string[];
+  videos: string[];
+};
+
+export type PopularityBatchBodyItemsItemMediaType = typeof PopularityBatchBodyItemsItemMediaType[keyof typeof PopularityBatchBodyItemsItemMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PopularityBatchBodyItemsItemMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type PopularityBatchBodyItemsItem = {
+  id: string;
+  mediaType: PopularityBatchBodyItemsItemMediaType;
+};
+
+export type PopularityBatchBody = {
+  /**
+   * @minItems 1
+   * @maxItems 100
+   */
+  items: PopularityBatchBodyItemsItem[];
+  /**
+   * @minimum 1
+   * @maximum 365
+   */
+  upvotesSinceDays?: number;
+};
+
+export type PopularityBatch200Item = {
+  id: string;
+  favorites: number;
+  upvotes: number;
+  downvotes: number;
+  isFavoritedByMe?: boolean;
+  isUpvotedByMe?: boolean;
+  hidden?: boolean;
+};
+
 export const pkAuthRegisterStart = (
     pkAuthRegisterStartBody: MaybeRef<PkAuthRegisterStartBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown>> => {
@@ -7786,3 +7878,402 @@ export function useTrainingSetsDescribeSet<TData = Awaited<ReturnType<typeof tra
 
   return query;
 }
+
+
+
+
+export const upvotesGetWallet = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesGetWallet200>> => {
+    
+    
+    return axios.get(
+      `/upvotes/getWallet`,options
+    );
+  }
+
+
+export const getUpvotesGetWalletQueryKey = () => {
+    return ['upvotes','getWallet'] as const;
+    }
+
+    
+export const getUpvotesGetWalletQueryOptions = <TData = Awaited<ReturnType<typeof upvotesGetWallet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetWallet>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUpvotesGetWalletQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof upvotesGetWallet>>> = ({ signal }) => upvotesGetWallet({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof upvotesGetWallet>>, TError, TData> 
+}
+
+export type UpvotesGetWalletQueryResult = NonNullable<Awaited<ReturnType<typeof upvotesGetWallet>>>
+export type UpvotesGetWalletQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUpvotesGetWallet<TData = Awaited<ReturnType<typeof upvotesGetWallet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetWallet>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUpvotesGetWalletQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const upvotesUpvote = (
+    upvotesUpvoteBody: MaybeRef<UpvotesUpvoteBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesUpvote200>> => {
+    upvotesUpvoteBody = unref(upvotesUpvoteBody);
+    
+    return axios.post(
+      `/upvotes/upvote`,
+      upvotesUpvoteBody,options
+    );
+  }
+
+
+
+export const getUpvotesUpvoteMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesUpvote>>, TError,{data: UpvotesUpvoteBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof upvotesUpvote>>, TError,{data: UpvotesUpvoteBody}, TContext> => {
+
+const mutationKey = ['upvotesUpvote'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upvotesUpvote>>, {data: UpvotesUpvoteBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  upvotesUpvote(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpvotesUpvoteMutationResult = NonNullable<Awaited<ReturnType<typeof upvotesUpvote>>>
+    export type UpvotesUpvoteMutationBody = UpvotesUpvoteBody
+    export type UpvotesUpvoteMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUpvotesUpvote = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesUpvote>>, TError,{data: UpvotesUpvoteBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof upvotesUpvote>>,
+        TError,
+        {data: UpvotesUpvoteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpvotesUpvoteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const upvotesGetMediaUpvoteCount = (
+    params?: MaybeRef<UpvotesGetMediaUpvoteCountParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesGetMediaUpvoteCount200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/upvotes/getMediaUpvoteCount`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getUpvotesGetMediaUpvoteCountQueryKey = (params?: MaybeRef<UpvotesGetMediaUpvoteCountParams>,) => {
+    return ['upvotes','getMediaUpvoteCount', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUpvotesGetMediaUpvoteCountQueryOptions = <TData = Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<UpvotesGetMediaUpvoteCountParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUpvotesGetMediaUpvoteCountQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>> = ({ signal }) => upvotesGetMediaUpvoteCount(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>, TError, TData> 
+}
+
+export type UpvotesGetMediaUpvoteCountQueryResult = NonNullable<Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>>
+export type UpvotesGetMediaUpvoteCountQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUpvotesGetMediaUpvoteCount<TData = Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<UpvotesGetMediaUpvoteCountParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetMediaUpvoteCount>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUpvotesGetMediaUpvoteCountQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const upvotesDownvote = (
+    upvotesDownvoteBody: MaybeRef<UpvotesDownvoteBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesDownvote200>> => {
+    upvotesDownvoteBody = unref(upvotesDownvoteBody);
+    
+    return axios.post(
+      `/upvotes/downvote`,
+      upvotesDownvoteBody,options
+    );
+  }
+
+
+
+export const getUpvotesDownvoteMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesDownvote>>, TError,{data: UpvotesDownvoteBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof upvotesDownvote>>, TError,{data: UpvotesDownvoteBody}, TContext> => {
+
+const mutationKey = ['upvotesDownvote'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upvotesDownvote>>, {data: UpvotesDownvoteBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  upvotesDownvote(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpvotesDownvoteMutationResult = NonNullable<Awaited<ReturnType<typeof upvotesDownvote>>>
+    export type UpvotesDownvoteMutationBody = UpvotesDownvoteBody
+    export type UpvotesDownvoteMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUpvotesDownvote = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesDownvote>>, TError,{data: UpvotesDownvoteBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof upvotesDownvote>>,
+        TError,
+        {data: UpvotesDownvoteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpvotesDownvoteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const upvotesUnhide = (
+    upvotesUnhideBody: MaybeRef<UpvotesUnhideBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesUnhide200>> => {
+    upvotesUnhideBody = unref(upvotesUnhideBody);
+    
+    return axios.post(
+      `/upvotes/unhide`,
+      upvotesUnhideBody,options
+    );
+  }
+
+
+
+export const getUpvotesUnhideMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesUnhide>>, TError,{data: UpvotesUnhideBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof upvotesUnhide>>, TError,{data: UpvotesUnhideBody}, TContext> => {
+
+const mutationKey = ['upvotesUnhide'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upvotesUnhide>>, {data: UpvotesUnhideBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  upvotesUnhide(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpvotesUnhideMutationResult = NonNullable<Awaited<ReturnType<typeof upvotesUnhide>>>
+    export type UpvotesUnhideMutationBody = UpvotesUnhideBody
+    export type UpvotesUnhideMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUpvotesUnhide = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upvotesUnhide>>, TError,{data: UpvotesUnhideBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof upvotesUnhide>>,
+        TError,
+        {data: UpvotesUnhideBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpvotesUnhideMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const upvotesGetHiddenList = (
+    params?: MaybeRef<UpvotesGetHiddenListParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UpvotesGetHiddenList200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/upvotes/getHiddenList`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getUpvotesGetHiddenListQueryKey = (params?: MaybeRef<UpvotesGetHiddenListParams>,) => {
+    return ['upvotes','getHiddenList', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUpvotesGetHiddenListQueryOptions = <TData = Awaited<ReturnType<typeof upvotesGetHiddenList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<UpvotesGetHiddenListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetHiddenList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUpvotesGetHiddenListQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof upvotesGetHiddenList>>> = ({ signal }) => upvotesGetHiddenList(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof upvotesGetHiddenList>>, TError, TData> 
+}
+
+export type UpvotesGetHiddenListQueryResult = NonNullable<Awaited<ReturnType<typeof upvotesGetHiddenList>>>
+export type UpvotesGetHiddenListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUpvotesGetHiddenList<TData = Awaited<ReturnType<typeof upvotesGetHiddenList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<UpvotesGetHiddenListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof upvotesGetHiddenList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUpvotesGetHiddenListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const popularityBatch = (
+    popularityBatchBody: MaybeRef<PopularityBatchBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<PopularityBatch200Item[]>> => {
+    popularityBatchBody = unref(popularityBatchBody);
+    
+    return axios.post(
+      `/popularity/batch`,
+      popularityBatchBody,options
+    );
+  }
+
+
+
+export const getPopularityBatchMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof popularityBatch>>, TError,{data: PopularityBatchBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof popularityBatch>>, TError,{data: PopularityBatchBody}, TContext> => {
+
+const mutationKey = ['popularityBatch'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof popularityBatch>>, {data: PopularityBatchBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  popularityBatch(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PopularityBatchMutationResult = NonNullable<Awaited<ReturnType<typeof popularityBatch>>>
+    export type PopularityBatchMutationBody = PopularityBatchBody
+    export type PopularityBatchMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const usePopularityBatch = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof popularityBatch>>, TError,{data: PopularityBatchBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof popularityBatch>>,
+        TError,
+        {data: PopularityBatchBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPopularityBatchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }

@@ -252,7 +252,7 @@ function switchToGallery() {
 
 async function startAutoCapture() {
   // Prevent capture when not authenticated
-  if (!userAuth.userProfile?.email) {
+  if (!userAuth.loggedIn) {
     emit("auth-required")
     return
   }
@@ -371,7 +371,7 @@ function openGalleryPicker() {
 }
 
 function onFileInputChange(e: Event) {
-  if (!userAuth.userProfile?.email) {
+  if (!userAuth.loggedIn) {
     emit("auth-required")
     if (fileInputRef.value) fileInputRef.value.value = ""
     return
