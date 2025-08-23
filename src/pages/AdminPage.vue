@@ -1,5 +1,5 @@
 <template lang="pug">
-q-page.full-height.full-width
+q-page.full-height.full-width.admin-page
   .centered.q-mt-md
     h4 Admin
   div(v-if="$userAuth.loggedIn && $userAuth.userData?.admin").q-pt-md
@@ -12,7 +12,7 @@ q-page.full-height.full-width
           .centered
             h4 Create Promo Code
           .q-ma-md
-            q-input(v-model.number="promoPoints" type="number" label="Points")
+            q-input(v-model.number="promoPoints" type="number" label="Points" input-style="font-size:16px;" inputmode="numeric")
           .centered
             q-btn(label="Create + Copy Claim Link" @click="createPromoCode('claim')" icon="add")
             q-btn(label="Create + Copy MagicMirror Link" class="q-ml-sm" @click="createPromoCode('mm')" icon="add")
@@ -22,7 +22,7 @@ q-page.full-height.full-width
             h4 Unclaimed Promo Codes
           q-list
             q-item(v-for="code in unclaimedPromoCodes" :key="code.id")
-              pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto;") {{ code }}
+              pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto; overflow-wrap:anywhere; word-break:break-word;") {{ code }}
               .row.q-gutter-xs.q-mt-xs
                 q-btn(size="sm" label="copy claim" @click="copyCode(code.id)" icon="content_copy" flat)
                 q-btn(size="sm" label="copy MM" @click="copyMagicMirror(code.id)" icon="content_copy" flat)
@@ -33,7 +33,7 @@ q-page.full-height.full-width
             h4 Claimed Promo Codes
           q-list
             q-item(v-for="code in claimedPromoCodes" :key="code.id")
-              pre {{ code }}
+                          pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto; overflow-wrap:anywhere; word-break:break-word;") {{ code }}
     div(v-if="tab == 'users'")
     .centered
       q-list
@@ -61,7 +61,7 @@ q-page.full-height.full-width
 
 // Fullscreen QR dialog
 q-dialog(v-model="qrDialogOpen" maximized)
-  q-card.q-dialog-plugin(style="width:100vw; max-width:100vw; background-color:#000;")
+  q-card.q-dialog-plugin.qr-dialog-card
     .centered.full-width.q-pa-lg(style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;")
       h5.text-white.q-mb-md {{ qrTitle }}
       q-spinner(color="primary" size="120px" v-if="qrLoading || !qrDataUrl")
@@ -214,3 +214,13 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="sass" scoped>
+.admin-page
+  overflow-x: hidden
+
+.qr-dialog-card
+  width: 100%
+  max-width: 100%
+  background-color: #000
+</style>
