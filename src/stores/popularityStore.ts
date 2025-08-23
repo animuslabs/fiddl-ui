@@ -281,6 +281,7 @@ export const usePopularityStore = defineStore("popularityStore", {
       const type = mediaType || e.mediaType || "image"
 
       // Optimistic increment (per-call delta)
+      const prevIsUpvoted = !!e.isUpvotedByMe
       e.isUpvotedByMe = true
       e.upvotes = (e.upvotes ?? 0) + 1
       e.mediaType = type
@@ -296,9 +297,10 @@ export const usePopularityStore = defineStore("popularityStore", {
           console.error("[popularityStore] failed to refresh upvotes wallet", e2)
         }
       } catch (err) {
-        // Per-call rollback: subtract only our optimistic +1
+        // Per-call rollback: subtract only our optimistic +1 and restore prior state
         const cur = this.entries[id] || e
         cur.upvotes = Math.max(0, (cur.upvotes ?? 0) - 1)
+        cur.isUpvotedByMe = prevIsUpvoted
         await this._put(cur)
         throw err
       }

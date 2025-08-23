@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
+import { Dialog } from "quasar"
+import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
 import { usePopularityStore } from "src/stores/popularityStore"
+import { useUserAuth } from "src/stores/userAuth"
 import type { MediaType } from "lib/types"
 
 export interface MediaGalleryMeta {
@@ -51,6 +54,8 @@ const emit = defineEmits<{
 }>()
 
 const $q = useQuasar()
+const userAuth = useUserAuth()
+const router = useRouter()
 const isMobile = computed(() => $q.screen.lt.md)
 const cols = computed(() => {
   if ($q.screen.lt.md) return props.colsMobile
@@ -67,6 +72,17 @@ type UpvoteBurst = { count: number; visible: boolean; timer?: number }
 const upvoteBursts = ref<Record<string, UpvoteBurst>>({})
 
 function onUpvote(id: string, type: MediaType) {
+  if (!userAuth.loggedIn) {
+    Dialog.create({
+      title: "Login required",
+      message: "You get free upvotes each day, but you need to login first.",
+      cancel: true,
+      persistent: true,
+    }).onOk(() => {
+      void router.push({ name: "login" })
+    })
+    return
+  }
   triggerUpvoteBurst(id)
   void popularity.addUpvote(id, type)
 }

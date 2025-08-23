@@ -248,6 +248,17 @@ async function toggleFavorite() {
 }
 
 function onUpvote() {
+  if (!userAuth.loggedIn) {
+    Dialog.create({
+      title: "Login required",
+      message: "You get free upvotes each day, but you need to login first.",
+      cancel: true,
+      persistent: true,
+    }).onOk(() => {
+      void router.push({ name: "login" })
+    })
+    return
+  }
   void popularity.addUpvote(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
 }
 
