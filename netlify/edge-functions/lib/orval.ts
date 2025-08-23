@@ -2735,6 +2735,109 @@ export type PopularityBatch200Item = {
   hidden?: boolean;
 };
 
+export type EventsPublicEventsParams = {
+since?: string;
+limit?: number;
+types?: EventsPublicEventsTypesItem[];
+};
+
+export type EventsPublicEventsTypesItem = typeof EventsPublicEventsTypesItem[keyof typeof EventsPublicEventsTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPublicEventsTypesItem = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPublicEvents200ItemType = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPublicEvents200Item = {
+  type: EventsPublicEvents200ItemType;
+  id: string;
+  createdAt: string;
+  dataJSON: string;
+  originUserId: string;
+  /** @nullable */
+  originUsername: string | null;
+  seen?: boolean;
+};
+
+export type EventsPrivateEventsParams = {
+since?: string;
+limit?: number;
+includeSeen?: boolean;
+types?: EventsPrivateEventsTypesItem[];
+};
+
+export type EventsPrivateEventsTypesItem = typeof EventsPrivateEventsTypesItem[keyof typeof EventsPrivateEventsTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPrivateEventsTypesItem = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPrivateEvents200ItemType = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPrivateEvents200Item = {
+  type: EventsPrivateEvents200ItemType;
+  id: string;
+  createdAt: string;
+  dataJSON: string;
+  originUserId: string;
+  /** @nullable */
+  originUsername: string | null;
+  seen?: boolean;
+};
+
+export type EventsMarkEventSeenBody = {
+  eventId: string;
+};
+
 export const getPkAuthRegisterStartUrl = () => {
 
 
@@ -5099,5 +5202,83 @@ export const popularityBatch = async (popularityBatchBody: PopularityBatchBody, 
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       popularityBatchBody,)
+  }
+);}
+
+
+
+export const getEventsPublicEventsUrl = (params?: EventsPublicEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/events/publicEvents?${stringifiedParams}` : `/events/publicEvents`
+}
+
+export const eventsPublicEvents = async (params?: EventsPublicEventsParams, options?: RequestInit): Promise<EventsPublicEvents200Item[]> => {
+  
+  return fetcher<EventsPublicEvents200Item[]>(getEventsPublicEventsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getEventsPrivateEventsUrl = (params?: EventsPrivateEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/events/privateEvents?${stringifiedParams}` : `/events/privateEvents`
+}
+
+export const eventsPrivateEvents = async (params?: EventsPrivateEventsParams, options?: RequestInit): Promise<EventsPrivateEvents200Item[]> => {
+  
+  return fetcher<EventsPrivateEvents200Item[]>(getEventsPrivateEventsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getEventsMarkEventSeenUrl = () => {
+
+
+  
+
+  return `/events/markEventSeen`
+}
+
+export const eventsMarkEventSeen = async (eventsMarkEventSeenBody: EventsMarkEventSeenBody, options?: RequestInit): Promise<boolean> => {
+  
+  return fetcher<boolean>(getEventsMarkEventSeenUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      eventsMarkEventSeenBody,)
   }
 );}

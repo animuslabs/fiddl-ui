@@ -2764,6 +2764,109 @@ export type PopularityBatch200Item = {
   hidden?: boolean;
 };
 
+export type EventsPublicEventsParams = {
+since?: string;
+limit?: number;
+types?: EventsPublicEventsTypesItem[];
+};
+
+export type EventsPublicEventsTypesItem = typeof EventsPublicEventsTypesItem[keyof typeof EventsPublicEventsTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPublicEventsTypesItem = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPublicEvents200ItemType = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPublicEvents200Item = {
+  type: EventsPublicEvents200ItemType;
+  id: string;
+  createdAt: string;
+  dataJSON: string;
+  originUserId: string;
+  /** @nullable */
+  originUsername: string | null;
+  seen?: boolean;
+};
+
+export type EventsPrivateEventsParams = {
+since?: string;
+limit?: number;
+includeSeen?: boolean;
+types?: EventsPrivateEventsTypesItem[];
+};
+
+export type EventsPrivateEventsTypesItem = typeof EventsPrivateEventsTypesItem[keyof typeof EventsPrivateEventsTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPrivateEventsTypesItem = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventsPrivateEvents200ItemType = {
+  likedImage: 'likedImage',
+  likedVideo: 'likedVideo',
+  unlikedVideo: 'unlikedVideo',
+  addedImageToCollection: 'addedImageToCollection',
+  unlockedImage: 'unlockedImage',
+  unlockedVideo: 'unlockedVideo',
+  unlikedImage: 'unlikedImage',
+  removedImageFromCollection: 'removedImageFromCollection',
+  referredUser: 'referredUser',
+} as const;
+
+export type EventsPrivateEvents200Item = {
+  type: EventsPrivateEvents200ItemType;
+  id: string;
+  createdAt: string;
+  dataJSON: string;
+  originUserId: string;
+  /** @nullable */
+  originUsername: string | null;
+  seen?: boolean;
+};
+
+export type EventsMarkEventSeenBody = {
+  eventId: string;
+};
+
 export const pkAuthRegisterStart = (
     pkAuthRegisterStartBody: MaybeRef<PkAuthRegisterStartBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown>> => {
@@ -8274,6 +8377,178 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getPopularityBatchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const eventsPublicEvents = (
+    params?: MaybeRef<EventsPublicEventsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<EventsPublicEvents200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/events/publicEvents`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getEventsPublicEventsQueryKey = (params?: MaybeRef<EventsPublicEventsParams>,) => {
+    return ['events','publicEvents', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getEventsPublicEventsQueryOptions = <TData = Awaited<ReturnType<typeof eventsPublicEvents>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<EventsPublicEventsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventsPublicEvents>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getEventsPublicEventsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventsPublicEvents>>> = ({ signal }) => eventsPublicEvents(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventsPublicEvents>>, TError, TData> 
+}
+
+export type EventsPublicEventsQueryResult = NonNullable<Awaited<ReturnType<typeof eventsPublicEvents>>>
+export type EventsPublicEventsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useEventsPublicEvents<TData = Awaited<ReturnType<typeof eventsPublicEvents>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<EventsPublicEventsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventsPublicEvents>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEventsPublicEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const eventsPrivateEvents = (
+    params?: MaybeRef<EventsPrivateEventsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<EventsPrivateEvents200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/events/privateEvents`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getEventsPrivateEventsQueryKey = (params?: MaybeRef<EventsPrivateEventsParams>,) => {
+    return ['events','privateEvents', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getEventsPrivateEventsQueryOptions = <TData = Awaited<ReturnType<typeof eventsPrivateEvents>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<EventsPrivateEventsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventsPrivateEvents>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getEventsPrivateEventsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventsPrivateEvents>>> = ({ signal }) => eventsPrivateEvents(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventsPrivateEvents>>, TError, TData> 
+}
+
+export type EventsPrivateEventsQueryResult = NonNullable<Awaited<ReturnType<typeof eventsPrivateEvents>>>
+export type EventsPrivateEventsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useEventsPrivateEvents<TData = Awaited<ReturnType<typeof eventsPrivateEvents>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<EventsPrivateEventsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventsPrivateEvents>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEventsPrivateEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const eventsMarkEventSeen = (
+    eventsMarkEventSeenBody: MaybeRef<EventsMarkEventSeenBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<boolean>> => {
+    eventsMarkEventSeenBody = unref(eventsMarkEventSeenBody);
+    
+    return axios.post(
+      `/events/markEventSeen`,
+      eventsMarkEventSeenBody,options
+    );
+  }
+
+
+
+export const getEventsMarkEventSeenMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventsMarkEventSeen>>, TError,{data: EventsMarkEventSeenBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof eventsMarkEventSeen>>, TError,{data: EventsMarkEventSeenBody}, TContext> => {
+
+const mutationKey = ['eventsMarkEventSeen'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventsMarkEventSeen>>, {data: EventsMarkEventSeenBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  eventsMarkEventSeen(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventsMarkEventSeenMutationResult = NonNullable<Awaited<ReturnType<typeof eventsMarkEventSeen>>>
+    export type EventsMarkEventSeenMutationBody = EventsMarkEventSeenBody
+    export type EventsMarkEventSeenMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useEventsMarkEventSeen = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventsMarkEventSeen>>, TError,{data: EventsMarkEventSeenBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof eventsMarkEventSeen>>,
+        TError,
+        {data: EventsMarkEventSeenBody},
+        TContext
+      > => {
+
+      const mutationOptions = getEventsMarkEventSeenMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

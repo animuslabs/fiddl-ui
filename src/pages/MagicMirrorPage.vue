@@ -707,7 +707,7 @@ function startAgain() {
 }
 
 function goToCreatePage() {
-  void toCreatePage({ model: "custom", type: "image", customModelId: customModelId.value!, customModelName: undefined }, router)
+  void toCreatePage({ model: "custom", type: "image", customModelId: customModelId.value!, customModelName: undefined }, router, { noCreateModal: true })
 }
 
 async function shareImage(id: string) {
@@ -773,7 +773,7 @@ function goToCreateVideo() {
   animateDialogOpen.value = false
   animPromptVisible.value = false
   stopAnimPromptCountdown()
-  void toCreatePage({ model: "kling", type: "video" }, router)
+  void toCreatePage({ model: "kling", type: "video" }, router, { noCreateModal: true })
 }
 
 function scrollToTopSmooth() {

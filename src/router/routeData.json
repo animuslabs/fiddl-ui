@@ -108,5 +108,10 @@
     "magicMirror",
     "/magicMirror",
     "MagicMirrorPage"
+  ],
+  [
+    "events",
+    "/events",
+    "EventsPage"
   ]
 ]

@@ -25,30 +25,46 @@ q-layout(view="lHh Lpr lFf" )
           //- q-route-tab(:to="{ name: 'mint' }")
           //-   | mint
       .row.justify-end.full-width(v-if="!$userAuth.loggedIn")
-        q-btn(flat @click="login()" label="login / Register"  size="sm")
+        q-btn(flat @click="login()" :label="isMobile ? 'login' : 'login / Register'" dense size="xs")
         //- q-separator(color="white" vertical)
         //- q-btn(flat @click="register()" label="register" size="sm")
-      .row.justify-end.full-width.q-gutter-sm(v-else)
-        q-btn(rounded padding="0px" :color="upvotesColor" v-if="$userAuth.upvotesWallet")
+      .row.justify-end.full-width.items-center.q-gutter-sm(v-else)
+        q-btn(rounded padding="0px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
           .row.items-center
-            div.q-ml-md {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
-            q-img.q-ml-sm.q-mr-sm(:src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'" style="width:30px; height:30px;" alt="available upvotes" no-spinner)
+            div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
+            q-img.q-ml-sm.q-mr-sm(
+              :src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'"
+              :style="{ width: isMobile ? '22px' : '30px', height: isMobile ? '22px' : '30px' }"
+              alt="available upvotes" no-spinner)
           q-tooltip
             p Available Upvotes
-        q-btn(rounded padding="0px" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
+        q-btn(rounded padding="0px" dense size="xs" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
           .row.items-center
-            div.q-ml-md {{ $userAuth?.userData?.availablePoints || 0 }}
-            q-img.q-ml-sm(src="/FiddlPointsLogo-sm.svg" style="width:40px; height:40px;" alt="fiddl points logo" no-spinner)
+            div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.userData?.availablePoints || 0 }}
+            q-img.q-ml-sm(
+              src="/FiddlPointsLogo-sm.svg"
+              :style="{ width: isMobile ? '28px' : '40px', height: isMobile ? '28px' : '40px' }"
+              alt="fiddl points logo" no-spinner)
           q-tooltip
             p Add Fiddl Points
         //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
+        NotificationsMenu(v-if="$userAuth.loggedIn")
         q-btn(
           round
+          dense
+          size="xs"
           padding="1px"
-
+          no-spinner
           @click="menu = true"
         )
-          q-img(slot="icon" :src="avatarImg($userAuth.userId || 'avatar')" style="width:40px; height:40px;" alt="avatar" placeholder-src="/blankAvatar.webp" :key="reloadAvatar")
+          q-img(
+            slot="icon"
+            :src="avatarImg($userAuth.userId || 'avatar')"
+            :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '32px' : '40px' }"
+            alt="avatar"
+            placeholder-src="/blankAvatar.webp"
+            :key="reloadAvatar"
+          )
         q-menu(
           v-if="menu"
           anchor="bottom right"
@@ -72,6 +88,42 @@ q-layout(view="lHh Lpr lFf" )
                 .row.items-center
                   q-icon(name="logout" size="20px").q-mr-md
                   div  Logout
+
+  q-dialog(v-model="showUpvoteInfo")
+    q-card(style="min-width:320px;max-width:520px")
+      q-card-section
+        .row.items-center
+          q-img(src="/upvote-fire.png" :style="{ width: '28px', height: '28px' }" no-spinner).q-mr-sm
+          .text-h6 Your Upvotes
+      .q-ma-md
+        .row
+          p Remaining: {{ $userAuth.upvotesWallet?.remainingToday }} / {{ $userAuth.upvotesWallet?.allowance }}
+        .row
+          p Resets : {{ new Date($userAuth.upvotesWallet?.resetAt || "").toLocaleString() }}
+      q-card-section(v-if="upvoteInfoLoading")
+        .row.justify-center.q-my-md
+          q-spinner(color="accent" size="32px")
+      //- q-card-section(v-else)
+      //-   .text-subtitle1
+      //-     | {{ upvoteInfo?.remainingToday ?? $userAuth?.upvotesWallet?.remainingToday || 0 }} upvotes left today
+      //-   .text-caption.text-grey-7
+      //-     | Refresh {{ upvoteInfo?.resetInText }} (at {{ upvoteInfo?.resetAtLocal }})
+      //-   .q-mt-md
+      //-     .text-body2
+      //-       | Use all your upvotes every day for a week to earn
+      //-       b 100 points
+      //-   .q-mt-sm
+      //-     q-linear-progress(:value="(upvoteInfo?.week?.streak || 0) / 7" color="accent" track-color="grey-4" rounded)
+      //-   .row.justify-between.items-center.q-mt-xs
+      //-     .text-caption {{ upvoteInfo?.week?.streak || 0 }}/7 days completed
+      //-   .row.q-gutter-xs.q-mt-sm
+      //-     div(
+      //-       v-for="(done, i) in upvoteInfo?.week?.days || []"
+      //-       :key="i"
+      //-       :style="{ width: '12px', height: '12px', borderRadius: '50%', background: done ? 'var(--q-color-accent)' : '#ccc' }"
+      //-     )
+      q-card-actions(align="right")
+        q-btn(flat label="Close" v-close-popup)
 
   q-page-container.centered.bg-transparent
     .centered(style="width:100vw; height:100%" )
@@ -109,17 +161,26 @@ import { avatarImg } from "lib/netlifyImg"
 import reloadAvatar from "lib/reloadAvatar"
 // import RegisterDialog from "components/dialogs/Register.vue"
 import { useCreateImageStore } from "stores/createImageStore"
+import NotificationsMenu from "src/components/NotificationsMenu.vue"
 
 export default defineComponent({
+  components: { NotificationsMenu },
   data() {
     return {
       create: useCreateImageStore(),
       menu: false,
       avatarImg,
       reloadAvatar,
+      showUpvoteInfo: false,
+      upvoteInfoLoading: false,
+      upvoteInfo: null,
     }
   },
   computed: {
+    isMobile(): boolean {
+      if (typeof window === "undefined") return false
+      return window.matchMedia("(max-width: 1023px)").matches
+    },
     pointsColor() {
       if (!this.$userAuth.userData) return "negative"
       return this.$userAuth.userData?.availablePoints > 10 ? "grey-9" : "accent"
@@ -136,6 +197,62 @@ export default defineComponent({
     },
     login() {
       void this.$router.push({ name: "login" })
+    },
+    openUpvoteInfo() {
+      this.showUpvoteInfo = true
+      void this.loadUpvoteInfo()
+    },
+    async loadUpvoteInfo() {
+      // this.upvoteInfoLoading = true
+      // try {
+      //   const info = await this.mockFetchUpvoteInfo()
+      //   this.upvoteInfo = info
+      // } finally {
+      //   this.upvoteInfoLoading = false
+      // }
+    },
+    async mockFetchUpvoteInfo() {
+      const wallet = this.$userAuth?.upvotesWallet
+      const remainingToday = wallet?.remainingToday ?? 0
+      const resetAtIso =
+        wallet?.resetAt ||
+        (() => {
+          const d = new Date()
+          d.setHours(24, 0, 0, 0)
+          return d.toISOString()
+        })()
+      const ms = new Date(resetAtIso).getTime() - Date.now()
+      const hrs = ms > 0 ? Math.floor(ms / 3600000) : 0
+      const mins = ms > 0 ? Math.floor((ms % 3600000) / 60000) : 0
+      const resetInText = ms > 0 ? (hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`) : "soon"
+      const resetAtLocal = new Date(resetAtIso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      const week = this.getUpdatedWeekProgress(remainingToday)
+      const rewardPoints = 100
+      await new Promise((r) => setTimeout(r, 400))
+      return { remainingToday, resetAtIso, resetInText, resetAtLocal, week, rewardPoints }
+    },
+    getUpdatedWeekProgress(remainingToday: number) {
+      try {
+        const key = "fiddl:upvoteWeek"
+        const today = new Date()
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+        let stateRaw = localStorage.getItem(key)
+        let state = stateRaw ? JSON.parse(stateRaw) : null
+        if (!state || typeof state.start !== "number" || !Array.isArray(state.days)) {
+          state = { start: todayStart, days: new Array(7).fill(false) }
+        }
+        const dayIndex = Math.floor((todayStart - state.start) / 86400000)
+        if (dayIndex < 0 || dayIndex >= 7) {
+          state = { start: todayStart, days: new Array(7).fill(false) }
+        }
+        const idx = Math.max(0, Math.min(6, Math.floor((todayStart - state.start) / 86400000)))
+        if (remainingToday <= 0) state.days[idx] = true
+        const streak = state.days.filter((d: boolean) => d).length
+        localStorage.setItem(key, JSON.stringify(state))
+        return { days: state.days, streak }
+      } catch {
+        return { days: new Array(7).fill(false), streak: 0 }
+      }
     },
   },
 })

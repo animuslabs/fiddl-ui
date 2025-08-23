@@ -115,6 +115,7 @@ export default defineComponent({
       imageCreations: useImageCreations(),
       videoCreations: useVideoCreations(),
       createContext: useCreateContextStore(),
+      suppressCreateModal: false,
     }
   },
   computed: {
@@ -180,7 +181,7 @@ export default defineComponent({
       immediate: false,
     },
     "$q.screen.lt.md"(val) {
-      this.createMode = val
+      if (!this.suppressCreateModal) this.createMode = val
     },
     "activeCreationsStore.dynamicModel": {
       handler(val: boolean) {
@@ -226,7 +227,8 @@ export default defineComponent({
     },
   },
   async mounted() {
-    if (this.quasar.screen.lt.md) this.createMode = true
+    this.suppressCreateModal = new URLSearchParams(window.location.search).has("noCreateModal")
+    if (this.quasar.screen.lt.md && !this.suppressCreateModal) this.createMode = true
     void this.$nextTick(() => {
       this.gridMode = this.createContext.state.gridMode
     })

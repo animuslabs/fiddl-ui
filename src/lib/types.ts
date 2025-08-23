@@ -153,3 +153,27 @@ export type UnifiedRequest = {
 }
 
 export type CreateEditType = "prompt" | "video" | "all"
+
+export type EventType =
+  | "likedImage"
+  | "likedVideo"
+  | "unlikedVideo"
+  | "addedImageToCollection"
+  | "unlockedImage"
+  | "unlockedVideo"
+  | "unlikedImage"
+  | "removedImageFromCollection"
+  | "referredUser"
+
+export type AccountEvent = {
+  id: string
+  type: EventType
+  createdAt: string
+  viewed: boolean
+  actorUsername?: string
+  mediaType?: "image" | "video"
+  requestId?: string
+  mediaId?: string
+  message?: string
+  meta?: Record<string, any>
+}
