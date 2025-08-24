@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, watch } from "vue"
+import { ref, computed, watch, onMounted, onUnmounted } from "vue"
 import { useQuasar } from "quasar"
 import { Dialog } from "quasar"
 import { useRouter } from "vue-router"
@@ -64,8 +64,14 @@ const cols = computed(() => {
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
-const requestedIds = new Set<string>()
 const popIconSize = ref("8px")
+
+// Popularity polling
+const pollIntervalMs = 15000
+let popularityPollTimer: number | null = null
+
+// Video reload retry timer (moved from global setInterval)
+let videoReloadTimer: number | null = null
 
 // Ephemeral "+N" burst UI for upvotes
 type UpvoteBurst = { count: number; visible: boolean; timer?: number }
@@ -187,18 +193,12 @@ async function buildItems(src: MediaGalleryMeta[]) {
     }),
   )
   if (props.showPopularity) {
-    const ids = galleryItems.value.map((i) => i.id)
-    const newIds = ids.filter((id) => !requestedIds.has(id))
-    if (newIds.length) {
-      const items = galleryItems.value
-        .filter((i) => newIds.includes(i.id))
-        .map((i) => ({
-          id: i.id,
-          mediaType: i.type === "video" ? "video" : ("image" as MediaType),
-        }))
-      void popularity.fetchBatchByItems(items)
-      for (const id of newIds) requestedIds.add(id)
-    }
+    const items = galleryItems.value.map((i) => ({
+      id: i.id,
+      mediaType: i.type === "video" ? "video" : ("image" as MediaType),
+    }))
+    // Load from cache/network for anything missing; store dedupes requests
+    void popularity.fetchBatchByItems(items)
   }
 }
 
@@ -260,13 +260,75 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
   }
 }
 
-setInterval(() => {
-  for (const id of Object.keys(videoLoading.value)) {
-    if (videoLoading.value[id]) {
-      videoReloadKey.value[id] = Date.now()
-    }
+/**
+ * Popularity polling and video reload retry setup
+ */
+
+// Compose items payload for popularity store
+function getPopularityItems(): { id: string; mediaType: "image" | "video" }[] {
+  return galleryItems.value.map((i) => ({
+    id: i.id,
+    mediaType: i.type === "video" ? "video" : ("image" as MediaType),
+  }))
+}
+
+function startPopularityPolling() {
+  stopPopularityPolling()
+  // Immediate refresh to ensure per-user fields (isFavoritedByMe/isUpvotedByMe) are current
+  void popularity.refreshBatchByItems(getPopularityItems())
+  popularityPollTimer = window.setInterval(() => {
+    void popularity.refreshBatchByItems(getPopularityItems())
+  }, pollIntervalMs) as unknown as number
+}
+
+function stopPopularityPolling() {
+  if (popularityPollTimer) {
+    window.clearInterval(popularityPollTimer)
+    popularityPollTimer = null
   }
-}, 10000)
+}
+
+// Start/stop polling based on prop
+watch(
+  () => props.showPopularity,
+  (enabled) => {
+    if (enabled) startPopularityPolling()
+    else stopPopularityPolling()
+  },
+  { immediate: true },
+)
+
+// Refresh per-user fields when auth state changes
+watch(
+  () => userAuth.loggedIn,
+  () => {
+    if (props.showPopularity) void popularity.refreshBatchByItems(getPopularityItems())
+  },
+)
+
+// When gallery content changes, ensure any missing popularity entries are fetched
+watch(
+  () => galleryItems.value.map((i) => i.id).join(","),
+  () => {
+    if (props.showPopularity) void popularity.fetchBatchByItems(getPopularityItems())
+  },
+)
+
+onMounted(() => {
+  // Move retry loop to lifecycle and clean up on unmount
+  videoReloadTimer = window.setInterval(() => {
+    for (const id of Object.keys(videoLoading.value)) {
+      if (videoLoading.value[id]) {
+        videoReloadKey.value[id] = Date.now()
+      }
+    }
+  }, 10000) as unknown as number
+})
+
+onUnmounted(() => {
+  if (videoReloadTimer) window.clearInterval(videoReloadTimer)
+  stopPopularityPolling()
+})
 
 function isVideoMedia(m: MediaGalleryMeta): boolean {
   const url = m.url || ""

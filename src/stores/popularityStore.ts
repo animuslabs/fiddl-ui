@@ -178,6 +178,64 @@ export const usePopularityStore = defineStore("popularityStore", {
         for (const it of toRequest) delete this._inFlight[it.id]
       }
     },
+    async refreshBatchByItems(items: { id: string; mediaType: "image" | "video" }[], upvotesSinceDays?: number) {
+      await this.init()
+      // Collapse to unique ids
+      const uniqueById = new Map<string, { id: string; mediaType: "image" | "video" }>()
+      for (const it of items) {
+        if (!uniqueById.has(it.id)) uniqueById.set(it.id, it)
+      }
+
+      // Determine which IDs need refreshing (ignore cache, but dedupe concurrent calls)
+      const toRequest = Array.from(uniqueById.values()).filter((it) => !this._inFlight[it.id])
+      if (toRequest.length === 0) return
+
+      // mark in-flight to dedupe concurrent calls
+      for (const it of toRequest) this._inFlight[it.id] = true
+
+      // chunk into parallel batches
+      const chunks: { id: string; mediaType: "image" | "video" }[][] = []
+      for (let i = 0; i < toRequest.length; i += CHUNK_SIZE) {
+        chunks.push(toRequest.slice(i, i + CHUNK_SIZE))
+      }
+
+      const requests = chunks.map((chunk) => {
+        const body: PopularityBatchBody = {
+          items: chunk.map((c) => ({ id: c.id, mediaType: c.mediaType })),
+          ...(upvotesSinceDays ? { upvotesSinceDays } : {}),
+        }
+        return popularityBatch(body)
+      })
+
+      try {
+        const settled = await Promise.allSettled(requests)
+        const allItems: PopularityBatch200Item[] = []
+        for (const r of settled) {
+          if (r.status === "fulfilled") {
+            const data = r.value?.data || []
+            allItems.push(...data)
+          } else {
+            console.error("[popularityStore] refresh batch request failed", r.reason)
+          }
+        }
+        if (allItems.length) {
+          const mapped: PopularityEntry[] = allItems.map((p) => ({
+            id: p.id,
+            mediaType: uniqueById.get(p.id)?.mediaType,
+            favorites: p.favorites ?? 0,
+            upvotes: p.upvotes ?? 0,
+            downvotes: p.downvotes ?? 0,
+            isFavoritedByMe: p.isFavoritedByMe,
+            isUpvotedByMe: p.isUpvotedByMe,
+            hidden: p.hidden ?? false,
+            updatedAt: Date.now(),
+          }))
+          await this._putMany(mapped)
+        }
+      } finally {
+        for (const it of toRequest) delete this._inFlight[it.id]
+      }
+    },
     async toggleFavorite(id: string, mediaType?: "image" | "video") {
       await this.init()
       if (this._mutating[id]) return

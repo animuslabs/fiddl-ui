@@ -15,15 +15,16 @@ div.relative-position.self-center
       :anchor="menuAnchor"
       :self="menuSelf"
       :content-style="menuContentStyle"
+      :content-class="isMobile ? 'notif-menu-mobile' : ''"
       @before-show="refresh"
     )
       div.q-pa-sm(:style="menuContainerStyle")
-        .row.items-center.justify-between.q-mb-sm
+        .q-mb-sm(:class="isMobile ? 'column items-start q-gutter-xs' : 'row items-center justify-between'")
           .text-subtitle2 Notifications
           q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
             q-tooltip Mark all as seen
         q-separator
-        q-scroll-area(:style="{ height: menuScrollHeight, width: '100%', maxWidth: '100vw' }")
+        q-scroll-area(:style="menuScrollStyle")
           q-list(v-if="recentEvents.length > 0" :dense="isMobile")
             q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
               q-item-section(avatar)
@@ -37,9 +38,9 @@ div.relative-position.self-center
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
         q-separator
-        .row.justify-between.items-center.q-mt-sm
-          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="refresh" :loading="loading")
-          q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })")
+        .q-mt-sm(:class="isMobile ? 'column items-stretch q-gutter-xs' : 'row justify-between items-center'")
+          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="refresh" :loading="loading" :class="isMobile ? 'full-width' : ''")
+          q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })" :class="isMobile ? 'full-width' : ''")
 </template>
 
 <script lang="ts">
@@ -81,15 +82,15 @@ export default defineComponent({
       return {
         width: this.menuWidth,
         maxWidth: "100vw",
-        height: this.isMobile ? "85vh" : "auto",
-        maxHeight: "90vh",
+        height: this.isMobile ? "100dvh" : "auto",
+        maxHeight: this.isMobile ? "100dvh" : "90vh",
         overflow: "hidden",
       }
     },
     menuContainerStyle(): Record<string, string> {
       return {
-        width: "100%",
-        height: "auto",
+        width: this.isMobile ? "100vw" : "400px",
+        height: this.isMobile ? "100%" : "auto",
         minHeight: "0",
         display: "flex",
         flexDirection: "column",
@@ -252,3 +253,23 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="sass">
+.notif-menu-mobile
+  position: fixed !important
+  inset: 0 !important
+  width: 100vw !important
+  max-width: 100vw !important
+  height: 100dvh !important
+  max-height: 100dvh !important
+  border-radius: 0 !important
+  padding: 0 !important
+  transform: none !important
+  left: 0 !important
+  right: 0 !important
+  top: 0 !important
+  z-index: 2000
+  display: flex !important
+  flex-direction: column !important
+  overflow: hidden !important
+</style>
