@@ -5,7 +5,7 @@ div.relative-position.self-center
     flat
     dense
     padding="1px"
-    size="xs"
+    size="md"
     :color="unreadCount > 0 ? 'accent' : 'grey-4'"
     icon="notifications"
   )
@@ -17,23 +17,25 @@ div.relative-position.self-center
       :content-style="menuContentStyle"
       @before-show="refresh"
     )
-      div.q-pa-sm
+      div.q-pa-sm(:style="menuContainerStyle")
         .row.items-center.justify-between.q-mb-sm
           .text-subtitle2 Notifications
           q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
             q-tooltip Mark all as seen
         q-separator
-        q-scroll-area(:style="{ height: menuScrollHeight }")
-          q-list
-            q-item(v-for="ev in recentEvents" :key="ev.id" clickable @click.stop="handleClick(ev)")
+        q-scroll-area(:style="{ height: menuScrollHeight, width: '100%', maxWidth: '100vw' }")
+          q-list(v-if="recentEvents.length > 0" :dense="isMobile")
+            q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
               q-item-section(avatar)
                 q-avatar(:size="isMobile ? '24px' : '28px'" square)
                   q-img(:src="previewFor(ev)" :ratio="1" no-spinner)
-              q-item-section
-                .text-body2 {{ messageFor(ev) }}
+              q-item-section(:style="{ minWidth: 0 }")
+                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
               q-item-section(side)
-                q-btn(flat round dense size="sm" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
+                q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
+          .text-caption.text-grey-6.q-pa-md.text-center(v-else)
+            | No notifications yet
         q-separator
         .row.justify-between.items-center.q-mt-sm
           q-btn(flat dense icon="refresh" label="Refresh" @click.stop="refresh" :loading="loading")
@@ -76,12 +78,19 @@ export default defineComponent({
       return "top right"
     },
     menuContentStyle(): Record<string, string> {
-      return { width: "400px", maxWidth: this.menuWidth, maxHeight: "90vh" }
+      return {
+        width: this.menuWidth,
+        maxWidth: "100vw",
+        height: this.isMobile ? "85vh" : "auto",
+        maxHeight: "90vh",
+        overflow: "hidden",
+      }
     },
     menuContainerStyle(): Record<string, string> {
       return {
         width: "100%",
-        maxHeight: "80vh",
+        height: "auto",
+        minHeight: "0",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -89,7 +98,28 @@ export default defineComponent({
       }
     },
     menuScrollHeight(): string {
-      return this.isMobile ? "60vh" : "360px"
+      return this.isMobile ? "70vh" : "360px"
+    },
+    menuScrollStyle(): Record<string, string> {
+      if (this.isMobile) {
+        return {
+          flex: "1 1 0",
+          height: "100%",
+          minHeight: "0",
+          width: "100%",
+          maxWidth: "100%",
+          overflow: "auto",
+          boxSizing: "border-box",
+        }
+      } else {
+        return {
+          height: this.menuScrollHeight,
+          width: "100%",
+          maxWidth: "100%",
+          overflow: "auto",
+          boxSizing: "border-box",
+        }
+      }
     },
   },
   watch: {

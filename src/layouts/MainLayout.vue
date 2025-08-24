@@ -2,7 +2,7 @@
 q-layout(view="lHh Lpr lFf" )
   q-header
     q-toolbar.bg-grey-10
-      .row.q-mr-lg.no-wrap.items-center
+      .row.no-wrap.items-center
         q-tabs
           q-route-tab(href="https://fiddl.art" no-caps exact).text-white
             .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
@@ -29,7 +29,7 @@ q-layout(view="lHh Lpr lFf" )
         //- q-separator(color="white" vertical)
         //- q-btn(flat @click="register()" label="register" size="sm")
       .row.justify-end.full-width.items-center.q-gutter-sm(v-else)
-        q-btn(rounded padding="0px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
+        q-btn(rounded padding="6px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
           .row.items-center
             div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
             q-img.q-ml-sm.q-mr-sm(
