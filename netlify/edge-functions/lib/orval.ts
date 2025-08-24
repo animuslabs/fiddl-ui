@@ -2755,6 +2755,7 @@ export const EventsPublicEventsTypesItem = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -2771,6 +2772,7 @@ export const EventsPublicEvents200ItemType = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -2805,6 +2807,7 @@ export const EventsPrivateEventsTypesItem = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -2821,6 +2824,7 @@ export const EventsPrivateEvents200ItemType = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -2836,6 +2840,168 @@ export type EventsPrivateEvents200Item = {
 
 export type EventsMarkEventSeenBody = {
   eventId: string;
+};
+
+export type MissionsList200ItemRewardsItemOneOfType = typeof MissionsList200ItemRewardsItemOneOfType[keyof typeof MissionsList200ItemRewardsItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsList200ItemRewardsItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type MissionsList200ItemRewardsItemOneOf = {
+  type: MissionsList200ItemRewardsItemOneOfType;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  amount: number;
+  memo?: string;
+};
+
+export type MissionsList200ItemRewardsItemOneOfThreeType = typeof MissionsList200ItemRewardsItemOneOfThreeType[keyof typeof MissionsList200ItemRewardsItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsList200ItemRewardsItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type MissionsList200ItemRewardsItemOneOfThree = {
+  type: MissionsList200ItemRewardsItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type MissionsList200ItemRewardsItem = MissionsList200ItemRewardsItemOneOf | MissionsList200ItemRewardsItemOneOfThree;
+
+export type MissionsList200Item = {
+  id: string;
+  description: string;
+  rewards: MissionsList200ItemRewardsItem[];
+};
+
+export type MissionsProgressParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsProgress200 = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+};
+
+export type MissionsIsClaimedParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsIsClaimed200 = {
+  missionId: string;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type MissionsClaimBody = {
+  missionId: string;
+  userId?: string;
+};
+
+export type MissionsClaim200RewardsAwardedItemOneOfType = typeof MissionsClaim200RewardsAwardedItemOneOfType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsClaim200RewardsAwardedItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type MissionsClaim200RewardsAwardedItemOneOf = {
+  type: MissionsClaim200RewardsAwardedItemOneOfType;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  amount: number;
+  memo?: string;
+};
+
+export type MissionsClaim200RewardsAwardedItemOneOfThreeType = typeof MissionsClaim200RewardsAwardedItemOneOfThreeType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsClaim200RewardsAwardedItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type MissionsClaim200RewardsAwardedItemOneOfThree = {
+  type: MissionsClaim200RewardsAwardedItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type MissionsClaim200RewardsAwardedItem = MissionsClaim200RewardsAwardedItemOneOf | MissionsClaim200RewardsAwardedItemOneOfThree;
+
+export type MissionsClaim200 = {
+  awarded: boolean;
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  rewardsAwarded?: MissionsClaim200RewardsAwardedItem[];
+  reason?: string;
+};
+
+export type MissionsStatusParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsStatus200 = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type BadgesList200Item = {
+  id: string;
+  imageUrl: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @minimum 0 */
+  holders: number;
+};
+
+export type BadgesForUserParams = {
+userId?: string;
+};
+
+export type BadgesForUser200ItemBadge = {
+  id: string;
+  imageUrl: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+};
+
+export type BadgesForUser200Item = {
+  id: string;
+  createdAt: string;
+  badge: BadgesForUser200ItemBadge;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -5280,5 +5446,181 @@ export const eventsMarkEventSeen = async (eventsMarkEventSeenBody: EventsMarkEve
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       eventsMarkEventSeenBody,)
+  }
+);}
+
+
+
+export const getMissionsListUrl = () => {
+
+
+  
+
+  return `/missions/list`
+}
+
+export const missionsList = async ( options?: RequestInit): Promise<MissionsList200Item[]> => {
+  
+  return fetcher<MissionsList200Item[]>(getMissionsListUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMissionsProgressUrl = (params: MissionsProgressParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/missions/progress?${stringifiedParams}` : `/missions/progress`
+}
+
+export const missionsProgress = async (params: MissionsProgressParams, options?: RequestInit): Promise<MissionsProgress200> => {
+  
+  return fetcher<MissionsProgress200>(getMissionsProgressUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMissionsIsClaimedUrl = (params: MissionsIsClaimedParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/missions/isClaimed?${stringifiedParams}` : `/missions/isClaimed`
+}
+
+export const missionsIsClaimed = async (params: MissionsIsClaimedParams, options?: RequestInit): Promise<MissionsIsClaimed200> => {
+  
+  return fetcher<MissionsIsClaimed200>(getMissionsIsClaimedUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMissionsClaimUrl = () => {
+
+
+  
+
+  return `/missions/claim`
+}
+
+export const missionsClaim = async (missionsClaimBody: MissionsClaimBody, options?: RequestInit): Promise<MissionsClaim200> => {
+  
+  return fetcher<MissionsClaim200>(getMissionsClaimUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      missionsClaimBody,)
+  }
+);}
+
+
+
+export const getMissionsStatusUrl = (params: MissionsStatusParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/missions/status?${stringifiedParams}` : `/missions/status`
+}
+
+export const missionsStatus = async (params: MissionsStatusParams, options?: RequestInit): Promise<MissionsStatus200> => {
+  
+  return fetcher<MissionsStatus200>(getMissionsStatusUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getBadgesListUrl = () => {
+
+
+  
+
+  return `/badges/list`
+}
+
+export const badgesList = async ( options?: RequestInit): Promise<BadgesList200Item[]> => {
+  
+  return fetcher<BadgesList200Item[]>(getBadgesListUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getBadgesForUserUrl = (params?: BadgesForUserParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/badges/forUser?${stringifiedParams}` : `/badges/forUser`
+}
+
+export const badgesForUser = async (params?: BadgesForUserParams, options?: RequestInit): Promise<BadgesForUser200Item[]> => {
+  
+  return fetcher<BadgesForUser200Item[]>(getBadgesForUserUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}

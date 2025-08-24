@@ -2784,6 +2784,7 @@ export const EventsPublicEventsTypesItem = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -2800,6 +2801,7 @@ export const EventsPublicEvents200ItemType = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -2834,6 +2836,7 @@ export const EventsPrivateEventsTypesItem = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -2850,6 +2853,7 @@ export const EventsPrivateEvents200ItemType = {
   unlikedImage: 'unlikedImage',
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
+  missionCompleted: 'missionCompleted',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -2865,6 +2869,168 @@ export type EventsPrivateEvents200Item = {
 
 export type EventsMarkEventSeenBody = {
   eventId: string;
+};
+
+export type MissionsList200ItemRewardsItemOneOfType = typeof MissionsList200ItemRewardsItemOneOfType[keyof typeof MissionsList200ItemRewardsItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsList200ItemRewardsItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type MissionsList200ItemRewardsItemOneOf = {
+  type: MissionsList200ItemRewardsItemOneOfType;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  amount: number;
+  memo?: string;
+};
+
+export type MissionsList200ItemRewardsItemOneOfThreeType = typeof MissionsList200ItemRewardsItemOneOfThreeType[keyof typeof MissionsList200ItemRewardsItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsList200ItemRewardsItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type MissionsList200ItemRewardsItemOneOfThree = {
+  type: MissionsList200ItemRewardsItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type MissionsList200ItemRewardsItem = MissionsList200ItemRewardsItemOneOf | MissionsList200ItemRewardsItemOneOfThree;
+
+export type MissionsList200Item = {
+  id: string;
+  description: string;
+  rewards: MissionsList200ItemRewardsItem[];
+};
+
+export type MissionsProgressParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsProgress200 = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+};
+
+export type MissionsIsClaimedParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsIsClaimed200 = {
+  missionId: string;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type MissionsClaimBody = {
+  missionId: string;
+  userId?: string;
+};
+
+export type MissionsClaim200RewardsAwardedItemOneOfType = typeof MissionsClaim200RewardsAwardedItemOneOfType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsClaim200RewardsAwardedItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type MissionsClaim200RewardsAwardedItemOneOf = {
+  type: MissionsClaim200RewardsAwardedItemOneOfType;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  amount: number;
+  memo?: string;
+};
+
+export type MissionsClaim200RewardsAwardedItemOneOfThreeType = typeof MissionsClaim200RewardsAwardedItemOneOfThreeType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MissionsClaim200RewardsAwardedItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type MissionsClaim200RewardsAwardedItemOneOfThree = {
+  type: MissionsClaim200RewardsAwardedItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type MissionsClaim200RewardsAwardedItem = MissionsClaim200RewardsAwardedItemOneOf | MissionsClaim200RewardsAwardedItemOneOfThree;
+
+export type MissionsClaim200 = {
+  awarded: boolean;
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  rewardsAwarded?: MissionsClaim200RewardsAwardedItem[];
+  reason?: string;
+};
+
+export type MissionsStatusParams = {
+missionId: string;
+userId?: string;
+};
+
+export type MissionsStatus200 = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type BadgesList200Item = {
+  id: string;
+  imageUrl: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @minimum 0 */
+  holders: number;
+};
+
+export type BadgesForUserParams = {
+userId?: string;
+};
+
+export type BadgesForUser200ItemBadge = {
+  id: string;
+  imageUrl: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+};
+
+export type BadgesForUser200Item = {
+  id: string;
+  createdAt: string;
+  badge: BadgesForUser200ItemBadge;
 };
 
 export const pkAuthRegisterStart = (
@@ -8552,3 +8718,400 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
       return useMutation(mutationOptions , queryClient);
     }
+    
+export const missionsList = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsList200Item[]>> => {
+    
+    
+    return axios.get(
+      `/missions/list`,options
+    );
+  }
+
+
+export const getMissionsListQueryKey = () => {
+    return ['missions','list'] as const;
+    }
+
+    
+export const getMissionsListQueryOptions = <TData = Awaited<ReturnType<typeof missionsList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMissionsListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof missionsList>>> = ({ signal }) => missionsList({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof missionsList>>, TError, TData> 
+}
+
+export type MissionsListQueryResult = NonNullable<Awaited<ReturnType<typeof missionsList>>>
+export type MissionsListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMissionsList<TData = Awaited<ReturnType<typeof missionsList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMissionsListQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const missionsProgress = (
+    params: MaybeRef<MissionsProgressParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsProgress200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/missions/progress`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMissionsProgressQueryKey = (params: MaybeRef<MissionsProgressParams>,) => {
+    return ['missions','progress', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMissionsProgressQueryOptions = <TData = Awaited<ReturnType<typeof missionsProgress>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<MissionsProgressParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsProgress>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMissionsProgressQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof missionsProgress>>> = ({ signal }) => missionsProgress(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof missionsProgress>>, TError, TData> 
+}
+
+export type MissionsProgressQueryResult = NonNullable<Awaited<ReturnType<typeof missionsProgress>>>
+export type MissionsProgressQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMissionsProgress<TData = Awaited<ReturnType<typeof missionsProgress>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<MissionsProgressParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsProgress>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMissionsProgressQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const missionsIsClaimed = (
+    params: MaybeRef<MissionsIsClaimedParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsIsClaimed200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/missions/isClaimed`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMissionsIsClaimedQueryKey = (params: MaybeRef<MissionsIsClaimedParams>,) => {
+    return ['missions','isClaimed', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMissionsIsClaimedQueryOptions = <TData = Awaited<ReturnType<typeof missionsIsClaimed>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<MissionsIsClaimedParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsIsClaimed>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMissionsIsClaimedQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof missionsIsClaimed>>> = ({ signal }) => missionsIsClaimed(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof missionsIsClaimed>>, TError, TData> 
+}
+
+export type MissionsIsClaimedQueryResult = NonNullable<Awaited<ReturnType<typeof missionsIsClaimed>>>
+export type MissionsIsClaimedQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMissionsIsClaimed<TData = Awaited<ReturnType<typeof missionsIsClaimed>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<MissionsIsClaimedParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsIsClaimed>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMissionsIsClaimedQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const missionsClaim = (
+    missionsClaimBody: MaybeRef<MissionsClaimBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsClaim200>> => {
+    missionsClaimBody = unref(missionsClaimBody);
+    
+    return axios.post(
+      `/missions/claim`,
+      missionsClaimBody,options
+    );
+  }
+
+
+
+export const getMissionsClaimMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof missionsClaim>>, TError,{data: MissionsClaimBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof missionsClaim>>, TError,{data: MissionsClaimBody}, TContext> => {
+
+const mutationKey = ['missionsClaim'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof missionsClaim>>, {data: MissionsClaimBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  missionsClaim(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MissionsClaimMutationResult = NonNullable<Awaited<ReturnType<typeof missionsClaim>>>
+    export type MissionsClaimMutationBody = MissionsClaimBody
+    export type MissionsClaimMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMissionsClaim = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof missionsClaim>>, TError,{data: MissionsClaimBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof missionsClaim>>,
+        TError,
+        {data: MissionsClaimBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMissionsClaimMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const missionsStatus = (
+    params: MaybeRef<MissionsStatusParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsStatus200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/missions/status`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMissionsStatusQueryKey = (params: MaybeRef<MissionsStatusParams>,) => {
+    return ['missions','status', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMissionsStatusQueryOptions = <TData = Awaited<ReturnType<typeof missionsStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<MissionsStatusParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMissionsStatusQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof missionsStatus>>> = ({ signal }) => missionsStatus(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof missionsStatus>>, TError, TData> 
+}
+
+export type MissionsStatusQueryResult = NonNullable<Awaited<ReturnType<typeof missionsStatus>>>
+export type MissionsStatusQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMissionsStatus<TData = Awaited<ReturnType<typeof missionsStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<MissionsStatusParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMissionsStatusQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const badgesList = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<BadgesList200Item[]>> => {
+    
+    
+    return axios.get(
+      `/badges/list`,options
+    );
+  }
+
+
+export const getBadgesListQueryKey = () => {
+    return ['badges','list'] as const;
+    }
+
+    
+export const getBadgesListQueryOptions = <TData = Awaited<ReturnType<typeof badgesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof badgesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getBadgesListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof badgesList>>> = ({ signal }) => badgesList({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof badgesList>>, TError, TData> 
+}
+
+export type BadgesListQueryResult = NonNullable<Awaited<ReturnType<typeof badgesList>>>
+export type BadgesListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useBadgesList<TData = Awaited<ReturnType<typeof badgesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof badgesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBadgesListQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const badgesForUser = (
+    params?: MaybeRef<BadgesForUserParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<BadgesForUser200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/badges/forUser`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getBadgesForUserQueryKey = (params?: MaybeRef<BadgesForUserParams>,) => {
+    return ['badges','forUser', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBadgesForUserQueryOptions = <TData = Awaited<ReturnType<typeof badgesForUser>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<BadgesForUserParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof badgesForUser>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getBadgesForUserQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof badgesForUser>>> = ({ signal }) => badgesForUser(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof badgesForUser>>, TError, TData> 
+}
+
+export type BadgesForUserQueryResult = NonNullable<Awaited<ReturnType<typeof badgesForUser>>>
+export type BadgesForUserQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useBadgesForUser<TData = Awaited<ReturnType<typeof badgesForUser>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<BadgesForUserParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof badgesForUser>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBadgesForUserQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}

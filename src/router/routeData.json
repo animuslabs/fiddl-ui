@@ -113,5 +113,10 @@
     "events",
     "/events",
     "EventsPage"
+  ],
+  [
+    "missions",
+    "/missions",
+    "MissionsPage"
   ]
 ]

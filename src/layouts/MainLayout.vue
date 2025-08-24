@@ -18,6 +18,8 @@ q-layout(view="lHh Lpr lFf" )
             | Forge
           q-route-tab(:to="{ name: 'models' }").gt-xs.text-white
             | Models
+          q-route-tab(:to="{ name: 'missions' }").gt-xs.text-white
+            | Missions
           q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
@@ -148,6 +150,8 @@ q-layout(view="lHh Lpr lFf" )
         | browse
       q-route-tab(:to="{ name: 'forge' }").text-white
         |  Forge
+      q-route-tab(:to="{ name: 'missions' }").text-white
+        | Missions
       q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog
 </template>
