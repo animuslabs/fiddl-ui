@@ -17,11 +17,14 @@ q-page.q-pa-md
         v-model="selectedTypes"
         label="Types"
         :options="typeOptions"
+        emit-value
+        map-options
         multiple
         use-chips
         dense
         options-dense
         clearable
+        :clear-value="[]"
         style="min-width:260px"
       )
 
@@ -61,20 +64,10 @@ q-page.q-pa-md
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams } from "../lib/orval"
+import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 
-const ALL_TYPES = [
-  "likedImage",
-  "likedVideo",
-  "unlikedVideo",
-  "addedImageToCollection",
-  "unlockedImage",
-  "unlockedVideo",
-  "unlikedImage",
-  "removedImageFromCollection",
-  "referredUser",
-] as const
+const ALL_TYPES = Object.values(EventsTypeConst) as EventsPrivateEvents200ItemType[]
 
 export default defineComponent({
   name: "EventsPage",
@@ -85,7 +78,7 @@ export default defineComponent({
       page: 1 as number,
       pageSize: 20 as number,
       showUnseenOnly: false as boolean,
-      selectedTypes: [] as string[],
+      selectedTypes: [] as EventsPrivateEvents200ItemType[],
       typeOptions: ALL_TYPES.map((t) => ({ label: t, value: t })),
     }
   },
@@ -121,6 +114,12 @@ export default defineComponent({
         if (val) void this.refresh()
         else this.events = []
       },
+    },
+    selectedTypes() {
+      this.page = 1
+    },
+    showUnseenOnly() {
+      this.page = 1
     },
     // Keep page in range when filters change
     sorted() {
@@ -213,6 +212,8 @@ export default defineComponent({
           return `@${u} unlocked your video`
         case "referredUser":
           return `@${u} joined from your referral`
+        case "missionCompleted":
+          return `Mission completed`
         default:
           return `Activity: ${ev.type}`
       }

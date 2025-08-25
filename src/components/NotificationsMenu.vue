@@ -16,8 +16,9 @@ div.relative-position.self-center
       :self="menuSelf"
       :content-style="menuContentStyle"
       :content-class="isMobile ? 'notif-menu-mobile' : ''"
-      @before-show="refresh"
-    )
+      @click.stop="refresh"
+      transition-duration="0"
+    ).bg-blur
       div.q-pa-sm(:style="menuContainerStyle")
         .q-mb-sm(:class="isMobile ? 'column items-start q-gutter-xs' : 'row items-center justify-between'")
           .text-subtitle2 Notifications
@@ -176,11 +177,12 @@ export default defineComponent({
     },
     async refresh() {
       if (!this.$userAuth.loggedIn) return
+      if (this.loading) return
       this.loading = true
       try {
         const params: EventsPrivateEventsParams = { limit: 25, includeSeen: true }
         const { data } = await eventsPrivateEvents(params)
-        this.events = data
+        this.events = Array.isArray(data) ? data : []
       } catch (e) {
         // ignore
       } finally {
@@ -235,6 +237,8 @@ export default defineComponent({
           return `@${u} unlocked your video`
         case "referredUser":
           return `@${u} joined from your referral`
+        case "missionCompleted":
+          return `Mission completed`
         default:
           return `Activity: ${ev.type}`
       }
