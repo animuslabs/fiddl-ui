@@ -26,6 +26,11 @@
   cache = "manual"
 
 [[edge_functions]]
+  function = "missions"
+  path     = "/missions"
+  cache = "manual"
+
+[[edge_functions]]
   function = "profile"
   path     = "/@:username"
   cache = "manual"

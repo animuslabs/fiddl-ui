@@ -255,6 +255,7 @@ export function buildStaticTopNavHtml(): string {
     <li><a href="/">Home</a></li>
     <li><a href="/browse">Browse</a></li>
     <li><a href="/create">Create</a></li>
+    <li><a href="/missions">Missions</a></li>
     <li><a href="/models">Models</a></li>
     <li><a href="/forge">Forge</a></li>
   </ul>
