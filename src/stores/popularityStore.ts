@@ -256,9 +256,11 @@ export const usePopularityStore = defineStore("popularityStore", {
         const attemptedLike = e.isFavoritedByMe
         try {
           if (e.isFavoritedByMe) {
-            await collectionsLikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+            const res = await collectionsLikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+            if (!res?.data) throw new Error("LIKE_REJECTED")
           } else {
-            await collectionsUnlikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+            const res = await collectionsUnlikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+            if (!res?.data) throw new Error("UNLIKE_REJECTED")
           }
         } catch (err) {
           console.error(err)

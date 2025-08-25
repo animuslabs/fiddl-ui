@@ -1,11 +1,13 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue"
-import { useQuasar } from "quasar"
+import { useQuasar, LocalStorage } from "quasar"
 import { Dialog } from "quasar"
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
 import { usePopularityStore } from "src/stores/popularityStore"
 import { useUserAuth } from "src/stores/userAuth"
+import { useMediaViewerStore } from "src/stores/mediaViewerStore"
+import LikeMedia from "src/components/dialogs/LikeMedia.vue"
 import type { MediaType } from "lib/types"
 
 export interface MediaGalleryMeta {
@@ -55,6 +57,7 @@ const emit = defineEmits<{
 
 const $q = useQuasar()
 const userAuth = useUserAuth()
+const mediaViewerStore = useMediaViewerStore()
 const router = useRouter()
 const isMobile = computed(() => $q.screen.lt.md)
 const cols = computed(() => {
@@ -102,6 +105,52 @@ function triggerUpvoteBurst(id: string) {
     upvoteBursts.value[id] = { count: 0, visible: false }
   }, 1800) as unknown as number
   upvoteBursts.value[id] = next
+}
+
+function ownsMediaQuick(id: string, type: MediaType): boolean {
+  if (type === "video") {
+    if (mediaViewerStore.hdVideoUrl[id]) return true
+    const cached = LocalStorage.getItem<string>("hdVideoUrl-" + id)
+    if (cached) return true
+  } else {
+    if (mediaViewerStore.hdImageSrc[id]) return true
+  }
+  return false
+}
+
+function onFavorite(id: string, type: MediaType) {
+  if (!userAuth.loggedIn) {
+    Dialog.create({
+      title: "Login required",
+      message: "You need to login to like media",
+      cancel: true,
+      persistent: true,
+    }).onOk(() => {
+      void router.push({ name: "login" })
+    })
+    return
+  }
+
+  const isFav = !!popularity.get(id)?.isFavoritedByMe
+  // Unfavorite path: allow immediately
+  if (isFav) {
+    void popularity.toggleFavorite(id, type)
+    return
+  }
+
+  // Favorite path: gate instantly if not unlocked
+  if (!ownsMediaQuick(id, type)) {
+    Dialog.create({
+      component: LikeMedia,
+      componentProps: { type, userOwnsMedia: false, currentMediaId: id },
+    }).onOk(() => {
+      void popularity.toggleFavorite(id, type)
+    })
+    return
+  }
+
+  // User owns/unlocked -> proceed
+  void popularity.toggleFavorite(id, type)
 }
 
 const wrapperStyles = computed(() => {
@@ -367,7 +416,7 @@ function videoClass(media: MediaGalleryMeta) {
         // Popularity overlay controls
         .popularity-overlay(v-if="props.showPopularity")
           .pop-row
-            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="popularity.toggleFavorite(m.id, 'image')")
+            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
               q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
@@ -405,7 +454,7 @@ function videoClass(media: MediaGalleryMeta) {
         // Popularity overlay controls
         .popularity-overlay(v-if="props.showPopularity")
           .pop-row
-            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="popularity.toggleFavorite(m.id, 'video')")
+            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
               q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")

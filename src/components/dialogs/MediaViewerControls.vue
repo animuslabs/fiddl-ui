@@ -244,7 +244,24 @@ async function toggleFavorite() {
     })
     return
   }
-  void popularity.toggleFavorite(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
+
+  const id = mediaViewerStore.currentMediaId
+  const type = mediaViewerStore.currentMediaType
+  const isFav = !!popularity.get(id)?.isFavoritedByMe
+
+  // If attempting to favorite and media is not owned/unlocked, show unlock dialog instantly
+  if (!mediaViewerStore.userOwnsMedia && !isFav) {
+    Dialog.create({
+      component: LikeMedia,
+      componentProps: mediaViewerStore.getDialogParams(),
+    }).onOk(() => {
+      void popularity.toggleFavorite(id, type)
+    })
+    return
+  }
+
+  // Unfavorite or already owned -> proceed
+  void popularity.toggleFavorite(id, type)
 }
 
 function onUpvote() {
