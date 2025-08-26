@@ -49,6 +49,7 @@ import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
+import { markOwned, clearOwned } from "lib/ownedMediaCache"
 export default defineComponent({
   props: { ...dialogProps, requestId: { type: String, required: false } },
   emits: ["unlocked", "hide", "ok"],
@@ -120,15 +121,24 @@ export default defineComponent({
     },
     async unlock() {
       if (!this.currentMediaId) return
-      await purchaseMedia(this.currentMediaId, this.type!)
-      this.mediaUnlocked = true
-      // Optimistically mark as owned immediately
       const store = useMediaViewerStore()
-      store.userOwnsMedia = true
-      store.triedHdLoad = false
-      void store.loadHdMedia()
-      // Keep dialog open to show downloads section and still notify listeners
-      this.$emit("unlocked")
+      // Optimistically mark as owned instantly
+      store.setOwnedOptimistic()
+      this.mediaUnlocked = true
+      markOwned(this.currentMediaId, this.type!)
+      try {
+        await purchaseMedia(this.currentMediaId, this.type!)
+        store.triedHdLoad = false
+        void store.loadHdMedia()
+        // Keep dialog open to show downloads section and still notify listeners
+        this.$emit("unlocked")
+      } catch (e) {
+        // Revert optimistic state on failure
+        clearOwned(this.currentMediaId, this.type!)
+        store.userOwnsMedia = false
+        this.mediaUnlocked = false
+        catchErr(e)
+      }
     },
     show() {
       const dialog = this.$refs.dialog as QDialog

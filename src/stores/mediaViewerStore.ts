@@ -5,6 +5,7 @@ import { collectionsMediaInUsersCollection, creationsGetCreationData, userGetUse
 import { getImageFromCache, storeImageInCache } from "src/lib/hdImageCache"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { catchErr } from "src/lib/util"
+import { markOwned, isOwned } from "lib/ownedMediaCache"
 
 interface CreatorMeta {
   userName: string
@@ -136,6 +137,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.mediaObjects = [...mediaObjects]
       this.currentIndex = startIndex
       this.resetStates()
+      // Instant ownership from cache
+      if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true
       await this.loadRequestId()
     },
 
@@ -189,6 +192,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (index >= 0 && index < this.mediaObjects.length) {
         this.currentIndex = index
         this.touchState.moveX = 0
+        if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true
       }
     },
 
@@ -247,7 +251,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (this.triedHdLoad || this.hdMediaLoaded) return
       this.triedHdLoad = true
       // this.loading = true
-      this.userOwnsMedia = false
+      // preserve current userOwnsMedia to avoid flicker after unlock
 
       let timer: any | null = null
       const timeoutPromise = new Promise<null>((_, reject) => {
@@ -291,6 +295,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         this.hdImageSrc[id] = src
         this.userOwnsMedia = true
         this.hdMediaLoaded = true
+        markOwned(id, "image")
         return src
       }
       return null
@@ -308,6 +313,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         this.hdVideoUrl[id] = hdUrl
         this.hdMediaLoaded = true
         this.userOwnsMedia = true
+        markOwned(id, "video")
         return hdUrl
       } finally {
         this.hdVideoLoading = false

@@ -2358,6 +2358,16 @@ export type AdminLoginAsUserBody = {
   id: string;
 };
 
+export type TonomyAuthLoginOrRegisterBody = {
+  vcString: string;
+  referrerUsername?: string;
+};
+
+export type TonomyAuthLoginOrRegister200 = {
+  token: string;
+  userId: string;
+};
+
 export type PrivyAuthenticateBody = {
   accessToken: string;
   referrerUsername?: string;
@@ -4959,6 +4969,28 @@ export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBod
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       adminLoginAsUserBody,)
+  }
+);}
+
+
+
+export const getTonomyAuthLoginOrRegisterUrl = () => {
+
+
+  
+
+  return `/tonomyAuth/loginOrRegister`
+}
+
+export const tonomyAuthLoginOrRegister = async (tonomyAuthLoginOrRegisterBody: TonomyAuthLoginOrRegisterBody, options?: RequestInit): Promise<TonomyAuthLoginOrRegister200> => {
+  
+  return fetcher<TonomyAuthLoginOrRegister200>(getTonomyAuthLoginOrRegisterUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      tonomyAuthLoginOrRegisterBody,)
   }
 );}
 

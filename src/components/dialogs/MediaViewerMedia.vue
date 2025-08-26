@@ -62,6 +62,7 @@ import { ref, computed, nextTick, watch } from "vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import CreatorInfo from "src/components/CreatorInfo.vue"
 import { img, s3Video } from "src/lib/netlifyImg"
+import { isOwned } from "lib/ownedMediaCache"
 interface Props {
   downloadMode?: boolean
 }
@@ -119,6 +120,11 @@ const mediaClass = computed(() => {
 
 async function onMediaLoaded(event?: Event) {
   const isImage = mediaViewerStore.currentMediaType === "image"
+
+  // Instant ownership from local cache
+  if (isOwned(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)) {
+    mediaViewerStore.userOwnsMedia = true
+  }
 
   if (isImage && event) {
     const imgEl = event.target as HTMLImageElement
@@ -210,7 +216,7 @@ watch(
     mediaViewerStore.hdMediaLoaded = false
     mediaViewerStore.triedHdLoad = false
     mediaViewerStore.userLikedMedia = false
-    mediaViewerStore.userOwnsMedia = false
+    mediaViewerStore.userOwnsMedia = isOwned(newId, mediaViewerStore.currentMediaType)
 
     // Reset creator info for new media
     mediaViewerStore.creatorMeta = { userName: "", id: "" }

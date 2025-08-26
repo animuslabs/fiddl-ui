@@ -2387,6 +2387,16 @@ export type AdminLoginAsUserBody = {
   id: string;
 };
 
+export type TonomyAuthLoginOrRegisterBody = {
+  vcString: string;
+  referrerUsername?: string;
+};
+
+export type TonomyAuthLoginOrRegister200 = {
+  token: string;
+  userId: string;
+};
+
 export type PrivyAuthenticateBody = {
   accessToken: string;
   referrerUsername?: string;
@@ -7579,6 +7589,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getAdminLoginAsUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const tonomyAuthLoginOrRegister = (
+    tonomyAuthLoginOrRegisterBody: MaybeRef<TonomyAuthLoginOrRegisterBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TonomyAuthLoginOrRegister200>> => {
+    tonomyAuthLoginOrRegisterBody = unref(tonomyAuthLoginOrRegisterBody);
+    
+    return axios.post(
+      `/tonomyAuth/loginOrRegister`,
+      tonomyAuthLoginOrRegisterBody,options
+    );
+  }
+
+
+
+export const getTonomyAuthLoginOrRegisterMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>, TError,{data: TonomyAuthLoginOrRegisterBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>, TError,{data: TonomyAuthLoginOrRegisterBody}, TContext> => {
+
+const mutationKey = ['tonomyAuthLoginOrRegister'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>, {data: TonomyAuthLoginOrRegisterBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  tonomyAuthLoginOrRegister(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TonomyAuthLoginOrRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>>
+    export type TonomyAuthLoginOrRegisterMutationBody = TonomyAuthLoginOrRegisterBody
+    export type TonomyAuthLoginOrRegisterMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTonomyAuthLoginOrRegister = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>, TError,{data: TonomyAuthLoginOrRegisterBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof tonomyAuthLoginOrRegister>>,
+        TError,
+        {data: TonomyAuthLoginOrRegisterBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTonomyAuthLoginOrRegisterMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

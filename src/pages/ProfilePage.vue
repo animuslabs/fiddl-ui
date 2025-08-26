@@ -110,6 +110,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="mosaic"
           :mediaObjects="filteredMediaObjects"
+          show-popularity
         )
         MediaGallery.q-pl-md.q-pr-md(
           v-else-if="gridMode == 'grid'"
@@ -121,6 +122,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="grid"
           :mediaObjects="filteredMediaObjects"
+          show-popularity
         )
 
       // Favorites tab - only show MediaGallery (no list view for individual images)
@@ -134,6 +136,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="mosaic"
           :mediaObjects="favoritesMediaObjects"
+          show-popularity
         )
         MediaGallery.q-pl-md.q-pr-md(
           v-else
@@ -145,6 +148,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="grid"
           :mediaObjects="favoritesMediaObjects"
+          show-popularity
         )
 
       // Purchased tab - only show MediaGallery
@@ -158,6 +162,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="mosaic"
           :mediaObjects="purchasedMediaObjects"
+          show-popularity
         )
         MediaGallery.q-pl-md.q-pr-md(
           v-else
@@ -169,6 +174,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="grid"
           :mediaObjects="purchasedMediaObjects"
+          show-popularity
         )
       template(v-else-if="tab === 'forgeModels'")
         .row.q-ma-md.full-width
@@ -190,6 +196,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="mosaic"
           :mediaObjects="unlockedMediaObjects"
+          show-popularity
         )
         MediaGallery.q-pl-md.q-pr-md(
           v-else
@@ -201,6 +208,7 @@ q-page.full-height.full-width
           :rowHeightRatio="1"
           layout="grid"
           :mediaObjects="unlockedMediaObjects"
+          show-popularity
         )
 
       // Account Settings section (always visible when authenticated and viewing own profile)

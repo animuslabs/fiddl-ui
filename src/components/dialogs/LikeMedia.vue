@@ -31,6 +31,7 @@ import { Loading, QDialog } from "quasar"
 import { defineComponent, PropType } from "vue"
 import { prices } from "stores/pricesStore"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
+import { markOwned, clearOwned } from "lib/ownedMediaCache"
 
 export default defineComponent({
   props: {
@@ -61,20 +62,26 @@ export default defineComponent({
     },
     async unlock() {
       Loading.show()
+      const store = useMediaViewerStore()
+      // Optimistically mark as owned instantly
+      store.setOwnedOptimistic()
+      this.mediaUnlocked = true
+      markOwned(this.currentMediaId, this.type)
       try {
         await purchaseMedia(this.currentMediaId, this.type)
-        this.mediaUnlocked = true
-        // Optimistically mark as owned immediately
-        const store = useMediaViewerStore()
-        store.userOwnsMedia = true
         store.triedHdLoad = false
         void store.loadHdMedia()
         // Close like dialog after unlock as before
         this.onOKClick()
       } catch (err) {
+        // Revert optimistic state on failure
+        clearOwned(this.currentMediaId, this.type)
+        store.userOwnsMedia = false
+        this.mediaUnlocked = false
         catchErr(err)
+      } finally {
+        Loading.hide()
       }
-      Loading.hide()
     },
     startEditing() {
       this.onOKClick()

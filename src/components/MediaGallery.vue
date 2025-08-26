@@ -7,6 +7,7 @@ import { img, s3Video } from "lib/netlifyImg"
 import { usePopularityStore } from "src/stores/popularityStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
+import { isOwned } from "lib/ownedMediaCache"
 import LikeMedia from "src/components/dialogs/LikeMedia.vue"
 import type { MediaType } from "lib/types"
 
@@ -108,6 +109,7 @@ function triggerUpvoteBurst(id: string) {
 }
 
 function ownsMediaQuick(id: string, type: MediaType): boolean {
+  if (isOwned(id, type)) return true
   if (type === "video") {
     if (mediaViewerStore.hdVideoUrl[id]) return true
     const cached = LocalStorage.getItem<string>("hdVideoUrl-" + id)
