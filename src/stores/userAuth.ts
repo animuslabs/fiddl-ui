@@ -148,6 +148,33 @@ export const useUserAuth = defineStore("userAuth", {
         throw e
       }
     },
+    async tonomyLogin(vcString: string) {
+      try {
+        const { data } = await tonomyAuthLoginOrRegister({ vcString, referrerUsername: getReferredBy() })
+        this.logout()
+        this.setUserId(data.userId)
+        jwt.save({ userId: data.userId, token: data.token })
+        this.loggedIn = true
+        await this.loadUserData(data.userId)
+        await this.loadUpvotesWallet()
+        void this.loadUserProfile().then(() => {
+          void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
+        })
+      } catch (e: any) {
+        this.logout()
+        console.error(e)
+        Dialog.create({
+          title: "Error",
+          message: "Tonomy authentication failed: " + e.message,
+          ok: {
+            label: "OK",
+            flat: true,
+            color: "primary",
+          },
+        })
+        throw e
+      }
+    },
     async adminLoginAsUser(userId: string) {
       const response = await adminLoginAsUser({ id: userId })
       const token = response.data

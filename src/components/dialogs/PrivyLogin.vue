@@ -19,6 +19,14 @@ div.column.items-center.q-gutter-md.q-pa-md
       template(v-slot:default)
         .centered
           q-icon(name="img:/x-logo.svg" size="24px")
+  q-separator.full-width.q-mt-lg(color="grey-7")
+  .centered
+    h5 Tonomy Login
+  .row.full-width.items-center
+    .col-grow
+      q-input( filled :model-value="vcString" @update:model-value="val => vcString = String(val)" type="textarea" autogrow placeholder="Paste Tonomy VC (Verifiable Credential)")
+    .col-auto
+      q-btn( color="primary" flat @click="loginWithTonomy" :loading="loading" label="Login with Tonomy")
 </template>
 
 <script lang="ts">
@@ -37,6 +45,8 @@ export default defineComponent({
     const router = useRouter()
     const email = ref("")
     const loading = ref(false)
+    const userAuth = useUserAuth()
+    const vcString = ref("")
 
     const sendEmailCode = async () => {
       if (!email.value || email.value.trim() === "") {
@@ -136,6 +146,45 @@ export default defineComponent({
       }
     }
 
+    const loginWithTonomy = async () => {
+      if (!vcString.value || vcString.value.trim() === "") {
+        quasar.notify({
+          color: "negative",
+          message: "Please paste your Tonomy VC",
+        })
+        return
+      }
+      loading.value = true
+      try {
+        await userAuth.tonomyLogin(vcString.value)
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        const returnTo = sessionStorage.getItem("returnTo")
+        if (returnTo) {
+          sessionStorage.removeItem("returnTo")
+          void router.replace(returnTo)
+        } else if (userAuth.userProfile?.username) {
+          void router.push({
+            name: "profile",
+            params: { username: userAuth.userProfile.username },
+            query: { tab: "unlocked" },
+          })
+        } else {
+          void router.push({ name: "settings" })
+        }
+        quasar.notify({
+          color: "positive",
+          message: "Logged in with Tonomy",
+        })
+      } catch (error: any) {
+        quasar.notify({
+          color: "negative",
+          message: "Tonomy login failed: " + error.message,
+        })
+        console.error(error)
+      } finally {
+        loading.value = false
+      }
+    }
     const loginWithPasskey = async () => {
       loading.value = true
       try {
@@ -158,9 +207,11 @@ export default defineComponent({
 
     return {
       email,
+      vcString,
       loading,
       sendEmailCode,
       loginWithOAuth,
+      loginWithTonomy,
       loginWithPasskey,
     }
   },
