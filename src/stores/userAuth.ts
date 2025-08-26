@@ -8,7 +8,7 @@ import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useImageCreations } from "src/stores/imageCreationsStore"
-import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, upvotesGetWallet, tonomyAuthLoginOrRegister, type PrivyAuthenticate200, type UpvotesGetWallet200 } from "lib/orval"
+import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, privyLinkCurrentUser, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, upvotesGetWallet, tonomyAuthLoginOrRegister, type PrivyAuthenticate200, type UpvotesGetWallet200 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
@@ -166,6 +166,29 @@ export const useUserAuth = defineStore("userAuth", {
         Dialog.create({
           title: "Error",
           message: "Tonomy authentication failed: " + e.message,
+          ok: {
+            label: "OK",
+            flat: true,
+            color: "primary",
+          },
+        })
+        throw e
+      }
+    },
+    async linkPrivyAccount(privyToken: string) {
+      try {
+        const { data } = await privyLinkCurrentUser({ accessToken: privyToken })
+        const { userId, token } = data
+        this.setUserId(userId)
+        jwt.save({ userId, token })
+        await this.loadUserData(userId)
+        await this.loadUpvotesWallet()
+        await this.loadUserProfile(userId)
+      } catch (e: any) {
+        console.error(e)
+        Dialog.create({
+          title: "Error",
+          message: "Failed to link Privy account: " + e.message,
           ok: {
             label: "OK",
             flat: true,

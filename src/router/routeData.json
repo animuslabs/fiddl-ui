@@ -90,6 +90,11 @@
     "AuthCallback"
   ],
   [
+    "tonomyCallback",
+    "/tonomy/callback",
+    "TonomyCallback"
+  ],
+  [
     "trainingSet",
     "/trainingSet/:trainingSetId?",
     "TrainingSetPage"

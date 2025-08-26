@@ -24,18 +24,17 @@ div.column.items-center.q-gutter-md.q-pa-md
     h5 Tonomy Login
   .row.full-width.items-center
     .col-grow
-      q-input( filled :model-value="vcString" @update:model-value="val => vcString = String(val)" type="textarea" autogrow placeholder="Paste Tonomy VC (Verifiable Credential)")
-    .col-auto
-      q-btn( color="primary" flat @click="loginWithTonomy" :loading="loading" label="Login with Tonomy")
+      q-btn( color="primary" outline @click="loginWithTonomy" :loading="loading" label="Login with Tonomy" icon="login")
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import { handleEmailLogin, handleOauthLogin, privy, verifyEmailCode } from "src/lib/privy"
+import { handleEmailLogin, handleOauthLogin, verifyEmailCode } from "src/lib/privy"
 import { Loading, useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
 import type { OAuthProviderType } from "@privy-io/js-sdk-core"
+import { ExternalUser } from "@tonomy/tonomy-id-sdk"
 import { throwErr } from "lib/util"
 
 export default defineComponent({
@@ -46,7 +45,6 @@ export default defineComponent({
     const email = ref("")
     const loading = ref(false)
     const userAuth = useUserAuth()
-    const vcString = ref("")
 
     const sendEmailCode = async () => {
       if (!email.value || email.value.trim() === "") {
@@ -147,41 +145,17 @@ export default defineComponent({
     }
 
     const loginWithTonomy = async () => {
-      if (!vcString.value || vcString.value.trim() === "") {
-        quasar.notify({
-          color: "negative",
-          message: "Please paste your Tonomy VC",
-        })
-        return
-      }
       loading.value = true
       try {
-        await userAuth.tonomyLogin(vcString.value)
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        const returnTo = sessionStorage.getItem("returnTo")
-        if (returnTo) {
-          sessionStorage.removeItem("returnTo")
-          void router.replace(returnTo)
-        } else if (userAuth.userProfile?.username) {
-          void router.push({
-            name: "profile",
-            params: { username: userAuth.userProfile.username },
-            query: { tab: "unlocked" },
-          })
-        } else {
-          void router.push({ name: "settings" })
-        }
-        quasar.notify({
-          color: "positive",
-          message: "Logged in with Tonomy",
-        })
+        const rt = window.location.pathname + window.location.search
+        sessionStorage.setItem("returnTo", rt)
+        await ExternalUser.loginWithTonomy({ callbackPath: "/tonomy/callback", dataRequest: { username: true } })
       } catch (error: any) {
         quasar.notify({
           color: "negative",
-          message: "Tonomy login failed: " + error.message,
+          message: "Failed to initiate Tonomy login",
         })
         console.error(error)
-      } finally {
         loading.value = false
       }
     }
@@ -207,7 +181,6 @@ export default defineComponent({
 
     return {
       email,
-      vcString,
       loading,
       sendEmailCode,
       loginWithOAuth,

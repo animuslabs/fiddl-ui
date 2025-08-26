@@ -30,6 +30,7 @@
     "@simplewebauthn/browser": "^13.1.0",
     "@simplewebauthn/types": "^12.0.0",
     "@tanstack/vue-query": "^5.77.2",
+    "@tonomy/tonomy-id-sdk": "^0.33.1",
     "@trpc/client": "^11.1.2",
     "@trpc/server": "^11.1.2",
     "@types/ms": "^0.7.34",

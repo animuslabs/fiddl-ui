@@ -59,9 +59,9 @@ q-page.full-height.full-width
             q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
           .q-ma-md(v-if="!$userAuth.userProfile?.emailVerified")
-            q-btn( @click="verifyEmail()" label="Verify Email" flat color="positive" icon="email" size="md")
+            q-btn( @click="linkPrivyEmail()" label="Link your email with Privy" flat color="positive" icon="link" size="md")
         .centered(v-if="!$userAuth.userProfile?.emailVerified")
-          small.text-positive Earn 100 Points when you verify your email
+          small.text-positive Earn 100 Points when you link your email
         h6.q-pt-md Notifications
         .row(v-if="$userAuth.notificationConfig")
           //- pre {{ $userAuth.notificationConfig }}
@@ -74,12 +74,14 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { userSetBio, userSetNotificationConfig, userSetUsername, userSendVerificationEmail } from "src/lib/orval"
+import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser } from "src/lib/orval"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
 import { avatarImg } from "lib/netlifyImg"
+import { handleEmailLogin, verifyEmailCode } from "src/lib/privy"
+import { jwt } from "src/lib/jwt"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -164,15 +166,50 @@ export default defineComponent({
         Notify.create({ message: "Failed to update username", color: "negative", icon: "error" })
       }
     },
-    async verifyEmail() {
-      if (!this.$userAuth.userProfile?.email) return
-      
-      Loading.show()
-      await userSendVerificationEmail({ email: this.$userAuth.userProfile.email }).catch(catchErr)
-      Loading.hide()
-      
+    async linkPrivyEmail() {
       Dialog.create({
-        message: "Verification email sent to " + this.$userAuth.userProfile?.email + " Click the link in the email to verify your account and earn 100 Fiddl Points.",
+        title: "Link with Privy",
+        message: "Enter your email to receive a login code from Privy",
+        prompt: { model: this.$userAuth.userProfile?.email || "", type: "email" },
+        cancel: true,
+        persistent: true,
+      }).onOk(async (email) => {
+        if (!email || String(email).trim() === "") {
+          Notify.create({ message: "Please enter a valid email", color: "negative", icon: "error" })
+          return
+        }
+        try {
+          Loading.show({ message: "Sending verification code..." })
+          await handleEmailLogin(String(email))
+          Loading.hide()
+          Dialog.create({
+            title: "Verification",
+            message: `Enter the code sent to ${String(email)}`,
+            prompt: { model: "", type: "text" },
+            cancel: true,
+            persistent: true,
+          }).onOk(async (code) => {
+            try {
+              Loading.show({ message: "Linking your account..." })
+              const result = await verifyEmailCode(String(email), String(code))
+              if (!result.token) throw new Error("No Privy token")
+              const linkRes = await privyLinkCurrentUser({ accessToken: result.token })
+              const { token: appToken, userId } = linkRes.data
+              jwt.save({ userId, token: appToken })
+              await this.$userAuth.loadUserData(userId)
+              await this.$userAuth.loadUserProfile(userId)
+              await this.$userAuth.loadUpvotesWallet()
+              Loading.hide()
+              Notify.create({ message: "Email linked successfully", color: "positive", icon: "check" })
+            } catch (e: any) {
+              Loading.hide()
+              Notify.create({ message: "Failed to link email: " + e.message, color: "negative", icon: "error" })
+            }
+          })
+        } catch (err: any) {
+          Loading.hide()
+          Notify.create({ message: "Failed to send code: " + err.message, color: "negative", icon: "error" })
+        }
       })
     },
     loadData() {
