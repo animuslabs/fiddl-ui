@@ -63,7 +63,9 @@ export default defineComponent({
         const returnTo = (route.query.returnTo as string) || sessionStorage.getItem("returnTo") || null
         if (returnTo && typeof returnTo === "string") {
           sessionStorage.removeItem("returnTo")
-          void router.replace(returnTo)
+          if (returnTo === "/login") void router.replace({ name: "settings" })
+          else void router.replace(returnTo)
+          console.log("Redirecting to:", returnTo)
         } else if (userAuth.userProfile?.username) {
           void router.push({
             name: "profile",
@@ -72,7 +74,7 @@ export default defineComponent({
           })
         } else {
           // Fallback to account route if username not available
-          void router.push({ name: "account" })
+          void router.push({ name: "settings" })
         }
       } catch (err: any) {
         console.error("Authentication error:", err)

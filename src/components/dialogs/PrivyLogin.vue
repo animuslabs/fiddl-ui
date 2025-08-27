@@ -92,7 +92,8 @@ export default defineComponent({
               const returnTo = sessionStorage.getItem("returnTo")
               if (returnTo) {
                 sessionStorage.removeItem("returnTo")
-                void router.replace(returnTo)
+                if (returnTo == "login") void router.replace({ name: "settings" })
+                else void router.replace(returnTo)
               } else if (userAuth.userProfile?.username) {
                 void router.push({
                   name: "profile",

@@ -17,11 +17,15 @@ export default boot(({ app }) => {
       setSettings({
         ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
         blockchainUrl: "https://blockchain-api-testnet.tonomy.io",
+        communicationUrl: "wss://communication.testnet.tonomy.io",
+        currencySymbol: "TONO",
       })
     } else {
       setSettings({
         ssoWebsiteOrigin: "https://accounts.tonomy.io",
         blockchainUrl: "https://blockchain-api.tonomy.io",
+        communicationUrl: "wss://communication.tonomy.io",
+        currencySymbol: "TONO",
       })
     }
   }

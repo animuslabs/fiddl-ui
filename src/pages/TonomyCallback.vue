@@ -26,13 +26,12 @@ export default defineComponent({
       try {
         const { user } = await ExternalUser.verifyLoginResponse()
         const accountName = await user.getAccountName()
-        const vc = await user.signVc(
-          window.location.origin + "/user-authorization",
-          "UserAuth",
-          { accountName: accountName.toString() }
-        )
-
-        await userAuth.tonomyLogin(JSON.stringify(vc))
+        // const vc = await user.signVc(window.location.origin + "/user-authorization", "UserAuth", { accountName: accountName.toString() })
+        const jwt = await user.createClientAuthorization({
+          username: (await user.getUsername())?.username,
+          foo: "bar",
+        })
+        await userAuth.tonomyLogin(jwt)
 
         Notify.create({
           type: "positive",

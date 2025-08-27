@@ -8,7 +8,23 @@ import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageCache } from "lib/hdImageCache"
 import { useImageCreations } from "src/stores/imageCreationsStore"
-import { adminLoginAsUser, loginLinkLoginWithLink, privyAuthenticate, privyLinkCurrentUser, promoCreateAccountWithPromo, userFindByEmail, userFindByPhone, userGet, userGetNotificationConfig, userPointsHistory, userProfile, upvotesGetWallet, tonomyAuthLoginOrRegister, type PrivyAuthenticate200, type UpvotesGetWallet200 } from "lib/orval"
+import {
+  adminLoginAsUser,
+  loginLinkLoginWithLink,
+  privyAuthenticate,
+  privyLinkCurrentUser,
+  promoCreateAccountWithPromo,
+  userFindByEmail,
+  userFindByPhone,
+  userGet,
+  userGetNotificationConfig,
+  userPointsHistory,
+  userProfile,
+  upvotesGetWallet,
+  tonomyAuthLoginOrRegister,
+  type PrivyAuthenticate200,
+  type UpvotesGetWallet200,
+} from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
 import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
@@ -148,9 +164,9 @@ export const useUserAuth = defineStore("userAuth", {
         throw e
       }
     },
-    async tonomyLogin(vcString: string) {
+    async tonomyLogin(jwtString: string) {
       try {
-        const { data } = await tonomyAuthLoginOrRegister({ vcString, referrerUsername: getReferredBy() })
+        const { data } = await tonomyAuthLoginOrRegister({ jwtString, referrerUsername: getReferredBy() })
         this.logout()
         this.setUserId(data.userId)
         jwt.save({ userId: data.userId, token: data.token })

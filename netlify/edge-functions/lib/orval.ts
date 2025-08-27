@@ -2359,7 +2359,7 @@ export type AdminLoginAsUserBody = {
 };
 
 export type TonomyAuthLoginOrRegisterBody = {
-  vcString: string;
+  jwtString: string;
   referrerUsername?: string;
 };
 
