@@ -7,15 +7,15 @@ q-page.full-height.full-width
       .shimmer
         q-img(src="/FiddlPointsLogo-sm.svg" style="width:140px;")
       h2.text-weight-bold.text-white Fiddl Points
-      h6.text-white {{ (userAuth.userData?.availablePoints || 0).toLocaleString() }} Available
+      h4.text-white {{ (userAuth.userData?.availablePoints || 0).toLocaleString() }} Available
       p.text-white.text-subtitle2.q-ma-md Fiddl Points power images, videos and model training across Fiddl.art
-      q-btn(outline color="white" label="View history" icon="receipt_long" @click="mainTab = 'history'" v-if="userAuth.loggedIn")
+      //- q-btn(outline color="white" label="View history" icon="receipt_long" @click="mainTab = 'history'" v-if="userAuth.loggedIn")
 
   // Main content container
   .q-mx-auto.q-px-md(style="max-width: 1100px;")
 
     // High-level tabs
-    q-tabs(v-model="mainTab" class="bg-dark text-white rounded-tabs shadow-1 q-mt-md q-mb-md" no-caps dense)
+    q-tabs(v-model="mainTab" class="bg-dark text-white rounded-tabs shadow-1 q-mt-md q-mb-md" no-caps)
       q-tab(name="buy" label="Buy Points" icon="shopping_cart")
       q-tab(name="history" label="History" icon="receipt_long" :disable="!userAuth.loggedIn")
 
@@ -23,11 +23,10 @@ q-page.full-height.full-width
       q-tab-panel(name="buy")
         .row.items-center.justify-between.q-mb-sm
           h4.q-my-none Select Points Package
-          q-badge(v-if="bestValueIndex !== null" color="positive" label="Best value highlighted")
 
         // Packages grid or loading
         div(v-if="packages.length > 0" class="packages-grid")
-          q-card.q-pa-md.pkg-card.cursor-pointer(v-for="(pkg, index) in packages" :key="pkg.points" @click="setAddPoints(index)" :class="pkgCardClass(pkg)")
+          q-card.q-pa-md.pkg-card.cursor-pointer(v-for="(pkg, index) in packages" :key="pkg.points" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" v-show="!(isMobile && selectedPkg && selectedPkgIndex !== index)")
             .row.items-center.justify-between
               h4.q-my-none +{{ pkg.points.toLocaleString() }}
               q-img(src="/FiddlPointsLogo-sm.svg" height="42px" width="42px")
@@ -36,7 +35,7 @@ q-page.full-height.full-width
               q-badge(v-if="index === bestValueIndex" color="positive" text-color="white" label="Best value" class="q-ml-xs")
             .row.items-center.justify-between.q-mt-md
               h5.q-my-none ${{ pkg.usd }}
-              q-btn(flat color="primary" label="Select" size="sm")
+              //- q-btn(flat color="primary" label="Select" size="sm")
         div(v-else style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; height:230px;")
           q-spinner(size="150px")
 
@@ -51,16 +50,16 @@ q-page.full-height.full-width
                 b Adding {{ selectedPkg?.points?.toLocaleString() }} points
                 span  with a {{ ((selectedPkg?.discountPct || 0) * 100) }}% discount for
                 b  ${{ selectedPkg?.usd }}
-              template(#action)
-                q-btn(flat color="white" label="Change package" @click="selectedPkg = null")
+            .centered.q-my-sm.full-width
+              q-btn( outline color="primary" icon="refresh" label="Select Different Package" @click="selectedPkg = null")
             .row
               .col-xs-12.col-md-6
-                q-card.bg-transparent(ref="paymentSection")
+                q-card.bg-transparent.scroll-anchor(ref="paymentSection" id="payment-section")
                   q-tabs(v-model="paymentMethod" class="text-white bg-dark" no-caps dense)
                     q-tab(name="paypal" icon="payments" label="PayPal")
                     q-tab(name="crypto" icon="currency_bitcoin" label="Crypto")
                   q-separator
-                  q-tab-panels(v-model="paymentMethod" animated)
+                  q-tab-panels(v-model="paymentMethod" style="min-height: 100px;")
                     q-tab-panel(name="paypal")
                       .centered
                         div.bg-white(ref="paypal" class="paypal-container q-pa-md rounded-box bg-dark")
@@ -69,7 +68,7 @@ q-page.full-height.full-width
                         CryptoPayment.full-width(style="max-width:420px;" :selectedPackageId="selectedPkgIndex" @paymentComplete="paymentCompleted")
               .col-xs-12.col-md-6
                 // Suggestions for selected package amount
-                q-card.q-mt-md
+                q-card.q-mt-md.q-ma-sm
                   q-card-section
                     h6.q-my-none What you can do with {{ selectedPkg?.points.toLocaleString() }} points
                     q-list(dense)
@@ -139,6 +138,9 @@ q-page.full-height.full-width
   border-radius: 14px
   width: 100%
   max-width: 420px
+
+.scroll-anchor
+  scroll-margin-top: 72px
 </style>
 
 <script lang="ts">
@@ -149,7 +151,7 @@ import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { catchErr, throwErr, getCookie } from "lib/util"
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/types/serverTypes"
-import { Dialog, LocalStorage, scroll } from "quasar"
+import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
@@ -181,6 +183,7 @@ export default defineComponent({
       paymentMethod: "paypal" as "paypal" | "crypto" | null,
       isRenderingPaypal: false,
       mainTab: "buy" as "buy" | "history",
+      isMobile: typeof window !== "undefined" ? window.innerWidth <= 768 : false,
     }
   },
   computed: {
@@ -253,6 +256,8 @@ export default defineComponent({
 
   async created() {},
   async mounted() {
+    if (typeof window !== "undefined") window.addEventListener("resize", this.updateIsMobile)
+    this.updateIsMobile()
     const packagesResponse = await pointsPackagesAvailable()
     if (packagesResponse?.data) {
       this.packages = packagesResponse.data.map((el: any) => {
@@ -277,7 +282,13 @@ export default defineComponent({
       }
     }
   },
+  beforeUnmount() {
+    if (typeof window !== "undefined") window.removeEventListener("resize", this.updateIsMobile)
+  },
   methods: {
+    updateIsMobile() {
+      this.isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : this.isMobile
+    },
     pkgCardClass(pkg: PointsPackageRender) {
       return {
         "selected-box": this.selectedPkg?.points === pkg.points,
@@ -301,45 +312,20 @@ export default defineComponent({
       this.ppButton = null
     },
     scrollToPayment() {
-      const el = (this.$refs.paymentSection as HTMLElement) || (this.$refs.paypal as HTMLElement)
-      if (!el) return
-      const isSmall = window.innerWidth <= 768
+      const isSmall = typeof window !== "undefined" ? window.innerWidth <= 768 : false
       if (!isSmall) return
 
-      const headerOffset = 72
-      const maxAttempts = 24
-      const delay = 50
+      const el = document.getElementById("payment-section") || (this.$refs.paymentSection as HTMLElement) || (this.$refs.paypal as HTMLElement)
+      if (!el) return
 
-      const doScroll = () => {
-        const target = scroll.getScrollTarget(el)
-        let offset: number
-
-        if (target === window) {
-          offset = el.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop)
-        } else {
-          // compute offset relative to scroll container
-          let cur: any = el
-          offset = 0
-          while (cur && cur !== target) {
-            offset += cur.offsetTop || 0
-            cur = cur.offsetParent
-          }
-        }
-
-        const to = Math.max((offset - headerOffset), 0)
-        scroll.setVerticalScrollPosition(target, to, 300)
+      // Use native smooth scrolling to the #payment-section anchor
+      try {
+        el.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" })
+      } catch {
+        // Fallback for older browsers
+        const y = (el as any).offsetTop || 0
+        if (typeof window !== "undefined") window.scrollTo({ top: Math.max(y - 72, 0), behavior: "smooth" })
       }
-
-      const tryScroll = (attempt = 0) => {
-        const rect = el.getBoundingClientRect()
-        const visible = rect.height > 0 && rect.width > 0
-        if (!visible && attempt < maxAttempts) {
-          return setTimeout(() => tryScroll(attempt + 1), delay)
-        }
-        doScroll()
-      }
-
-      requestAnimationFrame(() => tryScroll())
     },
     ensurePaypalRendered(attempt = 0) {
       if (this.paymentMethod !== "paypal" || !this.selectedPkg) return
@@ -420,12 +406,12 @@ export default defineComponent({
             // Handle success case
             void this.userAuth.loadUserData()
             void this.userAuth.loadPointsHistory()
-            Dialog.create({
-              title: "Success",
-              message: "Thank you for your purchase!",
-              ok: true,
-              color: "positive",
-            })
+            // Dialog.create({
+            //   title: "Success",
+            //   message: "Thank you for your purchase!",
+            //   ok: true,
+            //   color: "positive",
+            // })
             this.paymentCompleted()
           } catch (error: any) {
             // Check for declined instrument in error response
@@ -476,62 +462,49 @@ export default defineComponent({
       const out: SuggestionItem[] = []
       if (!points || !p) return out
 
-      // Image generations
+      // Keep this section short and clear. Show 4-5 high-impact items.
+
+      // 1) Images (Flux Dev as baseline)
       const fluxDev = p.image?.model?.["flux-dev"]
       if (fluxDev) {
         const n = Math.floor(points / fluxDev)
         if (n >= 1) out.push({ icon: "photo", text: `~${n} images (Flux Dev)` })
       }
-      const core = p.image?.model?.core
-      if (core && core !== fluxDev) {
-        const n = Math.floor(points / core)
-        if (n >= 1) out.push({ icon: "photo_library", text: `~${n} images (Core)` })
-      }
-      const fluxPro = p.image?.model?.["flux-pro"]
-      if (fluxPro) {
-        const n = Math.floor(points / fluxPro)
-        if (n >= 1) out.push({ icon: "collections", text: `~${n} images (Flux Pro)` })
-      }
 
-      // Videos
+      // 2) Short videos (Seedance Lite)
       const seedanceLite = p.video?.model?.["seedance-lite"]
       if (seedanceLite) {
         const n = Math.floor(points / seedanceLite)
-        if (n >= 1) out.push({ icon: "movie", text: `~${n} short videos (Seedance Lite)` })
+        if (n >= 1) out.push({ icon: "movie", text: `~${n} short videos` })
       }
 
-      // Training set creation
-      const trainingSet = p.forge?.createTrainingSet
-      if (trainingSet) {
-        const n = Math.floor(points / trainingSet)
-        if (n >= 1) out.push({ icon: "inventory_2", text: `${n} training set${n > 1 ? "s" : ""}` })
+      // 4) Train custom models — accurate counts using trainModelPrice formula:
+      //    price = prices.forge.trainBaseModel[base] + prices.forge.fineTuneType[type]
+      const base = p.forge?.trainBaseModel
+      const tune = p.forge?.fineTuneType
+      if (base && tune) {
+        const devLoraPrice = (base.fluxDev || 0) + (tune.lora || 0)
+        if (devLoraPrice > 0) {
+          const nDev = Math.floor(points / devLoraPrice)
+          if (nDev >= 1) out.push({ icon: "model_training", text: `~${nDev} custom model${nDev > 1 ? "s" : ""} (Flux Dev + LoRA)` })
+        }
+        // Show advanced option only when user likely has enough points; omit else to keep list short
+        const proFullPrice = (base.fluxPro || 0) + (tune.full || 0)
+        if (proFullPrice > 0) {
+          const nPro = Math.floor(points / proFullPrice)
+          if (nPro >= 1) out.push({ icon: "auto_graph", text: `~${nPro} advanced model${nPro > 1 ? "s" : ""} (Flux Pro + Full)` })
+        }
       }
 
-      // Base model training (show only when enough points)
-      const trainFluxDev = p.forge?.trainBaseModel?.fluxDev
-      if (trainFluxDev && points >= trainFluxDev) {
-        out.push({ icon: "rocket_launch", text: "Train a base model (Flux Dev)" })
-      }
-      const trainFluxPro = p.forge?.trainBaseModel?.fluxPro
-      if (trainFluxPro && points >= trainFluxPro) {
-        out.push({ icon: "auto_graph", text: "Train a base model (Flux Pro)" })
-      }
-
-      // Prompt tools (cheap, good filler)
-      const improvePrompt = p.promptTools?.improvePrompt
-      if (improvePrompt) {
-        const n = Math.floor(points / improvePrompt)
-        if (n >= 1) out.push({ icon: "tips_and_updates", text: `${n} prompt improvements` })
-      }
-
-      // Unlocking existing images
+      // 5) Unlock premium images
       const unlock = p.image?.unlock
       if (unlock) {
         const n = Math.floor(points / unlock)
         if (n >= 1) out.push({ icon: "lock_open", text: `Unlock ~${n} premium images` })
       }
 
-      return out.slice(0, 6)
+      // Keep it concise
+      return out.slice(0, 5)
     },
   },
 })

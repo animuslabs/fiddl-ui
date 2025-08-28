@@ -25,8 +25,6 @@ export default defineComponent({
     const handleCallback = async () => {
       try {
         const { user } = await ExternalUser.verifyLoginResponse()
-        const accountName = await user.getAccountName()
-        // const vc = await user.signVc(window.location.origin + "/user-authorization", "UserAuth", { accountName: accountName.toString() })
         const jwt = await user.createClientAuthorization({
           username: (await user.getUsername())?.username,
           foo: "bar",
