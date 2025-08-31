@@ -1,13 +1,15 @@
 <template lang="pug">
-q-page.q-pa-md
+q-page
   .q-mx-auto(style="max-width:1200px; width:100%")
-    // Header
-    .row.items-center.justify-between.q-mb-md
-      .row.items-center.q-gutter-sm
-        h5.q-mr-sm Missions
-        q-badge(v-if="completedCount > 0" color="positive" :label="completedCount + ' completed'")
-      .row.items-center.q-gutter-sm
-        q-btn(flat icon="refresh" label="Refresh" @click="refresh" :loading="loading")
+    .centered
+      h3 Missions
+    //- // Header
+    //- .row.items-center.justify-between.q-mb-md
+    //-   .row.items-center.q-gutter-sm
+    //-     h5.q-mr-sm Missions
+    //-     q-badge(v-if="completedCount > 0" color="positive" :label="completedCount + ' completed'")
+    //-   .row.items-center.q-gutter-sm
+    //-     q-btn(flat icon="refresh" label="Refresh" @click="refresh" :loading="loading")
 
     // Logged out banner
     div(v-if="!$userAuth.loggedIn").q-mt-lg
@@ -23,11 +25,11 @@ q-page.q-pa-md
         q-tab(name="active" icon="flag" label="Active")
         q-tab(name="claimed" icon="check_circle" label="Claimed")
       q-separator
-      q-tab-panels(v-model="tab" animated)
+      q-tab-panels.bg-transparent(v-model="tab" animated)
         q-tab-panel(name="active")
-          .column.q-gutter-md.q-mt-md
+          .column.q-gutter-md
             // Claimable first, then in-progress
-            q-card(v-for="m in activeMissionsSorted" :key="m.id")
+            q-card.q-pa-md(v-for="m in activeMissionsSorted" :key="m.id")
               q-card-section
                 .row.items-start.justify-between.q-gutter-md(:class="isMobile ? 'column' : 'row'")
                   .col
@@ -49,12 +51,11 @@ q-page.q-pa-md
                       :loading="claiming[m.id]"
                       @click="claim(m)"
                     )
-
               q-separator
               q-card-section
                 .row.items-center.q-gutter-sm
-                  q-linear-progress(:value="(m.progress || 0) / 100" color="accent" track-color="grey-8" style="width: 240px")
-                  .text-caption.text-grey-6 {{ Math.floor(m.progress || 0) }}%
+                  q-linear-progress.full-width(:value="(m.progress || 0) / 100" color="accent" track-color="grey-8" style="height:10px;")
+                  h4 {{ Math.floor(m.progress || 0) }}%
             div(v-if="activeMissionsSorted.length === 0 && !loading").text-grey-6.q-pa-lg.text-center
               | No active missions
         q-tab-panel(name="claimed")
@@ -85,23 +86,9 @@ q-page.q-pa-md
 <script lang="ts">
 import { defineComponent } from "vue"
 import { Notify } from "quasar"
-import {
-  missionsList,
-  missionsStatus,
-  missionsClaim,
-  badgesList,
-  badgesForUser,
-  type MissionsList200Item,
-  type MissionsList200ItemRewardsItem,
-  type MissionsStatus200,
-  type MissionsClaim200,
-  type BadgesList200Item,
-  type BadgesForUser200Item,
-} from "../lib/orval"
+import { missionsList, missionsStatus, missionsClaim, badgesList, badgesForUser, type MissionsList200Item, type MissionsList200ItemRewardsItem, type MissionsStatus200, type MissionsClaim200, type BadgesList200Item, type BadgesForUser200Item } from "../lib/orval"
 
-type RewardView =
-  | { type: "points"; amount: number; memo?: string }
-  | { type: "badge"; badgeId: string; badge?: BadgesList200Item }
+type RewardView = { type: "points"; amount: number; memo?: string } | { type: "badge"; badgeId: string; badge?: BadgesList200Item }
 
 export default defineComponent({
   name: "MissionsPage",
@@ -178,11 +165,7 @@ export default defineComponent({
       if (!this.$userAuth.loggedIn) return
       this.loading = true
       try {
-        const [missionsRes, badgesRes, myBadgesRes] = await Promise.all([
-          missionsList(),
-          badgesList(),
-          badgesForUser(),
-        ])
+        const [missionsRes, badgesRes, myBadgesRes] = await Promise.all([missionsList(), badgesList(), badgesForUser()])
         this.missions = missionsRes.data || []
         const badgesArr = badgesRes.data || []
         const myBadgesArr = myBadgesRes.data || []
