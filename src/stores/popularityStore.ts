@@ -262,6 +262,8 @@ export const usePopularityStore = defineStore("popularityStore", {
             const res = await collectionsUnlikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
             if (!res?.data) throw new Error("UNLIKE_REJECTED")
           }
+          // Ensure UI reflects server truth immediately after success
+          void this.refreshBatchByItems([{ id, mediaType: type }])
         } catch (err) {
           console.error(err)
           this.entries[id] = prev
@@ -284,6 +286,8 @@ export const usePopularityStore = defineStore("popularityStore", {
                 entry.mediaType = type
                 await this._put(entry)
                 await collectionsLikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+                // Sync from server after unlocking + like
+                void this.refreshBatchByItems([{ id, mediaType: type }])
               } catch (e2) {
                 const cur = this.entries[id]
                 if (cur) {

@@ -323,6 +323,9 @@ function getPopularityItems(): { id: string; mediaType: "image" | "video" }[] {
   }))
 }
 
+// Track previous set of IDs to trigger an immediate refresh for new items
+const prevIdSet = ref<Set<string>>(new Set())
+
 function startPopularityPolling() {
   stopPopularityPolling()
   // Immediate refresh to ensure per-user fields (isFavoritedByMe/isUpvotedByMe) are current
@@ -361,7 +364,21 @@ watch(
 watch(
   () => galleryItems.value.map((i) => i.id).join(","),
   () => {
-    if (props.showPopularity) void popularity.fetchBatchByItems(getPopularityItems())
+    if (!props.showPopularity) return
+    // Always request popularity for any missing entries (fast cache path)
+    void popularity.fetchBatchByItems(getPopularityItems())
+
+    // Additionally, force a fresh server refresh for only newly-appearing items
+    const currentIds = galleryItems.value.map((i) => i.id)
+    const newIds = currentIds.filter((id) => !prevIdSet.value.has(id))
+    if (newIds.length) {
+      const newItems = galleryItems.value
+        .filter((i) => newIds.includes(i.id))
+        .map((i) => ({ id: i.id, mediaType: i.type === "video" ? "video" : ("image" as MediaType) }))
+      void popularity.refreshBatchByItems(newItems)
+    }
+    // Update the snapshot of IDs
+    prevIdSet.value = new Set(currentIds)
   },
 )
 
