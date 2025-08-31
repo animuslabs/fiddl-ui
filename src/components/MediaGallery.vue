@@ -16,6 +16,9 @@ export interface MediaGalleryMeta {
   url?: string
   aspectRatio?: number
   type?: "image" | "video"
+  // Optional privacy flag. If explicitly false, treat as private.
+  // When undefined, privacy is unknown and click handlers will fall back to error messaging on denial.
+  isPublic?: boolean
 }
 
 const props = withDefaults(
@@ -81,7 +84,7 @@ let videoReloadTimer: number | null = null
 type UpvoteBurst = { count: number; visible: boolean; timer?: number }
 const upvoteBursts = ref<Record<string, UpvoteBurst>>({})
 
-function onUpvote(id: string, type: MediaType) {
+function onUpvote(id: string, type: MediaType, isPublic?: boolean) {
   if (!userAuth.loggedIn) {
     Dialog.create({
       title: "Login required",
@@ -93,8 +96,29 @@ function onUpvote(id: string, type: MediaType) {
     })
     return
   }
+  // If we explicitly know the media is private, block with a friendly message
+  if (isPublic === false) {
+    Dialog.create({
+      title: "Private Media",
+      message: "This media is private and cannot be upvoted.",
+      ok: { label: "OK", flat: true, color: "primary" },
+    })
+    return
+  }
+
   triggerUpvoteBurst(id)
-  void popularity.addUpvote(id, type)
+  // If privacy is unknown, proceed but handle potential server rejection gracefully
+  void (async () => {
+    try {
+      await popularity.addUpvote(id, type)
+    } catch (e) {
+      Dialog.create({
+        title: "Unable to Upvote",
+        message: "This media may be private and cannot be upvoted.",
+        ok: { label: "OK", flat: true, color: "primary" },
+      })
+    }
+  })()
 }
 
 function triggerUpvoteBurst(id: string) {
@@ -438,7 +462,13 @@ function videoClass(media: MediaGalleryMeta) {
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
-              q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
+              q-btn(
+                v-if="m.isPublic !== false"
+                :size="popIconSize"
+                flat dense round
+                :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
+                @click.stop="onUpvote(m.id, 'image', m.isPublic)"
+              )
               transition(name="burst")
                 .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
             span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
@@ -476,7 +506,13 @@ function videoClass(media: MediaGalleryMeta) {
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
-              q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+              q-btn(
+                v-if="m.isPublic !== false"
+                :size="popIconSize"
+                flat dense round
+                :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
+                @click.stop="onUpvote(m.id, 'video', m.isPublic)"
+              )
               transition(name="burst")
                 .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
             span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}

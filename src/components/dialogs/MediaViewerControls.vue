@@ -67,6 +67,7 @@
     flat
     round
     :icon="popularity.get(mediaViewerStore.currentMediaId)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
+    v-if="currentIsPublic !== false"
     @click.stop="onUpvote()"
   )
   span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.upvotes") {{ popularity.get(mediaViewerStore.currentMediaId)?.upvotes ?? 0 }}
@@ -154,6 +155,9 @@ const router = useRouter()
 const shareMenuOpen = ref(true)
 const moreMenuOpen = ref(true)
 const popularity = usePopularityStore()
+
+// Optional privacy knowledge propagated via mediaObjects entries
+const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
 
 const userCreatedImage = computed(() => {
   if (!mediaViewerStore.creatorMeta) return false
@@ -276,7 +280,27 @@ function onUpvote() {
     })
     return
   }
-  void popularity.addUpvote(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
+  // If we explicitly know the media is private, block with a friendly message
+  if (currentIsPublic.value === false) {
+    Dialog.create({
+      title: "Private Media",
+      message: "This media is private and cannot be upvoted.",
+      ok: { label: "OK", flat: true, color: "primary" },
+    })
+    return
+  }
+
+  void (async () => {
+    try {
+      await popularity.addUpvote(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
+    } catch (e) {
+      Dialog.create({
+        title: "Unable to Upvote",
+        message: "This media may be private and cannot be upvoted.",
+        ok: { label: "OK", flat: true, color: "primary" },
+      })
+    }
+  })()
 }
 
 function editMedia() {
