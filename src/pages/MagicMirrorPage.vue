@@ -23,6 +23,12 @@ q-page.full-width
         p.text-white.text-capitalize Training {{ trainingStatus }} {{ trainingProgress == 0?'': trainingProgress+`%`}}
       .centered.full-width
         q-linear-progress(:value="trainingProgress/100" stripe size="10px" color="primary" class="q-mt-xs" style="max-width:600px;")
+    // Show an indeterminate progress bar while first images are being generated
+    .centered.q-mt-sm(v-if="trainingStatus === 'succeeded' && isWaitingForImages")
+      .centered.q-mb-xs
+        p.text-white Generating your images...
+      .centered.full-width
+        q-linear-progress(indeterminate size="10px" color="primary" class="q-mt-xs" style="max-width:600px;")
     .centered.q-mt-sm(v-if="!templatesConfirmed")
       q-btn.q-mt-md(color="primary" label="Pick Looks" no-caps @click="openTemplatesDialog('initial')")
 
@@ -33,7 +39,7 @@ q-page.full-width
           .template-item(v-for="t in selectedTemplateObjs" :key="`${t.id}-${t.name}`")
             .template-card-box
               //- Hidden element to trigger Vue reactivity
-              PromptTemplateCard.full-width(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" no-title)
+              PromptTemplateCard.full-width(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" no-title :ratio="isDesktop ? 3/5 : 1")
               span {{ t.name[0] }}
         .row.items-center.justify-center.q-mt-md(v-if="trainingStatus !== 'succeeded'")
           q-spinner-dots(color="primary" size="24px")
@@ -55,7 +61,7 @@ q-page.full-width
           .template-item(v-for="t in currentPreviewTemplates" :key="`${t.id}-${t.name}`")
             .template-card-box
               //- Hidden element to trigger Vue reactivity
-              PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false")
+              PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" :ratio="isDesktop ? 3/5 : 1")
               span {{ t.name[0] }}
         .template-preview-grid(v-else :style="{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }")
           .template-item(v-for="i in previewSkeletonCount" :key="i")
@@ -886,6 +892,10 @@ onBeforeUnmount(() => {
 @media (max-width: 599px) {
   .template-preview-grid {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  /* Make preview cards shorter on mobile to avoid scrolling */
+  .template-card-box :deep(.template-item) {
+    min-height: 120px;
   }
 }
 .template-item :deep(.q-card) {

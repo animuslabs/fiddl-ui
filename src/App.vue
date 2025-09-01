@@ -34,13 +34,14 @@ router-view(style="z-index:1")
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import { Dialog, Loading, LoadingBar, LocalStorage, Notify } from "quasar"
+import { Dialog, Loading, LoadingBar, LocalStorage, Notify, SessionStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import { shortIdToLong, toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
 import { tawk } from "lib/tawk"
 import { promoClaimPromoCode } from "lib/orval"
 import { handleClaimCode } from "lib/promoCodeUtil"
+import { useMissionsStore } from "stores/missionsStore"
 LoadingBar.setDefaults({
   color: "primary",
   size: "1px",
@@ -75,6 +76,19 @@ export default defineComponent({
         if (referredBy) LocalStorage.set("referredBy", referredBy)
       },
     },
+    "$userAuth.loggedIn": {
+      immediate: true,
+      handler(val: boolean) {
+        const missions = useMissionsStore()
+        if (val) {
+          missions.startPolling()
+          // Initial check for claimables after login
+          this.maybeNotifyClaimables()
+        } else {
+          missions.stopPolling()
+        }
+      },
+    },
   },
   created() {
     // this.$userAuth = useUserAuth()
@@ -85,8 +99,33 @@ export default defineComponent({
     void usePricesStore().reloadPrices().catch(console.error)
     await this.$userAuth.attemptAutoLogin()
     await handleClaimCode(this.$userAuth.loggedIn)
+
+    // Watch for claimable missions and notify once per session
+    const missions = useMissionsStore()
+    this.$watch(
+      () => missions.claimableMissions.length,
+      (len) => {
+        if (len > 0) this.maybeNotifyClaimables()
+      },
+      { immediate: true },
+    )
   },
   methods: {
+    maybeNotifyClaimables() {
+      const KEY = "missions-claimable-notified"
+      if (SessionStorage.getItem(KEY)) return
+      const missions = useMissionsStore()
+      if (missions.claimableMissions.length === 0) return
+      SessionStorage.set(KEY, true)
+      Dialog.create({
+        title: "Missions",
+        message: "You have one or more claimable missions.",
+        ok: { label: "View Missions", color: "primary", flat: false },
+        cancel: { label: "Later", flat: true },
+      }).onOk(() => {
+        this.$router.push({ name: "missions" }).catch(() => {})
+      })
+    },
     openDialog(startingIndex = 0, images: string[]) {
       this.images = toObject(images)
       const gallery = this.$refs.gallery as InstanceType<typeof ImageGallery>

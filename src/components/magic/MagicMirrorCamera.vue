@@ -82,7 +82,7 @@ div
     //- Audio element for shutter sound
     audio#shutterAudio(ref="shutterAudioRef" src="/audio/camera-shutter.mp3" preload="auto")
     //- Hidden file input for instant gallery selection
-    input#filePicker(type="file" accept="image/*" ref="fileInputRef" @change="onFileInputChange" style="display:none")
+    input#filePicker(type="file" accept="image/*" multiple ref="fileInputRef" @change="onFileInputChange" style="display:none")
 
 </template>
 
@@ -382,10 +382,28 @@ function onFileInputChange(e: Event) {
     return
   }
   const input = e.target as HTMLInputElement
-  const file = input.files && input.files[0]
-  if (!file) return
-  readAsImageAndSynthesize(file)
-    .then((blobs) => emit("captured", blobs))
+  const files = Array.from(input.files || [])
+  if (!files.length) return
+
+  const MAX = 20
+  const selected = files.slice(0, MAX)
+  if (files.length > MAX) {
+    quasar.notify({ color: "primary", message: `Using first ${MAX} images (max).` })
+  }
+
+  Promise.allSettled(selected.map((f) => readAsImage(f)))
+    .then((results) => {
+      const blobs = results.filter((r): r is PromiseFulfilledResult<Blob> => r.status === "fulfilled").map((r) => r.value)
+      const failed = results.length - blobs.length
+      if (failed > 0) {
+        quasar.notify({ color: "warning", message: `Skipped ${failed} unsupported image${failed > 1 ? "s" : ""}.` })
+      }
+      if (blobs.length > 0) {
+        emit("captured", blobs)
+      } else {
+        emit("error", "gallery_failed")
+      }
+    })
     .catch((err) => {
       catchErr(err)
       emit("error", "gallery_failed")
@@ -394,6 +412,73 @@ function onFileInputChange(e: Event) {
       // Reset input so selecting the same file again will re-trigger change
       if (fileInputRef.value) fileInputRef.value.value = ""
     })
+}
+
+async function readAsImage(file: File): Promise<Blob> {
+  // Prefer ImageBitmap for better format support and EXIF orientation
+  let bitmap: ImageBitmap | null = null
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image", colorSpaceConversion: "default", premultiplyAlpha: "premultiply" } as any)
+  } catch {
+    // Fallback to HTMLImageElement
+    const imgUrl = URL.createObjectURL(file)
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+    await new Promise<void>((res, rej) => {
+      img.onload = () => res()
+      img.onerror = (e) => rej(e)
+      img.src = imgUrl
+    })
+    const iw = (img as any).naturalWidth || img.width
+    const ih = (img as any).naturalHeight || img.height
+    const side = Math.max(1, Math.min(iw, ih))
+    const sx = Math.floor((iw - side) / 2)
+    const sy = Math.floor((ih - side) / 2)
+    const target = Math.min(1024, Math.max(512, side))
+    const canvas = document.createElement("canvas")
+    canvas.width = target
+    canvas.height = target
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("no_ctx")
+    // White background for transparent sources (PNG/WebP)
+    ctx.fillStyle = "#ffffff"
+    ctx.fillRect(0, 0, target, target)
+    ctx.drawImage(img, sx, sy, side, side, 0, 0, target, target)
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob_failed"))), mimeType, quality)
+    })
+    URL.revokeObjectURL(imgUrl)
+    return blob
+  }
+
+  // Using ImageBitmap path
+  try {
+    const iw = bitmap.width
+    const ih = bitmap.height
+    const side = Math.max(1, Math.min(iw, ih))
+    const sx = Math.floor((iw - side) / 2)
+    const sy = Math.floor((ih - side) / 2)
+    const target = Math.min(1024, Math.max(512, side))
+    const canvas = document.createElement("canvas")
+    canvas.width = target
+    canvas.height = target
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("no_ctx")
+    // White background for transparent sources (PNG/WebP)
+    ctx.fillStyle = "#ffffff"
+    ctx.fillRect(0, 0, target, target)
+    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, target, target)
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob_failed"))), mimeType, quality)
+    })
+    bitmap.close && bitmap.close()
+    return blob
+  } finally {
+    // Ensure bitmap is released even if drawing fails
+    try {
+      bitmap && (bitmap as any).close?.()
+    } catch {}
+  }
 }
 
 async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
