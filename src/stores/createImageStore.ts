@@ -25,6 +25,8 @@ const defaultImageRequest: CreateImageRequest = {
 export type CreateImageRequestWithCustomModel = CreateImageRequest & {
   customModelName?: string
   customModelId?: string
+  // Allow optional input images list for supported models
+  uploadedStartImageIds?: string[]
 }
 
 const availableAspectRatios = Object.freeze(aspectRatios)

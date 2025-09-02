@@ -125,6 +125,7 @@ export const CreateImageBodyModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
@@ -158,6 +159,7 @@ export type CreateImageBody = {
   public?: boolean;
   aspectRatio?: CreateImageBodyAspectRatio;
   customModelId?: string;
+  uploadedStartImageIds?: string[];
 };
 
 export type CreateImage200 = {
@@ -341,6 +343,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio];
@@ -374,6 +377,7 @@ export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
   public?: boolean;
   aspectRatio?: CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio;
   customModelId?: string;
+  uploadedStartImageIds?: string[];
 };
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];
@@ -492,6 +496,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
@@ -561,6 +566,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
@@ -630,6 +636,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
@@ -710,6 +717,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
@@ -836,6 +844,7 @@ export const CreationsBrowseCreateRequestsModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
@@ -878,11 +887,16 @@ export const CreationsBrowseCreateRequestsMediaType = {
 
 export type CreationsHdImageParams = {
 imageId: string;
+download?: boolean;
 };
 
 export type CreationsHdVideoParams = {
 videoId: string;
 download?: boolean;
+};
+
+export type CreationsImageSecretParams = {
+imageId: string;
 };
 
 export type CreationsOriginalImageParams = {
@@ -918,6 +932,54 @@ export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
 };
 
+export type CreationsDescribeUploadedImageParams = {
+imageId: string;
+};
+
+/**
+ * @nullable
+ */
+export type CreationsDescribeUploadedImage200SubjectGender = typeof CreationsDescribeUploadedImage200SubjectGender[keyof typeof CreationsDescribeUploadedImage200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsDescribeUploadedImage200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CreationsDescribeUploadedImage200SubjectCategory = typeof CreationsDescribeUploadedImage200SubjectCategory[keyof typeof CreationsDescribeUploadedImage200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsDescribeUploadedImage200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
+export type CreationsDescribeUploadedImage200 = {
+  /** @nullable */
+  subjectGender: CreationsDescribeUploadedImage200SubjectGender;
+  /** @nullable */
+  subjectCategory: CreationsDescribeUploadedImage200SubjectCategory;
+  id: string;
+  createdAt: string;
+  userId: string;
+  /** @nullable */
+  subjectDescription: string | null;
+};
+
 export type PointsPackagesAvailable200Item = {
   points: number;
   discountPct: number;
@@ -940,6 +1002,7 @@ export type PointsPrices200ImageModel = {
   'recraft3-svg': number;
   'gpt-image-1': number;
   seedream3: number;
+  'nano-banana': number;
 };
 
 export type PointsPrices200Image = {
@@ -2984,6 +3047,28 @@ export type MissionsStatus200 = {
   claimedAt?: string;
 };
 
+export type MissionsStatusesParams = {
+userId?: string;
+};
+
+export type MissionsStatuses200StatusesItem = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type MissionsStatuses200 = {
+  statuses: MissionsStatuses200StatusesItem[];
+  completed: string[];
+  claimed: string[];
+};
+
 export type BadgesList200Item = {
   id: string;
   imageUrl: string;
@@ -3514,6 +3599,34 @@ export const creationsHdVideo = async (params: CreationsHdVideoParams, options?:
 
 
 
+export const getCreationsImageSecretUrl = (params: CreationsImageSecretParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/creations/imageSecret?${stringifiedParams}` : `/creations/imageSecret`
+}
+
+export const creationsImageSecret = async (params: CreationsImageSecretParams, options?: RequestInit): Promise<string> => {
+  
+  return fetcher<string>(getCreationsImageSecretUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getCreationsOriginalImageUrl = (params: CreationsOriginalImageParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -3676,6 +3789,34 @@ export const getCreationsGetUserUploadedImagesUrl = (params?: CreationsGetUserUp
 export const creationsGetUserUploadedImages = async (params?: CreationsGetUserUploadedImagesParams, options?: RequestInit): Promise<string[]> => {
   
   return fetcher<string[]>(getCreationsGetUserUploadedImagesUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getCreationsDescribeUploadedImageUrl = (params: CreationsDescribeUploadedImageParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/creations/describeUploadedImage?${stringifiedParams}` : `/creations/describeUploadedImage`
+}
+
+export const creationsDescribeUploadedImage = async (params: CreationsDescribeUploadedImageParams, options?: RequestInit): Promise<CreationsDescribeUploadedImage200> => {
+  
+  return fetcher<CreationsDescribeUploadedImage200>(getCreationsDescribeUploadedImageUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -5600,6 +5741,34 @@ export const getMissionsStatusUrl = (params: MissionsStatusParams,) => {
 export const missionsStatus = async (params: MissionsStatusParams, options?: RequestInit): Promise<MissionsStatus200> => {
   
   return fetcher<MissionsStatus200>(getMissionsStatusUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMissionsStatusesUrl = (params?: MissionsStatusesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/missions/statuses?${stringifiedParams}` : `/missions/statuses`
+}
+
+export const missionsStatuses = async (params?: MissionsStatusesParams, options?: RequestInit): Promise<MissionsStatuses200> => {
+  
+  return fetcher<MissionsStatuses200>(getMissionsStatusesUrl(params),
   {      
     ...options,
     method: 'GET'

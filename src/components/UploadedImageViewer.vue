@@ -11,10 +11,11 @@ div
         :colsDesktop="desktopCols"
         :colsMobile="2"
         :thumbSizeDesktop="165"
-        :thumbSizeMobile="120"
+        :thumbSizeMobile="thumbSizeMobile"
         :gap="8"
         :centerAlign="false"
         selectable
+        :selectedIds="selectedIds"
         @select="onSelect"
       )
     .centered.q-pa-lg(v-else)
@@ -29,6 +30,7 @@ import { s3Img } from "lib/netlifyImg"
 import { creationsGetUserUploadedImages } from "lib/orval"
 
 const emit = defineEmits<{ (e: "select", id: string): void }>()
+const props = withDefaults(defineProps<{ thumbSizeMobile?: number; selectedIds?: string[] }>(), { thumbSizeMobile: 110, selectedIds: undefined })
 
 const loading = ref(true)
 const imageUploadIds = ref<string[]>([])
@@ -54,6 +56,8 @@ onMounted(async () => {
 })
 
 const mediaObjects = computed(() => imageUploadIds.value.map((id) => ({ id, url: s3Img("uploads/" + id), type: "image" as const })))
+const thumbSizeMobile = computed(() => props.thumbSizeMobile)
+const selectedIds = computed(() => props.selectedIds || [])
 
 function onSelect(payload: { id: string; type: "image" | "video" }) {
   emit("select", payload.id)

@@ -35,6 +35,11 @@ const props = withDefaults(
     showLoading?: boolean
     centerAlign?: boolean
     showPopularity?: boolean
+    selectedIds?: string[]
+    // How media should fit within its cell: 'cover' crops, 'contain' shows full media
+    objectFit?: 'cover' | 'contain'
+    // Where to position media inside its box (CSS object-position value)
+    objectPosition?: string
   }>(),
   {
     layout: "grid",
@@ -48,6 +53,9 @@ const props = withDefaults(
     showLoading: true,
     centerAlign: false,
     showPopularity: false,
+    selectedIds: undefined,
+    objectFit: 'cover',
+    objectPosition: 'top',
   },
 )
 
@@ -72,6 +80,10 @@ const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
 const popIconSize = ref("8px")
+
+function isSelected(id: string): boolean {
+  return !!(props.selectedIds && props.selectedIds.includes(id))
+}
 
 // Popularity polling
 const pollIntervalMs = 15000
@@ -205,26 +217,20 @@ const wrapperStyles = computed(() => {
 })
 
 const mediaStyles = computed(() => {
+  const common = {
+    width: '100%',
+    height: '100%',
+    display: 'block',
+  } as Record<string, string>
+
   const style =
-    props.layout === "grid"
-      ? {
-          height: "100%",
-          width: "100%",
-          // maxHeight: "100px",
-          aspectRatio: "1 / 1",
-          "object-fit": "cover",
-          display: "block",
-        }
-      : {
-          width: "100%",
-          height: "100%",
-          "object-fit": "cover",
-          display: "block",
-        }
+    props.layout === 'grid'
+      ? { ...common, aspectRatio: '1 / 1' }
+      : { ...common }
 
   return Object.entries(style)
     .map(([k, v]) => `${k}:${v}`)
-    .join(";")
+    .join(';')
 })
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
@@ -444,11 +450,12 @@ function videoClass(media: MediaGalleryMeta) {
     class="media-cell"
   )
     template(v-if="!isVideoMedia(m)")
-      .media-wrapper(:style="mediaStyles")
+      .media-wrapper(:style="mediaStyles" :class="{ selected: isSelected(m.id) }")
         q-img(
           :src="m.url"
-          position="top"
-          style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
+          :position="props.objectPosition"
+          :fit="props.objectFit"
+          :style="`width:100%; height:100%; display:block`"
           spinner-color="white"
           :class="props.selectable ? 'cursor-pointer' : ''"
           @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
@@ -477,7 +484,7 @@ function videoClass(media: MediaGalleryMeta) {
         slot(name="actions" :media="m" :index="index")
           // default empty
     template(v-else)
-      .media-wrapper(:style="mediaStyles")
+      .media-wrapper(:style="mediaStyles" :class="{ selected: isSelected(m.id) }")
         div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative;" ).full-height
           div
             .absolute-center.z-top.offset-down
@@ -493,7 +500,7 @@ function videoClass(media: MediaGalleryMeta) {
             @canplay="markVideoLoaded(m.id)"
             @loadeddata="markVideoLoaded(m.id)"
             @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
+            :style="`width: 100%; height: 100%; object-fit: ${props.objectFit}; object-position: ${props.objectPosition}; display: block`"
             :class="videoClass(m)"
           )
         // Hidden overlay - keeps layout stable
@@ -546,6 +553,13 @@ function videoClass(media: MediaGalleryMeta) {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.media-wrapper.selected {
+  outline: 2px solid var(--q-primary);
+  border-radius: 8px;
+  transform: scale(0.965);
+  transition: transform 0.08s ease, outline-color 0.15s ease;
 }
 
 .media-wrapper > [slot="actions"],

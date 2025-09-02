@@ -154,6 +154,7 @@ export const CreateImageBodyModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
@@ -187,6 +188,7 @@ export type CreateImageBody = {
   public?: boolean;
   aspectRatio?: CreateImageBodyAspectRatio;
   customModelId?: string;
+  uploadedStartImageIds?: string[];
 };
 
 export type CreateImage200 = {
@@ -370,6 +372,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio];
@@ -403,6 +406,7 @@ export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
   public?: boolean;
   aspectRatio?: CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio;
   customModelId?: string;
+  uploadedStartImageIds?: string[];
 };
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];
@@ -521,6 +525,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
@@ -590,6 +595,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
@@ -659,6 +665,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
@@ -739,6 +746,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
@@ -865,6 +873,7 @@ export const CreationsBrowseCreateRequestsModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
 } as const;
 
 export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
@@ -907,11 +916,16 @@ export const CreationsBrowseCreateRequestsMediaType = {
 
 export type CreationsHdImageParams = {
 imageId: string;
+download?: boolean;
 };
 
 export type CreationsHdVideoParams = {
 videoId: string;
 download?: boolean;
+};
+
+export type CreationsImageSecretParams = {
+imageId: string;
 };
 
 export type CreationsOriginalImageParams = {
@@ -947,6 +961,54 @@ export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
 };
 
+export type CreationsDescribeUploadedImageParams = {
+imageId: string;
+};
+
+/**
+ * @nullable
+ */
+export type CreationsDescribeUploadedImage200SubjectGender = typeof CreationsDescribeUploadedImage200SubjectGender[keyof typeof CreationsDescribeUploadedImage200SubjectGender] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsDescribeUploadedImage200SubjectGender = {
+  male: 'male',
+  female: 'female',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CreationsDescribeUploadedImage200SubjectCategory = typeof CreationsDescribeUploadedImage200SubjectCategory[keyof typeof CreationsDescribeUploadedImage200SubjectCategory] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsDescribeUploadedImage200SubjectCategory = {
+  human: 'human',
+  animal: 'animal',
+  object: 'object',
+  architecture: 'architecture',
+  setting: 'setting',
+  style: 'style',
+  dog: 'dog',
+  cat: 'cat',
+  other: 'other',
+} as const;
+
+export type CreationsDescribeUploadedImage200 = {
+  /** @nullable */
+  subjectGender: CreationsDescribeUploadedImage200SubjectGender;
+  /** @nullable */
+  subjectCategory: CreationsDescribeUploadedImage200SubjectCategory;
+  id: string;
+  createdAt: string;
+  userId: string;
+  /** @nullable */
+  subjectDescription: string | null;
+};
+
 export type PointsPackagesAvailable200Item = {
   points: number;
   discountPct: number;
@@ -969,6 +1031,7 @@ export type PointsPrices200ImageModel = {
   'recraft3-svg': number;
   'gpt-image-1': number;
   seedream3: number;
+  'nano-banana': number;
 };
 
 export type PointsPrices200Image = {
@@ -3013,6 +3076,28 @@ export type MissionsStatus200 = {
   claimedAt?: string;
 };
 
+export type MissionsStatusesParams = {
+userId?: string;
+};
+
+export type MissionsStatuses200StatusesItem = {
+  missionId: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  progress: number;
+  claimed: boolean;
+  claimKey: string;
+  claimedAt?: string;
+};
+
+export type MissionsStatuses200 = {
+  statuses: MissionsStatuses200StatusesItem[];
+  completed: string[];
+  claimed: string[];
+};
+
 export type BadgesList200Item = {
   id: string;
   imageUrl: string;
@@ -4183,6 +4268,64 @@ export function useCreationsHdVideo<TData = Awaited<ReturnType<typeof creationsH
 
 
 
+export const creationsImageSecret = (
+    params: MaybeRef<CreationsImageSecretParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<string>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/imageSecret`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsImageSecretQueryKey = (params: MaybeRef<CreationsImageSecretParams>,) => {
+    return ['creations','imageSecret', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsImageSecretQueryOptions = <TData = Awaited<ReturnType<typeof creationsImageSecret>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsImageSecretParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsImageSecret>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsImageSecretQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsImageSecret>>> = ({ signal }) => creationsImageSecret(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsImageSecret>>, TError, TData> 
+}
+
+export type CreationsImageSecretQueryResult = NonNullable<Awaited<ReturnType<typeof creationsImageSecret>>>
+export type CreationsImageSecretQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsImageSecret<TData = Awaited<ReturnType<typeof creationsImageSecret>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CreationsImageSecretParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsImageSecret>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsImageSecretQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const creationsOriginalImage = (
     params: MaybeRef<CreationsOriginalImageParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string>> => {
@@ -4570,6 +4713,64 @@ export function useCreationsGetUserUploadedImages<TData = Awaited<ReturnType<typ
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCreationsGetUserUploadedImagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const creationsDescribeUploadedImage = (
+    params: MaybeRef<CreationsDescribeUploadedImageParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsDescribeUploadedImage200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/creations/describeUploadedImage`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreationsDescribeUploadedImageQueryKey = (params: MaybeRef<CreationsDescribeUploadedImageParams>,) => {
+    return ['creations','describeUploadedImage', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreationsDescribeUploadedImageQueryOptions = <TData = Awaited<ReturnType<typeof creationsDescribeUploadedImage>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreationsDescribeUploadedImageParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsDescribeUploadedImage>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreationsDescribeUploadedImageQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creationsDescribeUploadedImage>>> = ({ signal }) => creationsDescribeUploadedImage(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creationsDescribeUploadedImage>>, TError, TData> 
+}
+
+export type CreationsDescribeUploadedImageQueryResult = NonNullable<Awaited<ReturnType<typeof creationsDescribeUploadedImage>>>
+export type CreationsDescribeUploadedImageQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreationsDescribeUploadedImage<TData = Awaited<ReturnType<typeof creationsDescribeUploadedImage>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CreationsDescribeUploadedImageParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creationsDescribeUploadedImage>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreationsDescribeUploadedImageQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9060,6 +9261,64 @@ export function useMissionsStatus<TData = Awaited<ReturnType<typeof missionsStat
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMissionsStatusQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const missionsStatuses = (
+    params?: MaybeRef<MissionsStatusesParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MissionsStatuses200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/missions/statuses`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMissionsStatusesQueryKey = (params?: MaybeRef<MissionsStatusesParams>,) => {
+    return ['missions','statuses', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMissionsStatusesQueryOptions = <TData = Awaited<ReturnType<typeof missionsStatuses>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<MissionsStatusesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsStatuses>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMissionsStatusesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof missionsStatuses>>> = ({ signal }) => missionsStatuses(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof missionsStatuses>>, TError, TData> 
+}
+
+export type MissionsStatusesQueryResult = NonNullable<Awaited<ReturnType<typeof missionsStatuses>>>
+export type MissionsStatusesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMissionsStatuses<TData = Awaited<ReturnType<typeof missionsStatuses>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<MissionsStatusesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof missionsStatuses>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMissionsStatusesQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

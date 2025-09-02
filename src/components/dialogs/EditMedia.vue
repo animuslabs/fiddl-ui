@@ -42,7 +42,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { catchErr, downloadFile, purchaseMedia } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
-import { creationsOriginalImage, creationsUpscaledImage } from "src/lib/orval"
+// no direct image download calls here anymore
 import { CreateEditType, MediaType } from "lib/types"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"

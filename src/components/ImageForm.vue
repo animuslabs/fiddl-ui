@@ -47,7 +47,9 @@
         div
           p Aspect Ratio
           .row
-            q-select(v-model="createStore.state.req.aspectRatio" :options="createStore.availableAspectRatios" style="font-size:20px;" :disable="createStore.anyLoading")
+            q-select(v-if="!isNanoBanana" v-model="createStore.state.req.aspectRatio" :options="createStore.availableAspectRatios" style="font-size:20px;" :disable="createStore.anyLoading")
+            div(v-else)
+              q-badge(color="grey-7" label="Aspect ratio fixed by model")
         div.q-ma-md(v-if="req.seed != undefined")
           p Seed
           .row(style="max-width:150px;").no-wrap
@@ -67,6 +69,26 @@
                 h4 {{ req.customModelName }}
                 q-btn(round flat icon="list" @click="showModelPicker = true")
           q-btn.q-mt-md(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Image Models")
+
+        // Reference / input images section
+        div.q-ma-md.relative-position(v-if="supportsInputImages")
+          p.q-mb-sm {{ supportsMulti ? 'Input Images' : 'Input Image' }}
+          // Thumbnails
+          div(v-if="supportsMulti")
+            .row.q-gutter-sm.q-mb-sm
+              q-chip(v-for="id in selectedImageIds" :key="id" removable @remove="removeImage(id)" color="grey-9" text-color="white")
+                q-avatar(size="32px")
+                  q-img(:src="s3Img('uploads/' + id)" style="width:32px; height:32px; object-fit:cover;")
+                //- span.q-ml-sm {{ shortId(id) }}
+            .row.items-center.q-gutter-sm
+              q-btn(flat color="primary" icon="add" :label="selectedImageIds.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
+              q-badge(v-if="selectedImageIds.length" color="grey-7") {{ selectedImageIds.length }}/{{ maxMulti }}
+              q-btn(v-if="selectedImageIds.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+          div(v-else)
+            q-img.q-mb-sm(v-if="selectedImageIds[0]" :src="s3Img('uploads/' + selectedImageIds[0])" style="max-height:160px; min-width:100px;")
+            .row.items-center.q-gutter-sm
+              q-btn(flat color="primary" icon="photo_library" :label="selectedImageIds[0] ? 'Change image' : 'Choose image'" @click="openImagesDialog")
+              q-btn(v-if="selectedImageIds[0]" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
 
     .full-width(style="height:30px;").gt-sm
     .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
@@ -93,10 +115,21 @@
       @apply="applyResolvedPrompt"
       @close="templatesDialogOpen = false"
     )
+
+  // Uploaded images dialog
+  UploadedImagesDialog(
+    v-model="showImagesDialog"
+    :multiSelect="supportsMulti"
+    :max="maxMulti"
+    :thumbSizeMobile="95"
+    context="image"
+    :preselectedIds="selectedImageIds"
+    @accept="onImagesAccepted"
+  )
   </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue"
+import { ref, computed, watch } from "vue"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import CustomModelsList from "./CustomModelsList.vue"
@@ -105,6 +138,8 @@ import { useQuasar } from "quasar"
 import { prices } from "stores/pricesStore"
 import { useUserAuth } from "src/stores/userAuth"
 import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.vue"
+import UploadedImagesDialog from "src/components/dialogs/UploadedImagesDialog.vue"
+import { s3Img } from "lib/netlifyImg"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -118,6 +153,17 @@ const loading = createStore.state.loading
 
 const showModelPicker = ref(false)
 const templatesDialogOpen = ref(false)
+const showImagesDialog = ref(false)
+
+const isNanoBanana = computed(() => req.model === "nano-banana")
+const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(req.model))
+const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "photon", "custom"].includes(req.model))
+const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)
+const maxMulti = 10
+const selectedImageIds = computed<string[]>({
+  get: () => req.uploadedStartImageIds || [],
+  set: (val) => (req.uploadedStartImageIds = val),
+})
 
 function openTemplates() {
   templatesDialogOpen.value = true
@@ -145,6 +191,50 @@ function setCustomModel(model: CustomModel) {
 
   // creationsStore.searchCreations()
 }
+
+function openImagesDialog() {
+  if (supportsInputImages.value) showImagesDialog.value = true
+}
+
+function onImagesAccepted(ids: string[]) {
+  if (supportsMulti.value) {
+    // Enforce max and uniqueness
+    const merged = [...(req.uploadedStartImageIds || [])]
+    for (const id of ids) {
+      if (merged.length >= maxMulti) break
+      if (!merged.includes(id)) merged.push(id)
+    }
+    req.uploadedStartImageIds = merged
+  } else if (supportsSingle.value) {
+    req.uploadedStartImageIds = ids[0] ? [ids[0]] : []
+  }
+}
+
+function clearImages() {
+  req.uploadedStartImageIds = []
+}
+
+function removeImage(id: string) {
+  req.uploadedStartImageIds = (req.uploadedStartImageIds || []).filter((x) => x !== id)
+}
+
+function shortId(id: string) {
+  return id.slice(0, 6)
+}
+
+watch(
+  () => req.model,
+  (model) => {
+    // Aspect ratio not selectable for nano-banana
+    if (model === "nano-banana") req.aspectRatio = undefined as any
+
+    // Adjust selected images when model changes
+    if (!supportsInputImages.value) req.uploadedStartImageIds = []
+    else if (supportsSingle.value && (req.uploadedStartImageIds?.length || 0) > 1) req.uploadedStartImageIds = [req.uploadedStartImageIds![0]!]
+    else if (supportsMulti.value && (req.uploadedStartImageIds?.length || 0) > maxMulti) req.uploadedStartImageIds = req.uploadedStartImageIds!.slice(0, maxMulti)
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

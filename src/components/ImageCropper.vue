@@ -30,10 +30,10 @@
 
 <script lang="ts">
 import html2canvas from "html2canvas"
-import { getImageFromCache, storeImageInCache } from "lib/hdImageCache"
 import { QBtn, SessionStorage } from "quasar"
 import { defineComponent } from "vue"
-import { creationsHdImage } from "src/lib/orval"
+import { hdUrl } from "lib/imageCdn"
+import { img } from "lib/netlifyImg"
 
 export interface CropData {
   scale: number
@@ -78,28 +78,23 @@ export default {
   },
   methods: {
     async loadHdImage(val?: string) {
-      if (!val) val = this.imageId
+      const id = val || this.imageId
       if (!this.$userAuth.loggedIn) return
-      let imageData = await getImageFromCache(val)
-      if (!imageData) {
-        if (SessionStorage.getItem("noHdImage-" + val)) return
-        this.loading = true
-        try {
-          const response = await creationsHdImage({ imageId: val })
-          imageData = response?.data
-        } catch (error) {
-          console.error(error)
-          SessionStorage.setItem("noHdImage-" + val, true)
-          imageData = undefined
-        }
+      if (SessionStorage.getItem("noHdImage-" + id)) return
+      this.loading = true
+      try {
+        const url = await hdUrl(id)
+        void this.$nextTick(() => {
+          this.imageSrc = url
+        })
+      } catch (error) {
+        console.error(error)
+        SessionStorage.setItem("noHdImage-" + id, true)
+        // Fallback to compressed image
+        this.imageSrc = img(id, "lg")
+      } finally {
         this.loading = false
-        if (!imageData) return
-        await storeImageInCache(val, imageData)
       }
-      const imageDataUrl = `data:image/webp;base64,${imageData}`
-      void this.$nextTick(() => {
-        this.imageSrc = imageDataUrl
-      })
     },
     onTouchStart(event: TouchEvent) {
       if (event.touches[0]) {

@@ -6,7 +6,8 @@ import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
 import { catchErr, getReferredBy } from "lib/util"
-import { clearImageCache } from "lib/hdImageCache"
+import { clearImageSecretCache } from "lib/imageCdn"
+import { clearAvatarVersion, setAvatarVersion } from "lib/avatarVersion"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import {
   adminLoginAsUser,
@@ -62,6 +63,11 @@ export const useUserAuth = defineStore("userAuth", {
       if (!userId) userId = this.userId
       const response = await userGet({ userId })
       this.userData = response.data
+      try {
+        if (this.userId && this.userData?.AvatarConfig?.imageId) {
+          setAvatarVersion(this.userId, this.userData.AvatarConfig.imageId)
+        }
+      } catch {}
       tawk.setAttributes({ points: this.userData.availablePoints, userId: this.userId })
     },
     async loadUserProfile(userId?: string) {
@@ -274,6 +280,7 @@ export const useUserAuth = defineStore("userAuth", {
     logout() {
       privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
       // Clear our JWT and app state
+      const uid = this.userId
       jwt.remove()
       this.loggedIn = false
       this.userId = null
@@ -282,7 +289,8 @@ export const useUserAuth = defineStore("userAuth", {
       this.userProfile = null
       this.upvotesWallet = null
       umami.identify({ userId: "logged-out" })
-      void clearImageCache()
+      clearImageSecretCache()
+      if (uid) clearAvatarVersion(uid)
       // useCreateImageStore().$reset()
       // useImageCreations().$reset()
     },

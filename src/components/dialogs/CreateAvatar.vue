@@ -33,6 +33,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import ImageCropper, { CropData } from "components/ImageCropper.vue"
 import { img } from "lib/netlifyImg"
 import reloadAvatar from "lib/reloadAvatar"
+import { bumpAvatarVersion } from "lib/avatarVersion"
 import { catchErr, purchaseMedia } from "lib/util"
 import { Loading, Notify, QDialog, SessionStorage } from "quasar"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
@@ -69,15 +70,14 @@ export default {
       Loading.show({ message: "Updating avatar" })
       try {
         await userSetAvatar({ imageId: this.currentMediaId, position, scale })
+        if (this.$userAuth.userId) bumpAvatarVersion(this.$userAuth.userId)
         reloadAvatar.value = Date.now()
-        this.$root?.$forceUpdate()
         Notify.create({
           message: "Avatar updated",
           color: "positive",
         })
         Loading.hide()
         this.hide()
-        window.location.reload()
       } catch (err) {
         Loading.hide()
         catchErr(err)

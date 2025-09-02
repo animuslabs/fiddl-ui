@@ -41,10 +41,10 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { catchErr, downloadFile, longIdToShort, purchaseMedia, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
-import { creationsOriginalImage, creationsUpscaledImage, creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest } from "src/lib/orval"
+import { creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest, creationsHdVideo } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
-import { creationsHdVideo } from "src/lib/orval"
+import { originalDownloadUrl, upscaledUrl } from "lib/imageCdn"
 import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
@@ -77,11 +77,8 @@ export default defineComponent({
           message: "Downloading Image",
         })
         if (this.type == "image") {
-          const response = await creationsOriginalImage({ imageId: this.currentMediaId }).catch(catchErr)
-          const imageData = response?.data
-          const imageDataUrl = this.isSvg ? `data:image/png;base64,${imageData}` : `data:image/png;base64,${imageData}`
-          const extension = this.isSvg ? ".svg" : ".png"
-          downloadFile(imageDataUrl, longIdToShort(this.currentMediaId) + "-original" + extension)
+          const url = await originalDownloadUrl(this.currentMediaId)
+          void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.png`)
         } else {
           const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
           void triggerDownload(data, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.mp4`)
@@ -105,15 +102,12 @@ export default defineComponent({
       Loading.show({
         message: "Upscaling Image",
       })
-      const response = await creationsUpscaledImage({ imageId: this.currentMediaId }).catch(catchErr)
-      const imageData = response?.data
-      if (!imageData) {
+      try {
+        const url = await upscaledUrl(this.currentMediaId)
+        void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-upscaled.png`)
+      } finally {
         Loading.hide()
-        return console.error("No image data")
       }
-      const imageDataUrl = `data:image/png;base64,${imageData}`
-      downloadFile(imageDataUrl, this.currentMediaId + "-upscaled.png")
-      Loading.hide()
     },
     goToLogin() {
       void this.$router.push({ name: "login" })

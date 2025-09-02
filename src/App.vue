@@ -112,6 +112,9 @@ export default defineComponent({
   },
   methods: {
     maybeNotifyClaimables() {
+      if (this.$route.name === "missions") return
+      if (this.$route.name === "magicMirror") return
+      if (this.$route.name === "magicMirrorBanana") return
       const KEY = "missions-claimable-notified"
       if (SessionStorage.getItem(KEY)) return
       const missions = useMissionsStore()

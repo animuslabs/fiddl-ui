@@ -16,7 +16,7 @@ div.relative-position.self-center
       :self="menuSelf"
       :content-style="menuContentStyle"
       :content-class="isMobile ? 'notif-menu-mobile' : ''"
-      @click.stop="refresh"
+      @click.stop="onMenuClick"
       transition-duration="0"
     ).bg-blur
       div.q-pa-sm(:style="menuContainerStyle")
@@ -40,7 +40,7 @@ div.relative-position.self-center
             | No notifications yet
         q-separator
         .q-mt-sm(:class="isMobile ? 'column items-stretch q-gutter-xs' : 'row justify-between items-center'")
-          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="refresh" :loading="loading" :class="isMobile ? 'full-width' : ''")
+          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="onRefreshClick" :loading="loading" :class="isMobile ? 'full-width' : ''")
           q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })" :class="isMobile ? 'full-width' : ''")
 </template>
 
@@ -148,6 +148,12 @@ export default defineComponent({
     this.stopPolling()
   },
   methods: {
+    onMenuClick(evt: Event, go?: any) {
+      void this.refresh()
+    },
+    onRefreshClick(evt: Event, go?: any) {
+      void this.refresh()
+    },
     parseData(ev: EventsPrivateEvents200Item): any {
       try {
         return JSON.parse(ev.dataJSON)
@@ -175,14 +181,28 @@ export default defineComponent({
         this.pollId = null
       }
     },
-    async refresh() {
+    async refresh(forceFull = false) {
       if (!this.$userAuth.loggedIn) return
       if (this.loading) return
       this.loading = true
       try {
-        const params: EventsPrivateEventsParams = { limit: 25, includeSeen: true }
+        let since: string | undefined
+        if (!forceFull && this.events.length > 0) {
+          const times = this.events.map((e) => new Date(e.createdAt).getTime())
+          const sinceTs = times.length ? Math.max(...times) : 0
+          if (sinceTs > 0) since = new Date(sinceTs).toISOString()
+        }
+        const params: EventsPrivateEventsParams = since ? { since, limit: 25, includeSeen: true } : { limit: 25, includeSeen: true }
         const { data } = await eventsPrivateEvents(params)
-        this.events = Array.isArray(data) ? data : []
+        const incoming = Array.isArray(data) ? data : []
+        if (since) {
+          if (incoming.length === 0) return
+          const byId = new Map<string, EventsPrivateEvents200Item>()
+          ;[...incoming, ...this.events].forEach((e) => byId.set(e.id, e))
+          this.events = Array.from(byId.values())
+        } else {
+          this.events = incoming
+        }
       } catch (e) {
         // ignore
       } finally {

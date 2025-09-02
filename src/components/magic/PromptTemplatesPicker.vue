@@ -30,6 +30,7 @@ div
 
 <script setup lang="ts">
 import { computed, watch, onMounted } from "vue"
+import { useQuasar } from "quasar"
 import type { CSSProperties } from "vue"
 import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
@@ -78,11 +79,22 @@ const displayTemplates = computed<PromptTemplate[]>(() => {
   return resolveGenderedTemplates(tplStore.templates, props.gender)
 })
 
-const gridStyle = computed(() => ({
-  display: "grid",
-  gridTemplateColumns: `repeat(auto-fill, minmax(${props.gridMin}px, 1fr))`,
-  gap: "10px",
-}))
+const $q = useQuasar()
+const gridStyle = computed(() => {
+  // On small screens, force two columns for better scanability
+  if ($q.screen.lt.sm) {
+    return {
+      display: "grid",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gap: "8px",
+    }
+  }
+  return {
+    display: "grid",
+    gridTemplateColumns: `repeat(auto-fill, minmax(${props.gridMin}px, 1fr))`,
+    gap: "10px",
+  }
+})
 
 const confirmBarStyle = computed<CSSProperties>(() => (props.stickyConfirm ? { position: "sticky", bottom: "20px" } : {}))
 
@@ -138,5 +150,14 @@ watch([() => props.gender, () => tplStore.templates, () => props.maxSelected, ()
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
+}
+
+/* Ensure at least 2 items per row on small phones */
+@media (max-width: 430px) {
+  .template-grid {
+    /* Override inline gridTemplateColumns coming from :style */
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
 }
 </style>

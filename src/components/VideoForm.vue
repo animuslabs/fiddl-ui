@@ -73,56 +73,18 @@
       div(style="position:absolute; right:15px; top:15px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="anyLoading" :label="req.public ? 'Public' : 'Private'")
 
-  q-dialog(v-model="showImageDialog")
-    q-card(style="width:90vw; max-width:1400px;")
-      input(type="file" @change="handleFileUpload" style="display: none;" ref="fileInput")
-      .q-ma-md(v-if="!showUploads")
-        .centered
-          h4.q-mb-sm Create a video from an existing image on Fiddl.art
-          q-img.q-mb-sm(src="/EditIcon.jpg" style="width:200px; max-width:95vw;")
-          .q-ml-xl.q-mr-xl
-            p When viewing an image, select the edit button to turn the image into a video
-        q-separator(color="primary").q-ma-lg
-        .centered.q-ma-sm
-          h4.relative-position Upload your Own Image
-        .q-ma-lg
-          .centered.no-wrap
-            q-btn(icon="upload" label="Upload Image" flat color="primary" @click="triggerFileInput")
-              .badge
-                p {{ prices.image.uploadSoloImage }}
-            .col-grow
-            q-btn(icon="list" label="Select from Uploads" flat color="primary" @click="showUploads = true" :disabled="!imageUploadIds.length")
-          div.drag-drop-area.gt-sm(@drop.prevent="handleDrop" @dragover.prevent @dragleave.prevent)
-            .centered.bg-grey-9.q-pa-xl.q-mt-md
-              p Drag and drop an image here
-      .q-ma-md(v-else).relative-position
-        h4.z-top.bg-blur.q-pa-md(style="position:sticky; top:20px;") Select Starting Image
-        .q-ma-md()
-          UploadedImageViewer.full-width(@select="onUploadedSelected" )
-        div.z-top.bg-blur.q-pa-md(style="position:sticky; bottom:20px;")
-          .centered
-            q-btn(icon="upload" label="Upload New Image" flat color="primary" @click="triggerFileInput")
-              .badge
-                p {{ prices.image.uploadSoloImage }}
-
-        //- .centered.q-mt-md.q-gutter-md
-        //-   q-btn(label="< back" outline color="secondary" @click="showImageDialog = false")
-        //-   q-btn(label="browse images" color="primary" @click="$router.push({name:'browse'})")
+  UploadedImagesDialog(v-model="showImageDialog" @accept="onDialogAccept" :multiSelect="false" :thumbSizeMobile="95" context="video")
   </template>
 
 <script lang="ts" setup>
 import { videoModels } from "lib/imageModels"
-import { Loading, useQuasar } from "quasar"
+import { useQuasar } from "quasar"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { computed, ref, toRef, watch } from "vue"
 import { usePricesStore, prices } from "stores/pricesStore"
 import { img, s3Img } from "lib/netlifyImg"
 import { uploadTrainingImages } from "lib/api"
-import { createUploadImage, creationsGetUserUploadedImages } from "lib/orval"
-import { catchErr, throwErr } from "lib/util"
-import { uploadToPresignedPost } from "lib/api"
-import { generateWebpThumbnails } from "lib/imageUtils"
-import UploadedImageViewer from "components/UploadedImageViewer.vue"
+import UploadedImagesDialog from "components/dialogs/UploadedImagesDialog.vue"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -138,12 +100,6 @@ const vidStore = useCreateVideoStore()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
 const req = toRef(vidStore.state.req)
-const showUploads = ref(false)
-const imageUploadIds = ref<string[]>([])
-async function loadImageUploadUrls() {
-  const { data } = await creationsGetUserUploadedImages()
-  imageUploadIds.value = data
-}
 const disableStartingImage = computed(() => false)
 function clearStartingImage() {
   req.value.startImageId = undefined
@@ -152,51 +108,8 @@ function clearStartingImage() {
 function create() {
   void vidStore.createVideoRequest().then(() => emit("created"))
 }
-function handleFileUpload(event: Event) {
-  const files = (event.target as HTMLInputElement).files
-  if (files && files[0]) void uploadImage(files[0])
-}
-watch(
-  () => showImageDialog.value,
-  (val) => {
-    if (!val) showUploads.value = false
-    void loadImageUploadUrls()
-  },
-)
-
-function triggerFileInput() {
-  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-  if (fileInput) {
-    fileInput.click()
-  }
-}
-
-function handleDrop(event: DragEvent) {
-  event.preventDefault()
-  const files = event.dataTransfer?.files
-  if (files && files[0]) void uploadImage(files[0])
-}
-
-function onUploadedSelected(id: string) {
-  req.value.uploadedStartImageId = id
-  showImageDialog.value = false
-}
-
-async function uploadImage(file: File) {
-  console.log("handle file upload here:", file)
-  Loading.show({ message: "Uploading Image" })
-  try {
-    const [compressed] = await generateWebpThumbnails([file], 1920, 98)
-    if (!compressed) throwErr("error compressing image for upload")
-    const { data } = await createUploadImage({ fileType: "image/webp" })
-    await uploadToPresignedPost({ file: compressed, presignedPost: data.uploadUrl })
-    req.value.uploadedStartImageId = data.imageId
-    showImageDialog.value = false
-    Loading.hide()
-  } catch (err: any) {
-    Loading.hide()
-    catchErr(err)
-  }
+function onDialogAccept(ids: string[]) {
+  req.value.uploadedStartImageId = ids[0]
 }
 
 const scrollWrapperComponent = computed(() => (quasar.screen.lt.md ? "q-scroll-area" : "div"))

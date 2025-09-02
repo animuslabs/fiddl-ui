@@ -1,11 +1,11 @@
 import { defineStore } from "pinia"
 import { LocalStorage, SessionStorage } from "quasar"
 import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
-import { collectionsMediaInUsersCollection, creationsGetCreationData, userGetUsername, creationsHdImage, creationsHdVideo } from "src/lib/orval"
-import { getImageFromCache, storeImageInCache } from "src/lib/hdImageCache"
+import { collectionsMediaInUsersCollection, creationsGetCreationData, userGetUsername, creationsHdVideo } from "src/lib/orval"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { catchErr } from "src/lib/util"
 import { markOwned, isOwned } from "lib/ownedMediaCache"
+import { hdUrl } from "lib/imageCdn"
 
 interface CreatorMeta {
   userName: string
@@ -277,26 +277,21 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     async loadHdImage(id: string, timeoutPromise: Promise<null>) {
-      let imageData = await getImageFromCache(id)
-      if (!imageData && !SessionStorage.getItem(`noHdimage-${id}`)) {
-        const hdResponse = await Promise.race([
-          creationsHdImage({ imageId: id }).catch(() => {
-            SessionStorage.setItem(`noHdimage-${id}`, true)
-            return undefined
-          }),
+      if (SessionStorage.getItem(`noHdimage-${id}`)) return null
+      try {
+        const url = (await Promise.race([
+          hdUrl(id),
           timeoutPromise,
-        ])
-        imageData = hdResponse?.data
-        if (imageData) await storeImageInCache(id, imageData)
-      }
-
-      if (imageData) {
-        const src = `data:image/webp;base64,${imageData}`
-        this.hdImageSrc[id] = src
-        this.userOwnsMedia = true
-        this.hdMediaLoaded = true
-        markOwned(id, "image")
-        return src
+        ])) as string | null
+        if (url) {
+          this.hdImageSrc[id] = url
+          this.userOwnsMedia = true
+          this.hdMediaLoaded = true
+          markOwned(id, "image")
+          return url
+        }
+      } catch {
+        SessionStorage.setItem(`noHdimage-${id}`, true)
       }
       return null
     },

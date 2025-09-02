@@ -149,10 +149,27 @@ export default defineComponent({
       if (!this.$userAuth.loggedIn) return
       this.loading = true
       try {
-        // Pull a generous page and paginate client-side
-        const params: EventsPrivateEventsParams = { limit: 200, includeSeen: true }
+        let since: string | undefined
+        if (this.events.length > 0) {
+          const times = this.events.map((e) => new Date(e.createdAt).getTime())
+          const sinceTs = times.length ? Math.max(...times) : 0
+          if (sinceTs > 0) since = new Date(sinceTs).toISOString()
+        }
+        const params: EventsPrivateEventsParams = since
+          ? { since, limit: 200, includeSeen: true }
+          : { limit: 200, includeSeen: true }
         const { data } = await eventsPrivateEvents(params)
-        this.events = data
+        const incoming = Array.isArray(data) ? data : []
+        if (since) {
+          if (incoming.length > 0) {
+            const byId = new Map<string, EventsPrivateEvents200Item>()
+            const all = [...incoming, ...this.events]
+            all.forEach((e) => byId.set(e.id, e))
+            this.events = Array.from(byId.values())
+          }
+        } else {
+          this.events = incoming
+        }
         if (this.page > this.pageCount) this.page = this.pageCount
       } finally {
         this.loading = false

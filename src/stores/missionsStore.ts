@@ -2,13 +2,12 @@ import { defineStore } from "pinia"
 import { Dialog, Notify, SessionStorage } from "quasar"
 import {
   missionsList,
-  missionsStatus,
+  missionsStatuses,
   missionsClaim,
   badgesList,
   badgesForUser,
   type MissionsList200Item,
   type MissionsList200ItemRewardsItem,
-  type MissionsStatus200,
   type MissionsClaim200,
   type BadgesList200Item,
   type BadgesForUser200Item,
@@ -101,24 +100,22 @@ export const useMissionsStore = defineStore("missionsStore", {
       }
     },
     async loadProgressForAll() {
-      const missions = this.missions || []
-      const chunks: MissionsList200Item[][] = []
-      const size = 8
-      for (let i = 0; i < missions.length; i += size) chunks.push(missions.slice(i, i + size))
-      for (const group of chunks) {
-        await Promise.all(
-          group.map(async (m) => {
-            try {
-              const { data } = await missionsStatus({ missionId: m.id })
-              const st = data as MissionsStatus200
-              this.progressMap[m.id] = Math.max(0, Math.min(100, st.progress || 0))
-              this.claimedMap[m.id] = !!st.claimed
-            } catch {
-              this.progressMap[m.id] = 0
-            }
-          }),
-        )
-      }
+      try {
+        const { data } = await missionsStatuses()
+        const statuses = data?.statuses || []
+        const byId: Record<string, any> = {}
+        for (const st of statuses) byId[st.missionId] = st
+        const missions = this.missions || []
+        for (const m of missions) {
+          const st = byId[m.id]
+          if (st) {
+            this.progressMap[m.id] = Math.max(0, Math.min(100, st.progress || 0))
+            this.claimedMap[m.id] = !!st.claimed
+          } else {
+            this.progressMap[m.id] = 0
+          }
+        }
+      } catch {}
     },
     async claim(mission: MissionsList200Item) {
       if ((this.progressMap[mission.id] || 0) < 100) return

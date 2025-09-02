@@ -115,6 +115,11 @@
     "MagicMirrorPage"
   ],
   [
+    "magicMirrorBanana",
+    "/magicMirrorBanana",
+    "MagicMirrorBananaPage"
+  ],
+  [
     "events",
     "/events",
     "EventsPage"

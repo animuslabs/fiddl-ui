@@ -23,6 +23,7 @@ export const prices = reactive<PointsPrices200>({
       "gpt-image-1": 22,
       custom: 10,
       seedream3: 10,
+      "nano-banana": 15,
     },
   },
   forge: {

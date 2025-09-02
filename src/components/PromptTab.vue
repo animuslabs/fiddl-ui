@@ -23,11 +23,11 @@
                   q-separator(vertical)
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
-                  q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="$router.push({name:'magicMirror'})")
+                  q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
                 .centered.q-mt-md(v-if="quasar.screen.lt.md")
                   q-btn(label="create" size="md" color="primary" rounded  @click="createMode = true")
                   .col-grow
-                  q-btn(label="Magic Mirror" color="primary" rounded @click="$router.push({name:'magicMirror'})")
+                  q-btn(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
@@ -60,18 +60,45 @@
       ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
-  q-dialog(v-model="createMode" maximized no-route-dismiss)
-    q-card(style="width:100vw; max-width:600px; overflow:hidden;")
-      .centered.full-width
-        CreateCard(
-          show-back-btn
-          @back="createMode = false"
-          @created="addImage"
-          style="padding-top:0px; min-width:300px; max-width:600px;"
-          ref="createCard"
-          :customModel="customModel"
-          @active-tab="setActiveCreationsStore"
-        ).full-width
+      q-dialog(v-model="createMode" maximized no-route-dismiss)
+        q-card(style="width:100vw; max-width:600px; overflow:hidden;")
+          .centered.full-width
+            CreateCard(
+              show-back-btn
+              @back="createMode = false"
+              @created="addImage"
+              style="padding-top:0px; min-width:300px; max-width:600px;"
+              ref="createCard"
+              :customModel="customModel"
+              @active-tab="setActiveCreationsStore"
+            ).full-width
+
+  q-dialog(v-model="showMMChoice")
+    q-card(style="width:560px; max-width:95vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Magic Mirror Options
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mb-sm
+          p We offer two Magic Mirror modes. Both create great results:
+          ul
+            li
+              strong Flux:
+              |  higher quality and more creative. Uses a personalized model. Cost:
+              strong  {{ fluxCost }}
+              |  points (training set + Flux Pro training).
+            li
+              strong Banana:
+              |  faster and simpler. No model training. Cost:
+              strong  {{ bananaCost }}
+              |  points per image (Nano Banana).
+          p.q-mt-sm Choose a mode to continue.
+      q-separator
+      q-card-actions(align="right")
+        q-btn(flat color="secondary" label="Use Banana (faster)" no-caps @click="goBanana")
+        q-btn(color="primary" label="Use Flux (creative)" no-caps @click="goFlux")
 
 </template>
 
@@ -88,6 +115,7 @@ import { useCreateImageStore } from "src/stores/createImageStore"
 import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
+import { prices } from "src/stores/pricesStore"
 import mediaViwer from "lib/mediaViewer"
 import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
@@ -128,9 +156,18 @@ export default defineComponent({
       videoCreations: useVideoCreations(),
       createContext: useCreateContextStore(),
       suppressCreateModal: false,
+      showMMChoice: false,
     }
   },
   computed: {
+    fluxCost(): number {
+      // Training set + Flux Pro model training
+      return (prices.forge?.createTrainingSet || 0) + (prices.forge?.trainBaseModel?.fluxPro || 0)
+    },
+    bananaCost(): number {
+      // Cost per image using nano-banana model
+      return prices.image?.model?.["nano-banana"] || 0
+    },
     allMediaObjects() {
       const data = this.activeCreationsStore.allCreations.map((el) => {
         if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
@@ -246,6 +283,14 @@ export default defineComponent({
     })
   },
   methods: {
+    goFlux() {
+      this.showMMChoice = false
+      void this.$router.push({ name: "magicMirror" })
+    },
+    goBanana() {
+      this.showMMChoice = false
+      void this.$router.push({ name: "magicMirrorBanana" })
+    },
     isImageCreations(store: any): store is ReturnType<typeof useImageCreations> {
       return "filter" in store && "customModelId" in store.filter
     },
