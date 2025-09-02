@@ -932,6 +932,10 @@ export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
 };
 
+export type CreationsDeleteUploadedImageBody = {
+  imageId: string;
+};
+
 export type CreationsDescribeUploadedImageParams = {
 imageId: string;
 };
@@ -3794,6 +3798,28 @@ export const creationsGetUserUploadedImages = async (params?: CreationsGetUserUp
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getCreationsDeleteUploadedImageUrl = () => {
+
+
+  
+
+  return `/creations/deleteUploadedImage`
+}
+
+export const creationsDeleteUploadedImage = async (creationsDeleteUploadedImageBody: CreationsDeleteUploadedImageBody, options?: RequestInit): Promise<boolean> => {
+  
+  return fetcher<boolean>(getCreationsDeleteUploadedImageUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsDeleteUploadedImageBody,)
   }
 );}
 

@@ -1,7 +1,7 @@
 <template lang="pug">
 q-page.full-width
   .centered.q-mt-md
-    h2.lobster-font Magic Mirror Banana
+    h2.lobster-font Magic Mirror Fast
   .centered.q-ma-md
     p.text-primary Faster Magic Mirror: upload, pick looks, generate
 
@@ -380,7 +380,7 @@ async function loadSession() {
     if (typeof data.subjectDescription === "string") subjectDescription = data.subjectDescription
     if (Array.isArray(data.sessionBaselineIds)) sessionBaselineIds.value = data.sessionBaselineIds
     if (Array.isArray(data.sessionCreatedIds)) sessionCreatedIds.value = data.sessionCreatedIds
-    if (typeof data.sessionExpectedTotal === 'number') sessionExpectedTotal.value = data.sessionExpectedTotal
+    if (typeof data.sessionExpectedTotal === "number") sessionExpectedTotal.value = data.sessionExpectedTotal
     const sessStep = data.step as Step | undefined
     if (sessStep) step.value = sessStep
 

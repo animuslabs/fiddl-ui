@@ -33,7 +33,12 @@ q-dialog(v-model="innerOpen")
           q-btn(flat dense icon="close" label="Cancel" color="secondary" @click="close")
 
       .q-ma-md
-        UploadedImageViewer.full-width(@select="onUploadedSelected" :thumbSizeMobile="thumbSizeMobileProp" :selectedIds="multiSelect ? selectedIds : []")
+        UploadedImageViewer.full-width(
+          @select="onUploadedSelected"
+          @deleted="onUploadedDeleted"
+          :thumbSizeMobile="thumbSizeMobileProp"
+          :selectedIds="multiSelect ? selectedIds : []"
+        )
 
       // Sticky footer on mobile showing selection count (multi only)
       div(v-if="multiSelect" class="z-top bg-blur q-pa-sm" style="position:sticky; bottom:20px; backdrop-filter: blur(8px);")
@@ -200,6 +205,14 @@ function onUploadedSelected(id: string) {
   else if (selectedIds.value.length < props.max) selectedIds.value.push(id)
   else if ($q.screen.gt.xs) {
     void $q.dialog({ title: "Limit reached", message: `Max ${props.max} images.`, ok: true })
+  }
+}
+
+function onUploadedDeleted(id: string) {
+  // Ensure any previously selected id is removed if the image was deleted
+  if (!props.multiSelect) return
+  if (selectedIds.value.includes(id)) {
+    selectedIds.value = selectedIds.value.filter((x) => x !== id)
   }
 }
 

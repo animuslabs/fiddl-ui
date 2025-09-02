@@ -961,6 +961,10 @@ export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
 };
 
+export type CreationsDeleteUploadedImageBody = {
+  imageId: string;
+};
+
 export type CreationsDescribeUploadedImageParams = {
 imageId: string;
 };
@@ -4724,6 +4728,62 @@ export function useCreationsGetUserUploadedImages<TData = Awaited<ReturnType<typ
 
 
 
+export const creationsDeleteUploadedImage = (
+    creationsDeleteUploadedImageBody: MaybeRef<CreationsDeleteUploadedImageBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<boolean>> => {
+    creationsDeleteUploadedImageBody = unref(creationsDeleteUploadedImageBody);
+    
+    return axios.post(
+      `/creations/deleteUploadedImage`,
+      creationsDeleteUploadedImageBody,options
+    );
+  }
+
+
+
+export const getCreationsDeleteUploadedImageMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsDeleteUploadedImage>>, TError,{data: CreationsDeleteUploadedImageBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof creationsDeleteUploadedImage>>, TError,{data: CreationsDeleteUploadedImageBody}, TContext> => {
+
+const mutationKey = ['creationsDeleteUploadedImage'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creationsDeleteUploadedImage>>, {data: CreationsDeleteUploadedImageBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  creationsDeleteUploadedImage(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreationsDeleteUploadedImageMutationResult = NonNullable<Awaited<ReturnType<typeof creationsDeleteUploadedImage>>>
+    export type CreationsDeleteUploadedImageMutationBody = CreationsDeleteUploadedImageBody
+    export type CreationsDeleteUploadedImageMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCreationsDeleteUploadedImage = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsDeleteUploadedImage>>, TError,{data: CreationsDeleteUploadedImageBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof creationsDeleteUploadedImage>>,
+        TError,
+        {data: CreationsDeleteUploadedImageBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreationsDeleteUploadedImageMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const creationsDescribeUploadedImage = (
     params: MaybeRef<CreationsDescribeUploadedImageParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CreationsDescribeUploadedImage200>> => {
