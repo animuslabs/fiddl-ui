@@ -31,55 +31,32 @@ q-page.full-width
 
     // Preview selected templates during generation
     .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showInitialPreview || additionalLoadingTemplates.length > 0")
-      .full-width.bg-blur.q-pa-lg(style="max-width:720px;")
-        .template-preview-grid(:style="templatesPreviewGridStyle")
-          .template-item(v-for="t in selectedTemplateObjs" :key="`${t.id}-${t.name}`")
-            .template-card-box
-              PromptTemplateCard.full-width(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" no-title :ratio="isDesktop ? 3/5 : 1")
-              span.reactive-ghost {{ t.name[0] }}
-        .row.items-center.justify-center.q-mt-md
-          q-spinner-dots(color="primary" size="24px")
-          span.text-primary.q-ml-sm Generating your images...
+      MagicPreviewGrid(:templates="selectedTemplateObjs" :isDesktop="isDesktop" :gender="genderForTemplates || 'female'" :skeletonCount="0" :showSpinner="true" loadingMessage="Generating your images...")
 
   // Results step
   div(v-else-if="step === 'results'").relative-position.full-width
-    .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px;")
+    .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px; margin-bottom:12px;")
       .centered.col-12.full-width
         q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
         q-btn(color="primary" square icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
         q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
-
+        q-btn(flat icon="star" label="Magic Mirror Pro" :size="isDesktop? 'lg':'md'" no-caps @click="$router.push({name:'magicMirror'})")
     .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showTemplatePreview")
-      .full-width.bg-blur.q-pa-lg(style="max-width:720px;")
-        .template-preview-grid(v-if="currentPreviewTemplates.length > 0 || additionalLoadingTemplates.length > 0" :style="previewGridStyle")
-          .template-item(v-for="t in currentPreviewTemplates" :key="`${t.id}-${t.name}`")
-            .template-card-box
-              PromptTemplateCard(:template="t" :gender="genderForTemplates || 'female'" :selectable="false" :ratio="isDesktop ? 3/5 : 1")
-              span.reactive-ghost {{ t.name[0] }}
-        .template-preview-grid(v-else :style="{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }")
-          .template-item(v-for="i in previewSkeletonCount" :key="i")
-            q-skeleton(type="rect" style="width:100%; aspect-ratio:3/4; border-radius:8px;")
-        .row.items-center.justify-center.q-mt-md
-          q-spinner-dots(color="primary" size="24px")
-          span.text-primary.q-ml-sm {{ previewLoadingMessage }}
+      MagicPreviewGrid(:templates="currentPreviewTemplates" :skeletonCount="previewSkeletonCount" :loadingMessage="previewLoadingMessage" :isDesktop="isDesktop" :gender="genderForTemplates || 'female'" :showSpinner="true")
 
     div(v-if="generatedImageIds.length > 0" style="width:100%;")
-      .centered.full-width.q-mt-lg
-        MediaGallery.q-pl-md.q-pr-md(
-          :mediaObjects="mediaObjects"
-          layout="mosaic"
-          :rowHeightRatio="1"
+      .centered.full-width
+        SimpleMediaGrid.q-pl-md.q-pr-md(
+          :media="mediaObjects"
           :colsDesktop="3"
           :colsMobile="1"
-          :thumbSizeDesktop="350"
-          :thumbSizeMobile="400"
-          :gap="8"
-          :centerAlign="true"
+          gap="8px"
           objectFit="contain"
           objectPosition="center"
+          style="max-width:1100px;"
         )
           template(#actions="{ media }")
-            .row.items-center.justify-center.q-gutter-sm.q-pt-sm.bg-grey-10.q-pa-md
+            .centered.bg-black.q-pa-sm.q-mb-md.q-mt-sm(style="border-radius:24px;")
               q-btn(flat size="sm" icon="share" label="Share" no-caps @click="shareImage(media.id)")
               q-btn(flat size="sm" icon="download" label="Download" no-caps @click="downloadImage(media.id)")
               q-btn(color="primary" flat square size="sm" icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
@@ -168,13 +145,16 @@ import { useQuasar, Loading } from "quasar"
 import { useUserAuth } from "src/stores/userAuth"
 import MagicMirrorCamera from "src/components/magic/MagicMirrorCamera.vue"
 import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
+import MagicPreviewGrid from "src/components/magic/MagicPreviewGrid.vue"
 import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
-import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useRouter } from "vue-router"
-import { type Gender, type PromptTemplate, type GenderedPromptTemplate, resolveGenderedTemplates, promptFromTemplates } from "src/lib/promptTemplates"
+import { type Gender, type PromptTemplate, type GenderedPromptTemplate, promptFromTemplates } from "src/lib/promptTemplates"
+import { useMagicTemplateSelection } from "src/lib/magic/useMagicTemplateSelection"
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
@@ -193,13 +173,12 @@ const router = useRouter()
 
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
+// Gender handling for templates: default to female (no training-derived gender here)
+const genderForTemplates = computed<Gender | null>(() => detectedGender.value)
 
-// Template selection state
-const dialogOpen = ref(false)
-const dialogSelection = ref<string[]>([])
-const dialogMode = ref<"initial" | "additional">("initial")
-const selectedTemplates = ref<string[]>([])
-const templatesConfirmed = ref(false)
+// Template selection state via shared composable
+const rawTemplates = computed<GenderedPromptTemplate[]>(() => promptTplStore.templates as unknown as GenderedPromptTemplate[])
+const { dialogOpen, dialogSelection, dialogMode, selectedTemplates, templatesConfirmed, displayTemplates, templatesById, getTemplateByAnyId, selectedTemplateObjs, openTemplatesDialog } = useMagicTemplateSelection({ genderForTemplates, rawTemplates })
 const generatingMore = ref(false)
 
 // Generated results (session-scoped)
@@ -281,27 +260,7 @@ function stopAnimPromptCountdown() {
   animPromptTimer = null
 }
 
-// Gender handling for templates: default to female (no training-derived gender here)
-const genderForTemplates = computed<Gender | null>(() => detectedGender.value)
-const rawTemplates = computed<GenderedPromptTemplate[]>(() => promptTplStore.templates as unknown as GenderedPromptTemplate[])
-const displayTemplates = computed<PromptTemplate[]>(() => {
-  const g = genderForTemplates.value
-  return g ? resolveGenderedTemplates(rawTemplates.value, g) : []
-})
-const templatesById = computed(() => new Map(displayTemplates.value.map((t) => [t.id, t] as [string, PromptTemplate])))
-
-function getTemplateByAnyId(id: string): PromptTemplate | undefined {
-  const direct = templatesById.value.get(id)
-  if (direct) return direct
-  const g = genderForTemplates.value
-  if (g && !id.endsWith(`-${g}`)) {
-    const suffixed = `${id}-${g}`
-    return templatesById.value.get(suffixed)
-  }
-  return undefined
-}
-
-const selectedTemplateObjs = computed<PromptTemplate[]>(() => selectedTemplates.value.map((id) => getTemplateByAnyId(id)).filter(Boolean) as PromptTemplate[])
+// displayTemplates, mapping, and selection provided by composable
 
 // UI layout helpers
 const templatesPreviewGridStyle = computed(() => ({
@@ -339,7 +298,7 @@ const showInitialPreview = computed(() => templatesConfirmed.value && generatedI
 const showTemplatePreview = computed(() => isWaitingForImages.value || pendingNewCount.value > 0 || generatingMore.value)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
-const mediaObjects = computed<MediaGalleryMeta[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "lg"), type: "image" })))
+const mediaObjects = computed<Item[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "lg"), type: "image" })).reverse())
 
 // Persist/restore session state in localStorage
 function saveSession() {
@@ -423,7 +382,7 @@ function onAuthRequired() {
   quasar.notify({ color: "primary", message: "Please login or register to start capturing" })
 }
 function onInsufficientPoints() {
-  quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror" })
+  quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror Fast" })
 }
 
 // Upload blobs similar to UploadedImagesDialog
@@ -468,11 +427,6 @@ async function describeFirstUploaded(firstId: string) {
 }
 
 // Templates dialog handlers
-function openTemplatesDialog(mode: "initial" | "additional") {
-  dialogMode.value = mode
-  dialogSelection.value = mode === "initial" ? selectedTemplates.value.slice() : []
-  dialogOpen.value = true
-}
 function openMoreLooks() {
   openTemplatesDialog("additional")
 }
@@ -777,22 +731,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.slot-actions {
-  position: absolute !important;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 6px 6px 4px !important;
-  background: transparent !important;
-  pointer-events: auto;
-}
-:deep(.media-wrapper) {
-  padding-bottom: 48px;
-}
-:deep(.media-wrapper) > .q-img,
-:deep(.media-wrapper) > div > video {
-  height: calc(100% - 48px) !important;
-}
+/* No overlay padding needed; actions render below media via MediaGallery */
 .template-grid > .template-item {
   display: flex;
   flex-direction: column;

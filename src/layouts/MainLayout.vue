@@ -45,7 +45,7 @@ q-layout(view="lHh Lpr lFf" )
             div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.userData?.availablePoints || 0 }}
             q-img.q-ml-sm(
               src="/FiddlPointsLogo-sm.svg"
-              :style="{ width: isMobile ? '28px' : '40px', height: isMobile ? '28px' : '40px' }"
+              :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '34px' : '40px' }"
               alt="fiddl points logo" no-spinner)
           q-tooltip
             p Add Fiddl Points
@@ -128,16 +128,16 @@ q-layout(view="lHh Lpr lFf" )
         q-btn(flat label="Close" v-close-popup)
 
   q-page-container.centered.bg-transparent
-    .centered(style="width:100vw; height:100%" )
+    //- .centered(style="width:100vw; height:100%" )
       //- h4.text-white {{ create.state.req.customModelName }} {{ create.state.req.customModelId}}
-      router-view.full-width(style="max-width:1650px;")
-      .full-width.q-pa-md
-        .centered.items-center.q-gutter-md
-          q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
-          q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
-          q-btn(type="a" href="https://www.facebook.com/fiddlart" icon="fa-brands fa-facebook" color="primary" flat)
-          q-btn(type="a" href="https://www.linkedin.com/company/fiddl-art" icon="fa-brands fa-linkedin" color="primary" flat)
-          q-btn(type="a" href="https://t.me/fiddlart" icon="fa-brands fa-telegram" color="primary" flat)
+    router-view.full-width(style="max-width:1650px;")
+    .full-width.q-pa-md
+      .centered.items-center.q-gutter-md
+        q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)
+        q-btn(type="a" href="https://www.instagram.com/fiddl.art" icon="fa-brands fa-instagram" color="primary" flat)
+        q-btn(type="a" href="https://www.facebook.com/fiddlart" icon="fa-brands fa-facebook" color="primary" flat)
+        q-btn(type="a" href="https://www.linkedin.com/company/fiddl-art" icon="fa-brands fa-linkedin" color="primary" flat)
+        q-btn(type="a" href="https://t.me/fiddlart" icon="fa-brands fa-telegram" color="primary" flat)
 
 
 

@@ -48,13 +48,13 @@ div
         avatarSize="30px"
         wrapperClass=""
       )
-  .centered.q-mt-md(v-if="showIndicators")
-    span.indicator(
-      v-for="(media, index) in mediaViewerStore.mediaObjects"
-      :key="index"
-      :class="{ active: index === mediaViewerStore.currentIndex }"
-      @click.stop="mediaViewerStore.goToIndex(index)"
-    )
+  //- .centered.q-mt-md(v-if="showIndicators")
+  //-   span.indicator(
+  //-     v-for="(media, index) in mediaViewerStore.mediaObjects"
+  //-     :key="index"
+  //-     :class="{ active: index === mediaViewerStore.currentIndex }"
+  //-     @click.stop="mediaViewerStore.goToIndex(index)"
+  //-   )
 </template>
 
 <script setup lang="ts">

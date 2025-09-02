@@ -60,18 +60,19 @@
       ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
-      q-dialog(v-model="createMode" maximized no-route-dismiss)
-        q-card(style="width:100vw; max-width:600px; overflow:hidden;")
-          .centered.full-width
-            CreateCard(
-              show-back-btn
-              @back="createMode = false"
-              @created="addImage"
-              style="padding-top:0px; min-width:300px; max-width:600px;"
-              ref="createCard"
-              :customModel="customModel"
-              @active-tab="setActiveCreationsStore"
-            ).full-width
+
+  q-dialog(v-model="createMode" maximized no-route-dismiss)
+    q-card(style="width:100vw; max-width:600px; overflow:hidden;")
+      .centered.full-width
+        CreateCard(
+          show-back-btn
+          @back="createMode = false"
+          @created="addImage"
+          style="padding-top:0px; min-width:300px; max-width:600px;"
+          ref="createCard"
+          :customModel="customModel"
+          @active-tab="setActiveCreationsStore"
+        ).full-width
 
   q-dialog(v-model="showMMChoice")
     q-card(style="width:560px; max-width:95vw;")
@@ -85,20 +86,20 @@
           p We offer two Magic Mirror modes. Both create great results:
           ul
             li
-              strong Flux:
+              strong Magic Mirror Pro:
               |  higher quality and more creative. Uses a personalized model. Cost:
               strong  {{ fluxCost }}
               |  points (training set + Flux Pro training).
             li
-              strong Banana:
+              strong Magic Mirror Fast:
               |  faster and simpler. No model training. Cost:
               strong  {{ bananaCost }}
               |  points per image (Nano Banana).
           p.q-mt-sm Choose a mode to continue.
       q-separator
       q-card-actions(align="right")
-        q-btn(flat color="secondary" label="Use Banana (faster)" no-caps @click="goBanana")
-        q-btn(color="primary" label="Use Flux (creative)" no-caps @click="goFlux")
+        q-btn( label="Use Magic Mirror Fast" no-caps @click="goBanana")
+        q-btn( label="Use Magic Mirror Pro" no-caps @click="goFlux")
 
 </template>
 
