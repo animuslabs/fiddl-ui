@@ -66,11 +66,12 @@ q-page.full-width
 
   div(v-else-if="step === 'results'").relative-position.full-width
     .row.items-center.z-top.bg-blur.full-width(style="position:sticky; top:50px; margin-bottom:12px;")
-      .centered.col-12.full-width
-        q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
-        q-btn(color="primary" square icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
-        q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
-        q-btn(flat icon="sym_o_acute" label="Magic Mirror Fast" :size="isDesktop? 'lg':'md'" no-caps @click="$router.push({ name: 'magicMirrorBanana' })")
+      .centered.full-width
+        .row.q-ml-lg
+          q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
+          q-btn(color="primary" square icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
+          q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
+          q-btn(flat icon="sym_o_acute" label="Magic Mirror Fast" :size="isDesktop? 'lg':'md'" no-caps @click="$router.push({ name: 'magicMirrorBanana' })")
     .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showTemplatePreview")
       MagicPreviewGrid(
         :templates="currentPreviewTemplates"
