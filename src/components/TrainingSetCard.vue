@@ -1,5 +1,5 @@
 <template lang="pug">
-q-card.training-card.relative-position.overflow-hidden(style="width:550px; max-width:95vw;")
+q-card.training-card.relative-position.overflow-hidden(style="width:100%; max-width:600px;")
   .absolute.thumb-bg(style="z-index:0;")
     .row.no-wrap
       div(v-for="id in trimmedThumbnails" :key="id" style="width:80px;")

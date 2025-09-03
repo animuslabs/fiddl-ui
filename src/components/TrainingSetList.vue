@@ -1,5 +1,5 @@
 <template lang="pug">
-  div(style="max-width:95vw;")
+  div(style="max-width:100%;")
     q-list(v-if="trainingSets.length" separator ).full-width
       TrainingSetCard.q-mb-md(selectable v-for="set in trainingSets" :key="set.id" :trainingSet="set" @updated="loadData" @setClicked="$emit('setClicked', $event)")
     div(v-else)

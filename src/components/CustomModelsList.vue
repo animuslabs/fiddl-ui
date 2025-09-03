@@ -1,5 +1,5 @@
 <template lang="pug">
-  q-list(v-if="models?.length" style="max-width:95vw;")
+  q-list(v-if="models?.length" style="max-width:100%;")
     q-item(v-for="model in models" :key="model.id")
       .row.q-gutter-xs.items-center
         .col-auto

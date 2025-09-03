@@ -16,9 +16,6 @@ export interface MediaGalleryMeta {
   url?: string
   aspectRatio?: number
   type?: "image" | "video"
-  // Optional privacy flag. If explicitly false, treat as private.
-  // When undefined, privacy is unknown and click handlers will fall back to error messaging on denial.
-  isPublic?: boolean
 }
 
 const props = withDefaults(
@@ -35,13 +32,6 @@ const props = withDefaults(
     showLoading?: boolean
     centerAlign?: boolean
     showPopularity?: boolean
-    selectedIds?: string[]
-    // How media should fit within its cell: 'cover' crops, 'contain' shows full media
-    objectFit?: "cover" | "contain"
-    // Where to position media inside its box (CSS object-position value)
-    objectPosition?: string
-    // Place actions below the media instead of overlaying on top of it
-    actionsBelow?: boolean
   }>(),
   {
     layout: "grid",
@@ -55,10 +45,6 @@ const props = withDefaults(
     showLoading: true,
     centerAlign: false,
     showPopularity: false,
-    selectedIds: undefined,
-    objectFit: "cover",
-    objectPosition: "top",
-    actionsBelow: false,
   },
 )
 
@@ -81,17 +67,8 @@ const cols = computed(() => {
 })
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
-const gapPx = computed(() => {
-  if (typeof props.gap === "number") return props.gap
-  const m = /([0-9.]+)/.exec(props.gap || "8px")
-  return m ? parseFloat(m[1] || "8") : 8
-})
 const popularity = usePopularityStore()
 const popIconSize = ref("8px")
-
-function isSelected(id: string): boolean {
-  return !!(props.selectedIds && props.selectedIds.includes(id))
-}
 
 // Popularity polling
 const pollIntervalMs = 15000
@@ -104,7 +81,7 @@ let videoReloadTimer: number | null = null
 type UpvoteBurst = { count: number; visible: boolean; timer?: number }
 const upvoteBursts = ref<Record<string, UpvoteBurst>>({})
 
-function onUpvote(id: string, type: MediaType, isPublic?: boolean) {
+function onUpvote(id: string, type: MediaType) {
   if (!userAuth.loggedIn) {
     Dialog.create({
       title: "Login required",
@@ -116,29 +93,8 @@ function onUpvote(id: string, type: MediaType, isPublic?: boolean) {
     })
     return
   }
-  // If we explicitly know the media is private, block with a friendly message
-  if (isPublic === false) {
-    Dialog.create({
-      title: "Private Media",
-      message: "This media is private and cannot be upvoted.",
-      ok: { label: "OK", flat: true, color: "primary" },
-    })
-    return
-  }
-
   triggerUpvoteBurst(id)
-  // If privacy is unknown, proceed but handle potential server rejection gracefully
-  void (async () => {
-    try {
-      await popularity.addUpvote(id, type)
-    } catch (e) {
-      Dialog.create({
-        title: "Unable to Upvote",
-        message: "This media may be private and cannot be upvoted.",
-        ok: { label: "OK", flat: true, color: "primary" },
-      })
-    }
-  })()
+  void popularity.addUpvote(id, type)
 }
 
 function triggerUpvoteBurst(id: string) {
@@ -208,18 +164,7 @@ const wrapperStyles = computed(() => {
   }
 
   if (isMosaic && props.centerAlign) {
-    // When center-aligning a mosaic, we normally use fixed-size columns
-    // based on the desired thumbnail size. However, on mobile where
-    // cols === 1, a fixed pixel width can exceed the viewport (e.g. 400px
-    // on a 390px device), causing a subtle horizontal overflow that looks
-    // like the page is slightly zoomed in. Guard against this by capping
-    // the single column to the container width.
-    if (cols.value === 1) {
-      // Cap the single column to 100% of the container to prevent overflow
-      base.gridTemplateColumns = `minmax(0, min(${thumbSize.value}px, 100%))`
-    } else {
-      base.gridTemplateColumns = `repeat(${cols.value}, ${thumbSize.value}px)`
-    }
+    base.gridTemplateColumns = `repeat(${cols.value}, ${thumbSize.value}px)`
     base.gridAutoRows = `${thumbSize.value * props.rowHeightRatio}px`
     base.gridAutoFlow = "dense"
     base.justifyContent = "center"
@@ -236,13 +181,22 @@ const wrapperStyles = computed(() => {
 })
 
 const mediaStyles = computed(() => {
-  const common = {
-    width: "100%",
-    height: "100%",
-    display: "block",
-  } as Record<string, string>
-
-  const style = props.layout === "grid" ? { ...common, aspectRatio: "1 / 1" } : { ...common }
+  const style =
+    props.layout === "grid"
+      ? {
+          height: "100%",
+          width: "100%",
+          // maxHeight: "100px",
+          aspectRatio: "1 / 1",
+          "object-fit": "cover",
+          display: "block",
+        }
+      : {
+          width: "100%",
+          height: "100%",
+          "object-fit": "cover",
+          display: "block",
+        }
 
   return Object.entries(style)
     .map(([k, v]) => `${k}:${v}`)
@@ -343,22 +297,13 @@ function markVideoErrored(id: string) {
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
-  const aspect = m.aspectRatio || 1 // width / height
-  // Span 2 columns for wide media when possible
+  const aspect = m.aspectRatio ?? 1
   const colSpan = aspect > 1.5 && cols.value > 1 ? 2 : undefined
-  const colFactor = colSpan ?? 1
 
-  // Column width in px for this item (includes internal gaps when spanning)
-  const colWidthPx = colFactor * thumbSize.value + (colFactor - 1) * gapPx.value
-  // Height of the media content given its aspect ratio
-  const mediaHeightPx = colWidthPx / aspect
-  // Row track size in px
-  const rowTrackPx = thumbSize.value * props.rowHeightRatio
-  // Reserve space for actions when rendered below
-  const actionsPx = props.actionsBelow ? 64 : 0
-  const totalHeightPx = mediaHeightPx + actionsPx
-  // Masonry row span calculation accounting for grid gap
-  const rows = Math.max(1, Math.ceil((totalHeightPx + gapPx.value) / (rowTrackPx + gapPx.value)))
+  // When an item spans multiple columns, also increase its vertical span proportionally
+  // so wide media aren’t visually cropped. We scale rows by the number of columns taken.
+  const colFactor = colSpan ?? 1
+  const rows = Math.max(1, Math.ceil((colFactor / aspect) * props.rowHeightRatio))
 
   return {
     gridRowEnd: `span ${rows}`,
@@ -473,12 +418,11 @@ function videoClass(media: MediaGalleryMeta) {
     class="media-cell"
   )
     template(v-if="!isVideoMedia(m)")
-      .media-wrapper(:style="mediaStyles" :class="{ selected: isSelected(m.id), 'with-overlay': !props.actionsBelow }")
+      .media-wrapper(:style="mediaStyles")
         q-img(
           :src="m.url"
-          :position="props.objectPosition"
-          :fit="props.objectFit"
-          :style="`width:100%; height:100%; display:block`"
+          position="top"
+          style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
           spinner-color="white"
           :class="props.selectable ? 'cursor-pointer' : ''"
           @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
@@ -492,29 +436,16 @@ function videoClass(media: MediaGalleryMeta) {
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
-              q-btn(
-                v-if="m.isPublic !== false"
-                :size="popIconSize"
-                flat dense round
-                :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
-                @click.stop="onUpvote(m.id, 'image', m.isPublic)"
-              )
+              q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
               transition(name="burst")
                 .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
             span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
-        // Per-item actions slot (overlay variant)
-        template(v-if="!props.actionsBelow")
-          slot(name="actions" :media="m" :index="index")
-      // Below-actions variant (normal flow, reserves grid rows)
-      template(v-if="props.actionsBelow")
-        .slot-actions-below
-          // Defensive wrapper ensures normal flow regardless of consumer classes
-          div(class="slot-actions-below-inner")
-            slot(name="actions" :media="m" :index="index")
-              // default empty
+        // Per-item actions slot (optional)
+        slot(name="actions" :media="m" :index="index")
+          // default empty
     template(v-else)
-      .media-wrapper(:style="mediaStyles" :class="{ selected: isSelected(m.id), 'with-overlay': !props.actionsBelow }")
+      .media-wrapper(:style="mediaStyles")
         div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative;" ).full-height
           div
             .absolute-center.z-top.offset-down
@@ -530,7 +461,7 @@ function videoClass(media: MediaGalleryMeta) {
             @canplay="markVideoLoaded(m.id)"
             @loadeddata="markVideoLoaded(m.id)"
             @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-            :style="`width: 100%; height: 100%; object-fit: ${props.objectFit}; object-position: ${props.objectPosition}; display: block`"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
             :class="videoClass(m)"
           )
         // Hidden overlay - keeps layout stable
@@ -543,19 +474,13 @@ function videoClass(media: MediaGalleryMeta) {
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .upvote-burst-wrap
-              q-btn(
-                v-if="m.isPublic !== false"
-                :size="popIconSize"
-                flat dense round
-                :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
-                @click.stop="onUpvote(m.id, 'video', m.isPublic)"
-              )
+              q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
               transition(name="burst")
                 .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
             span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
-        // Per-item actions slot (overlay variant for video)
-        // template intentionally omitted for videos in this gallery usage
+        // Per-item actions slot (optional)
+        //- slot(name="actions" :media="m" :index="index")
           // default empty
 </template>
 
@@ -585,17 +510,8 @@ function videoClass(media: MediaGalleryMeta) {
   height: 100%;
 }
 
-.media-wrapper.selected {
-  outline: 2px solid var(--q-primary);
-  border-radius: 8px;
-  transform: scale(0.965);
-  transition:
-    transform 0.08s ease,
-    outline-color 0.15s ease;
-}
-
-.media-wrapper.with-overlay > [slot="actions"],
-.media-wrapper.with-overlay ::v-slotted([name="actions"]) {
+.media-wrapper > [slot="actions"],
+.media-wrapper ::v-slotted([name="actions"]) {
   position: absolute;
   left: 0;
   right: 0;
@@ -607,23 +523,6 @@ function videoClass(media: MediaGalleryMeta) {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
   z-index: 2;
   pointer-events: auto;
-}
-
-.slot-actions-below {
-  /* Normal document flow so it pushes content down */
-  display: block;
-  width: 100%;
-}
-
-/* Ensure anything slotted under actionsBelow is not forced to absolute by outside styles */
-.slot-actions-below-inner {
-  position: static !important;
-  z-index: auto !important;
-  display: block;
-  width: 100%;
-  pointer-events: auto;
-  background: transparent;
-  margin-top: 4px;
 }
 
 /* Lower the absolute-center slightly to appear visually centered within varying thumbnails */

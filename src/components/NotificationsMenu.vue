@@ -8,19 +8,21 @@ div.relative-position.self-center
     size="md"
     :color="unreadCount > 0 ? 'accent' : 'grey-4'"
     icon="notifications"
+    @click="onActivatorClick"
   )
     q-badge(v-if="unreadCount > 0" floating color="red" :label="unreadCount > 99 ? '99+' : String(unreadCount)")
+    //- Desktop: anchored dropdown menu
     q-menu(
+      v-if="!isMobile"
       v-model="open"
       :anchor="menuAnchor"
       :self="menuSelf"
       :content-style="menuContentStyle"
-      :content-class="isMobile ? 'notif-menu-mobile' : ''"
-      @click.stop="onMenuClick"
+      @before-show="onBeforeShow"
       transition-duration="0"
     ).bg-blur
       div.q-pa-sm(:style="menuContainerStyle")
-        .q-mb-sm(:class="isMobile ? 'column items-start q-gutter-xs' : 'row items-center justify-between'")
+        .q-mb-sm.row.items-center.justify-between
           .text-subtitle2 Notifications
           q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
             q-tooltip Mark all as seen
@@ -39,9 +41,39 @@ div.relative-position.self-center
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
         q-separator
-        .q-mt-sm(:class="isMobile ? 'column items-stretch q-gutter-xs' : 'row justify-between items-center'")
-          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="onRefreshClick" :loading="loading" :class="isMobile ? 'full-width' : ''")
-          q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })" :class="isMobile ? 'full-width' : ''")
+        .q-mt-sm.row.justify-between.items-center
+          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="onRefreshClick" :loading="loading")
+          q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })")
+
+  //- Mobile: full-screen dialog with same layout
+  q-dialog(v-if="isMobile" v-model="open" maximized transition-show="fade" transition-hide="fade" @before-show="onBeforeShow")
+    q-card.notif-dialog-card.bg-blur
+      div.q-pa-sm(:style="menuContainerStyle")
+        .q-mb-sm.row.items-center.justify-between
+          .text-subtitle2 Notifications
+          div.row.items-center.q-gutter-xs
+            q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
+              q-tooltip Mark all as seen
+            q-btn(flat dense icon="close" @click.stop="open = false")
+              q-tooltip Close
+        q-separator
+        q-scroll-area(:style="menuScrollStyle")
+          q-list(v-if="recentEvents.length > 0" :dense="isMobile")
+            q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
+              q-item-section(avatar)
+                q-avatar(:size="isMobile ? '24px' : '28px'" square)
+                  q-img(:src="previewFor(ev)" :ratio="1" no-spinner)
+              q-item-section(:style="{ minWidth: 0 }")
+                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
+                .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
+              q-item-section(side)
+                q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
+          .text-caption.text-grey-6.q-pa-md.text-center(v-else)
+            | No notifications yet
+        q-separator
+        .q-mt-sm.column.items-stretch.q-gutter-xs
+          q-btn(flat dense icon="refresh" label="Refresh" @click.stop="onRefreshClick" :loading="loading" class="full-width")
+          q-btn(flat dense icon="list" label="View all" @click.stop="$router.push({ name: 'events' })" class="full-width")
 </template>
 
 <script lang="ts">
@@ -148,6 +180,18 @@ export default defineComponent({
     this.stopPolling()
   },
   methods: {
+    onActivatorClick(evt: Event) {
+      if (this.isMobile) {
+        // Only programmatically open on mobile
+        evt.stopPropagation()
+        this.open = true
+        this.onMenuClick(evt)
+      }
+      // On desktop, let QMenu handle toggle via parent click
+    },
+    onBeforeShow() {
+      void this.refresh()
+    },
     onMenuClick(evt: Event, go?: any) {
       void this.refresh()
     },
@@ -296,4 +340,14 @@ export default defineComponent({
   display: flex !important
   flex-direction: column !important
   overflow: hidden !important
+
+.notif-dialog-card
+  width: 100vw
+  height: 100dvh
+  max-width: 100vw
+  max-height: 100dvh
+  border-radius: 0
+  display: flex
+  flex-direction: column
+  overflow: hidden
 </style>

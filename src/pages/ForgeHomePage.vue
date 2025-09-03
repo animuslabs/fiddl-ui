@@ -1,13 +1,14 @@
 <template lang="pug">
-q-page.q-mb-xl.q-px-lg
+q-page.full-height.full-width.q-px-lg
   .centered
     h1.lobster-font Forge
   .centered.q-mt-md
     p Train custom models with your own images
-  .centered.full-width(v-if="mode === 'pick'")
-    .col-6
-      PickModel(  @selectModel="selectModel" @createModel="mode = 'createModel'")
-    .col-6
+  // Responsive grid to avoid overflow on mobile
+  .row.items-start.justify-center.full-width(v-if="mode === 'pick'")
+    .col-12.col-md-6
+      PickModel(@selectModel="selectModel" @createModel="mode = 'createModel'")
+    .col-12.col-md-6
       PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
   div(v-if="mode == 'createModel'").full-width
     CreateModel

@@ -2,6 +2,7 @@ import { route } from "quasar/wrappers"
 import { createMemoryHistory, createRouter, createWebHashHistory, createWebHistory } from "vue-router"
 
 import routes from "./routes"
+import { setupRoutePrefetch } from "src/lib/routePreloader"
 
 // const createHistory = import.meta.env.SERVER ? createMemoryHistory : import.meta.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory
 const createHistory = () => createWebHistory(import.meta.env.VUE_ROUTER_BASE || "/")
@@ -26,5 +27,16 @@ Router.afterEach((to) => {
     if (canonicalLink) canonicalLink.setAttribute("href", `${baseUrl}${to.path}`)
   }
 })
+
+// Preload other route chunks when idle after initial load
+if (import.meta.env.CLIENT) {
+  setupRoutePrefetch(Router, {
+    // Skip heavy/rare pages by default; adjust as needed
+    excludeNames: ["magicMirror", "magicMirrorBanana"],
+    concurrency: 2,
+    delayMs: 500,
+    runOnce: true,
+  })
+}
 
 export default Router
