@@ -316,7 +316,19 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     () => state.req.model,
     () => {
       console.log("model watch triggered")
-      if (!availableAspectRatiosComputed.value?.includes(state.req.aspectRatio || "16:9")) (state.req.aspectRatio as any) = availableAspectRatiosComputed.value[0] || ("16:9" as AspectRatio)
+      const opts = availableAspectRatiosComputed.value || []
+      // If aspect ratio is empty and the model supports selection, default to 16:9 (or first option)
+      if (!state.req.aspectRatio) {
+        // Keep undefined for models where UI disables selection (handled in the form)
+        if (state.req.model !== "nano-banana") {
+          (state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
+        }
+        return
+      }
+      // If current value is not available for the selected model, coerce to a valid option
+      if (!opts.includes(state.req.aspectRatio)) {
+        (state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
+      }
     },
   )
 

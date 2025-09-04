@@ -277,7 +277,9 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     async loadHdImage(id: string, timeoutPromise: Promise<null>) {
-      if (SessionStorage.getItem(`noHdimage-${id}`)) return null
+      // If the user owns this media (optimistically or cached), do not block retries
+      const owns = this.userOwnsMedia || isOwned(id, "image")
+      if (!owns && SessionStorage.getItem(`noHdimage-${id}`)) return null
       try {
         const url = (await Promise.race([
           hdUrl(id),
@@ -288,6 +290,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           this.userOwnsMedia = true
           this.hdMediaLoaded = true
           markOwned(id, "image")
+          // Clear any previous block for this image now that HD is available
+          SessionStorage.removeItem(`noHdimage-${id}`)
           return url
         }
       } catch {

@@ -46,11 +46,15 @@ export async function getImageSecret(imageId: string): Promise<string> {
   if (existing) return existing
 
   const p = (async () => {
-    const { data } = await creationsImageSecret({ imageId })
-    const secret = data
-    if (secret) setCachedSecret(imageId, secret)
-    inFlight.delete(imageId)
-    return secret
+    try {
+      const { data } = await creationsImageSecret({ imageId })
+      const secret = data
+      if (secret) setCachedSecret(imageId, secret)
+      return secret
+    } finally {
+      // Always clear inFlight entry so future attempts can retry after failures/unlock
+      inFlight.delete(imageId)
+    }
   })()
 
   inFlight.set(imageId, p)
@@ -81,4 +85,3 @@ export async function hdDownloadUrl(imageId: string): Promise<string> {
   const { data } = await creationsHdImage({ imageId, download: true as any })
   return data
 }
-
