@@ -1,14 +1,14 @@
 // stores/createImageStore.ts — Composition API + factory reset
 import { defineStore } from "pinia"
 import { ref, computed, reactive, watch } from "vue"
-import { LocalStorage } from "quasar"
+import { LocalStorage, Notify } from "quasar"
 import { useRouter } from "vue-router"
 import { aspectRatios, imageModels, type AspectRatio, type ImageModel } from "lib/imageModels"
 import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useUserAuth } from "src/stores/userAuth"
-import { createImprovePrompt, createRandomPrompt, modelsGetCustomModel } from "lib/orval"
+import { createImprovePrompt, createRandomPrompt, modelsGetCustomModel, createQueueAsyncBatch, createBatchStatus, creationsGetImageRequest } from "lib/orval"
 import umami from "lib/umami"
 import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { CustomModel } from "lib/api"
@@ -50,6 +50,8 @@ function initState() {
     loading,
     anyLoading,
     customModel: null as CustomModel | null,
+    // Pending placeholder image IDs to render loading tiles in galleries
+    pendingPlaceholders: [] as string[],
   }
 }
 
@@ -160,14 +162,146 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   }
 
   async function createImage() {
+    // Immediately persist request and kick off async batch without blocking UI
     state.loading.create = true
     LocalStorage.set("req", state.req)
     if (typeof state.req.seed !== "number") state.req.seed = undefined
     if (state.req.model === "custom" && !state.req.customModelId) state.req.model = "flux-dev"
-    await creations.generateImage(toObject(state.req)).catch(catchErr)
-    state.loading.create = false
+
+    // Build batch request payload (images variant)
+    const requestPayload = {
+      prompt: state.req.prompt,
+      negativePrompt: undefined as string | undefined,
+      quantity: state.req.quantity,
+      seed: state.req.seed,
+      model: state.req.model,
+      public: state.req.public,
+      aspectRatio: state.req.aspectRatio,
+      customModelId: state.req.customModelId,
+      uploadedStartImageIds: state.req.uploadedStartImageIds,
+    }
+
+    let batchId: string | null = null
+    try {
+      const res = await createQueueAsyncBatch({ requests: [requestPayload] })
+      batchId = res.data?.batchId || null
+    } catch (err) {
+      catchErr(err)
+    } finally {
+      // Do not block the form – allow queuing more while polling runs in background
+      state.loading.create = false
+    }
+
+    // Immediately add placeholder tiles so users see progress while the batch runs
+    const qty = Math.max(1, Number(state.req.quantity || 1))
+    const stamp = Date.now()
+    const placeholders = Array.from({ length: qty }, (_, i) => `pending-${stamp}-${Math.random().toString(36).slice(2, 8)}-${i}`)
+    // Add to the front so placeholders appear first in galleries
+    state.pendingPlaceholders.unshift(...placeholders)
+
+    // Track points usage event
     await userAuth.loadUserData()
     umami.track("createImage")
+
+    if (!batchId) return
+
+    // Poll batch status every 2s and push finished jobs into the creations store as soon as they are ready
+    const processedReqs = new Set<string>()
+    // Track jobs we've already surfaced errors for (avoid duplicate popups)
+    const erroredNotified = new Set<string>()
+    const pollMs = 2000
+    // Interval handle for polling (needs to be declared before first pollOnce run)
+    let pollTimer: number | null = null
+
+    async function pollOnce() {
+      try {
+        const { data: batch } = await createBatchStatus({ batchId: batchId! })
+        // Null indicates server lost track or was restarted; stop polling and hard-reload to recover
+        if (!batch) {
+          if (pollTimer) window.clearInterval(pollTimer)
+          window.location.reload()
+          return
+        }
+
+        // Handle per-job state
+        for (const job of batch.jobs) {
+          if (job.type !== "image") continue
+
+          // Surface failures immediately with their server-provided messages
+          if (job.status === "failed" && !erroredNotified.has(job.id)) {
+            const details = (job.errors || []).filter(Boolean)
+            const message = details.length ? details.join("\n• ") : "Image generation failed"
+            catchErr(new Error(message))
+            erroredNotified.add(job.id)
+          }
+
+          // Push finished image jobs immediately to the gallery
+          if (job.status === "finished") {
+            const reqId = job.imageRequestId
+            if (!reqId || processedReqs.has(reqId)) continue
+            processedReqs.add(reqId)
+
+            try {
+              const { data: reqData } = await creationsGetImageRequest({ imageRequestId: reqId })
+              if (reqData) {
+                creations.addItemToFront({
+                  ...reqData,
+                  createdAt: new Date(reqData.createdAt),
+                } as any)
+                // Remove as many placeholders as the finished images we just added
+                const removeCount = Math.min(state.pendingPlaceholders.length, (reqData.imageIds?.length || 0))
+                if (removeCount > 0) state.pendingPlaceholders.splice(0, removeCount)
+              }
+            } catch (e) {
+              // ignore fetch failure and continue polling
+            }
+          }
+        }
+
+        // Determine completion
+        const allDone = batch.counts.finished + batch.counts.failed >= batch.counts.total
+        if (allDone || batch.status === "completed" || batch.status === "error") {
+          const failed = batch.counts.failed > 0
+
+          // If the whole batch errored and we haven't shown any per-job error, summarize all errors
+          if (batch.status === "error") {
+            const allErrors = (batch.jobs || [])
+              .filter((j) => j.type === "image" && (j.errors?.length || 0) > 0)
+              .flatMap((j) => j.errors || [])
+              .filter(Boolean)
+            if (allErrors.length) {
+              catchErr(new Error(allErrors.join("\n• ")))
+            }
+          }
+
+          if (processedReqs.size > 0 || failed) {
+            Notify.create({
+              type: failed ? "warning" : "positive",
+              message: failed ? "Some images failed to render" : "Your images are ready",
+              position: "top",
+            })
+          }
+          // On completion ensure no orphan placeholders remain
+          if (state.pendingPlaceholders.length > 0) {
+            state.pendingPlaceholders.splice(0, state.pendingPlaceholders.length)
+          }
+          if (pollTimer) window.clearInterval(pollTimer)
+        }
+      } catch (e: any) {
+        // If server responds with 5xx, stop polling and reload to avoid infinite loading state
+        const status = e?.response?.status
+        if (typeof status === "number" && status >= 500 && status < 600) {
+          if (pollTimer) window.clearInterval(pollTimer)
+          window.location.reload()
+          return
+        }
+        // Swallow transient network errors; keep interval alive
+      }
+    }
+
+    pollTimer = window.setInterval(pollOnce, pollMs) as unknown as number
+    // Run immediately to avoid waiting 2s for the first update
+    void pollOnce()
   }
 
   function reset() {

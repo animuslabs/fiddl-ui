@@ -12,19 +12,12 @@ type PrefetchOptions = {
 }
 
 const rIC: typeof window.requestIdleCallback =
-  typeof window !== "undefined" && (window as any).requestIdleCallback
-    ? (cb: IdleRequestCallback) => (window as any).requestIdleCallback(cb, { timeout: 5000 })
-    : (cb: IdleRequestCallback) => window.setTimeout(() => cb(({} as unknown) as IdleDeadline), 0) as any
+  typeof window !== "undefined" && (window as any).requestIdleCallback ? (cb: IdleRequestCallback) => (window as any).requestIdleCallback(cb, { timeout: 5000 }) : (cb: IdleRequestCallback) => window.setTimeout(() => cb({} as unknown as IdleDeadline), 0) as any
 
 export function setupRoutePrefetch(router: Router, opts: PrefetchOptions = {}) {
   if (import.meta.env.SSR) return
 
-  const {
-    excludeNames = ["magicMirror", "magicMirrorBanana"],
-    concurrency = 2,
-    delayMs = 300,
-    runOnce = true,
-  } = opts
+  const { excludeNames = ["magicMirror", "magicMirrorBanana"], concurrency = 2, delayMs = 300, runOnce = true } = opts
 
   let didRun = false
 
@@ -38,7 +31,10 @@ export function setupRoutePrefetch(router: Router, opts: PrefetchOptions = {}) {
   }
 
   // Run after the first route is ready
-  router.isReady().then(schedule).catch(() => {})
+  router
+    .isReady()
+    .then(schedule)
+    .catch(() => {})
 
   // Optionally, also run on the first navigation (in case isReady resolved earlier)
   if (!runOnce) {
@@ -46,13 +42,7 @@ export function setupRoutePrefetch(router: Router, opts: PrefetchOptions = {}) {
   }
 }
 
-async function prefetchAll(
-  router: Router,
-  {
-    excludeNames,
-    concurrency,
-  }: { excludeNames: Array<string | symbol>; concurrency: number },
-) {
+async function prefetchAll(router: Router, { excludeNames, concurrency }: { excludeNames: Array<string | symbol>; concurrency: number }) {
   try {
     const current = router.currentRoute.value
     const currentName = current?.name
@@ -90,11 +80,13 @@ async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, limit: numb
   let i = 0
   const runNext = () => {
     if (i >= tasks.length) return
-    const task = tasks[i++]()
+    const taskReady = tasks[i++]
+    if (!taskReady) return
+    const task = taskReady()
     const p = task
       .catch(() => {})
       .finally(() => {
-        pool.splice(pool.indexOf(p), 1)
+        void pool.splice(pool.indexOf(p), 1)
         runNext()
       })
     pool.push(p)
@@ -104,4 +96,3 @@ async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, limit: numb
   for (let k = 0; k < starters; k++) runNext()
   await Promise.all(pool)
 }
-

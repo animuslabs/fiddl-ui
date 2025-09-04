@@ -20,9 +20,10 @@ div
       )
         template(#actions="{ media }")
           q-btn(
-            flat dense size="sm" icon="delete" color="negative" label="Delete" no-caps
+            flat round size="sm" icon="delete" color="grey" no-caps
             :disable="deletingId === media.id"
             @click.stop="requestDelete(media.id, media.url)"
+            style="posiiton:absolute; bottom:30px; right:4px;"
           )
     .centered.q-pa-lg(v-else)
       h6.text-grey-6 No uploaded images yet

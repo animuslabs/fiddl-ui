@@ -468,6 +468,82 @@ export type CreateQueueAsyncBatch200 = {
   accepted: number;
 };
 
+export type CreateBatchStatusParams = {
+batchId: string;
+};
+
+export type CreateBatchStatus200Status = typeof CreateBatchStatus200Status[keyof typeof CreateBatchStatus200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateBatchStatus200Status = {
+  waiting: 'waiting',
+  running: 'running',
+  completed: 'completed',
+  error: 'error',
+} as const;
+
+export type CreateBatchStatus200JobsItemType = typeof CreateBatchStatus200JobsItemType[keyof typeof CreateBatchStatus200JobsItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateBatchStatus200JobsItemType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type CreateBatchStatus200JobsItemStatus = typeof CreateBatchStatus200JobsItemStatus[keyof typeof CreateBatchStatus200JobsItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateBatchStatus200JobsItemStatus = {
+  queued: 'queued',
+  waitingForModel: 'waitingForModel',
+  running: 'running',
+  finished: 'finished',
+  failed: 'failed',
+} as const;
+
+export type CreateBatchStatus200JobsItem = {
+  id: string;
+  type: CreateBatchStatus200JobsItemType;
+  status: CreateBatchStatus200JobsItemStatus;
+  errors: string[];
+  imageIds?: string[];
+  imageRequestId?: string;
+  videoIds?: string[];
+  videoRequestId?: string;
+  waitingOnModelId?: string;
+};
+
+export type CreateBatchStatus200Counts = {
+  total: number;
+  queued: number;
+  waitingForModel: number;
+  running: number;
+  finished: number;
+  failed: number;
+};
+
+export type CreateBatchStatus200Progress = {
+  completed: number;
+  total: number;
+  percent: number;
+};
+
+/**
+ * @nullable
+ */
+export type CreateBatchStatus200 = {
+  id: string;
+  status: CreateBatchStatus200Status;
+  emailNotify: boolean;
+  createdAt: string;
+  jobs: CreateBatchStatus200JobsItem[];
+  counts: CreateBatchStatus200Counts;
+  progress: CreateBatchStatus200Progress;
+} | null;
+
 export type CreationsGetCreationDataParams = {
 imageId?: string;
 videoId?: string;
@@ -3692,6 +3768,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const createBatchStatus = (
+    params: MaybeRef<CreateBatchStatusParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreateBatchStatus200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/create/batchStatus`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCreateBatchStatusQueryKey = (params: MaybeRef<CreateBatchStatusParams>,) => {
+    return ['create','batchStatus', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCreateBatchStatusQueryOptions = <TData = Awaited<ReturnType<typeof createBatchStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CreateBatchStatusParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBatchStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCreateBatchStatusQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof createBatchStatus>>> = ({ signal }) => createBatchStatus(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createBatchStatus>>, TError, TData> 
+}
+
+export type CreateBatchStatusQueryResult = NonNullable<Awaited<ReturnType<typeof createBatchStatus>>>
+export type CreateBatchStatusQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCreateBatchStatus<TData = Awaited<ReturnType<typeof createBatchStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CreateBatchStatusParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBatchStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreateBatchStatusQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const creationsGetCreationData = (
     params?: MaybeRef<CreationsGetCreationDataParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CreationsGetCreationData200>> => {

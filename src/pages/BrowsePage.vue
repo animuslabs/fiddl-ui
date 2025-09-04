@@ -16,6 +16,7 @@ q-page.full-height.full-width.relative-position
         :mediaObjects="browserStore.media"
         :layout="viewMode"
         :rowHeightRatio="1.2"
+        :show-loading="false"
         gap="8px"
         @select="handleSelect"
         :cols-desktop="8"

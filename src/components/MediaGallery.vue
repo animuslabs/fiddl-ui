@@ -28,6 +28,8 @@ const props = withDefaults(
     thumbSizeDesktop?: number
     thumbSizeMobile?: number
     selectable?: boolean
+    // IDs marked as selected (for external multi-select UIs)
+    selectedIds?: string[]
     rowHeightRatio?: number
     showLoading?: boolean
     centerAlign?: boolean
@@ -41,6 +43,7 @@ const props = withDefaults(
     thumbSizeDesktop: 200,
     thumbSizeMobile: 120,
     selectable: false,
+    selectedIds: undefined,
     rowHeightRatio: 1.2,
     showLoading: true,
     centerAlign: false,
@@ -50,6 +53,9 @@ const props = withDefaults(
 
 const videoLoading = ref<Record<string, boolean>>({})
 const videoReloadKey = ref<Record<string, number>>({})
+// Track loading state for images (to support server-side rendering delays)
+const imageLoading = ref<Record<string, boolean>>({})
+const imageReloadKey = ref<Record<string, number>>({})
 
 const emit = defineEmits<{
   (e: "select", payload: { id: string; type: "image" | "video" }): void
@@ -180,6 +186,9 @@ const wrapperStyles = computed(() => {
   return base
 })
 
+// Fast lookup for selection state
+const selectedSet = computed(() => new Set(props.selectedIds || []))
+
 const mediaStyles = computed(() => {
   const style =
     props.layout === "grid"
@@ -236,6 +245,11 @@ async function buildItems(src: MediaGalleryMeta[]) {
         if (!videoEl || videoEl.readyState < 2) {
           videoLoading.value[item.id] = true
         }
+      } else if (type === "image" && imageLoading.value[item.id] === undefined) {
+        // Only show loading overlay by default for placeholder tiles (pending-* IDs)
+        // Avoid flipping existing images into "loading" when new placeholders are added.
+        const isPending = typeof item.id === "string" && item.id.startsWith("pending-")
+        imageLoading.value[item.id] = props.showLoading && isPending
       }
 
       const aspectRatio = props.layout === "grid" ? 1 : (item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url)))
@@ -293,6 +307,15 @@ function markVideoLoaded(id: string) {
 
 function markVideoErrored(id: string) {
   videoLoading.value[id] = true
+}
+
+function markImageLoaded(id: string) {
+  delete imageLoading.value[id]
+}
+
+function markImageErrored(id: string) {
+  // Keep in loading state and allow periodic reload attempts
+  imageLoading.value[id] = true
 }
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
@@ -383,9 +406,18 @@ watch(
 onMounted(() => {
   // Move retry loop to lifecycle and clean up on unmount
   videoReloadTimer = window.setInterval(() => {
+    // Retry videos that aren't ready yet
     for (const id of Object.keys(videoLoading.value)) {
       if (videoLoading.value[id]) {
         videoReloadKey.value[id] = Date.now()
+      }
+    }
+    // Retry images only when the loading UI is enabled
+    if (props.showLoading) {
+      for (const id of Object.keys(imageLoading.value)) {
+        if (imageLoading.value[id]) {
+          imageReloadKey.value[id] = Date.now()
+        }
       }
     }
   }, 10000) as unknown as number
@@ -415,16 +447,27 @@ function videoClass(media: MediaGalleryMeta) {
     v-for="(m, index) in filteredGalleryItems"
     :key="m.id"
     :style="getItemStyle(m)"
-    class="media-cell"
+    :class="{ 'media-cell': true, 'is-selected': props.selectable && selectedSet.has(m.id) }"
   )
     template(v-if="!isVideoMedia(m)")
       .media-wrapper(:style="mediaStyles")
+        // Loading overlay for images that are still rendering/propagating
+        div(v-if="props.showLoading && imageLoading[m.id]" style="position: relative;").full-height
+          div
+            .absolute-center.z-top.offset-down
+              h4 Loading
+            q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
+        // Actual image (hidden until loaded)
         q-img(
           :src="m.url"
+          :key="imageReloadKey[m.id]"
           position="top"
           style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
           spinner-color="white"
           :class="props.selectable ? 'cursor-pointer' : ''"
+          v-show="!(props.showLoading && imageLoading[m.id])"
+          @load="markImageLoaded(m.id)"
+          @error="markImageErrored(m.id)"
           @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
         )
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
@@ -508,6 +551,26 @@ function videoClass(media: MediaGalleryMeta) {
   position: relative;
   width: 100%;
   height: 100%;
+  /* Smooth selection feedback */
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+/* Selected state: subtle scale + inset highlight */
+.media-cell.is-selected .media-wrapper {
+  transform: scale(0.965);
+  box-shadow: 0 0 0 3px var(--q-secondary) inset;
+  border-radius: 6px;
+}
+
+/* Explicit selection ring drawn above media content */
+.media-cell.is-selected .media-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--q-secondary);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .media-wrapper > [slot="actions"],

@@ -110,6 +110,16 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         mediaIds: item.imageIds,
       })
     },
+    // Prepend a newly finished request so it appears at the top (under any placeholders)
+    addItemToFront(item: CreateImageRequestData) {
+      const idExists = this.creations.some((i) => i.id === item.id)
+      if (idExists) return
+      this.creations.unshift({
+        ...item,
+        type: "image",
+        mediaIds: item.imageIds,
+      })
+    },
     reset() {
       this.creations = []
       this.imagePurchases = []

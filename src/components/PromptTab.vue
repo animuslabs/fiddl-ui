@@ -170,10 +170,28 @@ export default defineComponent({
       return prices.image?.model?.["nano-banana"] || 0
     },
     allMediaObjects() {
-      const data = this.activeCreationsStore.allCreations.map((el) => {
-        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
-        else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType }
+      const isImage = this.currentTab === "image"
+      // Sort requests newest-first, then flatten to mediaIds
+      const sorted = [...this.activeCreationsStore.creations].sort((a, b) => {
+        const at = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt as any).getTime()
+        const bt = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt as any).getTime()
+        return bt - at
       })
+      const data = sorted.flatMap((req) =>
+        req.mediaIds.map((id) =>
+          isImage ? { id, url: img(id, "md"), type: "image" as MediaType } : { id, url: s3Video(id, "preview-sm"), type: "video" as MediaType },
+        ),
+      )
+
+      // While an image batch is rendering, show placeholder tiles at the front
+      if (isImage) {
+        const pending = this.createImageStore.state.pendingPlaceholders || []
+        if (pending.length) {
+          const placeholders = pending.map((id: string) => ({ id, url: img(id, "md"), type: "image" as MediaType }))
+          return [...placeholders, ...data]
+        }
+      }
+
       return data
     },
     activeCreateStore() {
@@ -299,17 +317,22 @@ export default defineComponent({
       this.currentTab = activeTab
     },
     showDetails(imageIndex: number) {
-      // const creation = this.activeCreationsStore.allCreations[0]
-      // if (!creation) return
-      // this.selectedRequest = creation
-      // this.showRequest = true
-      // void mediaViwer.show(
-      //   this.activeCreationsStore.allCreations.map((el) => el.id),
-      //   imageIndex,
-      //   this.currentTab,
-      // )
-      const mediaObjects: MediaGalleryMeta[] = this.activeCreationsStore.allCreations.map((el) => ({ id: el.id, type: this.currentTab }))
-      void mediaViwer.show(mediaObjects, imageIndex)
+      // Use the exact list and ordering shown in the gallery
+      const displayObjects = this.allMediaObjects as MediaGalleryMeta[]
+      if (!Array.isArray(displayObjects) || !displayObjects.length) return
+
+      const clicked = displayObjects[imageIndex]
+      if (!clicked) return
+
+      // Ignore clicks on placeholders (pending tiles)
+      if (typeof clicked.id === "string" && clicked.id.startsWith("pending-")) return
+
+      // Build viewer list excluding placeholders, preserving visual order
+      const viewerObjects = displayObjects.filter((o) => !(typeof o.id === "string" && o.id.startsWith("pending-")))
+      const startIndex = viewerObjects.findIndex((o) => o.id === clicked.id)
+      if (startIndex < 0) return
+
+      void mediaViwer.show(viewerObjects, startIndex)
     },
     setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true

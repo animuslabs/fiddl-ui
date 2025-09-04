@@ -157,7 +157,8 @@ const moreMenuOpen = ref(true)
 const popularity = usePopularityStore()
 
 // Optional privacy knowledge propagated via mediaObjects entries
-const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
+// const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
+const currentIsPublic = computed(() => true)
 
 const userCreatedImage = computed(() => {
   if (!mediaViewerStore.creatorMeta) return false
@@ -321,16 +322,18 @@ function showDownloadWindow() {
       ...mediaViewerStore.getDialogParams(),
       requestId: mediaViewerStore.loadedRequestId,
     },
-  }).onOk(() => {
-    mediaViewerStore.userOwnsMedia = true
-    mediaViewerStore.triedHdLoad = false
-    void mediaViewerStore.loadHdMedia()
-  }).onDismiss(() => {
-    mediaViewerStore.triedHdLoad = false
-    mediaViewerStore.hdMediaLoaded = false
-    // mediaViewerStore.imgLoading = true
-    void mediaViewerStore.loadHdMedia()
   })
+    .onOk(() => {
+      mediaViewerStore.userOwnsMedia = true
+      mediaViewerStore.triedHdLoad = false
+      void mediaViewerStore.loadHdMedia()
+    })
+    .onDismiss(() => {
+      mediaViewerStore.triedHdLoad = false
+      mediaViewerStore.hdMediaLoaded = false
+      // mediaViewerStore.imgLoading = true
+      void mediaViewerStore.loadHdMedia()
+    })
 }
 
 function setProfileImage() {

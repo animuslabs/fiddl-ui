@@ -19,7 +19,9 @@ q-layout(view="lHh Lpr lFf" )
           q-route-tab(:to="{ name: 'models' }").gt-xs.text-white
             | Models
           q-route-tab(:to="{ name: 'missions' }").gt-xs.text-white
-            | Missions
+            .relative-position
+              | Missions
+              q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
           q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
             | Blog
           //- q-route-tab(:to="{ name: 'vote' }")
@@ -151,7 +153,9 @@ q-layout(view="lHh Lpr lFf" )
       q-route-tab(:to="{ name: 'forge' }").text-white
         |  Forge
       q-route-tab(:to="{ name: 'missions' }").text-white
-        | Missions
+        .relative-position
+          | Missions
+          q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
       q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog
 </template>
@@ -166,6 +170,7 @@ import reloadAvatar from "lib/reloadAvatar"
 // import RegisterDialog from "components/dialogs/Register.vue"
 import { useCreateImageStore } from "stores/createImageStore"
 import NotificationsMenu from "src/components/NotificationsMenu.vue"
+import { useMissionsStore } from "stores/missionsStore"
 
 export default defineComponent({
   components: { NotificationsMenu },
@@ -178,6 +183,7 @@ export default defineComponent({
       showUpvoteInfo: false,
       upvoteInfoLoading: false,
       upvoteInfo: null,
+      missionsStore: useMissionsStore(),
     }
   },
   computed: {
@@ -192,6 +198,13 @@ export default defineComponent({
     upvotesColor() {
       if (!this.$userAuth.upvotesWallet) return "negative"
       return this.$userAuth.upvotesWallet.remainingToday > 0 ? "grey-9" : "accent"
+    },
+    hasClaimableMissions(): boolean {
+      try {
+        return this.missionsStore.claimableMissions.length > 0
+      } catch {
+        return false
+      }
     },
   },
   methods: {

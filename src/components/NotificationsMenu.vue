@@ -31,8 +31,8 @@ div.relative-position.self-center
           q-list(v-if="recentEvents.length > 0" :dense="isMobile")
             q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
               q-item-section(avatar)
-                q-avatar(:size="isMobile ? '24px' : '28px'" square)
-                  q-img(:src="previewFor(ev)" :ratio="1" no-spinner)
+                q-avatar(:size="isMobile ? '24px' : '48px'" square)
+                  q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
                 .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
@@ -62,7 +62,7 @@ div.relative-position.self-center
             q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
               q-item-section(avatar)
                 q-avatar(:size="isMobile ? '24px' : '28px'" square)
-                  q-img(:src="previewFor(ev)" :ratio="1" no-spinner)
+                  q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
                 .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
@@ -80,6 +80,7 @@ div.relative-position.self-center
 import { defineComponent } from "vue"
 import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
+import mediaViwer from "../lib/mediaViewer"
 
 export default defineComponent({
   name: "NotificationsMenu",
@@ -209,9 +210,19 @@ export default defineComponent({
       const data = this.parseData(ev) || {}
       const imageId = data.imageId || data.image_id
       const videoId = data.videoId || data.video_id
-      if (imageId) return img(String(imageId), "md")
+      if (imageId) return img(String(imageId), "sm")
       if (videoId) return s3Video(String(videoId), "thumbnail")
       return "/blankAvatar.webp"
+    },
+    openMediaFromEvent(ev: EventsPrivateEvents200Item) {
+      const data = this.parseData(ev) || {}
+      const imageId = data.imageId || data.image_id
+      const videoId = data.videoId || data.video_id
+      const media = imageId ? { id: String(imageId), type: "image" } : videoId ? { id: String(videoId), type: "video" } : null
+      if (!media) return
+      this.open = false
+      void this.toggleSeen(ev)
+      void mediaViwer.show([media as any], 0)
     },
     startPolling() {
       this.stopPolling()

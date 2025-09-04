@@ -113,6 +113,7 @@ function processCreations(creations: CreationItem[]): MediaItem[] {
 
     for (let i = 0; i < creation.imageIds.length; i++) {
       const imageId = creation.imageIds[i]
+      if (!imageId) continue
       mediaItems.push({
         id: imageId,
         url: img(imageId, "lg"),
