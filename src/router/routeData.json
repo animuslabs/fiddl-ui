@@ -129,4 +129,10 @@
     "/missions",
     "MissionsPage"
   ]
+  ,
+  [
+    "tgLogin",
+    "/tg-login",
+    "TgLogin"
+  ]
 ]

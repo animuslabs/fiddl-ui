@@ -1470,6 +1470,10 @@ export type UserProfile200 = {
   /** @nullable */
   lastUsernameChange: string | null;
   /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
@@ -1530,6 +1534,10 @@ export type UserSetUsername200 = {
   /** @nullable */
   lastUsernameChange: string | null;
   /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
@@ -1561,6 +1569,10 @@ export type UserSetBio200 = {
   updatedAt: string;
   /** @nullable */
   lastUsernameChange: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
   /** @nullable */
   bio: string | null;
   /** @nullable */
@@ -3206,6 +3218,45 @@ export type BadgesForUser200Item = {
   id: string;
   createdAt: string;
   badge: BadgesForUser200ItemBadge;
+};
+
+export type TelegramPackages200Item = {
+  id: number;
+  points: number;
+  discountPct: number;
+  stars: number;
+};
+
+export type TelegramCreateDeepLinkBody = {
+  ref?: string;
+};
+
+export type TelegramCreateDeepLink200 = {
+  deepLink: string;
+  id: string;
+  expiresIn: number;
+};
+
+export type TelegramCreateBuyDeepLinkBody = {
+  packageId: number;
+  ref?: string;
+};
+
+export type TelegramCreateBuyDeepLink200 = {
+  deepLink: string;
+  id: string;
+  expiresIn: number;
+};
+
+/**
+ * @nullable
+ */
+export type TelegramLinkStatus200Data = unknown | null;
+
+export type TelegramLinkStatus200 = {
+  linked: boolean;
+  /** @nullable */
+  data?: TelegramLinkStatus200Data;
 };
 
 export const pkAuthRegisterStart = (
@@ -9627,6 +9678,230 @@ export function useBadgesForUser<TData = Awaited<ReturnType<typeof badgesForUser
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBadgesForUserQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const telegramPackages = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramPackages200Item[]>> => {
+    
+    
+    return axios.get(
+      `/telegram/packages`,options
+    );
+  }
+
+
+export const getTelegramPackagesQueryKey = () => {
+    return ['telegram','packages'] as const;
+    }
+
+    
+export const getTelegramPackagesQueryOptions = <TData = Awaited<ReturnType<typeof telegramPackages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramPackages>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getTelegramPackagesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof telegramPackages>>> = ({ signal }) => telegramPackages({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof telegramPackages>>, TError, TData> 
+}
+
+export type TelegramPackagesQueryResult = NonNullable<Awaited<ReturnType<typeof telegramPackages>>>
+export type TelegramPackagesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useTelegramPackages<TData = Awaited<ReturnType<typeof telegramPackages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramPackages>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTelegramPackagesQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const telegramCreateDeepLink = (
+    telegramCreateDeepLinkBody?: MaybeRef<TelegramCreateDeepLinkBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramCreateDeepLink200>> => {
+    telegramCreateDeepLinkBody = unref(telegramCreateDeepLinkBody);
+    
+    return axios.post(
+      `/telegram/createDeepLink`,
+      telegramCreateDeepLinkBody,options
+    );
+  }
+
+
+
+export const getTelegramCreateDeepLinkMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeepLink>>, TError,{data: TelegramCreateDeepLinkBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeepLink>>, TError,{data: TelegramCreateDeepLinkBody}, TContext> => {
+
+const mutationKey = ['telegramCreateDeepLink'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramCreateDeepLink>>, {data: TelegramCreateDeepLinkBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramCreateDeepLink(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramCreateDeepLinkMutationResult = NonNullable<Awaited<ReturnType<typeof telegramCreateDeepLink>>>
+    export type TelegramCreateDeepLinkMutationBody = TelegramCreateDeepLinkBody
+    export type TelegramCreateDeepLinkMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramCreateDeepLink = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeepLink>>, TError,{data: TelegramCreateDeepLinkBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramCreateDeepLink>>,
+        TError,
+        {data: TelegramCreateDeepLinkBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramCreateDeepLinkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramCreateBuyDeepLink = (
+    telegramCreateBuyDeepLinkBody: MaybeRef<TelegramCreateBuyDeepLinkBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramCreateBuyDeepLink200>> => {
+    telegramCreateBuyDeepLinkBody = unref(telegramCreateBuyDeepLinkBody);
+    
+    return axios.post(
+      `/telegram/createBuyDeepLink`,
+      telegramCreateBuyDeepLinkBody,options
+    );
+  }
+
+
+
+export const getTelegramCreateBuyDeepLinkMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>, TError,{data: TelegramCreateBuyDeepLinkBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>, TError,{data: TelegramCreateBuyDeepLinkBody}, TContext> => {
+
+const mutationKey = ['telegramCreateBuyDeepLink'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>, {data: TelegramCreateBuyDeepLinkBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramCreateBuyDeepLink(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramCreateBuyDeepLinkMutationResult = NonNullable<Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>>
+    export type TelegramCreateBuyDeepLinkMutationBody = TelegramCreateBuyDeepLinkBody
+    export type TelegramCreateBuyDeepLinkMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramCreateBuyDeepLink = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>, TError,{data: TelegramCreateBuyDeepLinkBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramCreateBuyDeepLink>>,
+        TError,
+        {data: TelegramCreateBuyDeepLinkBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramCreateBuyDeepLinkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramLinkStatus = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramLinkStatus200>> => {
+    
+    
+    return axios.get(
+      `/telegram/linkStatus`,options
+    );
+  }
+
+
+export const getTelegramLinkStatusQueryKey = () => {
+    return ['telegram','linkStatus'] as const;
+    }
+
+    
+export const getTelegramLinkStatusQueryOptions = <TData = Awaited<ReturnType<typeof telegramLinkStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramLinkStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getTelegramLinkStatusQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof telegramLinkStatus>>> = ({ signal }) => telegramLinkStatus({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof telegramLinkStatus>>, TError, TData> 
+}
+
+export type TelegramLinkStatusQueryResult = NonNullable<Awaited<ReturnType<typeof telegramLinkStatus>>>
+export type TelegramLinkStatusQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useTelegramLinkStatus<TData = Awaited<ReturnType<typeof telegramLinkStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramLinkStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTelegramLinkStatusQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

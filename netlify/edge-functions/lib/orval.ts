@@ -1441,6 +1441,10 @@ export type UserProfile200 = {
   /** @nullable */
   lastUsernameChange: string | null;
   /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
@@ -1501,6 +1505,10 @@ export type UserSetUsername200 = {
   /** @nullable */
   lastUsernameChange: string | null;
   /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
   bio: string | null;
   /** @nullable */
   linksJSON: string | null;
@@ -1532,6 +1540,10 @@ export type UserSetBio200 = {
   updatedAt: string;
   /** @nullable */
   lastUsernameChange: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
   /** @nullable */
   bio: string | null;
   /** @nullable */
@@ -3177,6 +3189,45 @@ export type BadgesForUser200Item = {
   id: string;
   createdAt: string;
   badge: BadgesForUser200ItemBadge;
+};
+
+export type TelegramPackages200Item = {
+  id: number;
+  points: number;
+  discountPct: number;
+  stars: number;
+};
+
+export type TelegramCreateDeepLinkBody = {
+  ref?: string;
+};
+
+export type TelegramCreateDeepLink200 = {
+  deepLink: string;
+  id: string;
+  expiresIn: number;
+};
+
+export type TelegramCreateBuyDeepLinkBody = {
+  packageId: number;
+  ref?: string;
+};
+
+export type TelegramCreateBuyDeepLink200 = {
+  deepLink: string;
+  id: string;
+  expiresIn: number;
+};
+
+/**
+ * @nullable
+ */
+export type TelegramLinkStatus200Data = unknown | null;
+
+export type TelegramLinkStatus200 = {
+  linked: boolean;
+  /** @nullable */
+  data?: TelegramLinkStatus200Data;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -5948,6 +5999,92 @@ export const getBadgesForUserUrl = (params?: BadgesForUserParams,) => {
 export const badgesForUser = async (params?: BadgesForUserParams, options?: RequestInit): Promise<BadgesForUser200Item[]> => {
   
   return fetcher<BadgesForUser200Item[]>(getBadgesForUserUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getTelegramPackagesUrl = () => {
+
+
+  
+
+  return `/telegram/packages`
+}
+
+export const telegramPackages = async ( options?: RequestInit): Promise<TelegramPackages200Item[]> => {
+  
+  return fetcher<TelegramPackages200Item[]>(getTelegramPackagesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getTelegramCreateDeepLinkUrl = () => {
+
+
+  
+
+  return `/telegram/createDeepLink`
+}
+
+export const telegramCreateDeepLink = async (telegramCreateDeepLinkBody?: TelegramCreateDeepLinkBody, options?: RequestInit): Promise<TelegramCreateDeepLink200> => {
+  
+  return fetcher<TelegramCreateDeepLink200>(getTelegramCreateDeepLinkUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramCreateDeepLinkBody,)
+  }
+);}
+
+
+
+export const getTelegramCreateBuyDeepLinkUrl = () => {
+
+
+  
+
+  return `/telegram/createBuyDeepLink`
+}
+
+export const telegramCreateBuyDeepLink = async (telegramCreateBuyDeepLinkBody: TelegramCreateBuyDeepLinkBody, options?: RequestInit): Promise<TelegramCreateBuyDeepLink200> => {
+  
+  return fetcher<TelegramCreateBuyDeepLink200>(getTelegramCreateBuyDeepLinkUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramCreateBuyDeepLinkBody,)
+  }
+);}
+
+
+
+export const getTelegramLinkStatusUrl = () => {
+
+
+  
+
+  return `/telegram/linkStatus`
+}
+
+export const telegramLinkStatus = async ( options?: RequestInit): Promise<TelegramLinkStatus200> => {
+  
+  return fetcher<TelegramLinkStatus200>(getTelegramLinkStatusUrl(),
   {      
     ...options,
     method: 'GET'

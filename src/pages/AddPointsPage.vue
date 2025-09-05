@@ -23,9 +23,11 @@ q-page.full-height.full-width
       q-tab-panel(name="buy")
         .row.items-center.justify-between.q-mb-sm
           h4.q-my-none Select Points Package
+          .row.items-center.q-gutter-sm
+            q-btn-toggle(v-model="buyMode" spread dense toggle-color="primary" color="dark" text-color="white" no-caps :options="[{label: 'In-App (PayPal/Crypto)', value: 'app'},{label: 'Telegram Stars', value: 'telegram'}]")
 
-        // Packages grid or loading
-        div(v-if="packages.length > 0" class="packages-grid")
+        // In-app packages grid
+        div(v-if="buyMode === 'app' && packages.length > 0" class="packages-grid")
           q-card.q-pa-md.pkg-card.cursor-pointer(v-for="(pkg, index) in packages" :key="pkg.points" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" v-show="!(isMobile && selectedPkg && selectedPkgIndex !== index)")
             .row.items-center.justify-between
               h4.q-my-none +{{ pkg.points.toLocaleString() }}
@@ -36,12 +38,37 @@ q-page.full-height.full-width
             .row.items-center.justify-between.q-mt-md
               h5.q-my-none ${{ pkg.usd }}
               //- q-btn(flat color="primary" label="Select" size="sm")
+        // Telegram Stars content
+        div(v-else-if="buyMode === 'telegram'" class="q-mt-md")
+          .row.items-center.q-gutter-sm
+            h6 Telegram Stars
+            q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
+          div(v-if="!tgLinked" class="q-mt-sm")
+            p Connect your account to buy Fiddl Points with Telegram Stars.
+            .row.q-gutter-sm.items-center
+              q-btn(@click="startTgDeepLink()" color="primary" icon="fa-brands fa-telegram" :loading="tgLinking" :disable="tgLinking" label="Connect Telegram")
+              q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" flat label="Open Telegram")
+            div(v-if="tgLinking" class="q-mt-sm")
+              q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
+              small Expires in {{ countdownText }}
+          div(v-else)
+            div(v-if="tgPackages.length > 0" class="packages-grid")
+              q-card.q-pa-md.pkg-card.cursor-pointer(v-for="pkg in tgPackages" :key="pkg.id" @click="buyWithStars(pkg.id)")
+                .row.items-center.justify-between
+                  h4.q-my-none +{{ pkg.points.toLocaleString() }}
+                  div.text-subtitle1 {{ pkg.stars }} ⭐
+                .row.q-mt-sm.items-center.q-gutter-xs
+                  q-badge(:color="pkg.discountPct > 0 ? 'positive' : 'dark'" :text-color="pkg.discountPct > 0 ? 'white' : 'white'" :label="pkg.discountPct > 0 ? (pkg.discountPct * 100 + '% OFF') : 'Standard'")
+            div(v-else style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; height:230px;")
+              q-spinner(size="100px")
+
+        // Loading for in-app packages
         div(v-else style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; height:230px;")
           q-spinner(size="150px")
 
-        // Selected package summary and actions
+        // Selected package summary and actions (in-app only)
         q-slide-transition
-          div(v-show="selectedPkg" class="q-mt-lg")
+          div(v-show="buyMode === 'app' && selectedPkg" class="q-mt-lg")
 
             q-banner(rounded class="bg-dark text-white q-pa-md")
               template(#avatar)
@@ -146,6 +173,7 @@ q-page.full-height.full-width
 <script lang="ts">
 import { defineComponent } from "vue"
 import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage, userGet } from "src/lib/orval"
+import { telegramPackages as tgPackagesApi, telegramLinkStatus, telegramCreateDeepLink, telegramCreateBuyDeepLink, type TelegramPackages200Item, type TelegramCreateDeepLink200 } from "src/lib/orval"
 import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
@@ -181,12 +209,34 @@ export default defineComponent({
       selectedPkgIndex: undefined as number | undefined,
       payPal: null as null | PayPalNamespace,
       paymentMethod: "paypal" as "paypal" | "crypto" | null,
+      buyMode: "app" as "app" | "telegram",
       isRenderingPaypal: false,
       mainTab: "buy" as "buy" | "history",
       isMobile: typeof window !== "undefined" ? window.innerWidth <= 768 : false,
+      // Telegram state
+      tgLinked: false,
+      tgStatusChecked: false,
+      tgTelegramId: null as string | null,
+      tgTelegramName: null as string | null,
+      tgLinking: false,
+      deepLink: null as TelegramCreateDeepLink200 | null,
+      countdown: 0,
+      countdownTotal: 0,
+      countdownTimer: null as any,
+      tgPackages: [] as TelegramPackages200Item[],
     }
   },
   computed: {
+    countdownPct(): number {
+      if (!this.countdownTotal) return 0
+      return Math.max(0, Math.min(1, this.countdown / this.countdownTotal))
+    },
+    countdownText(): string {
+      const s = Math.max(0, this.countdown | 0)
+      const m = Math.floor(s / 60)
+      const sec = s % 60
+      return `${m}:${sec.toString().padStart(2, "0")}`
+    },
     bestValueIndex(): number | null {
       if (!this.packages.length) return null
       let best = 0
@@ -247,6 +297,12 @@ export default defineComponent({
       },
       immediate: true,
     },
+    buyMode(val) {
+      if (val === "app") return
+      // Prepare telegram data when user switches
+      void this.checkTgStatus()
+      void this.loadTgPackages()
+    },
     mainTab(val: string) {
       if (val === "buy" && this.paymentMethod === "paypal" && this.selectedPkg) {
         this.ensurePaypalRendered()
@@ -271,6 +327,9 @@ export default defineComponent({
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
     }
+    // Prefetch telegram status/packages quietly
+    void this.checkTgStatus()
+    void this.loadTgPackages()
     void this.pricesStore.reloadPrices()
     const orderDetails = LocalStorage.getItem("orderDetails") as { packageId: number; paymentMethod: "paypal" | "crypto" }
     console.log("orderDetails", orderDetails)
@@ -286,6 +345,83 @@ export default defineComponent({
     if (typeof window !== "undefined") window.removeEventListener("resize", this.updateIsMobile)
   },
   methods: {
+    async checkTgStatus() {
+      try {
+        const { data } = await telegramLinkStatus()
+        this.tgLinked = Boolean(data.linked)
+        const extra = (data?.data || null) as any
+        this.tgTelegramId = extra && typeof extra === "object" && "telegramId" in extra ? String(extra.telegramId) : null
+        this.tgTelegramName = extra && typeof extra === "object" && "telegramName" in extra ? String(extra.telegramName) : null
+        if (!this.tgLinked && this.tgTelegramId) this.tgLinked = true
+      } catch {
+        // ignore
+      } finally {
+        this.tgStatusChecked = true
+      }
+    },
+    async startTgDeepLink() {
+      if (this.tgLinking) return
+      this.tgLinking = true
+      try {
+        const { data } = await telegramCreateDeepLink({})
+        this.deepLink = data
+        this.countdownTotal = data.expiresIn
+        this.countdown = data.expiresIn
+        this.startCountdown()
+        if (data.deepLink) {
+          try {
+            window.open(data.deepLink, "_blank")
+          } catch {}
+        }
+        this.startPolling()
+      } catch (e) {
+        this.tgLinking = false
+        catchErr(e)
+      }
+    },
+    startCountdown() {
+      if (this.countdownTimer) clearInterval(this.countdownTimer)
+      this.countdownTimer = setInterval(() => {
+        this.countdown = Math.max(0, this.countdown - 1)
+        if (this.countdown <= 0) {
+          clearInterval(this.countdownTimer)
+          this.tgLinking = false
+        }
+      }, 1000)
+    },
+    startPolling() {
+      const poll = setInterval(async () => {
+        try {
+          const { data } = await telegramLinkStatus()
+          if (data.linked || (data?.data as any)?.telegramId) {
+            clearInterval(poll)
+            if (this.countdownTimer) clearInterval(this.countdownTimer)
+            this.tgLinking = false
+            this.tgLinked = true
+            const extra = data?.data as any
+            this.tgTelegramId = extra?.telegramId || null
+            this.tgTelegramName = extra?.telegramName || null
+          }
+        } catch {}
+        if (this.countdown <= 0) clearInterval(poll)
+      }, 2000)
+    },
+    async loadTgPackages() {
+      try {
+        const { data } = await tgPackagesApi()
+        this.tgPackages = data
+      } catch {
+        this.tgPackages = []
+      }
+    },
+    async buyWithStars(packageId: number) {
+      try {
+        const { data } = await telegramCreateBuyDeepLink({ packageId })
+        if (data.deepLink) window.open(data.deepLink, "_blank")
+      } catch (e) {
+        catchErr(e)
+      }
+    },
     updateIsMobile() {
       this.isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : this.isMobile
     },

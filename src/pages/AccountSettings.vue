@@ -59,12 +59,30 @@ q-page.full-height.full-width
             q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
           .q-ma-md(v-if="!$userAuth.userProfile?.emailVerified")
-            q-btn( @click="linkPrivyEmail()" label="Link your email with Privy" flat color="positive" icon="link" size="md")
+            q-btn( @click="linkPrivyEmail()" label="Link your email" flat color="positive" icon="link" size="md")
         .centered(v-if="!$userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you link your email
         //- h6.q-pt-md Link Telegram
         //- .row.items-center.q-gutter-sm
         //-   q-btn(@click="linkTelegram()" label="Link Telegram" color="primary" flat icon="fa-brands fa-telegram")
+        // Telegram linking panel
+        .q-mt-lg
+          .row.items-center.q-gutter-sm
+            h6 Telegram
+            q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'" class="q-ml-sm") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
+          div(v-if="!tgLinked" class="q-mt-sm")
+            p Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
+            .row.q-gutter-sm.items-center
+              q-btn(@click="startTgDeepLink()" color="primary" icon="fa-brands fa-telegram" :loading="tgLinking" :disable="tgLinking" label="Connect Telegram")
+              q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" flat label="Open Telegram")
+            div(v-if="tgLinking" class="q-mt-sm")
+              q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
+              small Expires in {{ countdownText }}
+          div(v-else class="q-mt-sm")
+            p You are connected to Telegram.
+          // Stars purchase moved to Add Points page
+          // (See AddPointsPage → Telegram Stars toggle)
+        // Legacy widget mount (unused)
         .q-mt-sm
           div(ref="telegramLinkMount")
         h6.q-pt-md Notifications
@@ -79,7 +97,7 @@ q-page.full-height.full-width
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser } from "src/lib/orval"
+import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser, telegramLinkStatus, telegramCreateDeepLink, type TelegramCreateDeepLink200 } from "src/lib/orval"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
@@ -119,9 +137,30 @@ export default defineComponent({
       userBio: "",
       bioEditMode: false,
       telegramLinkMount: null as HTMLElement | null,
+      // Telegram linking state
+      tgLinked: false,
+      tgStatusChecked: false,
+      tgTelegramId: null as string | null,
+      tgTelegramName: null as string | null,
+      tgLinking: false,
+      deepLink: null as TelegramCreateDeepLink200 | null,
+      countdown: 0,
+      countdownTotal: 0,
+      countdownTimer: null as any,
+      // tgPackages moved to AddPointsPage
     }
   },
   computed: {
+    countdownPct(): number {
+      if (!this.countdownTotal) return 0
+      return Math.max(0, Math.min(1, this.countdown / this.countdownTotal))
+    },
+    countdownText(): string {
+      const s = Math.max(0, this.countdown | 0)
+      const m = Math.floor(s / 60)
+      const sec = s % 60
+      return `${m}:${sec.toString().padStart(2, "0")}`
+    },
     hasAvatar() {
       return !!this.$userAuth.userData?.AvatarConfig
     },
@@ -135,6 +174,7 @@ export default defineComponent({
       handler(val) {
         if (!val) return
         this.loadData()
+        void this.checkTgStatus()
       },
     },
     $userAuth: {
@@ -148,6 +188,74 @@ export default defineComponent({
   },
   mounted() {},
   methods: {
+    async checkTgStatus() {
+      try {
+        const { data } = await telegramLinkStatus()
+        this.tgLinked = Boolean(data.linked)
+        const extra = (data?.data || null) as any
+        this.tgTelegramId = extra && typeof extra === "object" && "telegramId" in extra ? String(extra.telegramId) : null
+        this.tgTelegramName = extra && typeof extra === "object" && "telegramName" in extra ? String(extra.telegramName) : null
+        // If backend linked flag lags, trust presence of telegramId
+        if (!this.tgLinked && this.tgTelegramId) this.tgLinked = true
+      } catch (e) {
+        console.warn("Failed to check telegram link status", e)
+      } finally {
+        this.tgStatusChecked = true
+      }
+    },
+    async startTgDeepLink() {
+      if (this.tgLinking) return
+      this.tgLinking = true
+      try {
+        const { data } = await telegramCreateDeepLink({})
+        this.deepLink = data
+        // Start countdown and polling
+        this.countdownTotal = data.expiresIn
+        this.countdown = data.expiresIn
+        this.startCountdown()
+        // Try opening Telegram
+        if (data.deepLink) {
+          try {
+            window.open(data.deepLink, "_blank")
+          } catch {}
+        }
+        this.startPolling()
+      } catch (e) {
+        this.tgLinking = false
+        catchErr(e)
+      }
+    },
+    startCountdown() {
+      if (this.countdownTimer) clearInterval(this.countdownTimer)
+      this.countdownTimer = setInterval(() => {
+        this.countdown = Math.max(0, this.countdown - 1)
+        if (this.countdown <= 0) {
+          clearInterval(this.countdownTimer)
+          this.tgLinking = false
+        }
+      }, 1000)
+    },
+    startPolling() {
+      const poll = setInterval(async () => {
+        try {
+          const { data } = await telegramLinkStatus()
+          if (data.linked || (data?.data as any)?.telegramId) {
+            clearInterval(poll)
+            if (this.countdownTimer) clearInterval(this.countdownTimer)
+            this.tgLinking = false
+            this.tgLinked = true
+            const extra = data?.data as any
+            this.tgTelegramId = extra?.telegramId || null
+            this.tgTelegramName = extra?.telegramName || null
+            void this.$userAuth.loadNotificationConfig()
+          }
+        } catch (e) {
+          // ignore transient errors
+        }
+        if (this.countdown <= 0) clearInterval(poll)
+      }, 2000)
+    },
+    // Stars purchase moved to AddPointsPage
     async renderTelegramLinkWidget() {
       // Clean old content
       if (this.telegramLinkMount) this.telegramLinkMount.innerHTML = ""
@@ -202,7 +310,7 @@ export default defineComponent({
     async linkPrivyEmail() {
       Dialog.create({
         title: "Link with Privy",
-        message: "Enter your email to receive a login code from Privy",
+        message: "Enter your email to receive a login code",
         prompt: { model: this.$userAuth.userProfile?.email || "", type: "email" },
         cancel: true,
         persistent: true,
@@ -236,12 +344,13 @@ export default defineComponent({
               Notify.create({ message: "Email linked successfully", color: "positive", icon: "check" })
             } catch (e: any) {
               Loading.hide()
-              Notify.create({ message: "Failed to link email: " + e.message, color: "negative", icon: "error" })
+              catchErr(e)
             }
           })
         } catch (err: any) {
           Loading.hide()
-          Notify.create({ message: "Failed to send code: " + err.message, color: "negative", icon: "error" })
+          catchErr(err)
+          // Notify.create({ message: "Failed to send code: " + err.message, color: "negative", icon: "error" })
         }
       })
     },
