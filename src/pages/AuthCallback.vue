@@ -10,7 +10,7 @@ q-page.flex.flex-center
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue"
 import { useRouter, useRoute } from "vue-router"
-import { oauthCallback } from "src/lib/privy"
+import { oauthCallback, authenticateWithTelegram } from "src/lib/privy"
 import { useUserAuth } from "src/stores/userAuth"
 import { Notify } from "quasar"
 import type { OAuthProviderType } from "@privy-io/js-sdk-core"
@@ -26,29 +26,51 @@ export default defineComponent({
 
     const handleCallback = async () => {
       try {
-        const code = route.query.privy_oauth_code as string
-        const state = route.query.privy_oauth_state as string
-        const provider = route.query.privy_oauth_provider as OAuthProviderType
+        const providerQuery = (route.query.provider as string) || (route.query.privy_oauth_provider as string)
+        if (providerQuery === "telegram" || (route.query.hash && route.query.id && route.query.auth_date)) {
+          // Telegram callback via widget auth_url
+          const tgUser = {
+            id: Number(route.query.id),
+            first_name: String(route.query.first_name || ""),
+            auth_date: Number(route.query.auth_date),
+            hash: String(route.query.hash),
+            username: route.query.username ? String(route.query.username) : undefined,
+            last_name: route.query.last_name ? String(route.query.last_name) : undefined,
+            photo_url: route.query.photo_url ? String(route.query.photo_url) : undefined,
+          }
+          const { token } = await authenticateWithTelegram(tgUser)
+          if (!token) throw new Error("Authentication token not found")
+          // Link or login based on mode
+          const mode = (route.query.mode as string) || "login"
+          if (mode === "link") {
+            await userAuth.linkPrivyAccount(token)
+          } else {
+            await userAuth.privyLogin(token)
+          }
+        } else {
+          // Standard OAuth callback
+          const code = route.query.privy_oauth_code as string
+          const state = route.query.privy_oauth_state as string
+          const provider = route.query.privy_oauth_provider as OAuthProviderType
 
-        if (!code || !state || !provider) {
-          error.value = "Missing required parameters"
-          loading.value = false
-          return
+          if (!code || !state || !provider) {
+            error.value = "Missing required parameters"
+            loading.value = false
+            return
+          }
+
+          await oauthCallback(code, state, provider)
+
+          // Save the token to localStorage - it's already been set by Privy SDK
+          const token = localStorage.getItem("privy:token")
+
+          if (!token) {
+            error.value = "Authentication token not found"
+            loading.value = false
+            return
+          }
+          await userAuth.privyLogin(token)
         }
-
-        const result = await oauthCallback(code, state, provider)
-
-        // Save the token to localStorage - it's already been set by Privy SDK
-        const token = localStorage.getItem("privy:token")
-
-        if (!token) {
-          error.value = "Authentication token not found"
-          loading.value = false
-          return
-        }
-
-        // Update authentication state in the userAuth store
-        await userAuth.privyLogin(token)
 
         Notify.create({
           type: "positive",
@@ -61,20 +83,26 @@ export default defineComponent({
         await new Promise((resolve) => setTimeout(resolve, 100))
 
         const returnTo = (route.query.returnTo as string) || sessionStorage.getItem("returnTo") || null
+        const navigateTo = async (pathName: string) => {
+          if (window.top && window.top !== window) {
+            // If we're in an iframe (Telegram auth_url flow), navigate the parent
+            const base = window.location.origin
+            const url = pathName.startsWith("/") ? pathName : `/${pathName}`
+            window.top.location.replace(base + url)
+          } else {
+            await router.replace(pathName)
+          }
+        }
         if (returnTo && typeof returnTo === "string") {
           sessionStorage.removeItem("returnTo")
-          if (returnTo === "/login") void router.replace({ name: "settings" })
-          else void router.replace(returnTo)
+          if (returnTo === "/login") await navigateTo("/settings")
+          else await navigateTo(returnTo)
           console.log("Redirecting to:", returnTo)
         } else if (userAuth.userProfile?.username) {
-          void router.push({
-            name: "profile",
-            params: { username: userAuth.userProfile.username },
-            query: { tab: "unlocked" },
-          })
+          await navigateTo(`/profile/${userAuth.userProfile.username}?tab=unlocked`)
         } else {
           // Fallback to account route if username not available
-          void router.push({ name: "settings" })
+          await navigateTo("/settings")
         }
       } catch (err: any) {
         console.error("Authentication error:", err)

@@ -62,9 +62,9 @@ q-page.full-height.full-width
             q-btn( @click="linkPrivyEmail()" label="Link your email with Privy" flat color="positive" icon="link" size="md")
         .centered(v-if="!$userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you link your email
-        h6.q-pt-md Link Telegram
-        .row.items-center.q-gutter-sm
-          q-btn(@click="linkTelegram()" label="Link Telegram" color="primary" flat icon="fa-brands fa-telegram")
+        //- h6.q-pt-md Link Telegram
+        //- .row.items-center.q-gutter-sm
+        //-   q-btn(@click="linkTelegram()" label="Link Telegram" color="primary" flat icon="fa-brands fa-telegram")
         .q-mt-sm
           div(ref="telegramLinkMount")
         h6.q-pt-md Notifications
@@ -158,27 +158,14 @@ export default defineComponent({
         Notify.create({ message: "Telegram linking not available", color: "negative", icon: "error" })
         return false
       }
-      ;(window as any).onTelegramAuthLink = async (user: any) => {
-        try {
-          Loading.show({ message: "Linking your Telegram..." })
-          const result = await authenticateWithTelegram(user)
-          if (!result.token) throw new Error("No Privy token")
-          await this.$userAuth.linkPrivyAccount(result.token)
-          await this.$userAuth.loadUserProfile()
-          await this.$userAuth.loadUserData()
-          Loading.hide()
-          Notify.create({ message: "Telegram linked successfully", color: "positive", icon: "check" })
-        } catch (e: any) {
-          Loading.hide()
-          Notify.create({ message: "Failed to link Telegram: " + e.message, color: "negative", icon: "error" })
-        }
-      }
       const s = document.createElement("script")
       s.async = true
       s.src = "https://telegram.org/js/telegram-widget.js?22"
       s.setAttribute("data-telegram-login", botName)
       s.setAttribute("data-size", "large")
-      s.setAttribute("data-onauth", "onTelegramAuthLink")
+      // Send Telegram auth result to our SPA callback route where we will link the account
+      const redirectUri = `${window.location.origin}/auth/callback?mode=link&provider=telegram`
+      s.setAttribute("data-auth-url", redirectUri)
       s.setAttribute("data-request-access", "write")
       this.telegramLinkMount?.appendChild(s)
       return true

@@ -90,13 +90,14 @@ export async function oauthCallback(code: string, state: string, provider: OAuth
 export async function authenticateWithTelegram(authPayload: { id: number; first_name: string; auth_date: number; hash: string; username?: string; last_name?: string; photo_url?: string }): Promise<PrivyVerificationResult> {
   try {
     // Ensure clean session
-    await privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
-
+    // await privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
+    console.log("Authenticating with Telegram payload:", authPayload)
     // Use the low-level route helper to call the Telegram authenticate endpoint
     const route = { path: "/api/v1/telegram/authenticate", method: "POST" } as const
     const response: any = await privy.fetchPrivyRoute(route, {
       body: { telegram_auth_result: authPayload, mode: "login-or-sign-up" },
     })
+    console.log("Privy telegram auth response:", response)
 
     const token: string | undefined = response?.token || response?.privy_access_token
     if (!token) throw new Error("Failed to get Privy access token from Telegram auth")

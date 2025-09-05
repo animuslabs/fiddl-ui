@@ -19,7 +19,7 @@ div.column.items-center.q-gutter-md.q-pa-md
       template(v-slot:default)
         .centered
           q-icon(name="img:/x-logo.svg" size="24px")
-    q-btn.q-ml-md( @click="loginWithTelegram" :loading="loading" color="primary" round padding="12px" )
+    //- q-btn.q-ml-md( @click="loginWithTelegram" :loading="loading" color="primary" round padding="12px" )
       template(v-slot:default)
         .centered
           q-icon(name="fa-brands fa-telegram" size="24px")
@@ -100,7 +100,7 @@ export default defineComponent({
               const returnTo = sessionStorage.getItem("returnTo")
               if (returnTo) {
                 sessionStorage.removeItem("returnTo")
-                if (returnTo == "login") void router.replace({ name: "settings" })
+                if (returnTo === "/login") void router.replace({ name: "settings" })
                 else void router.replace(returnTo)
               }
               Loading.hide()
@@ -183,46 +183,22 @@ export default defineComponent({
       // Clean old content
       if (telegramMount.value) telegramMount.value.innerHTML = ""
       const cfg = await getPrivyAppConfig()
-      const botName = cfg?.telegram_auth_config?.bot_name
+      const botName = "fiddlartbot"
       if (!botName) {
         quasar.notify({ color: "negative", message: "Telegram login not available" })
         return
       }
 
-      // Define the global callback consumed by Telegram widget
-      ;(window as any).onTelegramAuth = async (user: any) => {
-        try {
-          Loading.show({ message: "Logging you in..." })
-          const result = await authenticateWithTelegram(user)
-          if (!result.token) throwErr("No token")
-          await userAuth.privyLogin(result.token)
-
-          // Redirect back
-          await new Promise((r) => setTimeout(r, 100))
-          const returnTo = sessionStorage.getItem("returnTo")
-          if (returnTo) {
-            sessionStorage.removeItem("returnTo")
-            if (returnTo == "login") void router.replace({ name: "settings" })
-            else void router.replace(returnTo)
-          }
-          Loading.hide()
-          quasar.notify({ color: "positive", message: "Logged in with Telegram" })
-        } catch (err: any) {
-          Loading.hide()
-          quasar.notify({ color: "negative", message: "Telegram login failed: " + err.message })
-          console.error(err)
-        } finally {
-          loading.value = false
-        }
-      }
-
-      // Inject Telegram widget
+      // Prefer auth_url flow to avoid CSP issues with onauth callbacks
       const s = document.createElement("script")
       s.async = true
       s.src = "https://telegram.org/js/telegram-widget.js?22"
       s.setAttribute("data-telegram-login", botName)
       s.setAttribute("data-size", "large")
-      s.setAttribute("data-onauth", "onTelegramAuth")
+      // Send Telegram auth result to our SPA callback route inside a hidden iframe
+      const rt = window.location.pathname + window.location.search
+      const redirectUri = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(rt)}&provider=telegram`
+      s.setAttribute("data-auth-url", redirectUri)
       s.setAttribute("data-request-access", "write")
       telegramMount.value?.appendChild(s)
       quasar.notify({ color: "info", message: "Click the Telegram button below to continue" })
