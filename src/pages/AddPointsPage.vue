@@ -223,6 +223,7 @@ export default defineComponent({
       countdown: 0,
       countdownTotal: 0,
       countdownTimer: null as any,
+      tgPollTimer: null as any,
       tgPackages: [] as TelegramPackages200Item[],
     }
   },
@@ -343,6 +344,8 @@ export default defineComponent({
   },
   beforeUnmount() {
     if (typeof window !== "undefined") window.removeEventListener("resize", this.updateIsMobile)
+    if (this.countdownTimer) clearInterval(this.countdownTimer)
+    if (this.tgPollTimer) clearInterval(this.tgPollTimer)
   },
   methods: {
     async checkTgStatus() {
@@ -390,11 +393,13 @@ export default defineComponent({
       }, 1000)
     },
     startPolling() {
-      const poll = setInterval(async () => {
+      if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+      this.tgPollTimer = setInterval(async () => {
         try {
           const { data } = await telegramLinkStatus()
           if (data.linked || (data?.data as any)?.telegramId) {
-            clearInterval(poll)
+            if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+            this.tgPollTimer = null
             if (this.countdownTimer) clearInterval(this.countdownTimer)
             this.tgLinking = false
             this.tgLinked = true
@@ -403,7 +408,10 @@ export default defineComponent({
             this.tgTelegramName = extra?.telegramName || null
           }
         } catch {}
-        if (this.countdown <= 0) clearInterval(poll)
+        if (this.countdown <= 0) {
+          if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+          this.tgPollTimer = null
+        }
       }, 2000)
     },
     async loadTgPackages() {

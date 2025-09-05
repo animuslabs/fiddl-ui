@@ -254,6 +254,13 @@ export const useUserAuth = defineStore("userAuth", {
         void tawk.init()
         return false
       }
+      // If the saved JWT is expired, clear it and notify
+      if (jwt.isExpired()) {
+        this.logout()
+        const { Notify } = await import("quasar")
+        Notify.create({ message: "Your session has expired. Please log in again.", color: "warning", icon: "logout" })
+        return false
+      }
       // await this.login(savedLogin.userId)
       await this.loadUserData(savedLogin.userId)
       this.setUserId(savedLogin.userId)

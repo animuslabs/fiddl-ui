@@ -20,7 +20,7 @@ div.relative-position.self-center
       :content-style="menuContentStyle"
       @before-show="onBeforeShow"
       transition-duration="0"
-    ).bg-blur
+    ).notif-surface
       div.q-pa-sm(:style="menuContainerStyle")
         .q-mb-sm.row.items-center.justify-between
           .text-subtitle2 Notifications
@@ -34,7 +34,11 @@ div.relative-position.self-center
                 q-avatar(:size="isMobile ? '24px' : '48px'" square)
                   q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
-                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
+                .text-body2(:style="{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }")
+                  template(v-if="ev.originUsername && hasUserInMessage(ev)")
+                    router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
+                    |  {{ actionTextFor(ev) }}
+                  template(v-else) {{ messageFor(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
               q-item-section(side)
                 q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
@@ -47,7 +51,7 @@ div.relative-position.self-center
 
   //- Mobile: full-screen dialog with same layout
   q-dialog(v-if="isMobile" v-model="open" maximized transition-show="fade" transition-hide="fade" @before-show="onBeforeShow")
-    q-card.notif-dialog-card.bg-blur
+    q-card.notif-dialog-card.notif-surface
       div.q-pa-sm(:style="menuContainerStyle")
         .q-mb-sm.row.items-center.justify-between
           .text-subtitle2 Notifications
@@ -64,7 +68,11 @@ div.relative-position.self-center
                 q-avatar(:size="isMobile ? '24px' : '28px'" square)
                   q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
-                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}") {{ messageFor(ev) }}
+                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}")
+                  template(v-if="ev.originUsername && hasUserInMessage(ev)")
+                    router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
+                    |  {{ actionTextFor(ev) }}
+                  template(v-else) {{ messageFor(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
               q-item-section(side)
                 q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
@@ -172,10 +180,7 @@ export default defineComponent({
     },
   },
   mounted() {
-    if (this.$userAuth.loggedIn) {
-      void this.refresh()
-      this.startPolling()
-    }
+    // Initial refresh/polling handled by the auth watcher (immediate)
   },
   beforeUnmount() {
     this.stopPolling()
@@ -291,6 +296,36 @@ export default defineComponent({
       if (type.includes("Image")) return "image"
       return "notifications"
     },
+    hasUserInMessage(ev: EventsPrivateEvents200Item) {
+      return String(this.messageFor(ev)).startsWith("@")
+    },
+    actionTextFor(ev: EventsPrivateEvents200Item) {
+      const u = ev.originUsername || "someone"
+      switch (ev.type) {
+        case "likedImage":
+          return "liked your image"
+        case "likedVideo":
+          return "liked your video"
+        case "unlikedImage":
+          return "removed their like on your image"
+        case "unlikedVideo":
+          return "removed their like on your video"
+        case "addedImageToCollection":
+          return "added your image to a collection"
+        case "removedImageFromCollection":
+          return "removed your image from a collection"
+        case "unlockedImage":
+          return "unlocked your image"
+        case "unlockedVideo":
+          return "unlocked your video"
+        case "referredUser":
+          return "joined from your referral"
+        case "missionCompleted":
+          return "Mission completed"
+        default:
+          return `Activity: ${ev.type}`
+      }
+    },
     messageFor(ev: EventsPrivateEvents200Item) {
       const u = ev.originUsername || "someone"
       switch (ev.type) {
@@ -334,6 +369,18 @@ export default defineComponent({
 </script>
 
 <style lang="sass">
+.notif-surface
+  /* darker surface for better contrast */
+  background-color: rgba(0, 0, 0, 0.75) !important
+
+.notif-link
+  /* lighter link color for dark surface */
+  color: #9be9ff
+  &:hover
+    color: #c7f3ff
+  &:visited
+    color: #9be9ff
+
 .notif-menu-mobile
   position: fixed !important
   inset: 0 !important

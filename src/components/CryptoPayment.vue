@@ -79,7 +79,7 @@ export default defineComponent({
       cryptoOrder: null as null | CryptoOrder,
     }
   },
-  onUnmounted() {
+  beforeUnmount() {
     if (interval) clearInterval(interval)
   },
   watch: {

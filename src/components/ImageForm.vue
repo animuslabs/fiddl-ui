@@ -176,6 +176,11 @@ function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string 
 }
 
 function createImage() {
+  if (req.model === "custom" && !req.customModelId) {
+    $q.notify({ type: "warning", message: "Please select a custom model before creating." })
+    showModelPicker.value = true
+    return
+  }
   void createStore.createImage().then(() => emit("created"))
 }
 const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))

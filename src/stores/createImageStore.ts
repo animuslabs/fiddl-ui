@@ -166,7 +166,15 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     state.loading.create = true
     LocalStorage.set("req", state.req)
     if (typeof state.req.seed !== "number") state.req.seed = undefined
-    if (state.req.model === "custom" && !state.req.customModelId) state.req.model = "flux-dev"
+    if (state.req.model === "custom" && !state.req.customModelId) {
+      state.loading.create = false
+      Notify.create({
+        type: "warning",
+        message: "Select a custom model before creating",
+        position: "top",
+      })
+      return
+    }
 
     // Build batch request payload (images variant)
     const requestPayload = {

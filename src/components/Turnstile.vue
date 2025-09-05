@@ -38,7 +38,7 @@ export default {
     })
   },
   beforeUnmount() {
-    // this.resetTurnstile()
+    this.resetTurnstile()
   },
   methods: {
     loadTurnstileScript() {

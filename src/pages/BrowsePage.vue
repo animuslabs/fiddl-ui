@@ -28,7 +28,7 @@ q-page.full-height.full-width.relative-position
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue"
+import { defineComponent, computed, ref, onUnmounted } from "vue"
 import { useBrowserStore } from "stores/browserStore"
 import { throttle, useQuasar } from "quasar"
 import SearchBar from "src/components/BrowserSearchBar.vue"
@@ -44,7 +44,7 @@ type MediaGalleryMeta = {
   aspectRatio?: number
 }
 
-let interval: ReturnType<typeof setInterval> | null = null
+// interval handle scoped to component instance
 
 export default defineComponent({
   components: { SearchBar, MediaGallery },
@@ -71,11 +71,16 @@ export default defineComponent({
       else if (pos <= 0) onScrollUp()
     }
 
+    let interval: ReturnType<typeof setInterval> | null = null
     void (async () => {
       await browserStore.loadCreations()
       await browserStore.loadRecentCreations()
       interval = setInterval(() => void browserStore.loadRecentCreations(), 300_000)
     })()
+
+    onUnmounted(() => {
+      if (interval) clearInterval(interval)
+    })
 
     return {
       browserStore,
@@ -84,9 +89,6 @@ export default defineComponent({
       handleSelect,
       viewMode,
     }
-  },
-  unmounted() {
-    if (interval) clearInterval(interval)
   },
 })
 </script>

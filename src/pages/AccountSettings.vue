@@ -147,6 +147,7 @@ export default defineComponent({
       countdown: 0,
       countdownTotal: 0,
       countdownTimer: null as any,
+      tgPollTimer: null as any,
       // tgPackages moved to AddPointsPage
     }
   },
@@ -187,6 +188,10 @@ export default defineComponent({
     },
   },
   mounted() {},
+  beforeUnmount() {
+    if (this.countdownTimer) clearInterval(this.countdownTimer)
+    if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+  },
   methods: {
     async checkTgStatus() {
       try {
@@ -236,11 +241,13 @@ export default defineComponent({
       }, 1000)
     },
     startPolling() {
-      const poll = setInterval(async () => {
+      if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+      this.tgPollTimer = setInterval(async () => {
         try {
           const { data } = await telegramLinkStatus()
           if (data.linked || (data?.data as any)?.telegramId) {
-            clearInterval(poll)
+            if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+            this.tgPollTimer = null
             if (this.countdownTimer) clearInterval(this.countdownTimer)
             this.tgLinking = false
             this.tgLinked = true
@@ -252,7 +259,10 @@ export default defineComponent({
         } catch (e) {
           // ignore transient errors
         }
-        if (this.countdown <= 0) clearInterval(poll)
+        if (this.countdown <= 0) {
+          if (this.tgPollTimer) clearInterval(this.tgPollTimer)
+          this.tgPollTimer = null
+        }
       }, 2000)
     },
     // Stars purchase moved to AddPointsPage
