@@ -49,7 +49,7 @@ export function buildImageRequestsFromTemplates(params: { customModelId: string;
  * - Builds image request objects with the provided custom model id.
  * - Sends to queueAsyncBatch so the server can produce all images as a batch.
  */
-export async function scheduleMagicRenders({ customModelId, templates, subjectDescription, quantity = 1, public: isPublic = false, aspectRatio = "9:16", emailNotify = false }: MagicScheduleParams): Promise<void> {
+export async function scheduleMagicRenders({ customModelId, templates, subjectDescription, quantity = 1, public: isPublic = false, aspectRatio = "9:16", emailNotify = false }: MagicScheduleParams): Promise<string | null> {
   const requests = buildImageRequestsFromTemplates({
     customModelId,
     templates,
@@ -57,12 +57,13 @@ export async function scheduleMagicRenders({ customModelId, templates, subjectDe
     public: isPublic,
     aspectRatio,
   })
-  if (!requests.length) return
-  await createQueueAsyncBatch({
+  if (!requests.length) return null
+  const res = await createQueueAsyncBatch({
     requests: requests.map((el) => {
       el.prompt = `${el.prompt} Subject Base Details: ${subjectDescription}`
       return el
     }),
     emailNotify,
   })
+  return res.data?.batchId || null
 }

@@ -9,6 +9,7 @@ q-page.full-width
   div(v-if="sessionLoaded && step === 'capture'")
     .centered
       MagicMirrorCamera(
+        :requiredPoints="fastRequiredPoints"
         @captured="onCaptured"
         @error="onCaptureError"
         @auth-required="onAuthRequired"
@@ -59,9 +60,29 @@ q-page.full-width
           template(#actions="{ media }")
             .centered.bg-black.q-pa-sm.q-mb-md.q-mt-sm(style="border-radius:24px;")
               q-btn(flat size="sm" icon="share" label="Share" no-caps @click="shareImage(media.id)")
-              q-btn(flat size="sm" icon="download" label="Download" no-caps @click="downloadImage(media.id)")
+              q-btn(
+                flat
+                size="sm"
+                icon="download"
+                :label="isMobile ? 'Save to Gallery' : 'Download'"
+                no-caps
+                @click="isMobile ? saveToGallery(media.id) : downloadImage(media.id)"
+              )
               q-btn(color="primary" flat square size="sm" icon="movie" label="Animate" no-caps @click="animateImage(media.id)")
                 q-tooltip(v-if="triggeredVideoIds.includes(media.id)") Animation already triggered
+
+  // Login dialog (shown when capture requires auth)
+  q-dialog(v-model="loginDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Login to use Magic Mirror Fast
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mt-sm
+          p.text-primary Please login or register to start capturing.
+        PrivyLogin
 
   // Login prompt (post-capture)
   div(v-if="!userAuth.userProfile?.email && step != 'capture'").q-mb-lg
@@ -73,6 +94,19 @@ q-page.full-width
         q-separator
         q-card-section
           PrivyLogin
+
+  // Signup nudge popup after results
+  q-dialog(v-model="signupNudgeOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Create an account for more
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mt-sm
+          p.text-primary Save your Magic Mirror creations, earn bonus points, and unlock more features by creating an account.
+        PrivyLogin
 
   // Templates dialog
   q-dialog(v-model="dialogOpen" :maximized="!isDesktop")
@@ -86,8 +120,8 @@ q-page.full-width
       q-card-section
         .centered
           q-spinner(color="primary" size="32px")
+        .centered
           p.text-secondary.q-mt-sm Analyzing your selfie…
-          p.text-secondary.q-mt-xs This takes a few seconds.
     // Once we know the gender, show the picker immediately
     div(v-else class="tpl-dialog-body")
       PromptTemplatesPicker(
@@ -159,11 +193,11 @@ import { useMagicTemplateSelection } from "src/lib/magic/useMagicTemplateSelecti
 import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
-import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { prices } from "src/stores/pricesStore"
-import { createUploadImage, createQueueAsyncBatch, creationsDescribeUploadedImage } from "lib/orval"
+import { createUploadImage, createQueueAsyncBatch, creationsDescribeUploadedImage, createBatchStatus } from "lib/orval"
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
+import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
 
 type Step = "init" | "capture" | "selectTemplates" | "results"
 
@@ -174,6 +208,9 @@ const router = useRouter()
 
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
+const loginDialogOpen = ref(false)
+// Cost: 3 nano-banana images + 4 uploads
+const fastRequiredPoints = computed(() => 3 * (prices.image?.model?.["nano-banana"] || 0) + 4 * (prices.image?.uploadSoloImage || 0))
 // Gender handling for templates: default to female (no training-derived gender here)
 const genderForTemplates = computed<Gender | null>(() => detectedGender.value)
 
@@ -205,61 +242,31 @@ const isWaitingForImages = ref(false)
 
 // Polling timers
 let creationsPollTimer: number | null = null
+let batchStatusTimer: number | null = null
 
 const SESSION_KEY = "mmBananaState"
 const promptTplStore = usePromptTemplatesStore()
 
-// Video animation
-const vidStore = useCreateVideoStore()
-const animateDialogOpen = ref(false)
-const animateDialogImageId = ref<string | null>(null)
-const animating = ref(false)
-const ANIMATED_KEY = "mmBananaAnimatedVideoIds"
-const triggeredVideoIds = ref<string[]>([])
-function loadAnimatedIds() {
-  try {
-    triggeredVideoIds.value = JSON.parse(sessionStorage.getItem(ANIMATED_KEY) || "[]")
-  } catch {}
-}
-function saveAnimatedIds() {
-  try {
-    sessionStorage.setItem(ANIMATED_KEY, JSON.stringify(triggeredVideoIds.value))
-  } catch {}
-}
-
-// Animated video prompt toast
-const defaultVideoDuration = 5
-const klingCostPerSecond = computed(() => prices.video.model.kling)
-const estimatedVideoCost = computed(() => klingCostPerSecond.value * defaultVideoDuration)
-const animPromptVisible = ref(false)
-const animPromptSecondsLeft = ref(60)
-let animPromptTimer: number | null = null
-const animPromptReady = computed(() => animPromptSecondsLeft.value <= 0)
-const animPromptLabel = computed(() => (animPromptReady.value ? "Go to Video" : `Video available in ${formatMMSS(animPromptSecondsLeft.value)}`))
-const hasAnimatedSelected = computed(() => (animateDialogImageId.value ? triggeredVideoIds.value.includes(animateDialogImageId.value) : false))
-function formatMMSS(total: number) {
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, "0")}`
-}
-function startAnimPromptCountdown() {
-  stopAnimPromptCountdown()
-  animPromptSecondsLeft.value = 180
-  animPromptVisible.value = true
-  const tick = () => {
-    if (animPromptSecondsLeft.value <= 0) {
-      stopAnimPromptCountdown()
-      return
-    }
-    animPromptSecondsLeft.value -= 1
-    animPromptTimer = window.setTimeout(tick, 1000)
-  }
-  animPromptTimer = window.setTimeout(tick, 1000)
-}
-function stopAnimPromptCountdown() {
-  if (animPromptTimer) window.clearTimeout(animPromptTimer)
-  animPromptTimer = null
-}
+// Results actions shared via composable
+const {
+  shareImage,
+  downloadImage,
+  saveToGallery,
+  animateImage,
+  triggerAnimation,
+  goToCreateVideo,
+  animateDialogOpen,
+  animateDialogImageId,
+  animating,
+  animPromptVisible,
+  animPromptReady,
+  animPromptLabel,
+  estimatedVideoCost,
+  hasAnimatedSelected,
+  startAnimPromptCountdown,
+  stopAnimPromptCountdown,
+  triggeredVideoIds,
+} = useMagicMirrorResults({ animatedKey: "mmBananaAnimatedVideoIds", router })
 
 // displayTemplates, mapping, and selection provided by composable
 
@@ -299,6 +306,7 @@ const showInitialPreview = computed(() => templatesConfirmed.value && generatedI
 const showTemplatePreview = computed(() => isWaitingForImages.value || pendingNewCount.value > 0 || generatingMore.value)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
+const isMobile = computed(() => quasar.platform.is.mobile)
 const mediaObjects = computed<Item[]>(() => generatedImageIds.value.map((id) => ({ id, url: img(id, "lg"), type: "image" })).reverse())
 
 // Persist/restore session state in localStorage
@@ -377,10 +385,11 @@ async function onCaptured(blobs: Blob[]) {
   }
 }
 function onCaptureError(reason: string) {
-  catchErr(new Error("Capture error: " + reason))
+  // catchErr(new Error("Capture error: " + reason))
+  quasar.notify({ color: "negative", message: "Capture error: " + reason })
 }
 function onAuthRequired() {
-  quasar.notify({ color: "primary", message: "Please login or register to start capturing" })
+  loginDialogOpen.value = true
 }
 function onInsufficientPoints() {
   quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror Fast" })
@@ -405,7 +414,7 @@ async function uploadBlobsBackground(blobs: Blob[]): Promise<void> {
         void describeFirstUploaded(data.imageId)
       }
     }
-    quasar.notify({ color: "primary", message: `Uploaded ${ids.length} images` })
+    // quasar.notify({ color: "primary", message: `Uploaded ${ids.length} images` })
   } catch (e) {
     catchErr(e)
   }
@@ -507,8 +516,10 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
         uploadedStartImageIds: uploadedIds.value.slice(),
       }
     })
-    await createQueueAsyncBatch({ requests, emailNotify: false })
+    const res = await createQueueAsyncBatch({ requests, emailNotify: false })
+    const batchId = res.data?.batchId
     if (!creationsPollTimer) startCreationsPoll()
+    if (batchId) startBatchStatusWatch(batchId)
     void userAuth.loadUserData()
   } catch (e: any) {
     catchErr(e)
@@ -556,9 +567,8 @@ function startCreationsPoll() {
     const expecting = sessionCreatedIds.value.length < sessionExpectedTotal.value
     if (sessionCreatedIds.value.length >= 3 && step.value !== "results") {
       step.value = "results"
-      Loading.show({ message: "Images Loading" })
-      setTimeout(() => Loading.hide(), 3000)
       saveSession()
+      maybeStartSignupNudge()
     }
     if (!expecting) {
       stopCreationsPoll()
@@ -571,6 +581,34 @@ function startCreationsPoll() {
 function stopCreationsPoll() {
   if (creationsPollTimer) window.clearTimeout(creationsPollTimer)
   creationsPollTimer = null
+}
+
+function startBatchStatusWatch(batchId: string) {
+  stopBatchStatusWatch()
+  const check = async () => {
+    try {
+      const { data: batch } = await createBatchStatus({ batchId })
+      if (!batch) {
+        stopBatchStatusWatch()
+        return
+      }
+      const allDone = batch.counts.finished + batch.counts.failed >= batch.counts.total
+      if (allDone || batch.status === "completed" || batch.status === "error") {
+        // Trigger an immediate creations refresh so images display without waiting for the next poll tick
+        startCreationsPoll()
+        stopBatchStatusWatch()
+        return
+      }
+    } catch (e) {
+      // ignore transient errors
+    }
+    batchStatusTimer = window.setTimeout(check, 2000)
+  }
+  void check()
+}
+function stopBatchStatusWatch() {
+  if (batchStatusTimer) window.clearTimeout(batchStatusTimer)
+  batchStatusTimer = null
 }
 
 function startAgain() {
@@ -590,67 +628,7 @@ function goToCreatePage() {
   void toCreatePage({ model: "nano-banana", type: "image" }, router, { noCreateModal: true })
 }
 
-async function shareImage(id: string) {
-  try {
-    const url = img(id, "lg")
-    const nav: any = navigator as any
-    if (nav && typeof nav.share === "function") await nav.share({ title: "My Magic Mirror image", text: "Check out my Magic Mirror result", url })
-    else {
-      await navigator.clipboard.writeText(url)
-      quasar.notify({ message: "Link copied to clipboard", color: "primary" })
-    }
-  } catch (e: any) {
-    catchErr(e)
-  }
-}
-async function downloadImage(id: string) {
-  try {
-    const url = img(id, "lg")
-    const resp = await fetch(url, { mode: "cors" })
-    const blob = await resp.blob()
-    const objectUrl = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = objectUrl
-    a.download = id + ".webp"
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(objectUrl)
-  } catch (e: any) {
-    catchErr(e)
-  }
-}
-
-function animateImage(id: string) {
-  animateDialogImageId.value = id
-  animateDialogOpen.value = true
-}
-async function triggerAnimation() {
-  if (!animateDialogImageId.value) return
-  try {
-    animating.value = true
-    vidStore.setReq({ prompt: "Animate this image", model: "kling", aspectRatio: "9:16", public: false, quantity: 1, duration: defaultVideoDuration, startImageId: animateDialogImageId.value })
-    await vidStore.createVideoRequest()
-    void userAuth.loadUserData()
-    if (!triggeredVideoIds.value.includes(animateDialogImageId.value)) {
-      triggeredVideoIds.value.push(animateDialogImageId.value)
-      saveAnimatedIds()
-    }
-    animateDialogOpen.value = false
-    startAnimPromptCountdown()
-    quasar.notify({ message: "Video animation started. It may take a few minutes to complete.", color: "primary" })
-  } catch (e: any) {
-    catchErr(e)
-  } finally {
-    animating.value = false
-  }
-}
-function goToCreateVideo() {
-  animateDialogOpen.value = false
-  animPromptVisible.value = false
-  stopAnimPromptCountdown()
-  void toCreatePage({ model: "kling", type: "video" }, router, { noCreateModal: true })
-}
+// share/download/animate: provided by useMagicMirrorResults
 
 function scrollToTopSmooth() {
   try {
@@ -666,15 +644,34 @@ watch(step, () => {
   void userAuth.loadUserData()
 })
 
+// Close login dialog when user logs in
+watch(
+  () => userAuth.loggedIn,
+  (val) => {
+    if (val) loginDialogOpen.value = false
+  },
+)
+
 onMounted(() => {
   void loadSession()
-  loadAnimatedIds()
   void promptTplStore.loadSubjectFaceTemplates()
 })
 onBeforeUnmount(() => {
   stopCreationsPoll()
   stopAnimPromptCountdown()
+  stopBatchStatusWatch()
+  if (signupTimer) window.clearTimeout(signupTimer)
 })
+
+// Delayed signup nudge after first results
+const signupNudgeOpen = ref(false)
+let signupTimer: number | null = null
+function maybeStartSignupNudge() {
+  if (signupTimer || userAuth.userProfile?.email) return
+  signupTimer = window.setTimeout(() => {
+    if (!userAuth.userProfile?.email) signupNudgeOpen.value = true
+  }, 20000)
+}
 </script>
 
 <style scoped>

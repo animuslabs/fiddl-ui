@@ -62,6 +62,11 @@ q-page.full-height.full-width
             q-btn( @click="linkPrivyEmail()" label="Link your email with Privy" flat color="positive" icon="link" size="md")
         .centered(v-if="!$userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you link your email
+        h6.q-pt-md Link Telegram
+        .row.items-center.q-gutter-sm
+          q-btn(@click="linkTelegram()" label="Link Telegram" color="primary" flat icon="fa-brands fa-telegram")
+        .q-mt-sm
+          div(ref="telegramLinkMount")
         h6.q-pt-md Notifications
         .row(v-if="$userAuth.notificationConfig")
           //- pre {{ $userAuth.notificationConfig }}
@@ -80,7 +85,7 @@ import PointsTransfer from "src/components/PointsTransfer.vue"
 import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
 import { catchErr } from "lib/util"
 import { avatarImg } from "lib/netlifyImg"
-import { handleEmailLogin, verifyEmailCode } from "src/lib/privy"
+import { handleEmailLogin, verifyEmailCode, authenticateWithTelegram, getPrivyAppConfig } from "src/lib/privy"
 import { jwt } from "src/lib/jwt"
 
 function validateUsername(username: string): string | true {
@@ -113,6 +118,7 @@ export default defineComponent({
       avatarImg,
       userBio: "",
       bioEditMode: false,
+      telegramLinkMount: null as HTMLElement | null,
     }
   },
   computed: {
@@ -142,6 +148,46 @@ export default defineComponent({
   },
   mounted() {},
   methods: {
+    async renderTelegramLinkWidget() {
+      // Clean old content
+      if (this.telegramLinkMount) this.telegramLinkMount.innerHTML = ""
+      const cfg = await getPrivyAppConfig()
+      console.log("Privy app config:", cfg)
+      const botName = "fiddlartbot"
+      if (!botName) {
+        Notify.create({ message: "Telegram linking not available", color: "negative", icon: "error" })
+        return false
+      }
+      ;(window as any).onTelegramAuthLink = async (user: any) => {
+        try {
+          Loading.show({ message: "Linking your Telegram..." })
+          const result = await authenticateWithTelegram(user)
+          if (!result.token) throw new Error("No Privy token")
+          await this.$userAuth.linkPrivyAccount(result.token)
+          await this.$userAuth.loadUserProfile()
+          await this.$userAuth.loadUserData()
+          Loading.hide()
+          Notify.create({ message: "Telegram linked successfully", color: "positive", icon: "check" })
+        } catch (e: any) {
+          Loading.hide()
+          Notify.create({ message: "Failed to link Telegram: " + e.message, color: "negative", icon: "error" })
+        }
+      }
+      const s = document.createElement("script")
+      s.async = true
+      s.src = "https://telegram.org/js/telegram-widget.js?22"
+      s.setAttribute("data-telegram-login", botName)
+      s.setAttribute("data-size", "large")
+      s.setAttribute("data-onauth", "onTelegramAuthLink")
+      s.setAttribute("data-request-access", "write")
+      this.telegramLinkMount?.appendChild(s)
+      return true
+    },
+    async linkTelegram() {
+      // ensure mount ref
+      if (!this.telegramLinkMount) this.telegramLinkMount = (this.$refs.telegramLinkMount as HTMLElement) || null
+      await this.renderTelegramLinkWidget()
+    },
     async updateBio() {
       await userSetBio({ bio: this.userBio || "" }).catch(catchErr)
       this.bioEditMode = false

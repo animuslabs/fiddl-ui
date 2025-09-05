@@ -1,5 +1,22 @@
 <template lang="pug">
 div
+  // Onboarding: first-time camera access heads up
+  q-dialog(v-model="cameraIntroDialog" persistent :maximized="!isDesktop")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Camera Access Needed
+          q-btn(flat dense round icon="close" v-close-popup @click="dismissIntroToUpload")
+      q-separator
+      q-card-section
+        .centered.q-ma-md
+          q-img(src="https://fiddl-art.sfo3.cdn.digitaloceanspaces.com/fiddl-assets/MagicMirror-sm.webp" style="max-width:600px;")
+        p We will request camera access to take your selfie.
+        p You can also upload a selfie from your gallery instead.
+      q-card-actions(align="right")
+        q-btn(flat label="Upload Instead" color="grey" no-caps @click="dismissIntroToUpload")
+        q-btn(color="primary" size="lg" icon="camera" label="Continue" no-caps @click="confirmIntroAndStart")
+
   div
     .centered
     .q-pa-sm.flex.column.items-center
@@ -91,7 +108,6 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { catchErr } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
-import { prices } from "src/stores/pricesStore"
 
 const emit = defineEmits<{
   (e: "captured", blobs: Blob[]): void
@@ -150,8 +166,11 @@ function triggerFlashAndSound() {
 const quasar = useQuasar()
 
 const userAuth = useUserAuth()
-const mmRequiredPoints = computed(() => prices.forge.createTrainingSet + prices.forge.trainBaseModel.fluxDev + 3 * prices.image.model.custom)
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
+
+// Props
+const props = defineProps<{ requiredPoints?: number }>()
+const requiredPoints = computed(() => props.requiredPoints ?? 0)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
 const floatingControlsStyle = computed(
@@ -184,9 +203,32 @@ const videoStyle = computed((): Record<string, string> => {
   }
 })
 
+// First-time camera permission dialog
+const CAMERA_INTRO_KEY = "mmCameraIntroShown"
+const cameraIntroDialog = ref(false)
+function confirmIntroAndStart() {
+  try {
+    LocalStorage.set(CAMERA_INTRO_KEY, true)
+  } catch {}
+  cameraIntroDialog.value = false
+  void initCamera()
+}
+function dismissIntroToUpload() {
+  try {
+    LocalStorage.set(CAMERA_INTRO_KEY, true)
+  } catch {}
+  cameraIntroDialog.value = false
+  openGalleryPicker()
+}
+
 onMounted(() => {
   if (videoRef.value) videoRef.value.setAttribute("playsinline", "true")
-  void initCamera()
+  const shown = LocalStorage.getItem(CAMERA_INTRO_KEY)
+  if (shown) {
+    void initCamera()
+  } else {
+    cameraIntroDialog.value = true
+  }
   if (navigator.mediaDevices && "addEventListener" in navigator.mediaDevices) {
     navigator.mediaDevices.addEventListener("devicechange", fetchVideoDevices)
   }
@@ -257,7 +299,7 @@ async function startAutoCapture() {
     return
   }
   // Prevent capture when not enough points
-  if (availablePoints.value < mmRequiredPoints.value) {
+  if (availablePoints.value < requiredPoints.value) {
     emit("insufficient-points")
     return
   }
@@ -376,7 +418,7 @@ function onFileInputChange(e: Event) {
     if (fileInputRef.value) fileInputRef.value.value = ""
     return
   }
-  if (availablePoints.value < mmRequiredPoints.value) {
+  if (availablePoints.value < requiredPoints.value) {
     emit("insufficient-points")
     if (fileInputRef.value) fileInputRef.value.value = ""
     return
@@ -471,12 +513,12 @@ async function readAsImage(file: File): Promise<Blob> {
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob_failed"))), mimeType, quality)
     })
-    bitmap.close && bitmap.close()
+    bitmap.close()
     return blob
   } finally {
     // Ensure bitmap is released even if drawing fails
     try {
-      bitmap && (bitmap as any).close?.()
+      bitmap?.close()
     } catch {}
   }
 }

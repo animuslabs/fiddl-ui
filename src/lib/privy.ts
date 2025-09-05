@@ -83,6 +83,51 @@ export async function oauthCallback(code: string, state: string, provider: OAuth
   return { user, isNewUser: is_new_user }
 }
 
+// Telegram login via Telegram Login Widget or WebApp
+// Accepts the raw auth payload returned by the Telegram widget
+// and authenticates with Privy, returning the standard verification result.
+// See: https://core.telegram.org/widgets/login
+export async function authenticateWithTelegram(authPayload: { id: number; first_name: string; auth_date: number; hash: string; username?: string; last_name?: string; photo_url?: string }): Promise<PrivyVerificationResult> {
+  try {
+    // Ensure clean session
+    await privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
+
+    // Use the low-level route helper to call the Telegram authenticate endpoint
+    const route = { path: "/api/v1/telegram/authenticate", method: "POST" } as const
+    const response: any = await privy.fetchPrivyRoute(route, {
+      body: { telegram_auth_result: authPayload, mode: "login-or-sign-up" },
+    })
+
+    const token: string | undefined = response?.token || response?.privy_access_token
+    if (!token) throw new Error("Failed to get Privy access token from Telegram auth")
+    const user = response?.user as PrivyAuthenticatedUser
+    const isNewUser = Boolean(response?.is_new_user)
+    return { user, isNewUser, token }
+  } catch (error) {
+    console.error("Privy telegram authentication error:", error)
+    throw error
+  }
+}
+
+// Optional: Link Telegram directly to the current Privy user session.
+// Requires the user to be authenticated with Privy.
+export async function linkWithTelegram(authPayload: { id: number; first_name: string; auth_date: number; hash: string; username?: string; last_name?: string; photo_url?: string }) {
+  const route = { path: "/api/v1/telegram/link", method: "POST" } as const
+  return await privy.fetchPrivyRoute(route, {
+    body: { telegram_auth_result: authPayload },
+  })
+}
+
+// Helper to fetch app config (for reading telegram bot name, etc.)
+export async function getPrivyAppConfig() {
+  try {
+    return privy.app.getConfig()
+  } catch (e) {
+    console.error("Failed to load Privy app config:", e)
+    return undefined
+  }
+}
+
 // Get current user
 export async function getPrivyUser() {
   try {
