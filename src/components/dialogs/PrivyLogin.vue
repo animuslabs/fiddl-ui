@@ -15,11 +15,11 @@ div.column.items-center.q-gutter-md.q-pa-md
       template(v-slot:default)
         .centered
           q-icon(name="img:https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg")
-    q-btn( @click="loginWithOAuth('twitter')" :loading="loading" color="black" round padding="12px" )
+    q-btn.q-mr-md( @click="loginWithOAuth('twitter')" :loading="loading" color="black" round padding="12px" )
       template(v-slot:default)
         .centered
           q-icon(name="img:/x-logo.svg" size="24px")
-    TelegramConnect(mode="login")
+    TelegramConnect(mode="login" round)
   // Telegram widget mount area (rendered on demand)
   div.full-width.q-mt-sm
     div(ref="telegramMount")

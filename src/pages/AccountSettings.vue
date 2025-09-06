@@ -108,17 +108,16 @@ q-page.full-height.full-width
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
-import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser, telegramLinkStatus, telegramCreateDeepLink, type TelegramCreateDeepLink200 } from "src/lib/orval"
-import { useUserAuth } from "src/stores/userAuth"
+import { avatarImg } from "lib/netlifyImg"
+import { catchErr } from "lib/util"
+import QRCode from "qrcode"
+import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import TelegramConnect from "src/components/TelegramConnect.vue"
-import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
-import { catchErr } from "lib/util"
-import { avatarImg } from "lib/netlifyImg"
-import { handleEmailLogin, verifyEmailCode, authenticateWithTelegram, getPrivyAppConfig } from "src/lib/privy"
 import { jwt } from "src/lib/jwt"
-import QRCode from "qrcode"
+import { privyLinkCurrentUser, telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, type TelegramCreateDeepLink200 } from "src/lib/orval"
+import { getPrivyAppConfig, handleEmailLogin, verifyEmailCode } from "src/lib/privy"
+import { defineComponent } from "vue"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
