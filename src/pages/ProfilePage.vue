@@ -599,6 +599,48 @@ export default defineComponent({
     gridMode(val) {
       LocalStorage.set("profilePageGridMode", this.gridMode)
     },
+    "$route.params.username": {
+      async handler() {
+        const username = this.$route.params?.username
+        if (!username || typeof username != "string") return
+
+        const userIdResponse = await userFindByUsername({ username }).catch(console.error)
+        const userId = userIdResponse?.data
+        if (!userId) {
+          this.userId = null
+          Notify.create({ message: "User not found", color: "negative" })
+          void this.$router.replace({ name: "index" })
+          return
+        }
+
+        if (this.userId !== userId) {
+          this.userId = userId
+          this.activeCreationsStore.activeUserId = userId
+        }
+
+        const referrerAlreadySet = getReferredBy()
+        if (!referrerAlreadySet) setReferredBy(username)
+
+        const tabQuery = this.$route.query?.tab
+        if (tabQuery && typeof tabQuery === "string") {
+          void this.$nextTick(() => {
+            if (this.tabs.some((t) => t.name === tabQuery)) {
+              this.tab = tabQuery
+            }
+          })
+        }
+      },
+    },
+    "$route.query.tab": {
+      handler(newTab) {
+        if (typeof newTab !== "string") return
+        void this.$nextTick(() => {
+          if (this.tabs.some((t) => t.name === newTab)) {
+            this.tab = newTab
+          }
+        })
+      },
+    },
   },
   async mounted() {
     this.imageCreations.$reset()
