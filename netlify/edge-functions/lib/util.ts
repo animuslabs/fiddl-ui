@@ -246,6 +246,11 @@ export function buildModelFooterHtml(models: Partial<AnyModel>[]): string {
   <ul>
     ${items.join("\n")}
   </ul>
+  <div class="legal-links" style="margin-top:8px;font-size:12px;color:#9aa0a6;">
+    <a href="https://fiddl.art/privacy-policy" style="color:#9aa0a6;text-decoration:none;">Privacy Policy</a>
+    <span aria-hidden="true" style="margin:0 6px;">•</span>
+    <a href="https://fiddl.art/terms-of-service" style="color:#9aa0a6;text-decoration:none;">Terms of Service</a>
+  </div>
 </div>`
 }
 

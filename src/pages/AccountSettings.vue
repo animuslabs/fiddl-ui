@@ -70,7 +70,7 @@ q-page.full-height.full-width
           .row.items-center.q-gutter-sm
             h6 Telegram
             q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'" class="q-ml-sm") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
-          .centered
+          .centered(v-if="tgStatusChecked && !tgLinked")
             small.text-positive If you have Telegram Premium, you'll earn 100 extra Points
           div(v-if="!tgLinked" class="q-mt-sm")
             p.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
@@ -92,7 +92,7 @@ q-page.full-height.full-width
           q-card(style="width:520px; max-width:100vw;")
             q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
               .row.items-center.justify-between
-                h6.q-mt-none.q-mb-none Scan with your phone
+                h6.q-mt-none.q-mb-none Scan with your phone to login via Telegram
                 q-btn(flat dense round icon="close" v-close-popup)
             q-separator
             q-card-section

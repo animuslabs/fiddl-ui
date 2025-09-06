@@ -140,6 +140,10 @@ q-layout(view="lHh Lpr lFf" )
         q-btn(type="a" href="https://www.facebook.com/fiddlart" icon="fa-brands fa-facebook" color="primary" flat)
         q-btn(type="a" href="https://www.linkedin.com/company/fiddl-art" icon="fa-brands fa-linkedin" color="primary" flat)
         q-btn(type="a" href="https://t.me/fiddlart" icon="fa-brands fa-telegram" color="primary" flat)
+      .row.justify-center.q-mt-sm
+        a(href="https://fiddl.art/privacy-policy" class="text-caption text-grey-5 q-mx-xs" target="_blank" rel="noopener") Privacy Policy
+        span.text-grey-7 •
+        a(href="https://fiddl.art/terms-of-service" class="text-caption text-grey-5 q-mx-xs" target="_blank" rel="noopener") Terms of Service
 
 
 
@@ -158,6 +162,10 @@ q-layout(view="lHh Lpr lFf" )
           q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
       q-route-tab(href="https://fiddl.art/blog").text-white
         | Blog
+    .row.justify-center.q-pb-sm
+      a(href="https://fiddl.art/privacy-policy" class="text-caption text-grey-5 q-mx-xs" target="_blank" rel="noopener") Privacy Policy
+      span.text-grey-7 •
+      a(href="https://fiddl.art/terms-of-service" class="text-caption text-grey-5 q-mx-xs" target="_blank" rel="noopener") Terms of Service
 </template>
 
 <script lang="ts">
