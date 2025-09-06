@@ -24,7 +24,7 @@ div
   div(v-if="linking" class="q-mt-sm")
     q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
     small Expires in {{ countdownText }}
-    div(v-if="mode === 'login'" class="q-mt-sm")
+    div(v-if="mode === 'login' && (!qrDialogOpen || isMobile)" class="q-mt-sm")
       p.text-grey-8 Enter the code shown in Telegram to approve this login
       .row.items-center.q-gutter-sm
         q-input(
@@ -32,7 +32,6 @@ div
           filled
           type="tel"
           inputmode="numeric"
-          :maxlength="6"
           v-model="codeInput"
           style="width:160px"
           label="Code"
@@ -70,6 +69,30 @@ div
             rounded
           )
           q-btn(color="grey-7" icon="close" label="Close" flat rounded v-close-popup).q-ml-sm
+        // Inline code entry inside dialog (desktop)
+        div(v-if="mode === 'login'" class="q-mt-lg")
+          .column.items-center.q-gutter-sm
+            p.text-grey-8.text-center Enter the 6-digit code shown in Telegram
+            q-input(
+              filled
+              autofocus
+              type="tel"
+              inputmode="numeric"
+              v-model="codeInput"
+              style="width:min(92vw, 420px)"
+              input-class="text-h4 text-center"
+              label="Enter code"
+              @keyup.enter="verifyCode"
+            )
+            q-btn(
+              color="primary"
+              label="Verify"
+              size="lg"
+              :loading="verifying"
+              :disable="verifying || codeInput.length < 6"
+              @click="verifyCode"
+            )
+            small(v-if="statusText") {{ statusText }}
 </template>
 
 <script lang="ts">
@@ -326,6 +349,11 @@ export default defineComponent({
         this.qrDialogOpen = false
         this.statusText = "Approved! Signing you in…"
         Notify.create({ color: "positive", message: "Logged in via Telegram" })
+        try {
+          if (window?.location?.pathname === "/login") {
+            void this.$router.replace({ name: "settings" })
+          }
+        } catch {}
       } catch (err: any) {
         const msg = String(err?.response?.data?.message || err?.message || "")
         if (/expired|invalid/i.test(msg)) {
