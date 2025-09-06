@@ -42,7 +42,7 @@ div
           color="primary"
           label="Verify"
           :loading="verifying"
-          :disable="verifying || !/^\d{5,6}$/.test(codeInput)"
+          :disable="verifying || codeInput.length < 5"
           @click="verifyCode"
         )
       small(v-if="statusText") {{ statusText }}
@@ -121,6 +121,7 @@ export default defineComponent({
       statusText: "" as string,
       expiresAtMs: 0 as number,
       userAuth: useUserAuth(),
+      autoVerifyTimer: null as any,
     }
   },
   computed: {
@@ -152,9 +153,21 @@ export default defineComponent({
       },
     },
     codeInput(val: string) {
-      // Sanitize to digits-only and cap at 6 to match TG short code format
+      // digits-only, max 6
       const digits = String(val || "").replace(/\D/g, "").slice(0, 6)
-      if (digits !== this.codeInput) this.codeInput = digits
+      if (digits !== val) {
+        this.codeInput = digits
+        return
+      }
+      // Auto-verify when we have enough digits
+      if (this.mode === "login") {
+        if (this.autoVerifyTimer) clearTimeout(this.autoVerifyTimer)
+        if (digits.length >= 5) {
+          this.autoVerifyTimer = setTimeout(() => {
+            if (!this.verifying && digits === this.codeInput) this.verifyCode()
+          }, 150)
+        }
+      }
     },
   },
   mounted() {
