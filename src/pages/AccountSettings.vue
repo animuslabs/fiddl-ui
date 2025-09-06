@@ -74,12 +74,7 @@ q-page.full-height.full-width
             small.text-positive If you have Telegram Premium, you'll earn 100 extra Points
           div(v-if="!tgLinked" class="q-mt-sm")
             p.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
-            .row.q-gutter-sm.items-center
-              q-btn(@click="startTgDeepLink()" color="primary" icon="fa-brands fa-telegram" :loading="tgLinking" :disable="tgLinking" label="Connect Telegram")
-              q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" flat label="Open Telegram")
-            div(v-if="tgLinking" class="q-mt-sm")
-              q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
-              small Expires in {{ countdownText }}
+            TelegramConnect(mode="link" @linked="onTgLinked")
           div(v-else class="q-mt-sm")
             p You are connected to Telegram.
           // Stars purchase moved to Add Points page
@@ -117,6 +112,7 @@ import { defineComponent } from "vue"
 import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser, telegramLinkStatus, telegramCreateDeepLink, type TelegramCreateDeepLink200 } from "src/lib/orval"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
+import TelegramConnect from "src/components/TelegramConnect.vue"
 import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
 import { catchErr } from "lib/util"
 import { avatarImg } from "lib/netlifyImg"
@@ -145,7 +141,7 @@ function validateUsername(username: string): string | true {
 }
 
 export default defineComponent({
-  components: { PointsTransfer },
+  components: { PointsTransfer, TelegramConnect },
   data() {
     return {
       quasar: useQuasar(),
@@ -341,6 +337,12 @@ export default defineComponent({
       // ensure mount ref
       if (!this.telegramLinkMount) this.telegramLinkMount = (this.$refs.telegramLinkMount as HTMLElement) || null
       await this.renderTelegramLinkWidget()
+    },
+    onTgLinked(payload: { telegramId?: string | null; telegramName?: string | null }) {
+      this.tgLinked = true
+      this.tgTelegramId = payload.telegramId || null
+      this.tgTelegramName = payload.telegramName || null
+      void this.$userAuth.loadNotificationConfig()
     },
     async updateBio() {
       await userSetBio({ bio: this.userBio || "" }).catch(catchErr)

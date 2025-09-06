@@ -19,10 +19,7 @@ div.column.items-center.q-gutter-md.q-pa-md
       template(v-slot:default)
         .centered
           q-icon(name="img:/x-logo.svg" size="24px")
-    //- q-btn.q-ml-md( @click="loginWithTelegram" :loading="loading" color="primary" round padding="12px" )
-      template(v-slot:default)
-        .centered
-          q-icon(name="fa-brands fa-telegram" size="24px")
+    TelegramConnect(mode="login")
   // Telegram widget mount area (rendered on demand)
   div.full-width.q-mt-sm
     div(ref="telegramMount")
@@ -43,8 +40,10 @@ import { useUserAuth } from "src/stores/userAuth"
 import type { OAuthProviderType } from "@privy-io/js-sdk-core"
 import { ExternalUser } from "@tonomy/tonomy-id-sdk"
 import { throwErr } from "lib/util"
+import TelegramConnect from "src/components/TelegramConnect.vue"
 
 export default defineComponent({
+  components: { TelegramConnect },
   emits: ["close"],
   setup(_, { emit }) {
     const quasar = useQuasar()
