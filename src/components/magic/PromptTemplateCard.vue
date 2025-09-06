@@ -4,7 +4,8 @@ div.template-item.cursor-pointer(:class="itemClass" @click="$emit('click')")
     v-if="imageUrl"
     :src="imageUrl"
     :ratio="imgRatio"
-    position="top"
+    :position="imgPosition"
+    :fit="imgFit"
     no-spinner
     placeholder-src="/blankAvatar.png"
     style="border-radius: 8px; overflow: hidden"
@@ -28,6 +29,7 @@ div.template-item.cursor-pointer(:class="itemClass" @click="$emit('click')")
 
 <script setup lang="ts">
 import { computed } from "vue"
+import { useQuasar } from "quasar"
 import type { PromptTemplate, Gender } from "src/lib/promptTemplates"
 
 const props = withDefaults(
@@ -51,10 +53,15 @@ const itemClass = computed(() => ({
   disabled: props.selectable === false,
 }))
 
-// runtime ratio override when provided (used by dialog mosaic)
+/* runtime ratio override when provided (used by dialog mosaic) */
 const imgRatio = computed(() => props.ratio || 3 / 5)
 
-// Prefer already-resolved previewUrl when available; otherwise pick gendered preview
+/* Quasar screen helpers for mobile/desktop-specific image fit/position */
+const quasar = useQuasar()
+const imgPosition = computed(() => (quasar.screen.lt.md ? "center" : "top"))
+const imgFit = computed(() => (quasar.screen.lt.md ? "contain" : "cover"))
+
+/* Prefer already-resolved previewUrl when available; otherwise pick gendered preview */
 const imageUrl = computed(() => {
   const t: any = props.template
   const direct = t.previewUrl

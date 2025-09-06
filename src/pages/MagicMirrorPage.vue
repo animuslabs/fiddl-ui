@@ -150,6 +150,10 @@ q-page.full-width
             li
               strong For 3 images:
               |  {{ fastCostFor3 }} points (save ~{{ estimatedSavings }} points vs Pro)
+        .q-mt-sm
+          p.text-secondary Best results with Pro
+        .q-mt-md
+          BuyPointsMini(@paymentComplete="onBuyMiniComplete")
       q-card-actions(align="right")
         q-btn(flat label="Cancel" v-close-popup)
         q-btn(flat label="Try Magic Mirror Fast" color="primary" no-caps @click="goToMMFast")
@@ -227,6 +231,7 @@ import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicPreviewGrid from "src/components/magic/MagicPreviewGrid.vue"
 import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
+import BuyPointsMini from "src/components/dialogs/BuyPointsMini.vue"
 import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
@@ -510,6 +515,10 @@ function onAuthRequired() {
 function onInsufficientPoints() {
   quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror Pro" })
   insufficientDialogOpen.value = true
+}
+function onBuyMiniComplete() {
+  insufficientDialogOpen.value = false
+  quasar.notify({ color: "positive", message: "Points added. Continue with Magic Mirror." })
 }
 
 function goToAddPoints() {

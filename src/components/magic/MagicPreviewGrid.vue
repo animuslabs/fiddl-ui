@@ -89,4 +89,10 @@ const showSpinner = computed(() => props.showSpinner !== false)
   overflow: hidden;
   text-overflow: ellipsis;
 }
+@media (max-width: 599px) {
+  .template-card-box {
+    /* Match the mobile q-img ratio to avoid clipping content */
+    aspect-ratio: 1 / 1;
+  }
+}
 </style>

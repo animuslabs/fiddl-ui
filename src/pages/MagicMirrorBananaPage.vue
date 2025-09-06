@@ -95,6 +95,22 @@ q-page.full-width
         q-card-section
           PrivyLogin
 
+  // Points mini dialog (insufficient points)
+  q-dialog(v-model="buyPointsDialogOpen")
+    q-card(style="width:520px; max-width:100vw;")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Not enough points for Magic Mirror Fast
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        p You need {{ fastRequiredPoints }} Fiddl Points to use Magic Mirror Fast (3 looks + uploads).
+        p.text-secondary You have {{ availablePoints }} points. Missing {{ missingFastPoints }} points.
+        .q-mt-md
+          BuyPointsMini(@paymentComplete="onBuyMiniComplete")
+      q-card-actions(align="right")
+        q-btn(flat label="Cancel" v-close-popup)
+
   // Signup nudge popup after results
   q-dialog(v-model="signupNudgeOpen")
     q-card(style="width:520px; max-width:100vw;")
@@ -183,6 +199,7 @@ import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicPreviewGrid from "src/components/magic/MagicPreviewGrid.vue"
 import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
+import BuyPointsMini from "src/components/dialogs/BuyPointsMini.vue"
 import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
@@ -211,6 +228,9 @@ const sessionLoaded = ref(false)
 const loginDialogOpen = ref(false)
 // Cost: 3 nano-banana images + 4 uploads
 const fastRequiredPoints = computed(() => 3 * (prices.image?.model?.["nano-banana"] || 0) + 4 * (prices.image?.uploadSoloImage || 0))
+const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
+const buyPointsDialogOpen = ref(false)
+const missingFastPoints = computed(() => Math.max(0, fastRequiredPoints.value - availablePoints.value))
 // Gender handling for templates: default to female (no training-derived gender here)
 const genderForTemplates = computed<Gender | null>(() => detectedGender.value)
 
@@ -393,6 +413,11 @@ function onAuthRequired() {
 }
 function onInsufficientPoints() {
   quasar.notify({ color: "negative", message: "Not enough Fiddl Points to start Magic Mirror Fast" })
+  buyPointsDialogOpen.value = true
+}
+function onBuyMiniComplete() {
+  buyPointsDialogOpen.value = false
+  quasar.notify({ color: "positive", message: "Points added. Continue with Magic Mirror." })
 }
 
 // Upload blobs similar to UploadedImagesDialog

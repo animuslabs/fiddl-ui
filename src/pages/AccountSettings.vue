@@ -70,6 +70,8 @@ q-page.full-height.full-width
           .row.items-center.q-gutter-sm
             h6 Telegram
             q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'" class="q-ml-sm") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
+          .centered
+            small.text-positive If you have Telegram Premium, you'll earn 100 extra Points
           div(v-if="!tgLinked" class="q-mt-sm")
             p Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
             .row.q-gutter-sm.items-center
@@ -85,6 +87,21 @@ q-page.full-height.full-width
         // Legacy widget mount (unused)
         .q-mt-sm
           div(ref="telegramLinkMount")
+        // QR Code dialog for Telegram linking (desktop)
+        q-dialog(v-model="tgQrDialogOpen" :maximized="isMobile")
+          q-card(style="width:520px; max-width:100vw;")
+            q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+              .row.items-center.justify-between
+                h6.q-mt-none.q-mb-none Scan with your phone
+                q-btn(flat dense round icon="close" v-close-popup)
+            q-separator
+            q-card-section
+              .centered
+                q-spinner(v-if="tgQrLoading || !tgQrDataUrl" color="primary" size="120px")
+                q-img(v-else :src="tgQrDataUrl" style="width:min(92vw, 600px); height:auto;" no-spinner)
+              .centered.q-mt-md
+                q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" color="primary" icon="fa-brands fa-telegram" label="Open Telegram on this device" rounded)
+                q-btn(color="grey-7" icon="close" label="Close" flat rounded v-close-popup).q-ml-sm
         h6.q-pt-md Notifications
         .row(v-if="$userAuth.notificationConfig")
           //- pre {{ $userAuth.notificationConfig }}
@@ -105,6 +122,7 @@ import { catchErr } from "lib/util"
 import { avatarImg } from "lib/netlifyImg"
 import { handleEmailLogin, verifyEmailCode, authenticateWithTelegram, getPrivyAppConfig } from "src/lib/privy"
 import { jwt } from "src/lib/jwt"
+import QRCode from "qrcode"
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -149,6 +167,9 @@ export default defineComponent({
       countdownTimer: null as any,
       tgPollTimer: null as any,
       // tgPackages moved to AddPointsPage
+      tgQrDialogOpen: false as boolean,
+      tgQrDataUrl: '' as string,
+      tgQrLoading: false as boolean,
     }
   },
   computed: {
@@ -167,6 +188,10 @@ export default defineComponent({
     },
     hasBio() {
       return !!this.$userAuth.userProfile?.bio
+    },
+    isMobile(): boolean {
+      if (typeof window === "undefined") return false
+      return this.$q.screen.lt.md
     },
   },
   watch: {
@@ -218,10 +243,14 @@ export default defineComponent({
         this.countdownTotal = data.expiresIn
         this.countdown = data.expiresIn
         this.startCountdown()
-        // Try opening Telegram
+        // Mobile: open deep link directly; Desktop: show QR dialog
         if (data.deepLink) {
           try {
-            window.open(data.deepLink, "_blank")
+            if (this.isMobile) {
+              window.open(data.deepLink, "_blank")
+            } else {
+              await this.openTgQr()
+            }
           } catch {}
         }
         this.startPolling()
@@ -237,6 +266,7 @@ export default defineComponent({
         if (this.countdown <= 0) {
           clearInterval(this.countdownTimer)
           this.tgLinking = false
+          this.tgQrDialogOpen = false
         }
       }, 1000)
     },
@@ -251,6 +281,7 @@ export default defineComponent({
             if (this.countdownTimer) clearInterval(this.countdownTimer)
             this.tgLinking = false
             this.tgLinked = true
+            this.tgQrDialogOpen = false
             const extra = data?.data as any
             this.tgTelegramId = extra?.telegramId || null
             this.tgTelegramName = extra?.telegramName || null
@@ -264,6 +295,23 @@ export default defineComponent({
           this.tgPollTimer = null
         }
       }, 2000)
+    },
+    async openTgQr() {
+      if (!this.deepLink?.deepLink) return
+      this.tgQrDialogOpen = true
+      this.tgQrLoading = true
+      try {
+        this.tgQrDataUrl = await QRCode.toDataURL(this.deepLink.deepLink, {
+          errorCorrectionLevel: "M",
+          margin: 2,
+          width: 1024,
+          color: { dark: "#000000", light: "#ffffff" },
+        })
+      } catch (e) {
+        catchErr(e)
+      } finally {
+        this.tgQrLoading = false
+      }
     },
     // Stars purchase moved to AddPointsPage
     async renderTelegramLinkWidget() {
