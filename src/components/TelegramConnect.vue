@@ -42,7 +42,7 @@ div
           color="primary"
           label="Verify"
           :loading="verifying"
-          :disable="verifying || codeInput.length < 5"
+          :disable="verifying || codeInput.length < 6"
           @click="verifyCode"
         )
       small(v-if="statusText") {{ statusText }}
@@ -76,6 +76,7 @@ div
 import { defineComponent } from "vue"
 import { useQuasar, Notify } from "quasar"
 import { telegramCreateDeepLink, telegramLinkStatus, telegramCreateDeviceLogin, telegramExchangeDeviceLogin, type TelegramCreateDeepLink200, type TelegramCreateDeviceLogin200 } from "src/lib/orval"
+import axios from "axios"
 import QRCode from "qrcode"
 import { useUserAuth } from "src/stores/userAuth"
 import { jwt } from "src/lib/jwt"
@@ -154,7 +155,9 @@ export default defineComponent({
     },
     codeInput(val: string) {
       // digits-only, max 6
-      const digits = String(val || "").replace(/\D/g, "").slice(0, 6)
+      const digits = String(val || "")
+        .replace(/\D/g, "")
+        .slice(0, 6)
       if (digits !== val) {
         this.codeInput = digits
         return
@@ -162,9 +165,9 @@ export default defineComponent({
       // Auto-verify when we have enough digits
       if (this.mode === "login") {
         if (this.autoVerifyTimer) clearTimeout(this.autoVerifyTimer)
-        if (digits.length >= 5) {
+        if (digits.length >= 6) {
           this.autoVerifyTimer = setTimeout(() => {
-            if (!this.verifying && digits === this.codeInput) this.verifyCode()
+            if (!this.verifying && digits === this.codeInput) void this.verifyCode()
           }, 150)
         }
       }
@@ -297,7 +300,7 @@ export default defineComponent({
 
     async verifyCode() {
       const code = String(this.codeInput || "").trim()
-      if (!/^\d{5,6}$/.test(code)) {
+      if (!/^\d{6}$/.test(code)) {
         Notify.create({ color: "warning", message: "Enter the code from Telegram" })
         return
       }
@@ -315,7 +318,7 @@ export default defineComponent({
       this.verifying = true
       this.statusText = "Verifying…"
       try {
-        const res = await telegramExchangeDeviceLogin({ id, clientNonce })
+        const res = await axios.post("/telegram/confirmDeviceLogin", { id, clientNonce, code })
         const { token, userId } = res.data
         await this.applyLoginToken(token, userId)
         this.clearDeviceLoginStorage()
@@ -325,19 +328,15 @@ export default defineComponent({
         Notify.create({ color: "positive", message: "Logged in via Telegram" })
       } catch (err: any) {
         const msg = String(err?.response?.data?.message || err?.message || "")
-        if (/Not approved yet/i.test(msg)) {
-          this.statusText = "Not approved yet — checking…"
-          this.startExchangePolling()
-        } else if (/expired|invalid/i.test(msg)) {
+        if (/expired|invalid/i.test(msg)) {
           this.statusText = "Expired. Try again."
           this.clearDeviceLoginStorage()
           this.linking = false
           this.qrDialogOpen = false
           Notify.create({ color: "warning", message: "Login link expired. Please try again." })
         } else {
-          this.statusText = "Waiting for approval…"
-          Notify.create({ color: "info", message: "Waiting for Telegram approval…" })
-          this.startExchangePolling()
+          this.statusText = "Verification failed. Please try again."
+          Notify.create({ color: "negative", message: "Verification failed. Please try again." })
         }
       } finally {
         this.verifying = false
