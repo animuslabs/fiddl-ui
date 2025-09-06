@@ -73,7 +73,7 @@ q-page.full-height.full-width
           .centered
             small.text-positive If you have Telegram Premium, you'll earn 100 extra Points
           div(v-if="!tgLinked" class="q-mt-sm")
-            p Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
+            p.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
             .row.q-gutter-sm.items-center
               q-btn(@click="startTgDeepLink()" color="primary" icon="fa-brands fa-telegram" :loading="tgLinking" :disable="tgLinking" label="Connect Telegram")
               q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" flat label="Open Telegram")
@@ -117,7 +117,7 @@ import { defineComponent } from "vue"
 import { userSetBio, userSetNotificationConfig, userSetUsername, privyLinkCurrentUser, telegramLinkStatus, telegramCreateDeepLink, type TelegramCreateDeepLink200 } from "src/lib/orval"
 import { useUserAuth } from "src/stores/userAuth"
 import PointsTransfer from "src/components/PointsTransfer.vue"
-import { copyToClipboard, Dialog, Loading, Notify } from "quasar"
+import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
 import { catchErr } from "lib/util"
 import { avatarImg } from "lib/netlifyImg"
 import { handleEmailLogin, verifyEmailCode, authenticateWithTelegram, getPrivyAppConfig } from "src/lib/privy"
@@ -148,6 +148,7 @@ export default defineComponent({
   components: { PointsTransfer },
   data() {
     return {
+      quasar: useQuasar(),
       editingUsername: false,
       newUsername: "",
       validateUsername,
@@ -168,7 +169,7 @@ export default defineComponent({
       tgPollTimer: null as any,
       // tgPackages moved to AddPointsPage
       tgQrDialogOpen: false as boolean,
-      tgQrDataUrl: '' as string,
+      tgQrDataUrl: "" as string,
       tgQrLoading: false as boolean,
     }
   },
@@ -191,7 +192,7 @@ export default defineComponent({
     },
     isMobile(): boolean {
       if (typeof window === "undefined") return false
-      return this.$q.screen.lt.md
+      return this.quasar.screen.lt.md
     },
   },
   watch: {
