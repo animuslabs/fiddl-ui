@@ -24,6 +24,27 @@ div
   div(v-if="linking" class="q-mt-sm")
     q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
     small Expires in {{ countdownText }}
+    div(v-if="mode === 'login'" class="q-mt-sm")
+      p.text-grey-8 Enter the 6-digit code shown in Telegram to approve this login
+      .row.items-center.q-gutter-sm
+        q-input(
+          dense
+          filled
+          mask="######"
+          :maxlength="6"
+          v-model="codeInput"
+          style="width:160px"
+          label="Code"
+          @keyup.enter="verifyCode"
+        )
+        q-btn(
+          color="primary"
+          label="Verify"
+          :loading="verifying"
+          :disable="verifying || !/^\d{6}$/.test(codeInput)"
+          @click="verifyCode"
+        )
+      small(v-if="statusText") {{ statusText }}
   // Desktop QR dialog
   q-dialog(v-model="qrDialogOpen" :maximized="isMobile")
     q-card(style="width:520px; max-width:100vw;")
@@ -53,8 +74,10 @@ div
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useQuasar, Notify } from "quasar"
-import { telegramCreateDeepLink, telegramLinkStatus, type TelegramCreateDeepLink200 } from "src/lib/orval"
+import { telegramCreateDeepLink, telegramLinkStatus, telegramCreateDeviceLogin, telegramExchangeDeviceLogin, type TelegramCreateDeepLink200, type TelegramCreateDeviceLogin200 } from "src/lib/orval"
 import QRCode from "qrcode"
+import { useUserAuth } from "src/stores/userAuth"
+import { jwt } from "src/lib/jwt"
 
 export default defineComponent({
   name: "TelegramConnect",
@@ -82,7 +105,7 @@ export default defineComponent({
     return {
       $q: useQuasar(),
       linking: false as boolean,
-      deepLink: null as TelegramCreateDeepLink200 | null,
+      deepLink: null as (TelegramCreateDeepLink200 | TelegramCreateDeviceLogin200) | null,
       countdown: 0 as number,
       countdownTotal: 0 as number,
       countdownTimer: null as any,
@@ -90,6 +113,13 @@ export default defineComponent({
       qrDialogOpen: false as boolean,
       qrDataUrl: "" as string,
       qrLoading: false as boolean,
+      deviceLoginId: "" as string,
+      clientNonce: "" as string,
+      codeInput: "" as string,
+      verifying: false as boolean,
+      statusText: "" as string,
+      expiresAtMs: 0 as number,
+      userAuth: useUserAuth(),
     }
   },
   computed: {
@@ -121,6 +151,9 @@ export default defineComponent({
       },
     },
   },
+  mounted() {
+    this.restoreDeviceLogin()
+  },
   beforeUnmount() {
     if (this.countdownTimer) clearInterval(this.countdownTimer)
     if (this.pollTimer) clearInterval(this.pollTimer)
@@ -130,6 +163,11 @@ export default defineComponent({
       if (this.linking) return
       this.linking = true
       try {
+        if (this.mode === "login") {
+          await this.startDeviceLogin()
+          this.$emit("started", this.deepLink)
+          return
+        }
         const { data } = await telegramCreateDeepLink({})
         this.deepLink = data
         this.countdownTotal = data.expiresIn
@@ -146,14 +184,7 @@ export default defineComponent({
           } catch {}
         }
 
-        // For 'link' mode, poll server until linked
-        if (this.mode === "link") {
-          this.startPolling()
-        } else {
-          // In login mode, the bot will send a login link back to the app (e.g., /tg-login?t=...)
-          // We can't reliably poll for login, so show instructions and let the redirect handle completion.
-          Notify.create({ color: "info", message: "Open Telegram and follow the bot to receive your login link" })
-        }
+        this.startPolling()
         this.$emit("started", data)
       } catch (e: any) {
         this.linking = false
@@ -167,6 +198,7 @@ export default defineComponent({
         this.countdown = Math.max(0, this.countdown - 1)
         if (this.countdown <= 0) {
           clearInterval(this.countdownTimer)
+          if (this.mode === "login") this.clearDeviceLoginStorage()
           this.linking = false
           this.qrDialogOpen = false
         }
@@ -211,6 +243,178 @@ export default defineComponent({
       } catch {
       } finally {
         this.qrLoading = false
+      }
+    },
+
+    async startDeviceLogin() {
+      try {
+        const { data } = await telegramCreateDeviceLogin({})
+        this.deepLink = data
+        this.deviceLoginId = data.id
+        this.clientNonce = data.clientNonce
+        this.countdownTotal = data.expiresIn
+        this.countdown = data.expiresIn
+        this.expiresAtMs = Date.now() + data.expiresIn * 1000
+        sessionStorage.setItem("tgDeviceLinkId", this.deviceLoginId)
+        sessionStorage.setItem("tgDeviceClientNonce", this.clientNonce)
+        sessionStorage.setItem("tgDeviceExpiresAt", String(this.expiresAtMs))
+        this.startCountdown()
+        if (data.deepLink) {
+          try {
+            if (this.isMobile) {
+              window.open(data.deepLink, "_blank")
+            } else {
+              await this.openQr()
+            }
+          } catch {}
+        }
+        this.statusText = "Waiting for code…"
+      } catch (e: any) {
+        this.linking = false
+        this.$emit("error", e)
+        Notify.create({ color: "negative", message: e?.message || "Failed to start Telegram device login" })
+      }
+    },
+
+    async verifyCode() {
+      const code = String(this.codeInput || "").trim()
+      if (!/^\d{6}$/.test(code)) {
+        Notify.create({ color: "warning", message: "Enter the 6-digit code from Telegram" })
+        return
+      }
+      const id = this.deviceLoginId || sessionStorage.getItem("tgDeviceLinkId") || ""
+      const clientNonce = this.clientNonce || sessionStorage.getItem("tgDeviceClientNonce") || ""
+      if (!id || !clientNonce) {
+        this.linking = false
+        this.statusText = "Invalid state. Please try again."
+        Notify.create({ color: "negative", message: "Login state missing. Please start again." })
+        return
+      }
+      this.deviceLoginId = id
+      this.clientNonce = clientNonce
+
+      this.verifying = true
+      this.statusText = "Verifying…"
+      try {
+        const res = await telegramExchangeDeviceLogin({ id, clientNonce })
+        const { token, userId } = res.data
+        await this.applyLoginToken(token, userId)
+        this.clearDeviceLoginStorage()
+        this.linking = false
+        this.qrDialogOpen = false
+        this.statusText = "Approved! Signing you in…"
+        Notify.create({ color: "positive", message: "Logged in via Telegram" })
+      } catch (err: any) {
+        const msg = String(err?.response?.data?.message || err?.message || "")
+        if (/Not approved yet/i.test(msg)) {
+          this.statusText = "Not approved yet — checking…"
+          this.startExchangePolling()
+        } else if (/expired|invalid/i.test(msg)) {
+          this.statusText = "Expired. Try again."
+          this.clearDeviceLoginStorage()
+          this.linking = false
+          this.qrDialogOpen = false
+          Notify.create({ color: "warning", message: "Login link expired. Please try again." })
+        } else {
+          this.statusText = "Waiting for approval…"
+          Notify.create({ color: "info", message: "Waiting for Telegram approval…" })
+          this.startExchangePolling()
+        }
+      } finally {
+        this.verifying = false
+      }
+    },
+
+    startExchangePolling() {
+      if (this.pollTimer) clearInterval(this.pollTimer)
+      this.pollTimer = setInterval(async () => {
+        if (this.countdown <= 0 || (this.expiresAtMs && Date.now() >= this.expiresAtMs)) {
+          if (this.pollTimer) clearInterval(this.pollTimer)
+          this.pollTimer = null
+          this.linking = false
+          this.qrDialogOpen = false
+          this.clearDeviceLoginStorage()
+          return
+        }
+        try {
+          const id = this.deviceLoginId || sessionStorage.getItem("tgDeviceLinkId") || ""
+          const clientNonce = this.clientNonce || sessionStorage.getItem("tgDeviceClientNonce") || ""
+          if (!id || !clientNonce) return
+          const res = await telegramExchangeDeviceLogin({ id, clientNonce })
+          const { token, userId } = res.data
+          if (this.pollTimer) clearInterval(this.pollTimer)
+          this.pollTimer = null
+          this.statusText = "Approved! Signing you in…"
+          await this.applyLoginToken(token, userId)
+          this.clearDeviceLoginStorage()
+          this.linking = false
+          this.qrDialogOpen = false
+          Notify.create({ color: "positive", message: "Logged in via Telegram" })
+        } catch (err: any) {
+          const msg = String(err?.response?.data?.message || err?.message || "")
+          if (/Not approved yet/i.test(msg)) {
+            // keep polling
+          } else if (/expired|invalid/i.test(msg)) {
+            if (this.pollTimer) clearInterval(this.pollTimer)
+            this.pollTimer = null
+            this.statusText = "Expired. Try again."
+            this.linking = false
+            this.qrDialogOpen = false
+            this.clearDeviceLoginStorage()
+            Notify.create({ color: "warning", message: "Login link expired. Please try again." })
+          } else {
+            // transient error, continue polling
+          }
+        }
+      }, 2000)
+    },
+
+    async applyLoginToken(token: string, userId: string) {
+      try {
+        this.userAuth.logout()
+      } catch {}
+      this.userAuth.setUserId(userId)
+      jwt.save({ userId, token })
+      this.userAuth.loggedIn = true
+      await this.userAuth.loadUserData(userId)
+      await this.userAuth.loadUpvotesWallet()
+      void this.userAuth.loadUserProfile(userId)
+    },
+
+    clearDeviceLoginStorage() {
+      try {
+        sessionStorage.removeItem("tgDeviceLinkId")
+        sessionStorage.removeItem("tgDeviceClientNonce")
+        sessionStorage.removeItem("tgDeviceExpiresAt")
+      } catch {}
+      this.deviceLoginId = ""
+      this.clientNonce = ""
+      this.codeInput = ""
+      this.expiresAtMs = 0
+    },
+
+    restoreDeviceLogin() {
+      if (this.mode !== "login") return
+      try {
+        const id = sessionStorage.getItem("tgDeviceLinkId") || ""
+        const clientNonce = sessionStorage.getItem("tgDeviceClientNonce") || ""
+        const expiresAtStr = sessionStorage.getItem("tgDeviceExpiresAt") || ""
+        const expiresAt = Number(expiresAtStr || 0)
+        if (id && clientNonce && expiresAt && Date.now() < expiresAt) {
+          this.deviceLoginId = id
+          this.clientNonce = clientNonce
+          this.expiresAtMs = expiresAt
+          const secsLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
+          this.countdownTotal = secsLeft
+          this.countdown = secsLeft
+          this.linking = true
+          this.statusText = "Waiting for code…"
+          this.startCountdown()
+        } else {
+          this.clearDeviceLoginStorage()
+        }
+      } catch {
+        // ignore
       }
     },
   },

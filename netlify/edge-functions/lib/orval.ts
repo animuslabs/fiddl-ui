@@ -1639,12 +1639,25 @@ export const UserGetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserGetNotificationConfig200TelegramFrequency = typeof UserGetNotificationConfig200TelegramFrequency[keyof typeof UserGetNotificationConfig200TelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200TelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserGetNotificationConfig200 = {
   emailFrequency: UserGetNotificationConfig200EmailFrequency;
   phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
+  telegramFrequency: UserGetNotificationConfig200TelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
+  telegram: boolean;
 };
 
 export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
@@ -1698,12 +1711,25 @@ export const UserSetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserSetNotificationConfig200TelegramFrequency = typeof UserSetNotificationConfig200TelegramFrequency[keyof typeof UserSetNotificationConfig200TelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200TelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserSetNotificationConfig200 = {
   emailFrequency: UserSetNotificationConfig200EmailFrequency;
   phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
+  telegramFrequency: UserSetNotificationConfig200TelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
+  telegram: boolean;
 };
 
 export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
@@ -3228,6 +3254,28 @@ export type TelegramLinkStatus200 = {
   linked: boolean;
   /** @nullable */
   data?: TelegramLinkStatus200Data;
+};
+
+export type TelegramCreateDeviceLoginBody = {
+  ref?: string;
+};
+
+export type TelegramCreateDeviceLogin200 = {
+  deepLink: string;
+  id: string;
+  code: string;
+  expiresIn: number;
+  clientNonce: string;
+};
+
+export type TelegramExchangeDeviceLoginBody = {
+  id: string;
+  clientNonce: string;
+};
+
+export type TelegramExchangeDeviceLogin200 = {
+  token: string;
+  userId: string;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -6090,5 +6138,49 @@ export const telegramLinkStatus = async ( options?: RequestInit): Promise<Telegr
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getTelegramCreateDeviceLoginUrl = () => {
+
+
+  
+
+  return `/telegram/createDeviceLogin`
+}
+
+export const telegramCreateDeviceLogin = async (telegramCreateDeviceLoginBody?: TelegramCreateDeviceLoginBody, options?: RequestInit): Promise<TelegramCreateDeviceLogin200> => {
+  
+  return fetcher<TelegramCreateDeviceLogin200>(getTelegramCreateDeviceLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramCreateDeviceLoginBody,)
+  }
+);}
+
+
+
+export const getTelegramExchangeDeviceLoginUrl = () => {
+
+
+  
+
+  return `/telegram/exchangeDeviceLogin`
+}
+
+export const telegramExchangeDeviceLogin = async (telegramExchangeDeviceLoginBody: TelegramExchangeDeviceLoginBody, options?: RequestInit): Promise<TelegramExchangeDeviceLogin200> => {
+  
+  return fetcher<TelegramExchangeDeviceLogin200>(getTelegramExchangeDeviceLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramExchangeDeviceLoginBody,)
   }
 );}

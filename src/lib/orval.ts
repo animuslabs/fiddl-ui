@@ -1668,12 +1668,25 @@ export const UserGetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserGetNotificationConfig200TelegramFrequency = typeof UserGetNotificationConfig200TelegramFrequency[keyof typeof UserGetNotificationConfig200TelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200TelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserGetNotificationConfig200 = {
   emailFrequency: UserGetNotificationConfig200EmailFrequency;
   phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
+  telegramFrequency: UserGetNotificationConfig200TelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
+  telegram: boolean;
 };
 
 export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
@@ -1727,12 +1740,25 @@ export const UserSetNotificationConfig200PhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserSetNotificationConfig200TelegramFrequency = typeof UserSetNotificationConfig200TelegramFrequency[keyof typeof UserSetNotificationConfig200TelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200TelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserSetNotificationConfig200 = {
   emailFrequency: UserSetNotificationConfig200EmailFrequency;
   phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
+  telegramFrequency: UserSetNotificationConfig200TelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
+  telegram: boolean;
 };
 
 export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
@@ -3257,6 +3283,28 @@ export type TelegramLinkStatus200 = {
   linked: boolean;
   /** @nullable */
   data?: TelegramLinkStatus200Data;
+};
+
+export type TelegramCreateDeviceLoginBody = {
+  ref?: string;
+};
+
+export type TelegramCreateDeviceLogin200 = {
+  deepLink: string;
+  id: string;
+  code: string;
+  expiresIn: number;
+  clientNonce: string;
+};
+
+export type TelegramExchangeDeviceLoginBody = {
+  id: string;
+  clientNonce: string;
+};
+
+export type TelegramExchangeDeviceLogin200 = {
+  token: string;
+  userId: string;
 };
 
 export const pkAuthRegisterStart = (
@@ -9909,3 +9957,118 @@ export function useTelegramLinkStatus<TData = Awaited<ReturnType<typeof telegram
 
   return query;
 }
+
+
+
+
+export const telegramCreateDeviceLogin = (
+    telegramCreateDeviceLoginBody?: MaybeRef<TelegramCreateDeviceLoginBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramCreateDeviceLogin200>> => {
+    telegramCreateDeviceLoginBody = unref(telegramCreateDeviceLoginBody);
+    
+    return axios.post(
+      `/telegram/createDeviceLogin`,
+      telegramCreateDeviceLoginBody,options
+    );
+  }
+
+
+
+export const getTelegramCreateDeviceLoginMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeviceLogin>>, TError,{data: TelegramCreateDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeviceLogin>>, TError,{data: TelegramCreateDeviceLoginBody}, TContext> => {
+
+const mutationKey = ['telegramCreateDeviceLogin'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramCreateDeviceLogin>>, {data: TelegramCreateDeviceLoginBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramCreateDeviceLogin(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramCreateDeviceLoginMutationResult = NonNullable<Awaited<ReturnType<typeof telegramCreateDeviceLogin>>>
+    export type TelegramCreateDeviceLoginMutationBody = TelegramCreateDeviceLoginBody
+    export type TelegramCreateDeviceLoginMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramCreateDeviceLogin = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateDeviceLogin>>, TError,{data: TelegramCreateDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramCreateDeviceLogin>>,
+        TError,
+        {data: TelegramCreateDeviceLoginBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramCreateDeviceLoginMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramExchangeDeviceLogin = (
+    telegramExchangeDeviceLoginBody: MaybeRef<TelegramExchangeDeviceLoginBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramExchangeDeviceLogin200>> => {
+    telegramExchangeDeviceLoginBody = unref(telegramExchangeDeviceLoginBody);
+    
+    return axios.post(
+      `/telegram/exchangeDeviceLogin`,
+      telegramExchangeDeviceLoginBody,options
+    );
+  }
+
+
+
+export const getTelegramExchangeDeviceLoginMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>, TError,{data: TelegramExchangeDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>, TError,{data: TelegramExchangeDeviceLoginBody}, TContext> => {
+
+const mutationKey = ['telegramExchangeDeviceLogin'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>, {data: TelegramExchangeDeviceLoginBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramExchangeDeviceLogin(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramExchangeDeviceLoginMutationResult = NonNullable<Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>>
+    export type TelegramExchangeDeviceLoginMutationBody = TelegramExchangeDeviceLoginBody
+    export type TelegramExchangeDeviceLoginMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramExchangeDeviceLogin = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>, TError,{data: TelegramExchangeDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramExchangeDeviceLogin>>,
+        TError,
+        {data: TelegramExchangeDeviceLoginBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramExchangeDeviceLoginMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
