@@ -25,12 +25,13 @@ div
     q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
     small Expires in {{ countdownText }}
     div(v-if="mode === 'login'" class="q-mt-sm")
-      p.text-grey-8 Enter the 6-digit code shown in Telegram to approve this login
+      p.text-grey-8 Enter the code shown in Telegram to approve this login
       .row.items-center.q-gutter-sm
         q-input(
           dense
           filled
-          mask="######"
+          type="tel"
+          inputmode="numeric"
           :maxlength="6"
           v-model="codeInput"
           style="width:160px"
@@ -41,7 +42,7 @@ div
           color="primary"
           label="Verify"
           :loading="verifying"
-          :disable="verifying || !/^\d{6}$/.test(codeInput)"
+          :disable="verifying || !/^\d{5,6}$/.test(codeInput)"
           @click="verifyCode"
         )
       small(v-if="statusText") {{ statusText }}
@@ -149,6 +150,11 @@ export default defineComponent({
       handler(val: boolean) {
         if (val) void this.start()
       },
+    },
+    codeInput(val: string) {
+      // Sanitize to digits-only and cap at 6 to match TG short code format
+      const digits = String(val || "").replace(/\D/g, "").slice(0, 6)
+      if (digits !== this.codeInput) this.codeInput = digits
     },
   },
   mounted() {
@@ -278,8 +284,8 @@ export default defineComponent({
 
     async verifyCode() {
       const code = String(this.codeInput || "").trim()
-      if (!/^\d{6}$/.test(code)) {
-        Notify.create({ color: "warning", message: "Enter the 6-digit code from Telegram" })
+      if (!/^\d{5,6}$/.test(code)) {
+        Notify.create({ color: "warning", message: "Enter the code from Telegram" })
         return
       }
       const id = this.deviceLoginId || sessionStorage.getItem("tgDeviceLinkId") || ""
