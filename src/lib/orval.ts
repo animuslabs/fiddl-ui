@@ -1427,6 +1427,7 @@ export type UserGet200AvatarConfig = {
 
 export type UserGet200 = {
   id: string;
+  banned: boolean;
   /** @nullable */
   webauthnUserID: string | null;
   /** @nullable */
@@ -2568,6 +2569,94 @@ export type AdminLoginAsUserBody = {
   id: string;
 };
 
+export type AdminBanUserBody = {
+  userId: string;
+  reason?: string;
+};
+
+export type AdminBanUser200Stats = {
+  images: number;
+  videos: number;
+  imageRequests: number;
+  videoRequests: number;
+  uploadedImages: number;
+};
+
+export type AdminBanUser200 = {
+  stats: AdminBanUser200Stats;
+};
+
+export type AdminListUsersParams = {
+limit?: number;
+offset?: number;
+search?: string;
+includeBanned?: boolean;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListUsers200UsersItemProfile = {
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  emailVerified: boolean | null;
+  /** @nullable */
+  phone: string | null;
+  /** @nullable */
+  phoneVerified: boolean | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
+  twitter: string | null;
+  /** @nullable */
+  twitterVerified: boolean | null;
+  /** @nullable */
+  instagram: string | null;
+  /** @nullable */
+  instagramVerified: boolean | null;
+  /** @nullable */
+  pangeaAccount: string | null;
+  /** @nullable */
+  privyId: string | null;
+} | null;
+
+export type AdminListUsers200UsersItemStats = {
+  imageRequests: number;
+  imageRequestsFinished: number;
+  images: number;
+  videoRequests: number;
+  videos: number;
+  imagePurchases: number;
+  videoPurchases: number;
+  customModels: number;
+  trainingSets: number;
+};
+
+export type AdminListUsers200UsersItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  banned: boolean;
+  admin: boolean;
+  availablePoints: number;
+  spentPoints: number;
+  lastActiveAt: string;
+  /** @nullable */
+  profile: AdminListUsers200UsersItemProfile;
+  wallets: string[];
+  stats: AdminListUsers200UsersItemStats;
+};
+
+export type AdminListUsers200 = {
+  total: number;
+  users: AdminListUsers200UsersItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -3292,7 +3381,6 @@ export type TelegramCreateDeviceLoginBody = {
 export type TelegramCreateDeviceLogin200 = {
   deepLink: string;
   id: string;
-  code: string;
   expiresIn: number;
   clientNonce: string;
 };
@@ -3303,6 +3391,18 @@ export type TelegramExchangeDeviceLoginBody = {
 };
 
 export type TelegramExchangeDeviceLogin200 = {
+  token: string;
+  userId: string;
+};
+
+export type TelegramConfirmDeviceLoginBody = {
+  id: string;
+  clientNonce: string;
+  /** @pattern ^\d{6}$ */
+  code: string;
+};
+
+export type TelegramConfirmDeviceLogin200 = {
   token: string;
   userId: string;
 };
@@ -8087,6 +8187,120 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const adminBanUser = (
+    adminBanUserBody: MaybeRef<AdminBanUserBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminBanUser200>> => {
+    adminBanUserBody = unref(adminBanUserBody);
+    
+    return axios.post(
+      `/admin/banUser`,
+      adminBanUserBody,options
+    );
+  }
+
+
+
+export const getAdminBanUserMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBanUser>>, TError,{data: AdminBanUserBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminBanUser>>, TError,{data: AdminBanUserBody}, TContext> => {
+
+const mutationKey = ['adminBanUser'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminBanUser>>, {data: AdminBanUserBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminBanUser(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminBanUserMutationResult = NonNullable<Awaited<ReturnType<typeof adminBanUser>>>
+    export type AdminBanUserMutationBody = AdminBanUserBody
+    export type AdminBanUserMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminBanUser = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBanUser>>, TError,{data: AdminBanUserBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminBanUser>>,
+        TError,
+        {data: AdminBanUserBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminBanUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminListUsers = (
+    params?: MaybeRef<AdminListUsersParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminListUsers200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/listUsers`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminListUsersQueryKey = (params?: MaybeRef<AdminListUsersParams>,) => {
+    return ['admin','listUsers', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminListUsersQueryOptions = <TData = Awaited<ReturnType<typeof adminListUsers>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminListUsersParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListUsers>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminListUsersQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListUsers>>> = ({ signal }) => adminListUsers(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListUsers>>, TError, TData> 
+}
+
+export type AdminListUsersQueryResult = NonNullable<Awaited<ReturnType<typeof adminListUsers>>>
+export type AdminListUsersQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminListUsers<TData = Awaited<ReturnType<typeof adminListUsers>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminListUsersParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListUsers>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const tonomyAuthLoginOrRegister = (
     tonomyAuthLoginOrRegisterBody: MaybeRef<TonomyAuthLoginOrRegisterBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TonomyAuthLoginOrRegister200>> => {
@@ -10069,6 +10283,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getTelegramExchangeDeviceLoginMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramConfirmDeviceLogin = (
+    telegramConfirmDeviceLoginBody: MaybeRef<TelegramConfirmDeviceLoginBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramConfirmDeviceLogin200>> => {
+    telegramConfirmDeviceLoginBody = unref(telegramConfirmDeviceLoginBody);
+    
+    return axios.post(
+      `/telegram/confirmDeviceLogin`,
+      telegramConfirmDeviceLoginBody,options
+    );
+  }
+
+
+
+export const getTelegramConfirmDeviceLoginMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>, TError,{data: TelegramConfirmDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>, TError,{data: TelegramConfirmDeviceLoginBody}, TContext> => {
+
+const mutationKey = ['telegramConfirmDeviceLogin'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>, {data: TelegramConfirmDeviceLoginBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramConfirmDeviceLogin(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramConfirmDeviceLoginMutationResult = NonNullable<Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>>
+    export type TelegramConfirmDeviceLoginMutationBody = TelegramConfirmDeviceLoginBody
+    export type TelegramConfirmDeviceLoginMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramConfirmDeviceLogin = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>, TError,{data: TelegramConfirmDeviceLoginBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramConfirmDeviceLogin>>,
+        TError,
+        {data: TelegramConfirmDeviceLoginBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramConfirmDeviceLoginMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

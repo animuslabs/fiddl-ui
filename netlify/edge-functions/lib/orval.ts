@@ -1398,6 +1398,7 @@ export type UserGet200AvatarConfig = {
 
 export type UserGet200 = {
   id: string;
+  banned: boolean;
   /** @nullable */
   webauthnUserID: string | null;
   /** @nullable */
@@ -2539,6 +2540,94 @@ export type AdminLoginAsUserBody = {
   id: string;
 };
 
+export type AdminBanUserBody = {
+  userId: string;
+  reason?: string;
+};
+
+export type AdminBanUser200Stats = {
+  images: number;
+  videos: number;
+  imageRequests: number;
+  videoRequests: number;
+  uploadedImages: number;
+};
+
+export type AdminBanUser200 = {
+  stats: AdminBanUser200Stats;
+};
+
+export type AdminListUsersParams = {
+limit?: number;
+offset?: number;
+search?: string;
+includeBanned?: boolean;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListUsers200UsersItemProfile = {
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  emailVerified: boolean | null;
+  /** @nullable */
+  phone: string | null;
+  /** @nullable */
+  phoneVerified: boolean | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+  /** @nullable */
+  twitter: string | null;
+  /** @nullable */
+  twitterVerified: boolean | null;
+  /** @nullable */
+  instagram: string | null;
+  /** @nullable */
+  instagramVerified: boolean | null;
+  /** @nullable */
+  pangeaAccount: string | null;
+  /** @nullable */
+  privyId: string | null;
+} | null;
+
+export type AdminListUsers200UsersItemStats = {
+  imageRequests: number;
+  imageRequestsFinished: number;
+  images: number;
+  videoRequests: number;
+  videos: number;
+  imagePurchases: number;
+  videoPurchases: number;
+  customModels: number;
+  trainingSets: number;
+};
+
+export type AdminListUsers200UsersItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  banned: boolean;
+  admin: boolean;
+  availablePoints: number;
+  spentPoints: number;
+  lastActiveAt: string;
+  /** @nullable */
+  profile: AdminListUsers200UsersItemProfile;
+  wallets: string[];
+  stats: AdminListUsers200UsersItemStats;
+};
+
+export type AdminListUsers200 = {
+  total: number;
+  users: AdminListUsers200UsersItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -3263,7 +3352,6 @@ export type TelegramCreateDeviceLoginBody = {
 export type TelegramCreateDeviceLogin200 = {
   deepLink: string;
   id: string;
-  code: string;
   expiresIn: number;
   clientNonce: string;
 };
@@ -3274,6 +3362,18 @@ export type TelegramExchangeDeviceLoginBody = {
 };
 
 export type TelegramExchangeDeviceLogin200 = {
+  token: string;
+  userId: string;
+};
+
+export type TelegramConfirmDeviceLoginBody = {
+  id: string;
+  clientNonce: string;
+  /** @pattern ^\d{6}$ */
+  code: string;
+};
+
+export type TelegramConfirmDeviceLogin200 = {
   token: string;
   userId: string;
 };
@@ -5344,6 +5444,56 @@ export const adminLoginAsUser = async (adminLoginAsUserBody: AdminLoginAsUserBod
 
 
 
+export const getAdminBanUserUrl = () => {
+
+
+  
+
+  return `/admin/banUser`
+}
+
+export const adminBanUser = async (adminBanUserBody: AdminBanUserBody, options?: RequestInit): Promise<AdminBanUser200> => {
+  
+  return fetcher<AdminBanUser200>(getAdminBanUserUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminBanUserBody,)
+  }
+);}
+
+
+
+export const getAdminListUsersUrl = (params?: AdminListUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listUsers?${stringifiedParams}` : `/admin/listUsers`
+}
+
+export const adminListUsers = async (params?: AdminListUsersParams, options?: RequestInit): Promise<AdminListUsers200> => {
+  
+  return fetcher<AdminListUsers200>(getAdminListUsersUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getTonomyAuthLoginOrRegisterUrl = () => {
 
 
@@ -6182,5 +6332,27 @@ export const telegramExchangeDeviceLogin = async (telegramExchangeDeviceLoginBod
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramExchangeDeviceLoginBody,)
+  }
+);}
+
+
+
+export const getTelegramConfirmDeviceLoginUrl = () => {
+
+
+  
+
+  return `/telegram/confirmDeviceLogin`
+}
+
+export const telegramConfirmDeviceLogin = async (telegramConfirmDeviceLoginBody: TelegramConfirmDeviceLoginBody, options?: RequestInit): Promise<TelegramConfirmDeviceLogin200> => {
+  
+  return fetcher<TelegramConfirmDeviceLogin200>(getTelegramConfirmDeviceLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramConfirmDeviceLoginBody,)
   }
 );}
