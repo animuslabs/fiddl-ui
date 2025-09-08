@@ -28,6 +28,7 @@ export const useMissionsStore = defineStore("missionsStore", {
     badgeMap: {} as Record<string, BadgesList200Item>,
     userBadgeIds: [] as string[],
     _poller: null as any,
+    _visHandler: null as any,
   }),
   getters: {
     missionsEnriched(state): Array<MissionsList200Item & { progress: number; rewardsNormalized: RewardView[] }> {
@@ -166,14 +167,40 @@ export const useMissionsStore = defineStore("missionsStore", {
       if (this._poller) return
       // Initial load on login
       void this.refreshAll()
-      this._poller = setInterval(() => {
-        if (typeof document !== "undefined" && document.hidden) return
-        void this.loadProgressForAll()
-      }, 30_000)
+      const schedule = (ms: number) => {
+        this._poller = setTimeout(run, ms)
+      }
+      const run = async () => {
+        try {
+          await this.loadProgressForAll()
+        } finally {
+          const hidden = typeof document !== "undefined" && document.hidden
+          const delay = hidden ? 120_000 : 30_000
+          schedule(delay)
+        }
+      }
+      // Install a visibility listener to immediately reschedule when tab becomes visible
+      if (typeof document !== "undefined" && !this._visHandler) {
+        this._visHandler = () => {
+          if (!document.hidden) {
+            if (this._poller) {
+              clearTimeout(this._poller)
+              this._poller = null
+            }
+            if (typeof document !== "undefined" && this._visHandler) {
+              document.removeEventListener("visibilitychange", this._visHandler)
+              this._visHandler = null
+            }
+            schedule(1)
+          }
+        }
+        document.addEventListener("visibilitychange", this._visHandler)
+      }
+      schedule(1)
     },
     stopPolling() {
       if (this._poller) {
-        clearInterval(this._poller)
+        clearTimeout(this._poller)
         this._poller = null
       }
     },

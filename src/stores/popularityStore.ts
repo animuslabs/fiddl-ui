@@ -426,7 +426,7 @@ export const usePopularityStore = defineStore("popularityStore", {
       const max = options?.max ?? 200
 
       // Ensure unique ids
-      const uniqueById = new Map<string, { id: string; mediaType: "image" | "video" }&gt;()
+      const uniqueById = new Map<string, { id: string; mediaType: "image" | "video" }>()
       for (const it of items) {
         if (!uniqueById.has(it.id)) uniqueById.set(it.id, it)
       }

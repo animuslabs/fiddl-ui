@@ -181,11 +181,23 @@ export default defineComponent({
   },
   mounted() {
     // Initial refresh/polling handled by the auth watcher (immediate)
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", this.onVisibilityChange)
+    }
   },
   beforeUnmount() {
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", this.onVisibilityChange)
+    }
     this.stopPolling()
   },
   methods: {
+    onVisibilityChange() {
+      // When the tab becomes visible, re-arm the timer to run immediately
+      if (typeof document !== "undefined" && !document.hidden) {
+        this.startPolling()
+      }
+    },
     onActivatorClick(evt: Event) {
       if (this.isMobile) {
         // Only programmatically open on mobile
@@ -231,14 +243,20 @@ export default defineComponent({
     },
     startPolling() {
       this.stopPolling()
-      this.pollId = setInterval(() => {
-        if (typeof document !== "undefined" && document.hidden) return
-        void this.refresh()
-      }, 30000)
+      const run = async () => {
+        try {
+          await this.refresh()
+        } finally {
+          const hidden = typeof document !== "undefined" && document.hidden
+          const delay = hidden ? 120000 : 30000
+          this.pollId = setTimeout(run, delay)
+        }
+      }
+      this.pollId = setTimeout(run, 1)
     },
     stopPolling() {
       if (this.pollId) {
-        clearInterval(this.pollId)
+        clearTimeout(this.pollId)
         this.pollId = null
       }
     },
