@@ -76,8 +76,11 @@ const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px
 const popularity = usePopularityStore()
 const popIconSize = ref("8px")
 
-// Popularity polling
-const pollIntervalMs = 15000
+/**
+ * Popularity polling (use setTimeout loop to avoid overlap; pause when tab hidden)
+ * Note: using a timeout loop prevents stacking requests when the network is slow.
+ */
+const pollIntervalMs = 30000
 let popularityPollTimer: number | null = null
 
 // Video reload retry timer (moved from global setInterval)
@@ -351,16 +354,30 @@ const prevIdSet = ref<Set<string>>(new Set())
 
 function startPopularityPolling() {
   stopPopularityPolling()
-  // Immediate refresh to ensure per-user fields (isFavoritedByMe/isUpvotedByMe) are current
-  void popularity.refreshBatchByItems(getPopularityItems())
-  popularityPollTimer = window.setInterval(() => {
-    void popularity.refreshBatchByItems(getPopularityItems())
-  }, pollIntervalMs) as unknown as number
+  const run = async () => {
+    if (!props.showPopularity) return
+    if (typeof document !== "undefined" && document.hidden) {
+      popularityPollTimer = window.setTimeout(run, pollIntervalMs) as unknown as number
+      return
+    }
+    const items = getPopularityItems()
+    if (items.length === 0) {
+      popularityPollTimer = window.setTimeout(run, pollIntervalMs) as unknown as number
+      return
+    }
+    try {
+      // Only refresh missing/stale entries to limit network and avoid overlap
+      await popularity.refreshStaleByItems(items, { ttlMs: 120000, max: 200 })
+    } finally {
+      popularityPollTimer = window.setTimeout(run, pollIntervalMs) as unknown as number
+    }
+  }
+  void run()
 }
 
 function stopPopularityPolling() {
   if (popularityPollTimer) {
-    window.clearInterval(popularityPollTimer)
+    window.clearTimeout(popularityPollTimer)
     popularityPollTimer = null
   }
 }
@@ -406,6 +423,7 @@ watch(
 onMounted(() => {
   // Move retry loop to lifecycle and clean up on unmount
   videoReloadTimer = window.setInterval(() => {
+    if (typeof document !== "undefined" && document.hidden) return
     // Retry videos that aren't ready yet
     for (const id of Object.keys(videoLoading.value)) {
       if (videoLoading.value[id]) {

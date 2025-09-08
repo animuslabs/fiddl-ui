@@ -415,6 +415,53 @@ export const usePopularityStore = defineStore("popularityStore", {
         delete this._mutating[id]
       }
     },
+    /**
+     * Refresh only stale popularity entries to reduce network load.
+     * - Fetch any missing entries (no cache)
+     * - Refresh at most `max` items whose cached updatedAt is older than ttlMs
+     */
+    async refreshStaleByItems(items: { id: string; mediaType: "image" | "video" }[], options?: { ttlMs?: number; max?: number }) {
+      await this.init()
+      const ttlMs = options?.ttlMs ?? 120000
+      const max = options?.max ?? 200
+
+      // Ensure unique ids
+      const uniqueById = new Map<string, { id: string; mediaType: "image" | "video" }&gt;()
+      for (const it of items) {
+        if (!uniqueById.has(it.id)) uniqueById.set(it.id, it)
+      }
+
+      // Hydrate cache for these ids to get updatedAt if present
+      await this._loadFromDBByIds(Array.from(uniqueById.keys()))
+
+      const now = Date.now()
+      const missing: { id: string; mediaType: "image" | "video" }[] = []
+      const stale: { id: string; mediaType: "image" | "video" }[] = []
+
+      for (const it of uniqueById.values()) {
+        const e = this.entries[it.id]
+        if (!e) {
+          if (!this._inFlight[it.id]) missing.push(it)
+          continue
+        }
+        const age = e.updatedAt ? now - e.updatedAt : Number.POSITIVE_INFINITY
+        if (!this._inFlight[it.id] && age >= ttlMs) stale.push(it)
+      }
+
+      // Fetch any missing entries
+      if (missing.length) await this.fetchBatchByItems(missing)
+
+      // Refresh only a bounded set of the stalest entries
+      if (stale.length) {
+        stale.sort((a, b) => {
+          const ea = this.entries[a.id]?.updatedAt || 0
+          const eb = this.entries[b.id]?.updatedAt || 0
+          return ea - eb // oldest first
+        })
+        const subset = stale.slice(0, max)
+        await this.refreshBatchByItems(subset)
+      }
+    },
   },
   persist: false,
 })

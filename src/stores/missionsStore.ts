@@ -167,6 +167,7 @@ export const useMissionsStore = defineStore("missionsStore", {
       // Initial load on login
       void this.refreshAll()
       this._poller = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return
         void this.loadProgressForAll()
       }, 30_000)
     },

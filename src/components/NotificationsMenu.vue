@@ -232,6 +232,7 @@ export default defineComponent({
     startPolling() {
       this.stopPolling()
       this.pollId = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return
         void this.refresh()
       }, 30000)
     },
