@@ -30,7 +30,7 @@
     icon="sym_o_info"
     flat
     round
-    @click.stop="goToRequestPage()"
+    @click.stop="showRequestInfoDialog()"
     color="grey-5"
     v-if="mediaViewerStore.loadedRequestId"
   )
@@ -132,6 +132,7 @@ import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
 import EditMedia from "./EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
+import RequestInfoDialog from "./RequestInfoDialog.vue"
 import { useRouter } from "vue-router"
 import { usePopularityStore } from "src/stores/popularityStore"
 
@@ -225,13 +226,12 @@ async function share() {
   }
 }
 
-function goToRequestPage() {
+function showRequestInfoDialog() {
   if (!mediaViewerStore.loadedRequestId || mediaViewerStore.loadedRequestId.length === 0) return
-  emit("close")
-  void router.push({
-    name: "mediaRequest",
-    params: {
-      requestShortId: longIdToShort(mediaViewerStore.loadedRequestId),
+  Dialog.create({
+    component: RequestInfoDialog,
+    componentProps: {
+      requestId: mediaViewerStore.loadedRequestId,
       type: mediaViewerStore.currentMediaType,
     },
   })

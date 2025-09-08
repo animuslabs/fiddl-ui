@@ -1,8 +1,8 @@
 <template lang="pug">
-q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-md.q-pl-md.q-pb-lg.bg-translucent
+q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);" :class="cardClasses")
   //- div custom model id: {{ creation.customModelId }}
   //- div custom model name: {{ creation.customModelName }}
-  .centered.full-width.q-pt-md(:style="quasar.screen.lt.md? `overflow:auto;`:'' ")
+  .centered.full-width.q-pt-md(v-if="!hideMediaGrid" :style="quasar.screen.lt.md? `overflow:auto;`:'' ")
     div(v-if="creation.mediaIds.length < 1").full-width
       .centered.q-ma-xl
         h4.text-accent No images in this creation
@@ -14,30 +14,31 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
     .centered(v-else)
       video.cursor-pointer(v-for="(videoId,index) in creation.mediaIds" autoplay loop muted playsinline :src="s3Video(videoId,'preview-md')" @click="showGallery(index)")
   div(v-if="!minimized.value")
-    q-separator(color="grey-9" spaced="20px")
-    .row.q-gutter-md(style="padding-left:20px; padding-right:20px;")
+    q-separator(color="grey-9" spaced="20px" v-if="!hideMediaGrid")
+    .row.q-gutter-md(:style="{ paddingLeft: hideMediaGrid ? '0px' : '20px', paddingRight: hideMediaGrid ? '0px' : '20px' }")
       .col-grow(style="min-width:150px;")
         .row(style="max-width:600px;")
-          .col-auto
+          .col-auto(v-if="!hideMediaGrid")
             .row
-              //- q-btn(icon="edit" flat round @click="setRequest()" size="sm")
-              //-   q-tooltip
-              //-     p Create using the creation details
+              q-btn(icon="edit" flat round @click="setRequest()" size="sm")
+                q-tooltip
+                  p Create using the creation details
             .row
               q-btn(icon="link" flat round @click="goToRequestPage()" size="sm" v-if="!hideLinkBtn")
                 q-tooltip
                   p Go to creation
             .row
-              q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId")
+              q-btn(icon="delete" flat round @click="deleteRequest()" size="sm" v-if="creation.creatorId == $userAuth.userId && !hideMediaGrid && !quasar.screen.lt.md")
                 q-tooltip
                   p Delete
-          .col.q-ml-md.relative-position
-            small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
-            p.text-italic.text-positive(v-if="!creation.prompt || creation.prompt?.length == 0 ") Purchase any image to unlock the prompt
-            .absolute-bottom-right
-              q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
-                q-tooltip
-                  p Copy Prompt
+          .col.relative-position.q-ml-md
+            div
+              small Prompt: #[p.ellipsis-3-lines {{ creation.prompt }}]
+              p.text-italic.text-positive(v-if="!creation.prompt || creation.prompt?.length == 0 ") Purchase any image to unlock the prompt
+              .absolute-bottom-right
+                q-btn(icon="content_copy" round size="sm" color="grey-10" @click="copyPrompt" v-if="creation.prompt?.length").text-grey-6
+                  q-tooltip
+                    p Copy Prompt
       .col-grow.gt-sm
       .col-auto
         .row.q-gutter-md.full-width
@@ -57,6 +58,10 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
           .col-auto(v-if="creation.creatorId == $userAuth.userId")
             p {{ printPrivacy }}
             q-toggle(v-model="creation.public" @click="updatePrivacy()")
+          .col-auto(v-if="creation.creatorId == $userAuth.userId && !hideMediaGrid && quasar.screen.lt.md")
+            q-btn(icon="delete" flat round size="sm" @click="deleteRequest()")
+              q-tooltip
+                p Delete
   div.relative-position(style="height:30px;" v-else)
     div.full-width(style="position:absolute; bottom:-6px;")
       .centered(style="height:30px;")
@@ -66,7 +71,6 @@ q-card(style="overflow:auto; background-color: rgba(0,0,0,0.2);").q-mb-md.q-pr-m
 
 <script lang="ts">
 import CreatedImageCard from "components/CreatedImageCard.vue"
-import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import mediaViwer from "lib/mediaViewer"
 import { img, s3Video } from "lib/netlifyImg"
 import { catchErr, longIdToShort, timeSince } from "lib/util"
@@ -81,7 +85,6 @@ import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 export default defineComponent({
   components: {
     CreatedImageCard,
-    ImageGallery,
   },
   props: {
     minimized: {
@@ -99,6 +102,10 @@ export default defineComponent({
       default: "",
     },
     hideLinkBtn: Boolean,
+    hideMediaGrid: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["setRequest", "reload", "deleted"],
   setup() {
@@ -119,6 +126,16 @@ export default defineComponent({
     },
     printCreated() {
       return timeSince(this.creation.createdAt)
+    },
+    cardClasses() {
+      const base = ["bg-translucent", "q-mb-md", "q-pb-lg"]
+      if (this.hideMediaGrid) {
+        // Add top padding in dialog mode; tighten horizontal padding on mobile
+        const sidePad = this.quasar.screen.lt.md ? ["q-pl-sm", "q-pr-sm", "q-pt-md"] : ["q-pl-md", "q-pr-md", "q-pt-md"]
+        return [...base, ...sidePad].join(" ")
+      }
+      // Default full page layout
+      return [...base, "q-pl-md", "q-pr-md"].join(" ")
     },
   },
   methods: {
