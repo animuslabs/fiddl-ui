@@ -2657,6 +2657,100 @@ export type AdminListUsers200 = {
   users: AdminListUsers200UsersItem[];
 };
 
+export type AdminListPaymentsParams = {
+limit?: number;
+offset?: number;
+startDateTime?: string;
+endDateTime?: string;
+method?: AdminListPaymentsMethod;
+userId?: string;
+status?: string;
+};
+
+export type AdminListPaymentsMethod = typeof AdminListPaymentsMethod[keyof typeof AdminListPaymentsMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListPaymentsMethod = {
+  payPal: 'payPal',
+  crypto: 'crypto',
+  stars: 'stars',
+} as const;
+
+export type AdminListPayments200ItemsItemMethod = typeof AdminListPayments200ItemsItemMethod[keyof typeof AdminListPayments200ItemsItemMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListPayments200ItemsItemMethod = {
+  payPal: 'payPal',
+  crypto: 'crypto',
+  stars: 'stars',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminListPayments200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+/**
+ * @nullable
+ */
+export type AdminListPayments200ItemsItemPackage = {
+  points: number;
+  usd: number;
+  discountPct: number;
+} | null;
+
+export type AdminListPayments200ItemsItemDetails = {
+  orderID?: string;
+  currency?: string;
+  chainName?: string;
+  tokenAmount?: number;
+  tokenType?: string;
+  /** @nullable */
+  transactionId?: string | null;
+  /** @nullable */
+  memo?: string | null;
+  destWallet?: string;
+  /** @nullable */
+  senderWallet?: string | null;
+  packageId?: number;
+  stars?: number;
+};
+
+export type AdminListPayments200ItemsItem = {
+  id: string;
+  method: AdminListPayments200ItemsItemMethod;
+  /** @nullable */
+  user: AdminListPayments200ItemsItemUser;
+  /** @nullable */
+  amountUsd: number | null;
+  /** @nullable */
+  points: number | null;
+  status: string;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
+  /** @nullable */
+  package?: AdminListPayments200ItemsItemPackage;
+  details?: AdminListPayments200ItemsItemDetails;
+};
+
+export type AdminListPayments200 = {
+  total: number;
+  items: AdminListPayments200ItemsItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -8290,6 +8384,64 @@ export function useAdminListUsers<TData = Awaited<ReturnType<typeof adminListUse
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminListUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminListPayments = (
+    params?: MaybeRef<AdminListPaymentsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminListPayments200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/listPayments`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminListPaymentsQueryKey = (params?: MaybeRef<AdminListPaymentsParams>,) => {
+    return ['admin','listPayments', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminListPaymentsQueryOptions = <TData = Awaited<ReturnType<typeof adminListPayments>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminListPaymentsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPayments>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminListPaymentsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListPayments>>> = ({ signal }) => adminListPayments(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListPayments>>, TError, TData> 
+}
+
+export type AdminListPaymentsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListPayments>>>
+export type AdminListPaymentsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminListPayments<TData = Awaited<ReturnType<typeof adminListPayments>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminListPaymentsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPayments>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListPaymentsQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

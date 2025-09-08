@@ -2628,6 +2628,100 @@ export type AdminListUsers200 = {
   users: AdminListUsers200UsersItem[];
 };
 
+export type AdminListPaymentsParams = {
+limit?: number;
+offset?: number;
+startDateTime?: string;
+endDateTime?: string;
+method?: AdminListPaymentsMethod;
+userId?: string;
+status?: string;
+};
+
+export type AdminListPaymentsMethod = typeof AdminListPaymentsMethod[keyof typeof AdminListPaymentsMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListPaymentsMethod = {
+  payPal: 'payPal',
+  crypto: 'crypto',
+  stars: 'stars',
+} as const;
+
+export type AdminListPayments200ItemsItemMethod = typeof AdminListPayments200ItemsItemMethod[keyof typeof AdminListPayments200ItemsItemMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListPayments200ItemsItemMethod = {
+  payPal: 'payPal',
+  crypto: 'crypto',
+  stars: 'stars',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminListPayments200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+/**
+ * @nullable
+ */
+export type AdminListPayments200ItemsItemPackage = {
+  points: number;
+  usd: number;
+  discountPct: number;
+} | null;
+
+export type AdminListPayments200ItemsItemDetails = {
+  orderID?: string;
+  currency?: string;
+  chainName?: string;
+  tokenAmount?: number;
+  tokenType?: string;
+  /** @nullable */
+  transactionId?: string | null;
+  /** @nullable */
+  memo?: string | null;
+  destWallet?: string;
+  /** @nullable */
+  senderWallet?: string | null;
+  packageId?: number;
+  stars?: number;
+};
+
+export type AdminListPayments200ItemsItem = {
+  id: string;
+  method: AdminListPayments200ItemsItemMethod;
+  /** @nullable */
+  user: AdminListPayments200ItemsItemUser;
+  /** @nullable */
+  amountUsd: number | null;
+  /** @nullable */
+  points: number | null;
+  status: string;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
+  /** @nullable */
+  package?: AdminListPayments200ItemsItemPackage;
+  details?: AdminListPayments200ItemsItemDetails;
+};
+
+export type AdminListPayments200 = {
+  total: number;
+  items: AdminListPayments200ItemsItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -5484,6 +5578,34 @@ export const getAdminListUsersUrl = (params?: AdminListUsersParams,) => {
 export const adminListUsers = async (params?: AdminListUsersParams, options?: RequestInit): Promise<AdminListUsers200> => {
   
   return fetcher<AdminListUsers200>(getAdminListUsersUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminListPaymentsUrl = (params?: AdminListPaymentsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listPayments?${stringifiedParams}` : `/admin/listPayments`
+}
+
+export const adminListPayments = async (params?: AdminListPaymentsParams, options?: RequestInit): Promise<AdminListPayments200> => {
+  
+  return fetcher<AdminListPayments200>(getAdminListPaymentsUrl(params),
   {      
     ...options,
     method: 'GET'

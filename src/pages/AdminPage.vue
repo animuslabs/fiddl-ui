@@ -6,6 +6,7 @@ q-page.full-height.full-width.admin-page
     q-tabs(v-model="tab" ).q-mb-md
       q-tab( name="promo-codes" label="Promo Codes")
       q-tab(name="users" label="Users")
+      q-tab(name="payments" label="Payments")
     div(v-if="tab == 'promo-codes'")
       .centered.q-mb-md
         q-card.q-pa-md
@@ -73,6 +74,57 @@ q-page.full-height.full-width.admin-page
             q-chip(color="accent" text-color="white" v-if="props.row.admin" size="sm" label="ADMIN")
             q-chip(color="grey-5" text-color="black" v-else size="sm" label="USER")
 
+  div(v-if="tab == 'payments'").q-pa-sm
+    .row.items-center.q-gutter-sm.q-mb-sm
+      q-input(v-model="paymentsUserId" debounce="400" placeholder="User ID" dense outlined clearable style="min-width:200px")
+      q-select(v-model="paymentsMethod" :options="paymentsMethodOptions" label="Method" dense outlined clearable style="min-width:140px")
+      q-select(v-model="paymentsStatus" :options="paymentsStatusOptions" label="Status" dense outlined clearable style="min-width:140px")
+      q-input(v-model="paymentsStart" type="datetime-local" label="Start" dense outlined clearable style="min-width:220px")
+      q-input(v-model="paymentsEnd" type="datetime-local" label="End" dense outlined clearable style="min-width:220px")
+      q-space
+      q-btn(icon="refresh" flat @click="refetchPayments" :loading="paymentsFetching")
+    q-table(
+      :rows="paymentsRows"
+      :columns="paymentsColumns"
+      row-key="id"
+      :loading="paymentsLoading || paymentsFetching"
+      v-model:pagination="paymentsPagination"
+      :rows-number="paymentsTotal"
+      @request="onPaymentsRequest"
+      binary-state-sort
+      flat
+      bordered
+      dense
+      :rows-per-page-options="[10,25,50,100,0]"
+      :no-data-label="'No payments found'"
+    )
+      template(#body-cell-status="props")
+        q-td(:props="props")
+          q-chip(:color="statusColor(props.row.status)" text-color="white" size="sm" :label="props.row.status")
+      template(#body-cell-user="props")
+        q-td(:props="props")
+          div
+            template(v-if="props.row.user")
+              span {{ userDisplay(props.row.user) }}
+              q-btn(size="sm" icon="login" flat @click="loginAsUser(props.row.user.id)" class="q-ml-xs")
+            template(v-else)
+              span -
+      template(#body-cell-package="props")
+        q-td(:props="props")
+          div(v-if="props.row.package")
+            span {{ props.row.package.points?.toLocaleString() }} pts
+            span.q-ml-xs ${{ props.row.package.usd?.toFixed(2) }}
+            span.q-ml-xs(v-if="props.row.package.discountPct") (-{{ props.row.package.discountPct }}%)
+          div(v-else) -
+      template(#body-cell-details="props")
+        q-td(:props="props")
+          div(v-if="props.row.details")
+            span(v-if="props.row.details.orderID") Order: {{ props.row.details.orderID }}
+            span(v-if="props.row.details.transactionId") Tx: {{ props.row.details.transactionId }}
+            span(v-if="props.row.details.chainName") Chain: {{ props.row.details.chainName }}
+            span(v-if="props.row.details.tokenType") Token: {{ props.row.details.tokenType }}
+            span(v-if="props.row.details.tokenAmount") Amt: {{ props.row.details.tokenAmount }}
+          div(v-else) -
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
 
@@ -105,7 +157,7 @@ import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import type { QTableColumn } from "quasar"
 import { defineComponent, ref, computed, watch } from "vue"
-import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser } from "src/lib/orval"
+import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments } from "src/lib/orval"
 import QRCode from "qrcode"
 
 type TablePagination = { sortBy: string; descending: boolean; page: number; rowsPerPage: number }
@@ -210,6 +262,125 @@ export default defineComponent({
       refetchUsers()
     })
 
+    // Payments tab
+    const paymentsUserId = ref("")
+    const paymentsMethod = ref<string | null>(null)
+    const paymentsStatus = ref<string | null>(null)
+    const paymentsStart = ref<string | null>(null)
+    const paymentsEnd = ref<string | null>(null)
+
+    const paymentsPagination = ref({
+      sortBy: "createdAt",
+      descending: true,
+      page: 1,
+      rowsPerPage: 25,
+    })
+
+    const limit2 = computed(() => {
+      const rpp = paymentsPagination.value.rowsPerPage
+      return rpp === 0 ? 1000 : rpp
+    })
+    const offset2 = computed(() => {
+      const rpp = paymentsPagination.value.rowsPerPage
+      const page = paymentsPagination.value.page
+      if (rpp === 0) return 0
+      return (page - 1) * rpp
+    })
+
+    const paymentsParams = computed(() => ({
+      limit: limit2.value,
+      offset: offset2.value,
+      userId: paymentsUserId.value?.trim() ? paymentsUserId.value.trim() : undefined,
+      method: (paymentsMethod.value || undefined) as any,
+      status: paymentsStatus.value || undefined,
+      startDateTime: paymentsStart.value ? new Date(paymentsStart.value).toISOString() : undefined,
+      endDateTime: paymentsEnd.value ? new Date(paymentsEnd.value).toISOString() : undefined,
+    }))
+
+    const paymentsQuery = useAdminListPayments(paymentsParams)
+    const paymentsRows = computed(() => {
+      const rows = paymentsQuery.data?.value?.data?.items || []
+      const sortBy = paymentsPagination.value.sortBy || "createdAt"
+      const desc = !!paymentsPagination.value.descending
+      const isDate = sortBy === "createdAt" || sortBy === "updatedAt"
+      const val = (row: any) => {
+        switch (sortBy) {
+          case "user":
+            return row.user?.username || row.user?.email || row.user?.telegramName || row.user?.telegramId || row.user?.id || ""
+          case "method":
+            return row.method || ""
+          case "status":
+            return row.status || ""
+          case "points":
+            return row.points ?? 0
+          case "amountUsd":
+            return row.amountUsd ?? 0
+          case "createdAt":
+            return row.createdAt || ""
+          case "updatedAt":
+            return row.updatedAt || ""
+          default:
+            return row[sortBy]
+        }
+      }
+      return rows.slice().sort((a: any, b: any) => {
+        const av = val(a)
+        const bv = val(b)
+        let cmp = 0
+        if (isDate) cmp = new Date(av || 0).getTime() - new Date(bv || 0).getTime()
+        else if (typeof av === "number" && typeof bv === "number") cmp = av - bv
+        else cmp = String(av ?? "").localeCompare(String(bv ?? ""))
+        return desc ? -cmp : cmp
+      })
+    })
+    const paymentsTotal = computed(() => paymentsQuery.data?.value?.data?.total || paymentsRows.value.length)
+    const paymentsLoading = paymentsQuery.isLoading
+    const paymentsFetching = paymentsQuery.isFetching
+    const refetchPayments = () => paymentsQuery.refetch()
+    const onPaymentsRequest = (props: OnRequestProps) => {
+      paymentsPagination.value = props.pagination
+      refetchPayments()
+    }
+
+    watch([paymentsUserId, paymentsMethod, paymentsStatus, paymentsStart, paymentsEnd], () => {
+      paymentsPagination.value.page = 1
+      refetchPayments()
+    })
+
+    const paymentsMethodOptions = computed(() => {
+      const vals = new Set<string>()
+      for (const r of paymentsRows.value) if (r?.method) vals.add(String(r.method))
+      return Array.from(vals).sort()
+    })
+    const paymentsStatusOptions = computed(() => {
+      const vals = new Set<string>()
+      for (const r of paymentsRows.value) if (r?.status) vals.add(String(r.status))
+      return Array.from(vals).sort()
+    })
+
+    const statusColor = (status: string) => {
+      if (!status) return "grey-6"
+      const s = status.toLowerCase()
+      if (s.includes("fail") || s.includes("declin") || s.includes("error")) return "negative"
+      if (s.includes("pend") || s.includes("incom")) return "warning"
+      if (s.includes("succe") || s.includes("complet") || s.includes("paid")) return "positive"
+      return "grey-6"
+    }
+
+    const userDisplay = (user: any) => user?.username || user?.email || user?.telegramName || user?.telegramId || user?.id || "-"
+
+    const paymentsColumns: QTableColumn<any>[] = [
+      { name: "createdAt", label: "Date", field: "createdAt", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
+      { name: "user", label: "User", field: (row: any) => row.user?.username || row.user?.email || row.user?.telegramName || row.user?.telegramId || row.user?.id || "-", sortable: true },
+      { name: "method", label: "Method", field: "method", sortable: true },
+      { name: "status", label: "Status", field: "status", sortable: true },
+      { name: "points", label: "Points", field: "points", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
+      { name: "amountUsd", label: "USD", field: "amountUsd", align: "right", sortable: true, format: (val: number) => (val != null ? `$${val.toFixed(2)}` : "") },
+      { name: "package", label: "Package", field: (row: any) => row.package, sortable: false },
+      { name: "details", label: "Details", field: (row: any) => row.details, sortable: false },
+      { name: "updatedAt", label: "Updated", field: "updatedAt", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
+    ]
+
     const banMutation = useAdminBanUser()
     const confirmBan = (row: any) => {
       if (row.banned) return
@@ -262,6 +433,25 @@ export default defineComponent({
       refetchUsers,
       confirmBan,
       onUsersRequest,
+
+      // payments
+      paymentsUserId,
+      paymentsMethod,
+      paymentsStatus,
+      paymentsStart,
+      paymentsEnd,
+      paymentsPagination,
+      paymentsRows,
+      paymentsTotal,
+      paymentsLoading,
+      paymentsFetching,
+      paymentsColumns,
+      paymentsMethodOptions,
+      paymentsStatusOptions,
+      refetchPayments,
+      onPaymentsRequest,
+      statusColor,
+      userDisplay,
     }
   },
   data() {
