@@ -23,16 +23,16 @@ let hasNotifiedExpiry = false
 // Add auth interceptor for JWT and handle pre-flight expiry
 axios.interceptors.request.use((config) => {
   // Proactively logout if token is expired
-  if (jwt.isExpired()) {
-    const auth = useUserAuth()
-    if (auth.loggedIn) auth.logout()
-    if (!hasNotifiedExpiry) {
-      hasNotifiedExpiry = true
-      Notify.create({ message: "Your session has expired. Please log in again.", color: "warning", icon: "logout" })
-    }
-    // Reject the request since the token is invalid
-    return Promise.reject(new Error("JWT expired; user logged out"))
-  }
+  // if (jwt.isExpired()) {
+  //   const auth = useUserAuth()
+  //   if (auth.loggedIn) auth.logout()
+  //   if (!hasNotifiedExpiry) {
+  //     hasNotifiedExpiry = true
+  //     Notify.create({ message: "Your session has expired. Please log in again.", color: "warning", icon: "logout" })
+  //   }
+  //   // Reject the request since the token is invalid
+  //   return Promise.reject(new Error("JWT expired; user logged out"))
+  // }
 
   const jwtData = jwt.read()
   if (jwtData) {
