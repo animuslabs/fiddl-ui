@@ -30,7 +30,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
             .col-auto
               q-btn(label="original" icon="image" @click="downloadOriginal()")
             .col-auto(v-if="type == 'image' && !isSvg")
-              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()" )
+              q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()" :disable="isUpscaling")
             small(v-if="type == 'image'") Upscaling can take 30+ seconds the first time
       .centered.q-pt-md.q-pb-md
         q-btn(label="< back" color="grey" flat @click="hide()")
@@ -41,7 +41,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 import { catchErr, downloadFile, longIdToShort, purchaseMedia, triggerDownload } from "lib/util"
 import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
 import { defineComponent, PropType } from "vue"
-import { creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest, creationsHdVideo } from "src/lib/orval"
+import { creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest, creationsHdVideo, creationsUpscaledImage } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
 import { originalDownloadUrl, upscaledUrl } from "lib/imageCdn"
@@ -59,6 +59,7 @@ export default defineComponent({
       requestData: null as null | CreationsGetImageRequest200,
       prices,
       isSvg: false,
+      isUpscaling: false,
     }
   },
   watch: {},
@@ -99,14 +100,36 @@ export default defineComponent({
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
       if (!this.currentMediaId || this.isSvg) return
       if (this.type == "video") catchErr("video upscaling not yet supported")
-      Loading.show({
-        message: "Upscaling Image",
-      })
+      this.isUpscaling = true
+      let ongoing: any
       try {
+        ongoing = Notify.create({
+          message: "Upscaling started. This may take 30+ seconds...",
+          color: "info",
+          timeout: 0,
+          spinner: true,
+          group: false,
+        })
+        await creationsUpscaledImage({ imageId: this.currentMediaId })
         const url = await upscaledUrl(this.currentMediaId)
+        if (typeof ongoing === "function") ongoing()
+        else if (ongoing?.dismiss) ongoing.dismiss()
+        Notify.create({
+          message: "4k upscale ready. Downloading now...",
+          color: "positive",
+        })
         void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-upscaled.png`)
+        this.hide()
+      } catch (error: any) {
+        console.error(error)
+        if (typeof ongoing === "function") ongoing()
+        else if (ongoing?.dismiss) ongoing.dismiss()
+        Notify.create({
+          message: "Error upscaling image",
+          color: "negative",
+        })
       } finally {
-        Loading.hide()
+        this.isUpscaling = false
       }
     },
     goToLogin() {
