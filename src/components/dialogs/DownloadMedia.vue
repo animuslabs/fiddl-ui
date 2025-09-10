@@ -104,6 +104,7 @@ export default defineComponent({
       this.isUpscaling = true
       let ongoing: any
       let url: string | null = null
+      let err: any = null
       try {
         ongoing = Notify.create({
           message: "Upscaling started. This may take 30+ seconds...",
@@ -112,14 +113,19 @@ export default defineComponent({
           spinner: true,
           group: false,
         })
+        // Close dialog immediately; proceed even if already closed/unmounted
+        this.hide()
         await creationsUpscaledImage({ imageId: this.currentMediaId })
         url = await upscaledUrl(this.currentMediaId)
-      } catch (error: any) {
-        console.error(error)
+      } catch (e: any) {
+        console.error(e)
+        err = e
       } finally {
         if (typeof ongoing === "function") ongoing()
         else if (ongoing?.dismiss) ongoing.dismiss()
-        this.isUpscaling = false
+        // avoid updating state if component already unmounted
+        const alive = !!(this as any).$ && !(this as any).$?.isUnmounted
+        if (alive) this.isUpscaling = false
       }
       if (url) {
         Notify.create({
@@ -127,12 +133,16 @@ export default defineComponent({
           color: "positive",
         })
         void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-upscaled.png`)
-        this.hide()
       } else {
-        Notify.create({
-          message: "Error upscaling image",
-          color: "negative",
-        })
+        // Only show error if it's not a benign cancellation/unmount
+        const msg = (err && (err.message || err.toString())) || ""
+        const ignorable = !err || /abort|aborted|cancell?ed|navigation/i.test(msg)
+        if (!ignorable) {
+          Notify.create({
+            message: "Error upscaling image",
+            color: "negative",
+          })
+        }
       }
     },
     goToLogin() {
@@ -165,8 +175,10 @@ export default defineComponent({
       dialog.show()
     },
     hide() {
-      const dialog = this.$refs.dialog as QDialog
-      dialog.hide()
+      try {
+        const dialog = this.$refs.dialog as QDialog | undefined
+        if (dialog && typeof (dialog as any).hide === "function") (dialog as any).hide()
+      } catch {}
     },
 
     onDialogHide() {
