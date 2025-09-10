@@ -97,11 +97,13 @@ export default defineComponent({
       }
     },
     async downloadUpscaled() {
+      if (this.isUpscaling) return
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
       if (!this.currentMediaId || this.isSvg) return
-      if (this.type == "video") catchErr("video upscaling not yet supported")
+      if (this.type == "video") { catchErr("video upscaling not yet supported"); return }
       this.isUpscaling = true
       let ongoing: any
+      let url: string | null = null
       try {
         ongoing = Notify.create({
           message: "Upscaling started. This may take 30+ seconds...",
@@ -111,25 +113,26 @@ export default defineComponent({
           group: false,
         })
         await creationsUpscaledImage({ imageId: this.currentMediaId })
-        const url = await upscaledUrl(this.currentMediaId)
+        url = await upscaledUrl(this.currentMediaId)
+      } catch (error: any) {
+        console.error(error)
+      } finally {
         if (typeof ongoing === "function") ongoing()
         else if (ongoing?.dismiss) ongoing.dismiss()
+        this.isUpscaling = false
+      }
+      if (url) {
         Notify.create({
           message: "4k upscale ready. Downloading now...",
           color: "positive",
         })
         void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-upscaled.png`)
         this.hide()
-      } catch (error: any) {
-        console.error(error)
-        if (typeof ongoing === "function") ongoing()
-        else if (ongoing?.dismiss) ongoing.dismiss()
+      } else {
         Notify.create({
           message: "Error upscaling image",
           color: "negative",
         })
-      } finally {
-        this.isUpscaling = false
       }
     },
     goToLogin() {
