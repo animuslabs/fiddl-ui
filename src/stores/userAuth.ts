@@ -5,6 +5,7 @@ import { type NotificationConfig, type PointsTransfer, type UserData, type UserP
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
+import { metaPixel } from "lib/metaPixel"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageSecretCache } from "lib/imageCdn"
 import { clearAvatarVersion, setAvatarVersion } from "lib/avatarVersion"
@@ -81,6 +82,12 @@ export const useUserAuth = defineStore("userAuth", {
 
         if (this.userProfile) {
           umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+          try {
+            metaPixel.setAdvancedMatching({
+              em: this.userProfile?.email || undefined,
+              external_id: this.userId || undefined,
+            })
+          } catch {}
         }
       } catch (error) {
         this.userProfile = null
@@ -242,6 +249,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.setUserId(userId)
       jwt.save({ userId, token })
       this.loggedIn = true
+      try { metaPixel.trackCompleteRegistration({ status: true }) } catch {}
       await this.loadUserData(userId)
       await this.loadUpvotesWallet()
       void this.loadUserProfile().then(() => {
@@ -281,6 +289,9 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {
       const result = await pkAuth.register(data)
+      try {
+        metaPixel.trackCompleteRegistration({ status: true })
+      } catch {}
       await this.pkLogin(result.registration.user.name)
       console.log(result.registration)
     },

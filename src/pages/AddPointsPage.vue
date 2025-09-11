@@ -181,6 +181,7 @@ import { catchErr, throwErr, getCookie } from "lib/util"
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/types/serverTypes"
 import { Dialog, LocalStorage } from "quasar"
 import umami from "lib/umami"
+import { metaPixel } from "lib/metaPixel"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
@@ -535,6 +536,18 @@ export default defineComponent({
           const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
           if (!res?.data) return ""
           if (!res) return ""
+          try {
+            if (this.selectedPkg) {
+              metaPixel.trackInitiateCheckout({
+                currency: "USD",
+                value: Number(this.selectedPkg.usd),
+                num_items: 1,
+                content_type: "product",
+                contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.selectedPkg.usd) }],
+                content_name: `Fiddl Points ${this.selectedPkg.points}`
+              })
+            }
+          } catch {}
           return res.data.id
         },
         onApprove: async (data, actions) => {
@@ -590,6 +603,18 @@ export default defineComponent({
     paymentCompleted() {
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
+      try {
+        if (this.selectedPkg) {
+          metaPixel.trackPurchase({
+            currency: "USD",
+            value: Number(this.selectedPkg.usd),
+            num_items: 1,
+            content_type: "product",
+            contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.selectedPkg.usd) }],
+            content_name: `Fiddl Points ${this.selectedPkg.points}`
+          })
+        }
+      } catch {}
       umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
       LocalStorage.remove("orderDetails")
       this.selectedPkg = null

@@ -263,10 +263,24 @@ export class MetaPixel {
    * Update advanced matching fields after initialization
    */
   setAdvancedMatching(am: AdvancedMatching): void {
-    if (!this.canTrack()) return
-    if (this._pixelId && window.fbq) {
-      window.fbq("init", this._pixelId, am)
+    if (!this.isBrowser()) return
+    const fbq = window.fbq
+    if (!fbq) return
+    let pid = this._pixelId
+    if (!pid) {
+      try {
+        pid = (import.meta as any).env?.VITE_META_PIXEL_ID || (import.meta as any).env?.METAPIXEL_ID || null
+      } catch {
+        pid = null as any
+      }
+    }
+    if (pid) {
+      fbq("init", pid as any, am)
+      this._pixelId = String(pid)
+      this._initialized = true
       if (this._debug) console.info("[MetaPixel] advanced matching set", am)
+    } else {
+      if (this._debug) console.info("[MetaPixel] advanced matching skipped; missing pixel id")
     }
   }
 
@@ -358,15 +372,21 @@ export class MetaPixel {
     window.fbq && window.fbq("track", "PageView")
   }
 
-  /** True if running in browser and pixel is initialized */
+  /** True if running in browser and pixel is initialized or global fbq exists */
   private canTrack(): boolean {
     if (!this.isBrowser()) return false
+    if (window.fbq) {
+      if (!this._initialized) {
+        this._initialized = true
+        try {
+          const pid = (import.meta as any).env?.VITE_META_PIXEL_ID || (import.meta as any).env?.METAPIXEL_ID
+          if (pid) this._pixelId = String(pid)
+        } catch {}
+      }
+      return true
+    }
     if (!this._initialized || !this._pixelId) {
       if (this._debug) console.warn("[MetaPixel] not initialized; ignoring track call")
-      return false
-    }
-    if (!window.fbq) {
-      if (this._debug) console.warn("[MetaPixel] fbq missing; ignoring track call")
       return false
     }
     return true

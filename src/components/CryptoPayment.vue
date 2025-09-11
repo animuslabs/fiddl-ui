@@ -57,12 +57,13 @@ div
 
 <script lang="ts">
 import { defineComponent, PropType } from "vue"
-import { pointsFinishBuyPackage, pointsInitBuyPackage } from "src/lib/orval"
+import { pointsFinishBuyPackage, pointsInitBuyPackage, pointsPackagesAvailable } from "src/lib/orval"
 import { CryptoOrder } from "lib/prisma"
 type CryptoMethod = "telosNative" | "telosEVM"
 import { copyToClipboard, LocalStorage, Notify } from "quasar"
 let interval: ReturnType<typeof setInterval> | null = null
 import ms from "ms"
+import { metaPixel } from "lib/metaPixel"
 export default defineComponent({
   name: "CryptoPayment",
   props: {
@@ -77,6 +78,8 @@ export default defineComponent({
       loading: false,
       selectedMethod: null as null | CryptoMethod,
       cryptoOrder: null as null | CryptoOrder,
+      purchaseUsd: null as number | null,
+      purchasePoints: null as number | null,
     }
   },
   beforeUnmount() {
@@ -119,11 +122,23 @@ export default defineComponent({
       console.log("startFinishOrder", this.cryptoOrder, this.selectedMethod)
       if (!this.cryptoOrder || !this.selectedMethod) return
       try {
-        const response = await pointsFinishBuyPackage({ 
-          method: this.selectedMethod, 
-          orderId: this.cryptoOrder?.id 
+        const response = await pointsFinishBuyPackage({
+          method: this.selectedMethod,
+          orderId: this.cryptoOrder?.id
         })
         if (response?.data) {
+          try {
+            if (this.purchaseUsd != null) {
+              metaPixel.trackPurchase({
+                currency: "USD",
+                value: Number(this.purchaseUsd),
+                num_items: 1,
+                content_type: "product",
+                contents: [{ id: `points_${this.purchasePoints || 0}`, quantity: 1, item_price: Number(this.purchaseUsd) }],
+                content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package"
+              })
+            }
+          } catch {}
           this.$emit("paymentComplete")
           console.log(response.data)
         }
@@ -148,6 +163,30 @@ export default defineComponent({
           LocalStorage.set("cryptoOrder", order)
           this.cryptoOrder = order
         }
+
+        // Load package info to attribute value/points
+        try {
+          const { data: pkgs } = await pointsPackagesAvailable()
+          if (Array.isArray(pkgs)) {
+            const pkg = pkgs?.[packageId] as any
+            if (pkg) {
+              this.purchaseUsd = Number(pkg.usd)
+              this.purchasePoints = Number(pkg.points)
+            }
+          }
+        } catch {}
+
+        // Track checkout initiation for crypto
+        try {
+          metaPixel.trackInitiateCheckout({
+            currency: this.purchaseUsd != null ? "USD" : undefined,
+            value: this.purchaseUsd != null ? Number(this.purchaseUsd) : undefined,
+            num_items: 1,
+            content_type: "product",
+            contents: [{ id: this.purchasePoints != null ? `points_${this.purchasePoints}` : "points_pkg", quantity: 1, item_price: this.purchaseUsd != null ? Number(this.purchaseUsd) : undefined }],
+            content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package (crypto)"
+          } as any)
+        } catch {}
       } catch (error) {
         console.error("Failed to initialize package purchase:", error)
       }
