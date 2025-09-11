@@ -70,8 +70,26 @@ function injectSsrBlocks(html: string, blocks: string[]): string {
 }
 
 function setSocial(html: string, meta: Required<SocialMetaInput>): string {
-  // remove all previous OG/Twitter+canonical, then inject new (your existing approach)
-  html = html.replace(/<meta\s+[^>]*?(property|name)=["']?(og:[^"']+|twitter:[^"']+)["'][^>]*?>/gi, "").replace(/<link\s+[^>]*?rel=["']?canonical["'][^>]*?>/gi, "")
+  // remove only the OG/Twitter tags we override (leave custom ones intact)
+  const overridden = [
+    "og:title",
+    "og:description",
+    "og:image",
+    "og:url",
+    "og:type",
+    "twitter:card",
+    "twitter:title",
+    "twitter:description",
+    "twitter:image",
+    "twitter:image:alt",
+  ]
+  const rx = new RegExp(
+    `<meta\\s+[^>]*?(?:property|name)=["']?(?:${overridden.join("|")})["'][^>]*?>`,
+    "gi",
+  )
+  html = html
+    .replace(rx, "")
+    .replace(/<link\s+[^>]*?rel=["']?canonical["'][^>]*?>/gi, "")
 
   const tags = [
     `<meta property="og:type"        content="${meta.ogType}">`,

@@ -28,6 +28,19 @@ Router.afterEach((to) => {
   }
 })
 
+// Track Meta Pixel page views on SPA navigations (skip initial load)
+let hasTrackedInitialPageView = false
+Router.afterEach(() => {
+  if (import.meta.env.CLIENT) {
+    if (hasTrackedInitialPageView) {
+      const fbq = (window as any).fbq
+      if (typeof fbq === "function") fbq("track", "PageView")
+    } else {
+      hasTrackedInitialPageView = true
+    }
+  }
+})
+
 // Preload other route chunks when idle after initial load
 if (import.meta.env.CLIENT) {
   setupRoutePrefetch(Router, {
