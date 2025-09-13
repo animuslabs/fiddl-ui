@@ -1006,6 +1006,7 @@ export type CreationsSetRequestPrivacyBody = {
 
 export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
+offset?: number;
 };
 
 export type CreationsDeleteUploadedImageBody = {
@@ -1880,7 +1881,24 @@ export type CollectionsFindCollectionByName200 = {
 
 export type CollectionsGetCollectionImagesParams = {
 id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionImagesOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
 };
+
+export type CollectionsGetCollectionImagesOrder = typeof CollectionsGetCollectionImagesOrder[keyof typeof CollectionsGetCollectionImagesOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionImagesOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type CollectionsGetCollectionImages200ItemImageRequest = {
   userId: string;
@@ -1900,7 +1918,24 @@ export type CollectionsGetCollectionImages200Item = {
 
 export type CollectionsGetCollectionVideosParams = {
 id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionVideosOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
 };
+
+export type CollectionsGetCollectionVideosOrder = typeof CollectionsGetCollectionVideosOrder[keyof typeof CollectionsGetCollectionVideosOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionVideosOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
 
@@ -1934,6 +1969,68 @@ export type CollectionsGetCollectionVideos200Item = {
   /** @nullable */
   errorMessage: string | null;
   VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
+};
+
+export type CollectionsGetCollectionMediaParams = {
+id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionMediaOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
+mediaType?: CollectionsGetCollectionMediaMediaType;
+};
+
+export type CollectionsGetCollectionMediaOrder = typeof CollectionsGetCollectionMediaOrder[keyof typeof CollectionsGetCollectionMediaOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMediaOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type CollectionsGetCollectionMediaMediaType = typeof CollectionsGetCollectionMediaMediaType[keyof typeof CollectionsGetCollectionMediaMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMediaMediaType = {
+  image: 'image',
+  video: 'video',
+  all: 'all',
+} as const;
+
+export type CollectionsGetCollectionMedia200ItemsItemMediaType = typeof CollectionsGetCollectionMedia200ItemsItemMediaType[keyof typeof CollectionsGetCollectionMedia200ItemsItemMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMedia200ItemsItemMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type CollectionsGetCollectionMedia200ItemsItem = {
+  mediaType: CollectionsGetCollectionMedia200ItemsItemMediaType;
+  id: string;
+  createdAt: string;
+  aspectRatio: string;
+  requestId: string;
+  userId: string;
+};
+
+export type CollectionsGetCollectionMedia200TotalCounts = {
+  image: number;
+  video: number;
+  all: number;
+};
+
+export type CollectionsGetCollectionMedia200 = {
+  items: CollectionsGetCollectionMedia200ItemsItem[];
+  totalCounts: CollectionsGetCollectionMedia200TotalCounts;
+  hasMore: boolean;
 };
 
 export type PromoCreatePromoCodeBody = {
@@ -2799,6 +2896,42 @@ export type AdminListMissionClaims200ItemsItem = {
 export type AdminListMissionClaims200 = {
   total: number;
   items: AdminListMissionClaims200ItemsItem[];
+};
+
+export type AdminListUploadedImagesParams = {
+limit?: number;
+offset?: number;
+account?: string;
+startDateTime?: string;
+endDateTime?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListUploadedImages200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListUploadedImages200ItemsItem = {
+  id: string;
+  createdAt: string;
+  url: string;
+  /** @nullable */
+  user: AdminListUploadedImages200ItemsItemUser;
+};
+
+export type AdminListUploadedImages200 = {
+  total: number;
+  items: AdminListUploadedImages200ItemsItem[];
 };
 
 export type TonomyAuthLoginOrRegisterBody = {
@@ -5202,6 +5335,34 @@ export const collectionsGetCollectionVideos = async (params: CollectionsGetColle
 
 
 
+export const getCollectionsGetCollectionMediaUrl = (params: CollectionsGetCollectionMediaParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/collections/getCollectionMedia?${stringifiedParams}` : `/collections/getCollectionMedia`
+}
+
+export const collectionsGetCollectionMedia = async (params: CollectionsGetCollectionMediaParams, options?: RequestInit): Promise<CollectionsGetCollectionMedia200> => {
+  
+  return fetcher<CollectionsGetCollectionMedia200>(getCollectionsGetCollectionMediaUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getPromoCreatePromoCodeUrl = () => {
 
 
@@ -5713,6 +5874,34 @@ export const getAdminListMissionClaimsUrl = (params?: AdminListMissionClaimsPara
 export const adminListMissionClaims = async (params?: AdminListMissionClaimsParams, options?: RequestInit): Promise<AdminListMissionClaims200> => {
   
   return fetcher<AdminListMissionClaims200>(getAdminListMissionClaimsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminListUploadedImagesUrl = (params?: AdminListUploadedImagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listUploadedImages?${stringifiedParams}` : `/admin/listUploadedImages`
+}
+
+export const adminListUploadedImages = async (params?: AdminListUploadedImagesParams, options?: RequestInit): Promise<AdminListUploadedImages200> => {
+  
+  return fetcher<AdminListUploadedImages200>(getAdminListUploadedImagesUrl(params),
   {      
     ...options,
     method: 'GET'

@@ -32,12 +32,28 @@ q-dialog(v-model="innerOpen")
           q-btn(v-if="multiSelect" flat dense icon="done" label="Done" color="positive" @click="acceptSelection" :disable="!selectedIds.length")
           q-btn(flat dense icon="close" label="Cancel" color="secondary" @click="close")
 
+      // Top pagination
+      .row.justify-center.q-mt-sm
+        q-pagination(
+          v-if="rowsPerPage !== 0 && total > 0"
+          v-model="page"
+          :max="maxPages"
+          max-pages="8"
+          boundary-links
+          direction-links
+          color="primary"
+          size="lg"
+        )
+
       .q-ma-md
         UploadedImageViewer.full-width(
           @select="onUploadedSelected"
           @deleted="onUploadedDeleted"
+          @loaded="onLoaded"
           :thumbSizeMobile="thumbSizeMobileProp"
           :selectedIds="multiSelect ? selectedIds : []"
+          :limit="rowsPerPage || undefined"
+          :offset="offset || undefined"
         )
 
       // Sticky footer on mobile showing selection count (multi only)
@@ -45,6 +61,22 @@ q-dialog(v-model="innerOpen")
         .row.items-center.justify-between
           .text-caption {{ selectedIds.length }} selected (max {{ max }})
           q-btn(unelevated size="lg" icon="done_all" label="Done" color="positive" @click="acceptSelection" :disable="!selectedIds.length")
+
+      // Bottom pagination + rows
+      .row.items-center.q-gutter-sm.q-mt-sm
+        q-select(v-model="rowsPerPage" :options="rowsPerPageOptions" label="Rows" dense outlined style="width:100px")
+        q-space
+        .row.justify-center.full-width
+          q-pagination(
+            v-if="rowsPerPage !== 0 && total > 0"
+            v-model="page"
+            :max="maxPages"
+            max-pages="8"
+            boundary-links
+            direction-links
+            color="primary"
+            size="lg"
+          )
 
       //- // Floating desktop Done button
       //- div(v-if="multiSelect && $q.screen.gt.xs" class="done-fab")
@@ -85,6 +117,22 @@ const innerOpen = ref(props.modelValue)
 const showUploads = ref(false)
 const selectedIds = ref<string[]>([])
 const fileInputRef = ref<HTMLInputElement | null>(null)
+// Pagination state for uploads picker
+const page = ref(1)
+const rowsPerPage = ref(24)
+const rowsPerPageOptions = [12, 24, 48, 96]
+const total = ref(0)
+const offset = computed(() => (rowsPerPage.value === 0 ? 0 : (page.value - 1) * rowsPerPage.value))
+const maxPages = computed(() => {
+  const rpp = rowsPerPage.value || 1
+  return Math.max(1, Math.ceil(total.value / rpp))
+})
+watch(
+  () => rowsPerPage.value,
+  () => {
+    page.value = 1
+  },
+)
 
 // Helper to sanitize preselected list: unique + max limit
 function sanitizePreselected(list: string[] | undefined): string[] {
@@ -100,6 +148,8 @@ watch(
     if (val) {
       // Initialize selection from provided preselected list when opening
       selectedIds.value = props.multiSelect ? sanitizePreselected(props.preselectedIds) : []
+      // Reset pagination on open
+      page.value = 1
     } else {
       // Reset on close
       showUploads.value = false
@@ -213,6 +263,15 @@ function onUploadedDeleted(id: string) {
   if (!props.multiSelect) return
   if (selectedIds.value.includes(id)) {
     selectedIds.value = selectedIds.value.filter((x) => x !== id)
+  }
+}
+
+function onLoaded(t: number) {
+  total.value = Number.isFinite(t as any) ? Number(t) : 0
+  // Clamp current page if total shrank
+  if (rowsPerPage.value > 0) {
+    const max = Math.max(1, Math.ceil(total.value / rowsPerPage.value))
+    if (page.value > max) page.value = max
   }
 }
 

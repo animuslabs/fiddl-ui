@@ -1035,6 +1035,7 @@ export type CreationsSetRequestPrivacyBody = {
 
 export type CreationsGetUserUploadedImagesParams = {
 limit?: number;
+offset?: number;
 };
 
 export type CreationsDeleteUploadedImageBody = {
@@ -1909,7 +1910,24 @@ export type CollectionsFindCollectionByName200 = {
 
 export type CollectionsGetCollectionImagesParams = {
 id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionImagesOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
 };
+
+export type CollectionsGetCollectionImagesOrder = typeof CollectionsGetCollectionImagesOrder[keyof typeof CollectionsGetCollectionImagesOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionImagesOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type CollectionsGetCollectionImages200ItemImageRequest = {
   userId: string;
@@ -1929,7 +1947,24 @@ export type CollectionsGetCollectionImages200Item = {
 
 export type CollectionsGetCollectionVideosParams = {
 id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionVideosOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
 };
+
+export type CollectionsGetCollectionVideosOrder = typeof CollectionsGetCollectionVideosOrder[keyof typeof CollectionsGetCollectionVideosOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionVideosOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
 
@@ -1963,6 +1998,68 @@ export type CollectionsGetCollectionVideos200Item = {
   /** @nullable */
   errorMessage: string | null;
   VideoRequest: CollectionsGetCollectionVideos200ItemVideoRequest;
+};
+
+export type CollectionsGetCollectionMediaParams = {
+id: string;
+limit?: number;
+offset?: number;
+order?: CollectionsGetCollectionMediaOrder;
+startDateTime?: string;
+endDateTime?: string;
+model?: string;
+aspectRatio?: string;
+promptIncludes?: string;
+mediaType?: CollectionsGetCollectionMediaMediaType;
+};
+
+export type CollectionsGetCollectionMediaOrder = typeof CollectionsGetCollectionMediaOrder[keyof typeof CollectionsGetCollectionMediaOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMediaOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type CollectionsGetCollectionMediaMediaType = typeof CollectionsGetCollectionMediaMediaType[keyof typeof CollectionsGetCollectionMediaMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMediaMediaType = {
+  image: 'image',
+  video: 'video',
+  all: 'all',
+} as const;
+
+export type CollectionsGetCollectionMedia200ItemsItemMediaType = typeof CollectionsGetCollectionMedia200ItemsItemMediaType[keyof typeof CollectionsGetCollectionMedia200ItemsItemMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionsGetCollectionMedia200ItemsItemMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type CollectionsGetCollectionMedia200ItemsItem = {
+  mediaType: CollectionsGetCollectionMedia200ItemsItemMediaType;
+  id: string;
+  createdAt: string;
+  aspectRatio: string;
+  requestId: string;
+  userId: string;
+};
+
+export type CollectionsGetCollectionMedia200TotalCounts = {
+  image: number;
+  video: number;
+  all: number;
+};
+
+export type CollectionsGetCollectionMedia200 = {
+  items: CollectionsGetCollectionMedia200ItemsItem[];
+  totalCounts: CollectionsGetCollectionMedia200TotalCounts;
+  hasMore: boolean;
 };
 
 export type PromoCreatePromoCodeBody = {
@@ -2828,6 +2925,42 @@ export type AdminListMissionClaims200ItemsItem = {
 export type AdminListMissionClaims200 = {
   total: number;
   items: AdminListMissionClaims200ItemsItem[];
+};
+
+export type AdminListUploadedImagesParams = {
+limit?: number;
+offset?: number;
+account?: string;
+startDateTime?: string;
+endDateTime?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListUploadedImages200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListUploadedImages200ItemsItem = {
+  id: string;
+  createdAt: string;
+  url: string;
+  /** @nullable */
+  user: AdminListUploadedImages200ItemsItemUser;
+};
+
+export type AdminListUploadedImages200 = {
+  total: number;
+  items: AdminListUploadedImages200ItemsItem[];
 };
 
 export type TonomyAuthLoginOrRegisterBody = {
@@ -7394,6 +7527,64 @@ export function useCollectionsGetCollectionVideos<TData = Awaited<ReturnType<typ
 
 
 
+export const collectionsGetCollectionMedia = (
+    params: MaybeRef<CollectionsGetCollectionMediaParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CollectionsGetCollectionMedia200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/collections/getCollectionMedia`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCollectionsGetCollectionMediaQueryKey = (params: MaybeRef<CollectionsGetCollectionMediaParams>,) => {
+    return ['collections','getCollectionMedia', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCollectionsGetCollectionMediaQueryOptions = <TData = Awaited<ReturnType<typeof collectionsGetCollectionMedia>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<CollectionsGetCollectionMediaParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionMedia>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCollectionsGetCollectionMediaQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof collectionsGetCollectionMedia>>> = ({ signal }) => collectionsGetCollectionMedia(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionMedia>>, TError, TData> 
+}
+
+export type CollectionsGetCollectionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof collectionsGetCollectionMedia>>>
+export type CollectionsGetCollectionMediaQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCollectionsGetCollectionMedia<TData = Awaited<ReturnType<typeof collectionsGetCollectionMedia>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<CollectionsGetCollectionMediaParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof collectionsGetCollectionMedia>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCollectionsGetCollectionMediaQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const promoCreatePromoCode = (
     promoCreatePromoCodeBody: MaybeRef<PromoCreatePromoCodeBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PromoCreatePromoCode200>> => {
@@ -8579,6 +8770,64 @@ export function useAdminListMissionClaims<TData = Awaited<ReturnType<typeof admi
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminListMissionClaimsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminListUploadedImages = (
+    params?: MaybeRef<AdminListUploadedImagesParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminListUploadedImages200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/listUploadedImages`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminListUploadedImagesQueryKey = (params?: MaybeRef<AdminListUploadedImagesParams>,) => {
+    return ['admin','listUploadedImages', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminListUploadedImagesQueryOptions = <TData = Awaited<ReturnType<typeof adminListUploadedImages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminListUploadedImagesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListUploadedImages>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminListUploadedImagesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListUploadedImages>>> = ({ signal }) => adminListUploadedImages(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListUploadedImages>>, TError, TData> 
+}
+
+export type AdminListUploadedImagesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListUploadedImages>>>
+export type AdminListUploadedImagesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminListUploadedImages<TData = Awaited<ReturnType<typeof adminListUploadedImages>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminListUploadedImagesParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListUploadedImages>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListUploadedImagesQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

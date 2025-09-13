@@ -57,7 +57,7 @@ q-page.full-height.full-width
         ).gt-xs
         q-separator(vertical v-if="tab === 'creations'").gt-xs
         // Pagination controls (always on for creations/favorites)
-        div.row.items-center.q-gutter-sm(v-if="tab === 'creations' || tab === 'favorites'")
+        div.row.items-center.q-gutter-sm(ref="topPager" v-if="tab === 'creations' || tab === 'favorites'")
           q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px" @update:model-value="goToPage()")
           q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px" @update:model-value="goToPage(true)")
           q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
@@ -740,26 +740,24 @@ export default defineComponent({
     }
   },
   methods: {
-    scrollToTop() {
+    // Scroll the top pager row into view (mirrors AdminPage behavior)
+    scrollTopPagerIntoView() {
       if (typeof window === 'undefined') return
-      const el = (this.$refs as any)?.filtersBar as HTMLElement | undefined
-      if (el && typeof el.getBoundingClientRect === 'function') {
-        try {
-          const y = el.getBoundingClientRect().top + window.scrollY - 50 // align just under fixed header
-          window.scrollTo({ top: y, behavior: 'smooth' })
-          return
-        } catch {
-          const y = el.getBoundingClientRect().top + window.scrollY - 50
-          window.scrollTo(0, y)
-          return
-        }
-      }
-      // Fallback: scroll to page top if element not found
       try {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      } catch {
-        window.scrollTo(0, 0)
-      }
+        const refs: any = this.$refs || {}
+        // Prefer a plain DOM element for precise alignment
+        const el: HTMLElement | null = refs.topPager || (refs.filtersBar && (refs.filtersBar.$el || refs.filtersBar)) || null
+        if (!el || typeof el.getBoundingClientRect !== 'function') return
+        const rect = el.getBoundingClientRect()
+        // Account for the fixed header/sticky offset so buttons are fully visible
+        const headerOffset = 50 // keep in sync with sticky top
+        const top = window.pageYOffset + rect.top - headerOffset
+        try {
+          window.scrollTo({ top, behavior: 'smooth' })
+        } catch {
+          window.scrollTo(0, top)
+        }
+      } catch {}
     },
     aspectRatioToNumber(raw?: string): number | undefined {
       if (!raw) return undefined
@@ -881,7 +879,7 @@ export default defineComponent({
       } else if (this.tab === 'favorites') {
         void this.loadFavorites()
       }
-      this.scrollToTop()
+      this.scrollTopPagerIntoView()
     },
     prevPage() {
       if (this.page > 1) {
