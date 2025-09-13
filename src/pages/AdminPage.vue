@@ -130,11 +130,27 @@ q-page.full-height.full-width.admin-page
   // Uploaded Images tab
   div(v-if="tab == 'uploaded-images'").q-pa-sm
     .row.items-center.q-gutter-sm.q-mb-sm
+      q-btn-toggle(v-model="uploadsView" :options="uploadsViewOptions" dense unelevated size="sm")
       q-input(v-model="uploadsAccount" debounce="400" placeholder="Filter by account (username/email/id)" dense outlined clearable style="min-width:260px")
+      q-input(v-model="uploadsStart" type="datetime-local" label="Start" dense outlined clearable style="min-width:220px")
+      q-input(v-model="uploadsEnd" type="datetime-local" label="End" dense outlined clearable style="min-width:220px")
+      q-select(v-model="uploadsPagination.rowsPerPage" :options="[10,25,50,100]" label="Rows" dense outlined style="width:100px")
       q-space
       q-btn(v-if="uploadsAccount" icon="block" color="negative" flat :label="singleUploaderUser ? `Ban ${userDisplay(singleUploaderUser)}` : 'Ban account'" @click="banTopUser")
       q-btn(icon="refresh" flat @click="refetchUploads" :loading="uploadsFetching")
-    q-table(
+    // Top page navigation (centered, large)
+    .row.justify-center.q-mb-sm(ref="topPager")
+      q-pagination(
+        v-if="uploadsPagination.rowsPerPage !== 0 && uploadsTotal > 0"
+        v-model="uploadsPagination.page"
+        :max="Math.max(1, Math.ceil(uploadsTotal / uploadsPagination.rowsPerPage))"
+        max-pages="8"
+        boundary-links
+        direction-links
+        color="primary"
+        size="lg"
+      )
+    q-table(v-if="uploadsView === 'table'"
       :rows="uploadsRows"
       :columns="uploadsColumns"
       row-key="id"
@@ -146,6 +162,7 @@ q-page.full-height.full-width.admin-page
       flat
       bordered
       dense
+      :hide-bottom="true"
       :rows-per-page-options="[10,25,50,100,0]"
       :no-data-label="'No uploaded images found'"
     )
@@ -160,7 +177,36 @@ q-page.full-height.full-width.admin-page
         q-td(:props="props")
           .row.items-center.q-gutter-xs
             q-btn(size="sm" icon="delete" color="negative" flat @click="confirmDeleteUpload(props.row)")
+            q-btn(size="sm" icon="block" color="negative" flat @click="banUploader(props.row)")
             q-btn(size="sm" icon="person_search" flat v-if="!uploadsAccount" @click="lookupUploader(props.row)")
+    // Grid view for uploaded images
+    div(v-else)
+      div(v-if="uploadsLoading && !uploadsRows.length" class="row justify-center q-my-md")
+        q-spinner(size="32px" color="primary")
+      .row.q-col-gutter-sm
+        .col-6.col-sm-4.col-md-3.col-lg-2(v-for="row in uploadsRows" :key="row.id")
+          q-card(flat bordered)
+            div(style="position:relative;")
+              q-img(:src="s3Img('uploads/' + row.id)" style="width:100%; height:0; padding-bottom:100%; object-fit:cover;")
+              .row.items-center.q-gutter-xs(style="position:absolute; top:6px; right:6px;")
+                q-btn(size="sm" round dense color="negative" icon="delete" @click="confirmDeleteUpload(row)")
+                q-btn(size="sm" round dense color="negative" icon="block" @click="banUploader(row)")
+            q-card-section(class="q-pa-sm")
+              div(style="font-size:12px;" class="ellipsis") {{ userDisplay(row.user) }}
+              div(style="font-size:11px; color:#777") {{ row.createdAt ? new Date(row.createdAt).toLocaleString() : '' }}
+    // Bottom page navigation (centered, large)
+    .row.justify-center.q-mt-sm
+      q-pagination(
+        v-if="uploadsPagination.rowsPerPage !== 0 && uploadsTotal > 0"
+        v-model="uploadsPagination.page"
+        @update:model-value="onBottomPageChange"
+        :max="Math.max(1, Math.ceil(uploadsTotal / uploadsPagination.rowsPerPage))"
+        max-pages="8"
+        boundary-links
+        direction-links
+        color="primary"
+        size="lg"
+      )
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
 
@@ -460,6 +506,14 @@ export default defineComponent({
 
     // Uploaded Images state
     const uploadsAccount = ref("")
+    const uploadsView = ref<'table' | 'grid'>("grid")
+    const topPager = ref<HTMLElement | null>(null)
+    const uploadsViewOptions = [
+      { label: 'Table', value: 'table', icon: 'table_rows' },
+      { label: 'Grid', value: 'grid', icon: 'grid_on' },
+    ]
+    const uploadsStart = ref<string | null>(null)
+    const uploadsEnd = ref<string | null>(null)
     const uploadsPagination = ref({
       sortBy: "createdAt",
       descending: true,
@@ -500,6 +554,8 @@ export default defineComponent({
           order: uploadsPagination.value.descending ? "desc" : "asc",
         }
         if (uploadsAccount.value?.trim()) params.account = uploadsAccount.value.trim()
+        if (uploadsStart.value) params.startDateTime = new Date(uploadsStart.value).toISOString()
+        if (uploadsEnd.value) params.endDateTime = new Date(uploadsEnd.value).toISOString()
         // Prefer orval admin endpoint if available, fallback to raw axios
         let data: any
         try {
@@ -530,14 +586,46 @@ export default defineComponent({
     }
 
     const refetchUploads = () => fetchUploads(false)
+    const uploadsSilent = ref(false)
     const onUploadsRequest = (props: OnRequestProps) => {
+      uploadsSilent.value = true
       uploadsPagination.value = props.pagination
       void refetchUploads()
+      uploadsSilent.value = false
     }
-    watch(uploadsAccount, () => {
+    watch([uploadsAccount, uploadsStart, uploadsEnd], () => {
       uploadsPagination.value.page = 1
       void refetchUploads()
     })
+    // React to external page/rows changes (top/bottom paginators and rows selector)
+    watch(
+      () => [uploadsPagination.value.page, uploadsPagination.value.rowsPerPage],
+      () => {
+        if (uploadsSilent.value) return
+        void refetchUploads()
+      }
+    )
+    watch(
+      () => uploadsPagination.value.rowsPerPage,
+      () => {
+        uploadsPagination.value.page = 1
+      }
+    )
+
+    function scrollTopPagerIntoView() {
+      try {
+        const el = topPager.value
+        if (!el || typeof window === 'undefined') return
+        const rect = el.getBoundingClientRect()
+        const top = window.pageYOffset + rect.top - 8
+        window.scrollTo({ top, behavior: 'smooth' })
+      } catch {}
+    }
+
+    function onBottomPageChange() {
+      // v-model already updated uploadsPagination.page; just scroll the top pager into view
+      scrollTopPagerIntoView()
+    }
 
     // Identify if results correspond to a single uploader for top ban button
     const singleUploaderUser = computed(() => {
@@ -583,6 +671,23 @@ export default defineComponent({
             items: [],
           },
         }).onOk(() => confirmBan(user))
+      } catch (error) {
+        catchErr(error)
+      }
+    }
+
+    async function banUploader(row: any) {
+      try {
+        const uid = row?.user?.id
+        if (!uid) return
+        try {
+          const res = await adminListUsers({ search: uid, limit: 1, offset: 0 })
+          const user = res?.data?.users?.[0]
+          if (user) return confirmBan(user)
+        } catch {}
+        // fallback minimal row
+        const fallbackRow = { id: uid, profile: { username: userDisplay(row.user) }, banned: false }
+        confirmBan(fallbackRow as any)
       } catch (error) {
         catchErr(error)
       }
@@ -650,6 +755,11 @@ export default defineComponent({
 
       // uploads
       uploadsAccount,
+      uploadsView,
+      uploadsViewOptions,
+      topPager,
+      uploadsStart,
+      uploadsEnd,
       uploadsPagination,
       uploadsRows,
       uploadsTotal,
@@ -662,6 +772,8 @@ export default defineComponent({
       singleUploaderUser,
       banTopUser,
       lookupUploader,
+      banUploader,
+      onBottomPageChange,
       confirmDeleteUpload,
     }
   },
