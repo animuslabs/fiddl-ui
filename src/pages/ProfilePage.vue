@@ -937,7 +937,7 @@ export default defineComponent({
 
     // For favorites tab
     showFavoritesDetails(mediaIndex: number) {
-      const mediaObjects: MediaGalleryMeta[] = this.favoritesPageItems.map((el) => ({ id: el.id, type: el.type }))
+      const mediaObjects: MediaGalleryMeta[] = this.favoritesPageItems.map((el: any) => ({ id: el.id, type: (el.type || el.mediaType) }))
       void mediaViwer.show(mediaObjects, mediaIndex)
     },
 

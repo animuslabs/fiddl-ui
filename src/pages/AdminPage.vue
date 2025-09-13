@@ -7,6 +7,7 @@ q-page.full-height.full-width.admin-page
       q-tab( name="promo-codes" label="Promo Codes")
       q-tab(name="users" label="Users")
       q-tab(name="payments" label="Payments")
+      q-tab(name="uploaded-images" label="Uploaded Images")
     div(v-if="tab == 'promo-codes'")
       .centered.q-mb-md
         q-card.q-pa-md
@@ -125,6 +126,41 @@ q-page.full-height.full-width.admin-page
             span(v-if="props.row.details.tokenType") Token: {{ props.row.details.tokenType }}
             span(v-if="props.row.details.tokenAmount") Amt: {{ props.row.details.tokenAmount }}
           div(v-else) -
+
+  // Uploaded Images tab
+  div(v-if="tab == 'uploaded-images'").q-pa-sm
+    .row.items-center.q-gutter-sm.q-mb-sm
+      q-input(v-model="uploadsAccount" debounce="400" placeholder="Filter by account (username/email/id)" dense outlined clearable style="min-width:260px")
+      q-space
+      q-btn(v-if="uploadsAccount" icon="block" color="negative" flat :label="singleUploaderUser ? `Ban ${userDisplay(singleUploaderUser)}` : 'Ban account'" @click="banTopUser")
+      q-btn(icon="refresh" flat @click="refetchUploads" :loading="uploadsFetching")
+    q-table(
+      :rows="uploadsRows"
+      :columns="uploadsColumns"
+      row-key="id"
+      :loading="uploadsLoading || uploadsFetching"
+      v-model:pagination="uploadsPagination"
+      :rows-number="uploadsTotal"
+      @request="onUploadsRequest"
+      binary-state-sort
+      flat
+      bordered
+      dense
+      :rows-per-page-options="[10,25,50,100,0]"
+      :no-data-label="'No uploaded images found'"
+    )
+      template(#body-cell-preview="props")
+        q-td(:props="props")
+          q-img(:src="s3Img('uploads/' + props.row.id)" style="width:60px; height:60px; object-fit:cover; border-radius:4px;")
+      template(#body-cell-user="props")
+        q-td(:props="props") {{ userDisplay(props.row.user) }}
+      template(#body-cell-createdAt="props")
+        q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
+      template(#body-cell-actions="props")
+        q-td(:props="props")
+          .row.items-center.q-gutter-xs
+            q-btn(size="sm" icon="delete" color="negative" flat @click="confirmDeleteUpload(props.row)")
+            q-btn(size="sm" icon="person_search" flat v-if="!uploadsAccount" @click="lookupUploader(props.row)")
   .centered.q-gutter-lg.q-ma-md(v-else)
     h2 You need to be logged in as an admin to view this page
 
@@ -152,13 +188,14 @@ q-dialog(v-model="qrDialogOpen" maximized)
 <script lang="ts">
 import { PromoCode } from "lib/api"
 import { jwt } from "lib/jwt"
-import { avatarImg } from "lib/netlifyImg"
+import { avatarImg, s3Img } from "lib/netlifyImg"
 import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import type { QTableColumn } from "quasar"
 import { defineComponent, ref, computed, watch } from "vue"
-import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments } from "src/lib/orval"
+import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments, creationsDescribeUploadedImage, adminListUsers } from "src/lib/orval"
 import QRCode from "qrcode"
+import axios from "axios"
 
 type TablePagination = { sortBy: string; descending: boolean; page: number; rowsPerPage: number }
 type OnRequestProps = { pagination: TablePagination }
@@ -421,6 +458,164 @@ export default defineComponent({
       { name: "admin", label: "Admin", field: "admin", sortable: true },
     ]
 
+    // Uploaded Images state
+    const uploadsAccount = ref("")
+    const uploadsPagination = ref({
+      sortBy: "createdAt",
+      descending: true,
+      page: 1,
+      rowsPerPage: 25,
+    })
+    const uploadsLoading = ref(false)
+    const uploadsFetching = ref(false)
+    const uploadsRows = ref<any[]>([])
+    const uploadsTotal = ref(0)
+
+    const limit3 = computed(() => {
+      const rpp = uploadsPagination.value.rowsPerPage
+      return rpp === 0 ? 1000 : rpp
+    })
+    const offset3 = computed(() => {
+      const rpp = uploadsPagination.value.rowsPerPage
+      const page = uploadsPagination.value.page
+      if (rpp === 0) return 0
+      return (page - 1) * rpp
+    })
+
+    const uploadsColumns: QTableColumn<any>[] = [
+      { name: "actions", label: "Actions", field: "id", align: "left", sortable: false },
+      { name: "preview", label: "Preview", field: "id", align: "left", sortable: false },
+      { name: "user", label: "User", field: (row: any) => row.user || {}, sortable: true },
+      { name: "id", label: "Image ID", field: "id", sortable: false },
+      { name: "createdAt", label: "Created", field: "createdAt", sortable: true },
+    ]
+
+    async function fetchUploads(initial = false) {
+      try {
+        if (initial) uploadsLoading.value = true
+        else uploadsFetching.value = true
+        const params: any = {
+          limit: limit3.value,
+          offset: offset3.value,
+          order: uploadsPagination.value.descending ? "desc" : "asc",
+        }
+        if (uploadsAccount.value?.trim()) params.account = uploadsAccount.value.trim()
+        // Prefer orval admin endpoint if available, fallback to raw axios
+        let data: any
+        try {
+          const mod: any = await import("src/lib/orval")
+          if (typeof mod.adminListUploadedImages === "function") {
+            const res = await mod.adminListUploadedImages(params)
+            data = res?.data
+          } else {
+            const res = await axios.get("/admin/listUploadedImages", { params })
+            data = res.data
+          }
+        } catch (err) {
+          // last resort
+          const res = await axios.get("/admin/listUploadedImages", { params })
+          data = res.data
+        }
+        const items = Array.isArray(data?.items) ? data.items : []
+        uploadsRows.value = items.map((it: any) => ({
+          id: it.id || it.imageId || it._id,
+          createdAt: it.createdAt || it.created_at || null,
+          user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+        }))
+        uploadsTotal.value = Number(data?.total || uploadsRows.value.length || 0)
+      } finally {
+        uploadsLoading.value = false
+        uploadsFetching.value = false
+      }
+    }
+
+    const refetchUploads = () => fetchUploads(false)
+    const onUploadsRequest = (props: OnRequestProps) => {
+      uploadsPagination.value = props.pagination
+      void refetchUploads()
+    }
+    watch(uploadsAccount, () => {
+      uploadsPagination.value.page = 1
+      void refetchUploads()
+    })
+
+    // Identify if results correspond to a single uploader for top ban button
+    const singleUploaderUser = computed(() => {
+      const ids = new Set<string>()
+      for (const r of uploadsRows.value) if (r?.user?.id) ids.add(String(r.user.id))
+      if (ids.size !== 1) return null
+      const onlyId = Array.from(ids)[0]!
+      // Try to build a minimal display object for button
+      const sample = uploadsRows.value.find((r) => r?.user?.id === onlyId)
+      return sample?.user || { id: onlyId }
+    })
+
+    async function banTopUser() {
+      // Prefer explicit filter value to lookup user; fallback to inferred single user
+      const search = uploadsAccount.value?.trim() || (singleUploaderUser.value?.id as string | undefined)
+      if (!search) return
+      try {
+        const res = await adminListUsers({ search, limit: 1, offset: 0 })
+        const row = res?.data?.users?.[0]
+        if (row) return confirmBan(row)
+      } catch {}
+      // fallback minimal row
+      const fallbackRow = singleUploaderUser.value ? { id: singleUploaderUser.value.id, profile: { username: singleUploaderUser.value.username }, banned: false } : { id: search, profile: { username: search }, banned: false }
+      confirmBan(fallbackRow as any)
+    }
+
+    async function lookupUploader(row: any) {
+      try {
+        const { data } = await creationsDescribeUploadedImage({ imageId: row.id })
+        const userId = data?.userId
+        if (!userId) return
+        const res = await adminListUsers({ search: userId, limit: 1, offset: 0 })
+        const user = res?.data?.users?.[0]
+        if (!user) return
+        Dialog.create({
+          title: "Uploader",
+          message: `User: ${userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })}`,
+          cancel: true,
+          ok: { label: "Ban", color: "negative" },
+          options: {
+            type: "checkbox",
+            model: [],
+            items: [],
+          },
+        }).onOk(() => confirmBan(user))
+      } catch (error) {
+        catchErr(error)
+      }
+    }
+
+    function confirmDeleteUpload(row: any) {
+      Dialog.create({
+        title: "Delete uploaded image?",
+        message: "This image will be permanently deleted.",
+        cancel: true,
+        ok: { label: "Delete", color: "negative" },
+      }).onOk(async () => {
+        try {
+          // Prefer orval admin endpoint if available, then admin raw, then user endpoint
+          const mod: any = await import("src/lib/orval")
+          if (typeof mod.adminDeleteUploadedImage === "function") {
+            await mod.adminDeleteUploadedImage({ imageId: row.id })
+          } else {
+            try {
+              await axios.post("/admin/deleteUploadedImage", { imageId: row.id })
+            } catch {
+              const { creationsDeleteUploadedImage } = await import("src/lib/orval")
+              await creationsDeleteUploadedImage({ imageId: row.id })
+            }
+          }
+          Notify.create({ message: "Image deleted", color: "positive", icon: "check" })
+          await refetchUploads()
+        } catch (error) {
+          catchErr(error)
+        }
+      })
+    }
+
     return {
       userSearch,
       includeBanned,
@@ -452,6 +647,22 @@ export default defineComponent({
       onPaymentsRequest,
       statusColor,
       userDisplay,
+
+      // uploads
+      uploadsAccount,
+      uploadsPagination,
+      uploadsRows,
+      uploadsTotal,
+      uploadsLoading,
+      uploadsFetching,
+      uploadsColumns,
+      refetchUploads,
+      onUploadsRequest,
+      s3Img,
+      singleUploaderUser,
+      banTopUser,
+      lookupUploader,
+      confirmDeleteUpload,
     }
   },
   data() {
@@ -574,6 +785,9 @@ export default defineComponent({
             .reverse()
         } else if (this.tab == "users") {
           // Users list handled by vue-query in setup()
+        } else if (this.tab == "uploaded-images") {
+          // Trigger initial fetch for uploads
+          void this.refetchUploads()
         }
       } catch (error) {
         catchErr(error)

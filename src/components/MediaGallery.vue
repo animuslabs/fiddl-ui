@@ -15,7 +15,10 @@ export interface MediaGalleryMeta {
   id: string
   url?: string
   aspectRatio?: number
+  // Preferred field used by this component
   type?: "image" | "video"
+  // Back-compat for API objects that provide `mediaType`
+  mediaType?: "image" | "video"
 }
 
 const props = withDefaults(
@@ -281,8 +284,10 @@ async function buildItems(src: MediaGalleryMeta[]) {
   // IMPORTANT: avoid preloading image/video metadata for offscreen items to keep memory low.
   // We only compute aspect ratio from existing data; otherwise fall back to 1 until media loads.
   galleryItems.value = src.map((item) => {
-    if (!item.url) item.url = item.type === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
-    const type = item.type ?? getMediaType(item.url)
+    const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
+    if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
+    const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
+    const type: "image" | "video" = derived === "video" ? "video" : "image"
     const aspectRatio = props.layout === "grid" ? 1 : item.aspectRatio ?? 1
     return { ...item, type, aspectRatio }
   })

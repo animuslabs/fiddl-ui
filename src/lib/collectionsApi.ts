@@ -56,11 +56,12 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
 
     const { data } = await unified(req)
     return (data || []).map((row: any) => {
-      const t: MediaType = (row.mediaType || row.type) === "video" ? "video" : "image"
-      const mid = row.id || row.imageId || row.videoId
+      const rawType = (row.mediaType ?? row.type ?? "").toString().toLowerCase()
+      const t: MediaType = rawType === "video" ? "video" : "image"
+      const mid = row.mediaId || row.id || row.imageId || row.videoId
       return {
-        id: mid,
-        url: t === "video" ? s3Video(mid, "preview-sm") : img(mid, "md"),
+        id: String(mid),
+        url: t === "video" ? s3Video(String(mid), "preview-sm") : img(String(mid), "md"),
         type: t,
       }
     })
@@ -95,4 +96,3 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
 
   return items.slice(offset, offset + pageSize)
 }
-
