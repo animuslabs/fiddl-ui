@@ -1,5 +1,5 @@
 <template lang="pug">
-q-dialog(v-model="innerOpen")
+q-dialog(v-model="innerOpen" :maximized="$q.screen.lt.md")
   q-card(:class="cardClass")
     // Hidden native file input for uploads
     input(type="file" :multiple="multiSelect" @change="handleFileUpload" style="display: none;" ref="fileInputRef" accept="image/*")
@@ -292,6 +292,13 @@ function acceptSelection() {
 }
 .uploads-dialog-card--wide {
   max-width: 1400px;
+}
+/* When dialog is maximized (mobile), make card fill the viewport */
+.q-dialog__inner--maximized .uploads-dialog-card {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  border-radius: 0;
 }
 @media (min-width: 1024px) {
   .chooser-actions .q-btn {

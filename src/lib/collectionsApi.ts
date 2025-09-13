@@ -40,7 +40,7 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
 
   // Prefer unified endpoint if present in generated API
   const unified = (api as any).collectionsGetCollectionMedia as
-    | (undefined | ((p: any) => Promise<{ data: any[] }>))
+    | (undefined | ((p: any) => Promise<{ data: { items?: any[] } }>))
     | undefined
 
   const offset = Math.max(0, (page - 1) * pageSize)
@@ -50,12 +50,14 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
       id,
       offset,
       limit: pageSize,
+      order: "desc",
     }
     if (search) req.promptIncludes = search
     if (mediaType !== "all") req.mediaType = mediaType
 
     const { data } = await unified(req)
-    return (data || []).map((row: any) => {
+    const items = Array.isArray((data as any)?.items) ? (data as any).items : []
+    return items.map((row: any) => {
       const rawType = (row.mediaType ?? row.type ?? "").toString().toLowerCase()
       const t: MediaType = rawType === "video" ? "video" : "image"
       const mid = row.mediaId || row.id || row.imageId || row.videoId
@@ -68,31 +70,37 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
   }
 
   // Fallback to legacy endpoints if unified endpoint not available
-  // Note: legacy endpoints do not support pagination or search; emulate by slicing.
   const items: GalleryItem[] = []
+  // Images
   if (mediaType !== "video" && (api as any).collectionsGetCollectionImages) {
-    const { data } = await (api as any).collectionsGetCollectionImages({ id })
+    const { data } = await (api as any).collectionsGetCollectionImages({
+      id,
+      offset,
+      limit: mediaType === "image" ? pageSize : undefined,
+      order: "desc",
+      promptIncludes: search || undefined,
+    })
     const list = Array.isArray(data) ? data : []
-    const filtered = list
-      .filter((x: any) => (search ? (x.prompt?.includes?.(search) || x.id?.includes?.(search)) : true))
-      .map((x: any) => ({ id: x.id, url: img(x.id, "md"), type: "image" as const }))
-    items.push(...filtered)
+    const mapped = list.map((x: any) => ({ id: x.id, url: img(x.id, "md"), type: "image" as const }))
+    items.push(...mapped)
   }
+  // Videos
   if (mediaType !== "image" && (api as any).collectionsGetCollectionVideos) {
-    const { data } = await (api as any).collectionsGetCollectionVideos({ id })
+    const { data } = await (api as any).collectionsGetCollectionVideos({
+      id,
+      offset,
+      limit: mediaType === "video" ? pageSize : undefined,
+      order: "desc",
+      promptIncludes: search || undefined,
+    })
     const list = Array.isArray(data) ? data : []
-    const filtered = list
-      .filter((x: any) => (search ? (x.prompt?.includes?.(search) || x.id?.includes?.(search)) : true))
-      .map((x: any) => ({ id: x.id, url: s3Video(x.id, "preview-sm"), type: "video" as const }))
-    items.push(...filtered)
+    const mapped = list.map((x: any) => ({ id: x.id, url: s3Video(x.id, "preview-sm"), type: "video" as const }))
+    items.push(...mapped)
   }
 
-  // Deterministic order (newest first if createdAt available)
-  items.sort((a: any, b: any) => {
-    const ad = new Date(a.createdAt || 0).getTime()
-    const bd = new Date(b.createdAt || 0).getTime()
-    return bd - ad
-  })
-
-  return items.slice(offset, offset + pageSize)
+  // For mixed media fallback (mediaType === 'all'), merge and slice client-side
+  if (mediaType === "all") {
+    return items.slice(0, pageSize)
+  }
+  return items
 }

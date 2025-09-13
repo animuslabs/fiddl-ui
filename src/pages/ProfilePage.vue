@@ -14,7 +14,8 @@ q-page.full-height.full-width
     .full-width(style="height:15px;").gt-sm
     .full-width(style="height:75px;").lt-md
     q-card.q-pa-sm.sticky-top.blur-bg(ref="filtersBar" style="z-index:100; top:50px;" v-if="tab !== 'forgeModels'")
-      .row.q-gutter-md.items-center.no-wrap
+      // Make filter controls horizontally scrollable on small screens
+      .row.q-gutter-md.items-center.no-wrap.hide-scrollbar(style="overflow: auto; width:fit-content; max-width:100vw;")
         q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
         q-separator(vertical v-if="tab === 'creations'").gt-xs
         q-btn-dropdown(
@@ -56,14 +57,18 @@ q-page.full-height.full-width
           :color="showAdvancedFilters ? 'primary' : 'grey-6'"
         ).gt-xs
         q-separator(vertical v-if="tab === 'creations'").gt-xs
-        // Pagination controls (always on for creations/favorites)
-        div.row.items-center.q-gutter-sm(ref="topPager" v-if="tab === 'creations' || tab === 'favorites'")
-          q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px" @update:model-value="goToPage()")
-          q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px" @update:model-value="goToPage(true)")
-          q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
-          q-separator(vertical)
-          q-btn(icon="chevron_left" label="Prev" size="sm" flat @click="prevPage" :disable="page <= 1")
-          q-btn(icon="chevron_right" label="Next" size="sm" flat @click="nextPage")
+        // Unified pagination (top)
+        .row.justify-center.q-mb-sm(ref="topPager" v-if="tab === 'creations' || tab === 'favorites'")
+          q-pagination(
+            v-model="page"
+            :max="pagerMax"
+            max-pages="8"
+            boundary-links
+            direction-links
+            color="primary"
+            size="lg"
+            @update:model-value="goToPage()"
+          )
         .col-grow
       .row.q-gutter-sm.items-center.no-wrap.q-mt-sm(v-if="showAdvancedFilters && (tab === 'creations' || tab === 'favorites')")
         q-input(
@@ -256,11 +261,18 @@ q-page.full-height.full-width
                   q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
                   q-icon(v-else name="close" color="negative" size="sm")
 
-      .centered.q-ma-md(v-if="tab === 'creations' || tab === 'favorites'")
-        .row.items-center.q-gutter-sm
-          q-btn(icon="chevron_left" label="Prev" @click="prevPage" :disable="page <= 1")
-          div Page {{ page }}
-          q-btn(icon="chevron_right" label="Next" @click="nextPage")
+      // Unified pagination (bottom)
+      .row.justify-center.q-mt-sm(v-if="tab === 'creations' || tab === 'favorites'")
+        q-pagination(
+          v-model="page"
+          :max="pagerMax"
+          max-pages="8"
+          boundary-links
+          direction-links
+          color="primary"
+          size="lg"
+          @update:model-value="goToPage()"
+        )
       .centered.q-ma-md(v-else-if="shouldShowLoadMore")
         q-btn(label="Load More" @click="loadMore()" :disable="!canLoadMore")
 
@@ -352,6 +364,30 @@ export default defineComponent({
     }
   },
   computed: {
+    // Fallback pager max similar to Admin/UploadedImageViewer behavior
+    pagerMax(): number {
+      // default at least 1 page
+      const base = Math.max(1, this.page)
+      if (this.tab === "favorites") {
+        const hasNext = (this.favoritesPageItems?.length || 0) >= this.pageSize
+        return Math.max(base, this.page + (hasNext ? 1 : 0))
+      }
+      if (this.tab === "creations") {
+        if (this.mediaTypeFilter === "all") {
+          const imgCount = this.imageCreations.creations.length
+          const vidCount = this.videoCreations.creations.length
+          const hasNext = imgCount >= this.pageSize || vidCount >= this.pageSize
+          return Math.max(base, this.page + (hasNext ? 1 : 0))
+        } else if (this.mediaTypeFilter === "image") {
+          const hasNext = this.imageCreations.creations.length >= this.pageSize
+          return Math.max(base, this.page + (hasNext ? 1 : 0))
+        } else if (this.mediaTypeFilter === "video") {
+          const hasNext = this.videoCreations.creations.length >= this.pageSize
+          return Math.max(base, this.page + (hasNext ? 1 : 0))
+        }
+      }
+      return base
+    },
     // Dynamic tabs based on authentication and current user
     tabs() {
       const baseTabs = [
@@ -389,7 +425,7 @@ export default defineComponent({
       const m = new Map<string, number>()
       for (const c of this.imageCreations.creations) {
         const ar = this.aspectRatioToNumber(c.aspectRatio)
-        for (const id of c.mediaIds) m.set(id, ar)
+        for (const id of c.mediaIds) m.set(id, ar || 0)
       }
       return m
     },
@@ -397,7 +433,7 @@ export default defineComponent({
       const m = new Map<string, number>()
       for (const c of this.videoCreations.creations) {
         const ar = this.aspectRatioToNumber(c.aspectRatio)
-        for (const id of c.mediaIds) m.set(id, ar)
+        for (const id of c.mediaIds) m.set(id, ar || 0)
       }
       return m
     },
@@ -405,8 +441,7 @@ export default defineComponent({
     creationsMediaObjects(): MediaGalleryMeta[] {
       if (this.tab !== "creations") return []
       return this.activeCreationsStore.allCreations.map((el) => {
-        if (this.currentTab == "image")
-          return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType, aspectRatio: this.imageAspectMap.get(el.id) }
+        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType, aspectRatio: this.imageAspectMap.get(el.id) }
         else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType, aspectRatio: this.videoAspectMap.get(el.id) }
       })
     },
@@ -603,9 +638,9 @@ export default defineComponent({
         // Reset search when switching between favorites/creations
         this.searchQuery = ""
         this.showAdvancedFilters = false
-        if (this.tab === 'creations') this.page = 1
+        if (this.tab === "creations") this.page = 1
         void this.load()
-        if (this.tab === 'favorites' && this.userId) {
+        if (this.tab === "favorites" && this.userId) {
           void this.loadFavorites()
         }
       },
@@ -624,7 +659,7 @@ export default defineComponent({
         if (this.tab === "creations") {
           this.page = 1
           void this.load()
-        } else if (this.tab === 'favorites') {
+        } else if (this.tab === "favorites") {
           this.page = 1
           void this.loadFavorites()
         }
@@ -742,18 +777,18 @@ export default defineComponent({
   methods: {
     // Scroll the top pager row into view (mirrors AdminPage behavior)
     scrollTopPagerIntoView() {
-      if (typeof window === 'undefined') return
+      if (typeof window === "undefined") return
       try {
         const refs: any = this.$refs || {}
         // Prefer a plain DOM element for precise alignment
         const el: HTMLElement | null = refs.topPager || (refs.filtersBar && (refs.filtersBar.$el || refs.filtersBar)) || null
-        if (!el || typeof el.getBoundingClientRect !== 'function') return
+        if (!el || typeof el.getBoundingClientRect !== "function") return
         const rect = el.getBoundingClientRect()
         // Account for the fixed header/sticky offset so buttons are fully visible
         const headerOffset = 50 // keep in sync with sticky top
         const top = window.pageYOffset + rect.top - headerOffset
         try {
-          window.scrollTo({ top, behavior: 'smooth' })
+          window.scrollTo({ top, behavior: "smooth" })
         } catch {
           window.scrollTo(0, top)
         }
@@ -778,7 +813,7 @@ export default defineComponent({
         this.videoCreations.search = this.searchQuery || null
         this.imageCreations.searchCreations(this.userId || undefined)
         this.videoCreations.searchCreations(this.userId || undefined)
-      } else if (this.tab === 'favorites') {
+      } else if (this.tab === "favorites") {
         void this.loadFavorites()
       }
     },
@@ -867,7 +902,7 @@ export default defineComponent({
       if (this.page < 1) this.page = 1
       if (this.pageSize < 1) this.pageSize = 1
       if (resetToFirstOnSize) this.page = 1
-      if (this.tab === 'creations') {
+      if (this.tab === "creations") {
         if (this.mediaTypeFilter === "all") {
           void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
           void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
@@ -876,7 +911,7 @@ export default defineComponent({
         } else if (this.mediaTypeFilter === "video") {
           void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
         }
-      } else if (this.tab === 'favorites') {
+      } else if (this.tab === "favorites") {
         void this.loadFavorites()
       }
       this.scrollTopPagerIntoView()
@@ -937,7 +972,7 @@ export default defineComponent({
 
     // For favorites tab
     showFavoritesDetails(mediaIndex: number) {
-      const mediaObjects: MediaGalleryMeta[] = this.favoritesPageItems.map((el: any) => ({ id: el.id, type: (el.type || el.mediaType) }))
+      const mediaObjects: MediaGalleryMeta[] = this.favoritesPageItems.map((el: any) => ({ id: el.id, type: el.type || el.mediaType }))
       void mediaViwer.show(mediaObjects, mediaIndex)
     },
 
@@ -1043,5 +1078,16 @@ export default defineComponent({
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+/* Reuse the horizontal scroll behavior from Browse search bar */
+.hide-scrollbar {
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 </style>
