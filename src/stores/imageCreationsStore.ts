@@ -189,6 +189,36 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         this.loadingCreations = false
       }
     },
+    async loadCreationsPage(userId?: string | null, page = 1, limit = 30) {
+      // Direct page navigation using offset+limit
+      // Resets current list to keep memory bounded when jumping far
+      this.creations = []
+      this.loadingCreations = true
+      try {
+        this.activeUserId = userId || null
+        const params = {
+          userId: userId || undefined,
+          order: 'desc' as const,
+          offset: Math.max(0, (page - 1) * limit),
+          limit,
+          promptIncludes: this.search || undefined,
+          aspectRatio: this.filter.aspectRatio as any,
+          model: this.filter.model,
+          customModelId: this.filter.customModelId,
+        }
+        const response = await creationsCreateImageRequests(params)
+        const creations = response.data
+        if (!creations) return
+        for (const creation of creations) {
+          this.addItem({
+            ...creation,
+            createdAt: new Date(creation.createdAt),
+          })
+        }
+      } finally {
+        this.loadingCreations = false
+      }
+    },
     async loadPurchases(userId?: string) {
       if (!userId) userId = useUserAuth().userId || undefined
       if (!userId) return

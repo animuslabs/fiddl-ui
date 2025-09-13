@@ -160,6 +160,7 @@ export const useBrowserStore = defineStore("browserStore", {
 
     /* ---------- internal util ---------- */
     addBatch(rows: BrowseRow[], prepend = false) {
+      const MAX_ITEMS = 1500 // soft cap to prevent unbounded memory growth
       for (const row of rows) {
         // Normalize media to a proper array
         let medias: { id: string }[] = []
@@ -195,6 +196,17 @@ export const useBrowserStore = defineStore("browserStore", {
           } else {
             this.media.push(item)
           }
+        }
+      }
+      // Trim to cap to avoid DOM and memory blow-up on extremely long sessions
+      if (this.media.length > MAX_ITEMS) {
+        const excess = this.media.length - MAX_ITEMS
+        if (prepend) {
+          // Added to the top; drop from the bottom (oldest loaded tail)
+          this.media.splice(MAX_ITEMS)
+        } else {
+          // Added to the bottom; drop from the top (newest head)
+          this.media.splice(0, excess)
         }
       }
     },

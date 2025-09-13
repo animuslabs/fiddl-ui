@@ -55,6 +55,14 @@ q-page.full-height.full-width
           v-if="tab === 'creations'"
           :color="showAdvancedFilters ? 'primary' : 'grey-6'"
         ).gt-xs
+        q-separator(vertical v-if="tab === 'creations'").gt-xs
+        // Pagination controls (optional)
+        div.row.items-center.q-gutter-sm(v-if="tab === 'creations'")
+          q-toggle(v-model="usePagination" label="Pagination" size="sm")
+          div(v-if="usePagination" class="row items-center q-gutter-sm")
+            q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px")
+            q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px")
+            q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
         .col-grow
       .row.q-gutter-sm.items-center.no-wrap.q-mt-sm(v-if="showAdvancedFilters && tab === 'creations'")
         q-input(
@@ -247,12 +255,13 @@ q-page.full-height.full-width
                   q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
                   q-icon(v-else name="close" color="negative" size="sm")
 
-      .centered.q-ma-md(v-if="shouldShowLoadMore")
-        q-btn(
-          label="Load More"
-          @click="loadMore()"
-          :disable="!canLoadMore"
-        )
+      .centered.q-ma-md(v-if="tab === 'creations' && usePagination")
+        .row.items-center.q-gutter-sm
+          q-btn(icon="chevron_left" label="Prev" @click="prevPage" :disable="page <= 1")
+          div Page {{ page }}
+          q-btn(icon="chevron_right" label="Next" @click="nextPage")
+      .centered.q-ma-md(v-else-if="shouldShowLoadMore")
+        q-btn(label="Load More" @click="loadMore()" :disable="!canLoadMore")
 
       .centered.q-ma-md(v-if="shouldShowEmptyMessage")
         h5.text-grey-6 No {{ currentTab }}s found
@@ -334,6 +343,10 @@ export default defineComponent({
       ],
       mediaTypeIcon,
       img,
+      // Pagination
+      usePagination: false,
+      page: 1,
+      pageSize: 30,
     }
   },
   computed: {
@@ -369,11 +382,30 @@ export default defineComponent({
       return models.sort()
     },
 
+    // Build a map from mediaId -> aspect ratio (number) for fast lookups
+    imageAspectMap(): Map<string, number> {
+      const m = new Map<string, number>()
+      for (const c of this.imageCreations.creations) {
+        const ar = this.aspectRatioToNumber(c.aspectRatio)
+        for (const id of c.mediaIds) m.set(id, ar)
+      }
+      return m
+    },
+    videoAspectMap(): Map<string, number> {
+      const m = new Map<string, number>()
+      for (const c of this.videoCreations.creations) {
+        const ar = this.aspectRatioToNumber(c.aspectRatio)
+        for (const id of c.mediaIds) m.set(id, ar)
+      }
+      return m
+    },
+
     creationsMediaObjects(): MediaGalleryMeta[] {
       if (this.tab !== "creations") return []
       return this.activeCreationsStore.allCreations.map((el) => {
-        if (this.currentTab == "image") return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType }
-        else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType }
+        if (this.currentTab == "image")
+          return { id: el.id, url: img(el.id, "md"), type: "image" as MediaType, aspectRatio: this.imageAspectMap.get(el.id) }
+        else return { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType, aspectRatio: this.videoAspectMap.get(el.id) }
       })
     },
 
@@ -410,6 +442,7 @@ export default defineComponent({
               url: img(mediaId, "md"),
               type: "image" as MediaType,
               createdAt: request.createdAt,
+              aspectRatio: this.aspectRatioToNumber(request.aspectRatio),
             })
           })
         })
@@ -420,6 +453,7 @@ export default defineComponent({
               url: s3Video(mediaId, "preview-sm"),
               type: "video" as MediaType,
               createdAt: request.createdAt,
+              aspectRatio: this.aspectRatioToNumber(request.aspectRatio),
             })
           })
         })
@@ -431,12 +465,14 @@ export default defineComponent({
           id: el.id,
           url: img(el.id, "md"),
           type: "image" as MediaType,
+          aspectRatio: this.imageAspectMap.get(el.id),
         }))
       } else if (this.mediaTypeFilter === "video") {
         mediaObjects = this.videoCreations.allCreations.map((el) => ({
           id: el.id,
           url: s3Video(el.id, "preview-sm"),
           type: "video" as MediaType,
+          aspectRatio: this.videoAspectMap.get(el.id),
         }))
       }
 
@@ -596,6 +632,13 @@ export default defineComponent({
         }
       },
     },
+    usePagination(val: boolean) {
+      if (this.tab === 'creations') {
+        // Reset to first page when toggling mode for clarity
+        if (val) this.page = 1
+        void this.load()
+      }
+    },
     gridMode(val) {
       LocalStorage.set("profilePageGridMode", this.gridMode)
     },
@@ -705,6 +748,15 @@ export default defineComponent({
     }
   },
   methods: {
+    aspectRatioToNumber(raw?: string): number | undefined {
+      if (!raw) return undefined
+      if (raw.includes(":")) {
+        const [w, h] = raw.split(":").map((x) => parseFloat(x))
+        return h && w ? w / h : undefined
+      }
+      const n = parseFloat(raw)
+      return Number.isFinite(n) ? n : undefined
+    },
     handleDeleted(requestId: string) {
       this.activeCreationsStore.creations = this.activeCreationsStore.creations.filter((el) => el.id !== requestId)
     },
@@ -768,14 +820,25 @@ export default defineComponent({
         this.imageCreations.activeUserId = this.userId
         this.videoCreations.activeUserId = this.userId
 
-        // Load data based on media type filter
-        if (this.mediaTypeFilter === "all") {
-          void this.imageCreations.loadCreations(this.userId || undefined)
-          void this.videoCreations.loadCreations(this.userId || undefined)
-        } else if (this.mediaTypeFilter === "image") {
-          void this.imageCreations.loadCreations(this.userId || undefined)
-        } else if (this.mediaTypeFilter === "video") {
-          void this.videoCreations.loadCreations(this.userId || undefined)
+        // Load data based on media type filter and pagination mode
+        if (this.usePagination) {
+          if (this.mediaTypeFilter === "all") {
+            void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+            void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+          } else if (this.mediaTypeFilter === "image") {
+            void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+          } else if (this.mediaTypeFilter === "video") {
+            void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+          }
+        } else {
+          if (this.mediaTypeFilter === "all") {
+            void this.imageCreations.loadCreations(this.userId || undefined)
+            void this.videoCreations.loadCreations(this.userId || undefined)
+          } else if (this.mediaTypeFilter === "image") {
+            void this.imageCreations.loadCreations(this.userId || undefined)
+          } else if (this.mediaTypeFilter === "video") {
+            void this.videoCreations.loadCreations(this.userId || undefined)
+          }
         }
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId)
@@ -793,8 +856,35 @@ export default defineComponent({
         void this.activeCreationsStore.loadPurchases(this.userId)
       }
     },
+    goToPage() {
+      if (!this.userId) return
+      if (this.page < 1) this.page = 1
+      if (this.pageSize < 1) this.pageSize = 1
+      if (this.mediaTypeFilter === "all") {
+        void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+        void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+      } else if (this.mediaTypeFilter === "image") {
+        void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+      } else if (this.mediaTypeFilter === "video") {
+        void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+      }
+    },
+    prevPage() {
+      if (this.page > 1) {
+        this.page -= 1
+        this.goToPage()
+      }
+    },
+    nextPage() {
+      this.page += 1
+      this.goToPage()
+    },
     loadMore() {
       if (this.tab === "creations") {
+        if (this.usePagination) {
+          this.nextPage()
+          return
+        }
         if (this.mediaTypeFilter === "all") {
           void this.imageCreations.loadCreations(this.userId || undefined)
           void this.videoCreations.loadCreations(this.userId || undefined)

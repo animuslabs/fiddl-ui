@@ -51,11 +51,50 @@ const props = withDefaults(
   },
 )
 
+// Loading and reload keys for media; keys are added only when item mounts/visible
 const videoLoading = ref<Record<string, boolean>>({})
 const videoReloadKey = ref<Record<string, number>>({})
-// Track loading state for images (to support server-side rendering delays)
 const imageLoading = ref<Record<string, boolean>>({})
 const imageReloadKey = ref<Record<string, number>>({})
+
+// Intersection-based visibility map to unmount offscreen media
+const visibleMap = ref<Record<string, boolean>>({})
+type ObserveBinding = string // media id
+
+// Preload/unmount buffer around viewport to avoid thrash
+const OBSERVER_ROOT_MARGIN = "800px"
+
+// Local directive to observe an element and toggle visibility for its media id
+let sharedIO: IntersectionObserver | null = null
+const ioTargets = new Map<Element, string>()
+function getSharedIO(): IntersectionObserver {
+  if (sharedIO) return sharedIO
+  sharedIO = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = ioTargets.get(entry.target)
+        if (!id) continue
+        visibleMap.value[id] = entry.isIntersecting
+      }
+    },
+    { root: null, rootMargin: OBSERVER_ROOT_MARGIN, threshold: 0 },
+  )
+  return sharedIO
+}
+const vObserve: import("vue").Directive<HTMLElement, ObserveBinding> = {
+  mounted(el, binding) {
+    const id = binding.value
+    if (!id) return
+    ioTargets.set(el, id)
+    getSharedIO().observe(el)
+  },
+  unmounted(el, binding) {
+    const id = binding.value
+    if (id) delete visibleMap.value[id]
+    ioTargets.delete(el)
+    if (sharedIO) sharedIO.unobserve(el)
+  },
+}
 
 const emit = defineEmits<{
   (e: "select", payload: { id: string; type: "image" | "video" }): void
@@ -239,27 +278,14 @@ watch(
 )
 
 async function buildItems(src: MediaGalleryMeta[]) {
-  galleryItems.value = await Promise.all(
-    src.map(async (item) => {
-      if (!item.url) item.url = item.type === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
-      const type = item.type ?? getMediaType(item.url)
-      if (type === "video" && !videoLoading.value[item.id]) {
-        const videoEl = document.querySelector(`video[data-id="${item.id}"]`) as HTMLVideoElement | null
-        if (!videoEl || videoEl.readyState < 2) {
-          videoLoading.value[item.id] = true
-        }
-      } else if (type === "image" && imageLoading.value[item.id] === undefined) {
-        // Only show loading overlay by default for placeholder tiles (pending-* IDs)
-        // Avoid flipping existing images into "loading" when new placeholders are added.
-        const isPending = typeof item.id === "string" && item.id.startsWith("pending-")
-        imageLoading.value[item.id] = props.showLoading && isPending
-      }
-
-      const aspectRatio = props.layout === "grid" ? 1 : (item.aspectRatio ?? (type === "image" ? await getImageAspectRatio(item.url) : await getVideoAspectRatio(item.url)))
-
-      return { ...item, type, aspectRatio }
-    }),
-  )
+  // IMPORTANT: avoid preloading image/video metadata for offscreen items to keep memory low.
+  // We only compute aspect ratio from existing data; otherwise fall back to 1 until media loads.
+  galleryItems.value = src.map((item) => {
+    if (!item.url) item.url = item.type === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
+    const type = item.type ?? getMediaType(item.url)
+    const aspectRatio = props.layout === "grid" ? 1 : item.aspectRatio ?? 1
+    return { ...item, type, aspectRatio }
+  })
   if (props.showPopularity) {
     const items = galleryItems.value.map((i) => ({
       id: i.id,
@@ -274,22 +300,10 @@ function getMediaType(url: string): "image" | "video" {
   return url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) ? "video" : "image"
 }
 
-async function getImageAspectRatio(url: string): Promise<number> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(img.naturalWidth / img.naturalHeight || 1)
-    img.onerror = () => resolve(1)
-    img.src = url
-  })
-}
+// We no longer pre-measure assets offscreen; ratios are updated opportunistically on load
 
-async function getVideoAspectRatio(url: string): Promise<number> {
-  return new Promise((resolve) => {
-    const video = document.createElement("video")
-    video.onloadedmetadata = () => resolve(video.videoWidth / video.videoHeight || 1)
-    video.onerror = () => resolve(1)
-    video.src = url
-  })
+function markVideoLoadStart(id: string) {
+  videoLoading.value[id] = true
 }
 
 function markVideoLoaded(id: string) {
@@ -314,6 +328,12 @@ function markVideoErrored(id: string) {
 
 function markImageLoaded(id: string) {
   delete imageLoading.value[id]
+  const im = document.querySelector(`img[data-id="${id}"]`) as HTMLImageElement | null
+  if (im && im.naturalWidth && im.naturalHeight) {
+    const realAspect = im.naturalWidth / im.naturalHeight
+    const item = galleryItems.value.find((i) => i.id === id)
+    if (item) item.aspectRatio = realAspect
+  }
 }
 
 function markImageErrored(id: string) {
@@ -427,14 +447,15 @@ onMounted(() => {
     // Retry videos that aren't ready yet
     for (const id of Object.keys(videoLoading.value)) {
       if (videoLoading.value[id]) {
-        videoReloadKey.value[id] = Date.now()
+        // Only nudge reload for visible videos
+        if (visibleMap.value[id]) videoReloadKey.value[id] = Date.now()
       }
     }
     // Retry images only when the loading UI is enabled
     if (props.showLoading) {
       for (const id of Object.keys(imageLoading.value)) {
         if (imageLoading.value[id]) {
-          imageReloadKey.value[id] = Date.now()
+          if (visibleMap.value[id]) imageReloadKey.value[id] = Date.now()
         }
       }
     }
@@ -457,6 +478,18 @@ function videoClass(media: MediaGalleryMeta) {
     "cursor-pointer": props.selectable && !videoLoading.value[media.id],
   }
 }
+
+function isVisible(id: string): boolean {
+  return !!visibleMap.value[id]
+}
+
+function showImageOverlay(id: string): boolean {
+  // Only show heavy overlay for placeholders (pending-*) to avoid extra DOM
+  const isPending = typeof id === 'string' && id.startsWith('pending-')
+  if (!isPending) return false
+  // treat undefined as loading=true so overlay shows until first load
+  return props.showLoading && imageLoading.value[id] !== false
+}
 </script>
 
 <template lang="pug">
@@ -466,33 +499,40 @@ function videoClass(media: MediaGalleryMeta) {
     :key="m.id"
     :style="getItemStyle(m)"
     :class="{ 'media-cell': true, 'is-selected': props.selectable && selectedSet.has(m.id) }"
+    v-observe="m.id"
   )
     template(v-if="!isVideoMedia(m)")
       .media-wrapper(:style="mediaStyles")
-        // Loading overlay for images that are still rendering/propagating
-        div(v-if="props.showLoading && imageLoading[m.id]" style="position: relative;").full-height
-          div
-            .absolute-center.z-top.offset-down
-              h4 Loading
-            q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
-        // Actual image (hidden until loaded)
-        q-img(
-          :src="m.url"
-          :key="imageReloadKey[m.id]"
-          position="top"
-          style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
-          spinner-color="white"
-          :class="props.selectable ? 'cursor-pointer' : ''"
-          v-show="!(props.showLoading && imageLoading[m.id])"
-          @load="markImageLoaded(m.id)"
-          @error="markImageErrored(m.id)"
-          @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
-        )
+        // Only mount heavy content when visible
+        template(v-if="isVisible(m.id)")
+          // Loading overlay for images that are still rendering/propagating
+          div(v-if="showImageOverlay(m.id)" style="position: relative;").full-height
+            div
+              .absolute-center.z-top.offset-down
+                h4 Loading
+              q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
+          // Actual image (hidden until loaded)
+          q-img(
+            :src="m.url"
+            :key="imageReloadKey[m.id]"
+            position="top"
+            style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
+            spinner-color="white"
+            :class="props.selectable ? 'cursor-pointer' : ''"
+            v-show="!showImageOverlay(m.id)"
+            :img-attrs="{ 'data-id': m.id }"
+            @load="markImageLoaded(m.id)"
+            @error="markImageErrored(m.id)"
+            @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
+          )
+        template(v-else)
+          // Placeholder keeps layout without mounting the image element
+          div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity")
+        .popularity-overlay(v-if="props.showPopularity && isVisible(m.id)")
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
@@ -507,30 +547,36 @@ function videoClass(media: MediaGalleryMeta) {
           // default empty
     template(v-else)
       .media-wrapper(:style="mediaStyles")
-        div(v-if="props.showLoading && videoLoading[m.id]" style="position: relative;" ).full-height
-          div
-            .absolute-center.z-top.offset-down
-              h4 Loading
-            q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
-        //- div {{ !!videoLoading[m.id] }}
-        div(v-show="!videoLoading[m.id]" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
-          video(
-            :src="m.url"
-            :key="videoReloadKey[m.id]"
-            :data-id="m.id"
-            loop autoplay muted playsinline
-            @canplay="markVideoLoaded(m.id)"
-            @loadeddata="markVideoLoaded(m.id)"
-            @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
-            :class="videoClass(m)"
-          )
+        // Only mount heavy content when visible
+        template(v-if="isVisible(m.id)")
+          div(v-if="props.showLoading && (videoLoading[m.id] ?? true)" style="position: relative;" ).full-height
+            div
+              .absolute-center.z-top.offset-down
+                h4 Loading
+              q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
+          div(v-show="!(videoLoading[m.id] ?? true)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+            video(
+              :src="m.url"
+              :key="videoReloadKey[m.id]"
+              :data-id="m.id"
+              loop autoplay muted playsinline
+              @loadstart="markVideoLoadStart(m.id)"
+              @canplay="markVideoLoaded(m.id)"
+              @loadeddata="markVideoLoaded(m.id)"
+              @error="markVideoErrored(m.id)"
+              @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
+              :class="videoClass(m)"
+            )
+        template(v-else)
+          // Placeholder keeps layout without mounting the video element
+          div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         // Hidden overlay - keeps layout stable
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity")
+        .popularity-overlay(v-if="props.showPopularity && isVisible(m.id)")
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
