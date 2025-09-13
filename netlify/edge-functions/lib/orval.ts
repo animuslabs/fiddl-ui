@@ -2722,6 +2722,85 @@ export type AdminListPayments200 = {
   items: AdminListPayments200ItemsItem[];
 };
 
+export type AdminListMissionClaimsParams = {
+limit?: number;
+offset?: number;
+startDateTime?: string;
+endDateTime?: string;
+userId?: string;
+missionId?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListMissionClaims200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOf = {
+  type: AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType;
+  /** @minimum 0 */
+  amount: number;
+  memo?: string;
+};
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThree = {
+  type: AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItem = AdminListMissionClaims200ItemsItemMissionRewardsItemOneOf | AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThree;
+
+/**
+ * @nullable
+ */
+export type AdminListMissionClaims200ItemsItemMission = {
+  id: string;
+  description: string;
+  rewards: AdminListMissionClaims200ItemsItemMissionRewardsItem[];
+} | null;
+
+export type AdminListMissionClaims200ItemsItem = {
+  id: string;
+  missionId: string;
+  claimKey: string;
+  createdAt: string;
+  /** @nullable */
+  user: AdminListMissionClaims200ItemsItemUser;
+  /** @nullable */
+  mission: AdminListMissionClaims200ItemsItemMission;
+};
+
+export type AdminListMissionClaims200 = {
+  total: number;
+  items: AdminListMissionClaims200ItemsItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -5606,6 +5685,34 @@ export const getAdminListPaymentsUrl = (params?: AdminListPaymentsParams,) => {
 export const adminListPayments = async (params?: AdminListPaymentsParams, options?: RequestInit): Promise<AdminListPayments200> => {
   
   return fetcher<AdminListPayments200>(getAdminListPaymentsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminListMissionClaimsUrl = (params?: AdminListMissionClaimsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listMissionClaims?${stringifiedParams}` : `/admin/listMissionClaims`
+}
+
+export const adminListMissionClaims = async (params?: AdminListMissionClaimsParams, options?: RequestInit): Promise<AdminListMissionClaims200> => {
+  
+  return fetcher<AdminListMissionClaims200>(getAdminListMissionClaimsUrl(params),
   {      
     ...options,
     method: 'GET'

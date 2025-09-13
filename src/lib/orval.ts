@@ -2751,6 +2751,85 @@ export type AdminListPayments200 = {
   items: AdminListPayments200ItemsItem[];
 };
 
+export type AdminListMissionClaimsParams = {
+limit?: number;
+offset?: number;
+startDateTime?: string;
+endDateTime?: string;
+userId?: string;
+missionId?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListMissionClaims200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = {
+  points: 'points',
+} as const;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOf = {
+  type: AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType;
+  /** @minimum 0 */
+  amount: number;
+  memo?: string;
+};
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = {
+  badge: 'badge',
+} as const;
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThree = {
+  type: AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType;
+  badgeId: string;
+};
+
+export type AdminListMissionClaims200ItemsItemMissionRewardsItem = AdminListMissionClaims200ItemsItemMissionRewardsItemOneOf | AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThree;
+
+/**
+ * @nullable
+ */
+export type AdminListMissionClaims200ItemsItemMission = {
+  id: string;
+  description: string;
+  rewards: AdminListMissionClaims200ItemsItemMissionRewardsItem[];
+} | null;
+
+export type AdminListMissionClaims200ItemsItem = {
+  id: string;
+  missionId: string;
+  claimKey: string;
+  createdAt: string;
+  /** @nullable */
+  user: AdminListMissionClaims200ItemsItemUser;
+  /** @nullable */
+  mission: AdminListMissionClaims200ItemsItemMission;
+};
+
+export type AdminListMissionClaims200 = {
+  total: number;
+  items: AdminListMissionClaims200ItemsItem[];
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -8442,6 +8521,64 @@ export function useAdminListPayments<TData = Awaited<ReturnType<typeof adminList
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminListPaymentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminListMissionClaims = (
+    params?: MaybeRef<AdminListMissionClaimsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminListMissionClaims200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/listMissionClaims`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminListMissionClaimsQueryKey = (params?: MaybeRef<AdminListMissionClaimsParams>,) => {
+    return ['admin','listMissionClaims', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminListMissionClaimsQueryOptions = <TData = Awaited<ReturnType<typeof adminListMissionClaims>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminListMissionClaimsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListMissionClaims>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminListMissionClaimsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListMissionClaims>>> = ({ signal }) => adminListMissionClaims(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListMissionClaims>>, TError, TData> 
+}
+
+export type AdminListMissionClaimsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListMissionClaims>>>
+export type AdminListMissionClaimsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminListMissionClaims<TData = Awaited<ReturnType<typeof adminListMissionClaims>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminListMissionClaimsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListMissionClaims>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListMissionClaimsQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

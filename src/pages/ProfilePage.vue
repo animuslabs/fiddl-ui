@@ -13,7 +13,7 @@ q-page.full-height.full-width
   .full-width
     .full-width(style="height:15px;").gt-sm
     .full-width(style="height:75px;").lt-md
-    q-card.q-pa-sm.sticky-top.blur-bg(style="z-index:100; top:50px;" v-if="tab !== 'forgeModels'")
+    q-card.q-pa-sm.sticky-top.blur-bg(ref="filtersBar" style="z-index:100; top:50px;" v-if="tab !== 'forgeModels'")
       .row.q-gutter-md.items-center.no-wrap
         q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
         q-separator(vertical v-if="tab === 'creations'").gt-xs
@@ -22,7 +22,7 @@ q-page.full-height.full-width
           flat
           color="primary"
           :icon="mediaTypeIcon[mediaTypeFilter]"
-          v-if="tab === 'creations'"
+          v-if="tab === 'creations' || tab === 'favorites'"
         ).gt-xs
           q-list
             .q-ma-md.cursor-pointer.relative-position(
@@ -52,12 +52,12 @@ q-page.full-height.full-width
           flat
           round
           @click="toggleAdvancedFilters"
-          v-if="tab === 'creations'"
+          v-if="tab === 'creations' || tab === 'favorites'"
           :color="showAdvancedFilters ? 'primary' : 'grey-6'"
         ).gt-xs
         q-separator(vertical v-if="tab === 'creations'").gt-xs
-        // Pagination controls (always on for creations)
-        div.row.items-center.q-gutter-sm(v-if="tab === 'creations'")
+        // Pagination controls (always on for creations/favorites)
+        div.row.items-center.q-gutter-sm(v-if="tab === 'creations' || tab === 'favorites'")
           q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px" @update:model-value="goToPage()")
           q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px" @update:model-value="goToPage(true)")
           q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
@@ -65,7 +65,7 @@ q-page.full-height.full-width
           q-btn(icon="chevron_left" label="Prev" size="sm" flat @click="prevPage" :disable="page <= 1")
           q-btn(icon="chevron_right" label="Next" size="sm" flat @click="nextPage")
         .col-grow
-      .row.q-gutter-sm.items-center.no-wrap.q-mt-sm(v-if="showAdvancedFilters && tab === 'creations'")
+      .row.q-gutter-sm.items-center.no-wrap.q-mt-sm(v-if="showAdvancedFilters && (tab === 'creations' || tab === 'favorites')")
         q-input(
           v-model="searchQuery"
           placeholder="Search prompts..."
@@ -77,7 +77,7 @@ q-page.full-height.full-width
         )
           template(v-slot:prepend)
             q-icon(name="search")
-      .row.q-gutter-sm.items-center.justify-center.q-mt-sm.lt-sm(v-if="tab === 'creations'")
+      .row.q-gutter-sm.items-center.justify-center.q-mt-sm.lt-sm(v-if="tab === 'creations' || tab === 'favorites'")
         q-btn-dropdown(
           :label="mediaTypeFilter"
           flat
@@ -101,7 +101,7 @@ q-page.full-height.full-width
           flat
           round
           @click="toggleAdvancedFilters"
-          v-if="tab === 'creations'"
+          v-if="tab === 'creations' || tab === 'favorites'"
           :color="showAdvancedFilters ? 'primary' : 'grey-6'"
         )
 
@@ -256,7 +256,7 @@ q-page.full-height.full-width
                   q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
                   q-icon(v-else name="close" color="negative" size="sm")
 
-      .centered.q-ma-md(v-if="tab === 'creations'")
+      .centered.q-ma-md(v-if="tab === 'creations' || tab === 'favorites'")
         .row.items-center.q-gutter-sm
           q-btn(icon="chevron_left" label="Prev" @click="prevPage" :disable="page <= 1")
           div Page {{ page }}
@@ -304,6 +304,7 @@ import ModelCard from "src/components/ModelCard.vue"
 import * as modelsStore from "src/stores/modelsStore"
 import { modelTags, type ModelTags } from "lib/imageModels"
 import { useUserAuth } from "src/stores/userAuth"
+import { fetchCollectionMedia } from "src/lib/collectionsApi"
 
 export default defineComponent({
   components: {
@@ -346,6 +347,8 @@ export default defineComponent({
       img,
       page: 1,
       pageSize: 30,
+      // Favorites (paged) data
+      favoritesPageItems: [] as MediaGalleryMeta[],
     }
   },
   computed: {
@@ -479,19 +482,7 @@ export default defineComponent({
     },
     favoritesMediaObjects(): MediaGalleryMeta[] {
       if (this.tab !== "favorites") return []
-      if (this.currentTab === "image") {
-        return this.imageCreations.favorites.map((el) => ({
-          id: el.id,
-          url: img(el.id, "md"),
-          type: "image" as MediaType,
-        }))
-      } else {
-        return this.videoCreations.favorites.map((el) => ({
-          id: el.id,
-          url: s3Video(el.id, "preview-sm"),
-          type: "video" as MediaType,
-        }))
-      }
+      return this.favoritesPageItems
     },
     purchasedMediaObjects(): MediaGalleryMeta[] {
       if (this.tab !== "purchased") return []
@@ -581,7 +572,7 @@ export default defineComponent({
           return !this.videoCreations.loadingCreations && this.videoCreations.creations.length === 0
         }
       } else if (this.tab === "favorites") {
-        return !this.activeCreationsStore.loadingCreations && this.activeCreationsStore.favorites.length === 0
+        return this.favoritesPageItems.length === 0
       } else if (this.tab === "purchased") {
         return !this.activeCreationsStore.loadingCreations && this.activeCreationsStore.imagePurchases.length === 0
       } else if (this.tab === "forgeModels") {
@@ -614,6 +605,9 @@ export default defineComponent({
         this.showAdvancedFilters = false
         if (this.tab === 'creations') this.page = 1
         void this.load()
+        if (this.tab === 'favorites' && this.userId) {
+          void this.loadFavorites()
+        }
       },
     },
     currentTab: {
@@ -630,6 +624,9 @@ export default defineComponent({
         if (this.tab === "creations") {
           this.page = 1
           void this.load()
+        } else if (this.tab === 'favorites') {
+          this.page = 1
+          void this.loadFavorites()
         }
       },
     },
@@ -744,12 +741,24 @@ export default defineComponent({
   },
   methods: {
     scrollToTop() {
-      if (typeof window !== 'undefined') {
+      if (typeof window === 'undefined') return
+      const el = (this.$refs as any)?.filtersBar as HTMLElement | undefined
+      if (el && typeof el.getBoundingClientRect === 'function') {
         try {
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          const y = el.getBoundingClientRect().top + window.scrollY - 50 // align just under fixed header
+          window.scrollTo({ top: y, behavior: 'smooth' })
+          return
         } catch {
-          window.scrollTo(0, 0)
+          const y = el.getBoundingClientRect().top + window.scrollY - 50
+          window.scrollTo(0, y)
+          return
         }
+      }
+      // Fallback: scroll to page top if element not found
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } catch {
+        window.scrollTo(0, 0)
       }
     },
     aspectRatioToNumber(raw?: string): number | undefined {
@@ -765,12 +774,15 @@ export default defineComponent({
       this.activeCreationsStore.creations = this.activeCreationsStore.creations.filter((el) => el.id !== requestId)
     },
     onSearchChange() {
-      if (this.tab !== "creations") return
       this.page = 1
-      this.imageCreations.search = this.searchQuery || null
-      this.videoCreations.search = this.searchQuery || null
-      this.imageCreations.searchCreations(this.userId || undefined)
-      this.videoCreations.searchCreations(this.userId || undefined)
+      if (this.tab === "creations") {
+        this.imageCreations.search = this.searchQuery || null
+        this.videoCreations.search = this.searchQuery || null
+        this.imageCreations.searchCreations(this.userId || undefined)
+        this.videoCreations.searchCreations(this.userId || undefined)
+      } else if (this.tab === 'favorites') {
+        void this.loadFavorites()
+      }
     },
     onModelChange() {
       if (this.tab !== "creations") return
@@ -856,13 +868,17 @@ export default defineComponent({
       if (this.page < 1) this.page = 1
       if (this.pageSize < 1) this.pageSize = 1
       if (resetToFirstOnSize) this.page = 1
-      if (this.mediaTypeFilter === "all") {
-        void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
-        void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
-      } else if (this.mediaTypeFilter === "image") {
-        void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
-      } else if (this.mediaTypeFilter === "video") {
-        void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+      if (this.tab === 'creations') {
+        if (this.mediaTypeFilter === "all") {
+          void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+          void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+        } else if (this.mediaTypeFilter === "image") {
+          void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+        } else if (this.mediaTypeFilter === "video") {
+          void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
+        }
+      } else if (this.tab === 'favorites') {
+        void this.loadFavorites()
       }
       this.scrollToTop()
     },
@@ -875,6 +891,17 @@ export default defineComponent({
     nextPage() {
       this.page += 1
       this.goToPage()
+    },
+    async loadFavorites() {
+      if (!this.userId) return
+      const items = await fetchCollectionMedia({
+        ownerId: this.userId,
+        page: this.page,
+        pageSize: this.pageSize,
+        mediaType: this.mediaTypeFilter,
+        search: this.searchQuery || null,
+      })
+      this.favoritesPageItems = items
     },
     loadMore() {
       if (this.tab === "creations") {
@@ -910,10 +937,7 @@ export default defineComponent({
 
     // For favorites tab
     showFavoritesDetails(mediaIndex: number) {
-      const mediaObjects: MediaGalleryMeta[] = this.activeCreationsStore.favorites.map((el) => ({
-        id: el.id,
-        type: this.currentTab,
-      }))
+      const mediaObjects: MediaGalleryMeta[] = this.favoritesPageItems.map((el) => ({ id: el.id, type: el.type }))
       void mediaViwer.show(mediaObjects, mediaIndex)
     },
 
