@@ -56,13 +56,14 @@ q-page.full-height.full-width
           :color="showAdvancedFilters ? 'primary' : 'grey-6'"
         ).gt-xs
         q-separator(vertical v-if="tab === 'creations'").gt-xs
-        // Pagination controls (optional)
+        // Pagination controls (always on for creations)
         div.row.items-center.q-gutter-sm(v-if="tab === 'creations'")
-          q-toggle(v-model="usePagination" label="Pagination" size="sm")
-          div(v-if="usePagination" class="row items-center q-gutter-sm")
-            q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px")
-            q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px")
-            q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
+          q-input(dense outlined type="number" v-model.number="page" label="Page" style="width:90px" @update:model-value="goToPage()")
+          q-input(dense outlined type="number" v-model.number="pageSize" label="Page Size" style="width:110px" @update:model-value="goToPage(true)")
+          q-btn(size="sm" flat color="primary" label="Go" @click="goToPage()")
+          q-separator(vertical)
+          q-btn(icon="chevron_left" label="Prev" size="sm" flat @click="prevPage" :disable="page <= 1")
+          q-btn(icon="chevron_right" label="Next" size="sm" flat @click="nextPage")
         .col-grow
       .row.q-gutter-sm.items-center.no-wrap.q-mt-sm(v-if="showAdvancedFilters && tab === 'creations'")
         q-input(
@@ -255,7 +256,7 @@ q-page.full-height.full-width
                   q-icon(v-if="userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
                   q-icon(v-else name="close" color="negative" size="sm")
 
-      .centered.q-ma-md(v-if="tab === 'creations' && usePagination")
+      .centered.q-ma-md(v-if="tab === 'creations'")
         .row.items-center.q-gutter-sm
           q-btn(icon="chevron_left" label="Prev" @click="prevPage" :disable="page <= 1")
           div Page {{ page }}
@@ -343,8 +344,6 @@ export default defineComponent({
       ],
       mediaTypeIcon,
       img,
-      // Pagination
-      usePagination: false,
       page: 1,
       pageSize: 30,
     }
@@ -613,6 +612,7 @@ export default defineComponent({
         // Reset search when switching between favorites/creations
         this.searchQuery = ""
         this.showAdvancedFilters = false
+        if (this.tab === 'creations') this.page = 1
         void this.load()
       },
     },
@@ -628,17 +628,12 @@ export default defineComponent({
       handler() {
         // When switching media type filter, reload data if needed
         if (this.tab === "creations") {
+          this.page = 1
           void this.load()
         }
       },
     },
-    usePagination(val: boolean) {
-      if (this.tab === 'creations') {
-        // Reset to first page when toggling mode for clarity
-        if (val) this.page = 1
-        void this.load()
-      }
-    },
+    // no pagination toggle – pagination always enabled
     gridMode(val) {
       LocalStorage.set("profilePageGridMode", this.gridMode)
     },
@@ -748,6 +743,15 @@ export default defineComponent({
     }
   },
   methods: {
+    scrollToTop() {
+      if (typeof window !== 'undefined') {
+        try {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        } catch {
+          window.scrollTo(0, 0)
+        }
+      }
+    },
     aspectRatioToNumber(raw?: string): number | undefined {
       if (!raw) return undefined
       if (raw.includes(":")) {
@@ -762,6 +766,7 @@ export default defineComponent({
     },
     onSearchChange() {
       if (this.tab !== "creations") return
+      this.page = 1
       this.imageCreations.search = this.searchQuery || null
       this.videoCreations.search = this.searchQuery || null
       this.imageCreations.searchCreations(this.userId || undefined)
@@ -769,6 +774,7 @@ export default defineComponent({
     },
     onModelChange() {
       if (this.tab !== "creations") return
+      this.page = 1
 
       // Apply model filter to both stores
       if (this.selectedModel) {
@@ -820,25 +826,14 @@ export default defineComponent({
         this.imageCreations.activeUserId = this.userId
         this.videoCreations.activeUserId = this.userId
 
-        // Load data based on media type filter and pagination mode
-        if (this.usePagination) {
-          if (this.mediaTypeFilter === "all") {
-            void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
-            void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
-          } else if (this.mediaTypeFilter === "image") {
-            void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
-          } else if (this.mediaTypeFilter === "video") {
-            void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
-          }
-        } else {
-          if (this.mediaTypeFilter === "all") {
-            void this.imageCreations.loadCreations(this.userId || undefined)
-            void this.videoCreations.loadCreations(this.userId || undefined)
-          } else if (this.mediaTypeFilter === "image") {
-            void this.imageCreations.loadCreations(this.userId || undefined)
-          } else if (this.mediaTypeFilter === "video") {
-            void this.videoCreations.loadCreations(this.userId || undefined)
-          }
+        // Load data based on media type filter (pagination always on)
+        if (this.mediaTypeFilter === "all") {
+          void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+          void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+        } else if (this.mediaTypeFilter === "image") {
+          void this.imageCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
+        } else if (this.mediaTypeFilter === "video") {
+          void this.videoCreations.loadCreationsPage(this.userId || undefined, this.page, this.pageSize)
         }
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId)
@@ -856,10 +851,11 @@ export default defineComponent({
         void this.activeCreationsStore.loadPurchases(this.userId)
       }
     },
-    goToPage() {
+    goToPage(resetToFirstOnSize = false) {
       if (!this.userId) return
       if (this.page < 1) this.page = 1
       if (this.pageSize < 1) this.pageSize = 1
+      if (resetToFirstOnSize) this.page = 1
       if (this.mediaTypeFilter === "all") {
         void this.imageCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
         void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
@@ -868,6 +864,7 @@ export default defineComponent({
       } else if (this.mediaTypeFilter === "video") {
         void this.videoCreations.loadCreationsPage(this.userId, this.page, this.pageSize)
       }
+      this.scrollToTop()
     },
     prevPage() {
       if (this.page > 1) {
@@ -881,18 +878,7 @@ export default defineComponent({
     },
     loadMore() {
       if (this.tab === "creations") {
-        if (this.usePagination) {
-          this.nextPage()
-          return
-        }
-        if (this.mediaTypeFilter === "all") {
-          void this.imageCreations.loadCreations(this.userId || undefined)
-          void this.videoCreations.loadCreations(this.userId || undefined)
-        } else if (this.mediaTypeFilter === "image") {
-          void this.imageCreations.loadCreations(this.userId || undefined)
-        } else if (this.mediaTypeFilter === "video") {
-          void this.videoCreations.loadCreations(this.userId || undefined)
-        }
+        this.nextPage()
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId || undefined)
       } else if (this.tab === "favorites") {
