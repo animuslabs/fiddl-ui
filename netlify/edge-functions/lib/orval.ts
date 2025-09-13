@@ -831,6 +831,125 @@ export type CreationsCreateVideoRequests200Item = {
   uploadedStartImageId?: string;
 };
 
+export type CreationsGetMediaRequestsParams = {
+userId?: string;
+startDateTime?: string;
+limit?: number;
+offset?: number;
+order?: CreationsGetMediaRequestsOrder;
+endDateTime?: string;
+customModelId?: string;
+model?: typeof CreationsGetMediaRequestsModel[keyof typeof CreationsGetMediaRequestsModel] ;
+aspectRatio?: CreationsGetMediaRequestsAspectRatio;
+promptIncludes?: string;
+};
+
+export type CreationsGetMediaRequestsOrder = typeof CreationsGetMediaRequestsOrder[keyof typeof CreationsGetMediaRequestsOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsGetMediaRequestsOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
+  'veo-3': 'veo-3',
+  'seedance-pro': 'seedance-pro',
+  'seedance-lite': 'seedance-lite',
+  kling: 'kling',
+  ultra: 'ultra',
+  'sd3-lg': 'sd3-lg',
+  core: 'core',
+  'dall-e-3': 'dall-e-3',
+  'flux-pro-ultra': 'flux-pro-ultra',
+  'flux-dev': 'flux-dev',
+  'flux-pro': 'flux-pro',
+  custom: 'custom',
+  imagen4: 'imagen4',
+  'imagen4-ultra': 'imagen4-ultra',
+  photon: 'photon',
+  recraft3: 'recraft3',
+  'recraft3-svg': 'recraft3-svg',
+  'gpt-image-1': 'gpt-image-1',
+  seedream3: 'seedream3',
+  'nano-banana': 'nano-banana',
+} as const
+export type CreationsGetMediaRequestsAspectRatio = typeof CreationsGetMediaRequestsAspectRatio[keyof typeof CreationsGetMediaRequestsAspectRatio];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsGetMediaRequestsAspectRatio = {
+  '16:9': '16:9',
+  '1:1': '1:1',
+  '21:9': '21:9',
+  '2:3': '2:3',
+  '3:2': '3:2',
+  '4:5': '4:5',
+  '5:4': '5:4',
+  '9:16': '9:16',
+  '9:21': '9:21',
+  '3:4': '3:4',
+  '4:3': '4:3',
+} as const;
+
+export type CreationsGetMediaRequests200ItemAnyOfMediaType = typeof CreationsGetMediaRequests200ItemAnyOfMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsGetMediaRequests200ItemAnyOfMediaType = {
+  image: 'image',
+} as const;
+
+export type CreationsGetMediaRequests200ItemAnyOf = {
+  id: string;
+  imageIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  negativePrompt?: string;
+  quantity: number;
+  customModelId?: string;
+  customModelName?: string;
+  meta?: string;
+  mediaType: CreationsGetMediaRequests200ItemAnyOfMediaType;
+};
+
+export type CreationsGetMediaRequests200ItemAnyOfThreeMediaType = typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsGetMediaRequests200ItemAnyOfThreeMediaType = {
+  video: 'video',
+} as const;
+
+export type CreationsGetMediaRequests200ItemAnyOfThree = {
+  id: string;
+  videoIds: string[];
+  createdAt: string;
+  aspectRatio: string;
+  public: boolean;
+  creatorId: string;
+  creatorUsername: string;
+  model?: string;
+  seed?: number;
+  prompt?: string;
+  meta?: string;
+  duration?: number;
+  quantity: number;
+  startImageId?: string;
+  uploadedStartImageId?: string;
+  mediaType: CreationsGetMediaRequests200ItemAnyOfThreeMediaType;
+};
+
+export type CreationsGetMediaRequests200Item = CreationsGetMediaRequests200ItemAnyOf | CreationsGetMediaRequests200ItemAnyOfThree;
+
 export type CreationsGetImageRequestParams = {
 imageRequestId: string;
 };
@@ -2659,7 +2778,30 @@ limit?: number;
 offset?: number;
 search?: string;
 includeBanned?: boolean;
+sortBy?: AdminListUsersSortBy;
+sortDir?: AdminListUsersSortDir;
 };
+
+export type AdminListUsersSortBy = typeof AdminListUsersSortBy[keyof typeof AdminListUsersSortBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsersSortBy = {
+  lastActiveAt: 'lastActiveAt',
+  spentPoints: 'spentPoints',
+  availablePoints: 'availablePoints',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type AdminListUsersSortDir = typeof AdminListUsersSortDir[keyof typeof AdminListUsersSortDir];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsersSortDir = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 /**
  * @nullable
@@ -4062,6 +4204,34 @@ export const getCreationsCreateVideoRequestsUrl = (params?: CreationsCreateVideo
 export const creationsCreateVideoRequests = async (params?: CreationsCreateVideoRequestsParams, options?: RequestInit): Promise<CreationsCreateVideoRequests200Item[]> => {
   
   return fetcher<CreationsCreateVideoRequests200Item[]>(getCreationsCreateVideoRequestsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getCreationsGetMediaRequestsUrl = (params?: CreationsGetMediaRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/creations/getMediaRequests?${stringifiedParams}` : `/creations/getMediaRequests`
+}
+
+export const creationsGetMediaRequests = async (params?: CreationsGetMediaRequestsParams, options?: RequestInit): Promise<CreationsGetMediaRequests200Item[]> => {
+  
+  return fetcher<CreationsGetMediaRequests200Item[]>(getCreationsGetMediaRequestsUrl(params),
   {      
     ...options,
     method: 'GET'

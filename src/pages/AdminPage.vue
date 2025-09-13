@@ -271,17 +271,32 @@ export default defineComponent({
       return (page - 1) * rpp
     })
 
-    const params = computed(() => ({
-      limit: limit.value,
-      offset: offset.value,
-      search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
-      includeBanned: includeBanned.value ? true : undefined,
-    }))
+    const params = computed(() => {
+      // Map UI sort to API-supported sort fields
+      const apiSortable = new Set(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"]) as Set<string>
+      const currentSort = usersPagination.value.sortBy || "spentPoints"
+      const sortBy = apiSortable.has(currentSort) ? (currentSort as any) : undefined
+      const sortDir = sortBy ? (usersPagination.value.descending ? "desc" : "asc") : undefined
+
+      return {
+        limit: limit.value,
+        offset: offset.value,
+        search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
+        includeBanned: includeBanned.value ? true : undefined,
+        sortBy,
+        sortDir,
+      }
+    })
 
     const usersQuery = useAdminListUsers(params)
     const usersRows = computed(() => {
       const rows = usersQuery.data?.value?.data?.users || []
       const sortBy = usersPagination.value.sortBy || "spentPoints"
+      const apiSortable = new Set(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"]) as Set<string>
+      // If server supports this sort, trust server order
+      if (apiSortable.has(sortBy)) return rows
+
+      // Otherwise, sort locally within the current page
       const desc = !!usersPagination.value.descending
       const isDate = sortBy === "lastActiveAt" || sortBy === "createdAt"
       const val = (row: any) => {
