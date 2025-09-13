@@ -850,7 +850,8 @@ export default defineComponent({
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId)
       } else if (this.tab === "favorites") {
-        void this.activeCreationsStore.loadFavorites(this.userId)
+        // Use paged collection API for favorites
+        void this.loadFavorites()
       } else if (this.tab === "forgeModels") {
         if (this.userId) {
           console.log("Loading forge models for userId:", this.userId)
@@ -909,7 +910,8 @@ export default defineComponent({
       } else if (this.tab === "purchased") {
         void this.activeCreationsStore.loadPurchases(this.userId || undefined)
       } else if (this.tab === "favorites") {
-        void this.activeCreationsStore.loadFavorites(this.userId || undefined)
+        // Favorites uses explicit pagination controls
+        void this.loadFavorites()
       } else if (this.tab === "forgeModels") {
         if (this.userId) {
           // Load more forge models (next page)

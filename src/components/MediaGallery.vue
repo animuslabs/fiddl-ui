@@ -317,7 +317,9 @@ function markVideoLoaded(id: string) {
 
   // Only mark as loaded if we have metadata and some readiness
   if (el.readyState >= 2) {
-    delete videoLoading.value[id]
+    // Use explicit false to indicate "done loading" so template checks can
+    // reliably hide the overlay and show the video element.
+    videoLoading.value[id] = false
 
     if (el.videoWidth && el.videoHeight) {
       const realAspect = el.videoWidth / el.videoHeight
@@ -332,7 +334,7 @@ function markVideoErrored(id: string) {
 }
 
 function markImageLoaded(id: string) {
-  delete imageLoading.value[id]
+  imageLoading.value[id] = false
   const im = document.querySelector(`img[data-id="${id}"]`) as HTMLImageElement | null
   if (im && im.naturalWidth && im.naturalHeight) {
     const realAspect = im.naturalWidth / im.naturalHeight
@@ -480,7 +482,7 @@ function isVideoMedia(m: MediaGalleryMeta): boolean {
 
 function videoClass(media: MediaGalleryMeta) {
   return {
-    "cursor-pointer": props.selectable && !videoLoading.value[media.id],
+    "cursor-pointer": props.selectable && videoLoading.value[media.id] === false,
   }
 }
 
@@ -554,12 +556,12 @@ function showImageOverlay(id: string): boolean {
       .media-wrapper(:style="mediaStyles")
         // Only mount heavy content when visible
         template(v-if="isVisible(m.id)")
-          div(v-if="props.showLoading && (videoLoading[m.id] ?? true)" style="position: relative;" ).full-height
+          div(v-if="props.showLoading && videoLoading[m.id] !== false" style="position: relative;" ).full-height
             div
               .absolute-center.z-top.offset-down
                 h4 Loading
               q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
-          div(v-show="!(videoLoading[m.id] ?? true)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+          div(v-show="videoLoading[m.id] === false" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
             video(
               :src="m.url"
               :key="videoReloadKey[m.id]"
