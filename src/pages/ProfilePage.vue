@@ -58,15 +58,15 @@ q-page.full-height.full-width
         ).gt-xs
         q-separator(vertical v-if="tab === 'creations'").gt-xs
         // Unified pagination (top)
-        .row.justify-center.q-mb-sm(ref="topPager" v-if="tab === 'creations' || tab === 'favorites'")
-          q-pagination(
+        .row.justify-center.q-mb-sm.no-wrap.nowrap-flex.hide-scrollbar(ref="topPager" v-if="tab === 'creations' || tab === 'favorites'" style="overflow:auto; max-width:100vw;")
+          AppPagination(
             v-model="page"
             :max="pagerMax"
-            max-pages="8"
-            boundary-links
-            direction-links
             color="primary"
-            size="lg"
+            size="sm"
+            :max-pages="8"
+            :boundary-links="true"
+            :direction-links="true"
             @update:model-value="goToPage()"
           )
         .col-grow
@@ -262,15 +262,15 @@ q-page.full-height.full-width
                   q-icon(v-else name="close" color="negative" size="sm")
 
       // Unified pagination (bottom)
-      .row.justify-center.q-mt-sm(v-if="tab === 'creations' || tab === 'favorites'")
-        q-pagination(
+      .row.justify-center.q-mt-md.q-mb-md.q-pa-sm.no-wrap.nowrap-flex.hide-scrollbar(v-if="tab === 'creations' || tab === 'favorites'" style="overflow:auto; max-width:100vw;")
+        AppPagination(
           v-model="page"
           :max="pagerMax"
-          max-pages="8"
-          boundary-links
-          direction-links
           color="primary"
-          size="lg"
+          size="md"
+          :max-pages="8"
+          :boundary-links="true"
+          :direction-links="true"
           @update:model-value="goToPage()"
         )
       .centered.q-ma-md(v-else-if="shouldShowLoadMore")
@@ -309,6 +309,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { userPublicProfile, userFindByUsername } from "src/lib/orval"
 import { match } from "ts-pattern"
+import AppPagination from "src/components/AppPagination.vue"
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { imageModels, videoModels } from "lib/imageModels"
 import { mediaTypeIcon } from "src/stores/browserStore"
@@ -324,6 +325,7 @@ export default defineComponent({
     CreatedImageCard,
     ProfileCard,
     MediaGallery,
+    AppPagination,
     ModelCard,
   },
   data() {
@@ -775,23 +777,35 @@ export default defineComponent({
     }
   },
   methods: {
-    // Scroll the top pager row into view (mirrors AdminPage behavior)
+    // Scroll the top pager row into view (robust for sticky headers)
     scrollTopPagerIntoView() {
       if (typeof window === "undefined") return
       try {
-        const refs: any = this.$refs || {}
-        // Prefer a plain DOM element for precise alignment
-        const el: HTMLElement | null = refs.topPager || (refs.filtersBar && (refs.filtersBar.$el || refs.filtersBar)) || null
-        if (!el || typeof el.getBoundingClientRect !== "function") return
-        const rect = el.getBoundingClientRect()
-        // Account for the fixed header/sticky offset so buttons are fully visible
-        const headerOffset = 50 // keep in sync with sticky top
-        const top = window.pageYOffset + rect.top - headerOffset
-        try {
-          window.scrollTo({ top, behavior: "smooth" })
-        } catch {
-          window.scrollTo(0, top)
-        }
+        void this.$nextTick(() => {
+          const refs: any = this.$refs || {}
+          const raw = refs.topPager || (refs.filtersBar && (refs.filtersBar.$el || refs.filtersBar)) || null
+          const el: HTMLElement | null = (raw && (raw as any).$el) ? (raw as any).$el : raw
+          const headerOffset = 50 // keep in sync with sticky top
+          if (!el || typeof el.getBoundingClientRect !== "function") {
+            try {
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            } catch {
+              window.scrollTo(0, 0)
+            }
+            return
+          }
+          const rect = el.getBoundingClientRect()
+          // If the element is sticky and already pinned near the header offset, just go to top
+          const pinned = Math.abs(rect.top - headerOffset) < 4
+          const top = pinned ? 0 : Math.max(0, window.pageYOffset + rect.top - headerOffset)
+          try {
+            window.scrollTo({ top, behavior: "smooth" })
+            // Fallback for some mobile browsers
+            if (pinned) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          } catch {
+            window.scrollTo(0, top)
+          }
+        })
       } catch {}
     },
     aspectRatioToNumber(raw?: string): number | undefined {
@@ -914,7 +928,15 @@ export default defineComponent({
       } else if (this.tab === "favorites") {
         void this.loadFavorites()
       }
-      this.scrollTopPagerIntoView()
+      this.scrollTopPagerIntoViewWithRetry(6, 140)
+    },
+    // Try scrolling a few times with a small delay to wait for layout
+    scrollTopPagerIntoViewWithRetry(tries = 3, delayMs = 120) {
+      const attempt = (n: number) => {
+        this.scrollTopPagerIntoView()
+        if (n > 1) setTimeout(() => attempt(n - 1), delayMs)
+      }
+      setTimeout(() => attempt(tries), 0)
     },
     prevPage() {
       if (this.page > 1) {
