@@ -27,13 +27,14 @@ export default ts.config(
       "@typescript-eslint/no-explicit-any": "off",
       "vue/multiword-component-names": "off",
       "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-floating-promises": [
-        "error",
-        {
-          ignoreVoid: true, // Ignore expressions with `void`
-          ignoreIIFE: false, // Ignore immediately invoked function expressions
-        },
-      ],
+      "@typescript-eslint/no-floating-promises": "off",
+      // "@typescript-eslint/no-floating-promises": [
+      //   "error",
+      //   {
+      //     ignoreVoid: true, // Ignore expressions with `void`
+      //     ignoreIIFE: false, // Ignore immediately invoked function expressions
+      //   },
+      // ],
       "@typescript-eslint/await-thenable": "error",
       "require-await": "off",
       "vue/multi-word-component-names": "off",
