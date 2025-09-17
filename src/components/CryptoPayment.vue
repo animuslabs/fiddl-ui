@@ -71,6 +71,10 @@ export default defineComponent({
       type: Number as PropType<number | undefined>,
       required: false,
     },
+    discountCode: {
+      type: String as PropType<string | undefined>,
+      required: false,
+    },
   },
   emits: ["paymentComplete"],
   data() {
@@ -124,7 +128,7 @@ export default defineComponent({
       try {
         const response = await pointsFinishBuyPackage({
           method: this.selectedMethod,
-          orderId: this.cryptoOrder?.id
+          orderId: this.cryptoOrder?.id,
         })
         if (response?.data) {
           try {
@@ -157,6 +161,7 @@ export default defineComponent({
         const response = await pointsInitBuyPackage({
           method,
           packageId,
+          discountCode: this.discountCode || undefined,
         })
         const order = response?.data as unknown as CryptoOrder
         if (order) {

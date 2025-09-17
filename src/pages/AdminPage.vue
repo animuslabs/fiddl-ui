@@ -8,6 +8,8 @@ q-page.full-height.full-width.admin-page
       q-tab(name="users" label="Users")
       q-tab(name="payments" label="Payments")
       q-tab(name="uploaded-images" label="Uploaded Images")
+      q-tab(name="discount-codes" label="Discount Codes")
+      q-tab(name="affiliate-payouts" label="Affiliate Payouts")
     div(v-if="tab == 'promo-codes'")
       .centered.q-mb-md
         q-card.q-pa-md
@@ -38,6 +40,98 @@ q-page.full-height.full-width.admin-page
           q-list
             q-item(v-for="code in claimedPromoCodes" :key="code.id")
                           pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto; overflow-wrap:anywhere; word-break:break-word;") {{ code }}
+
+    // Discount Codes tab
+    div(v-if="tab == 'discount-codes'" class="q-pa-sm")
+      .row.items-center.q-gutter-md
+        h5.q-my-none Create Discount Code
+      q-card.q-pa-md.q-mb-md
+        .row.q-col-gutter-sm
+          .col-12.col-sm-4
+            q-input(v-model="dcForm.code" label="Code"  outlined hint="Uppercase" :rules="[v => !!v || 'Required']" @update:model-value="dcForm.code = (dcForm.code || '').toUpperCase()")
+          .col-6.col-sm-2
+            q-input(v-model.number="dcForm.discountPct" type="number"  outlined label="Discount %" :min="0" :max="95" :step="1" suffix="%")
+          .col-6.col-sm-2
+            q-input(v-model.number="dcForm.maximumUses" type="number"  outlined label="Max Uses" :min="1")
+          .col-6.col-sm-3
+            q-select(
+              v-model="dcForm.linkedUserId"
+              :options="dcUserOptionsCreate"
+              label="Linked Account (optional)"
+              outlined clearable use-input fill-input input-debounce="300" hide-selected
+              emit-value map-options option-label="label" option-value="value" outllined
+              @filter="filterDcUserCreate"
+            )
+        .row.items-center.q-gutter-sm.q-mt-sm
+          q-btn(color="primary" icon="add" label="Create" :loading="dcCreating" @click="createDiscountCode")
+          q-btn(flat icon="refresh" label="Refresh" :loading="dcFetching || dcLoading" @click="refetchDiscounts")
+      q-table(
+        :rows="dcRows"
+        :columns="dcColumns"
+        row-key="code"
+        :loading="dcLoading || dcFetching"
+        flat bordered dense
+        :rows-per-page-options="[10,25,50,100,0]"
+        :no-data-label="'No discount codes found'"
+      )
+        template(#body-cell-discount="props")
+          q-td(:props="props") {{ Math.round((props.row.discount || 0) * 100) }}%
+        template(#body-cell-uses="props")
+          q-td(:props="props") {{ props.row.used }}/{{ props.row.maximumUses }}
+        template(#body-cell-pendingPayout="props")
+          q-td(:props="props") ${{ (props.row.pendingPayout || 0).toFixed(2) }}
+        template(#body-cell-totalPayout="props")
+          q-td(:props="props") ${{ (props.row.totalPayout || 0).toFixed(2) }}
+        template(#body-cell-createdAt="props")
+          q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
+        template(#body-cell-actions="props")
+          q-td(:props="props")
+            .row.items-center.q-gutter-xs
+              q-btn(size="sm" icon="edit" flat @click="openEditDiscount(props.row)")
+              q-btn(size="sm" icon="delete" color="negative" flat @click="confirmDeleteDiscount(props.row)")
+
+    // Edit dialog
+    q-dialog(v-model="dcEditOpen")
+      q-card(style="min-width: 360px")
+        q-card-section
+          h6.q-my-none Edit Discount Code
+        q-card-section
+          .column.q-gutter-sm
+            q-input(v-model="dcEdit.code" label="Code" dense outlined disable)
+            q-input(v-model.number="dcEdit.discountPct" type="number" dense outlined label="Discount %" :min="0" :max="95" :step="1" suffix="%")
+            q-input(v-model.number="dcEdit.maximumUses" type="number" dense outlined label="Max Uses" :min="1")
+              q-select(
+                v-model="dcEdit.linkedUserId"
+                :options="dcUserOptionsEdit"
+                label="Linked Account (optional)"
+                dense outlined clearable use-input fill-input input-debounce="300"
+                emit-value map-options option-label="label" option-value="value"
+                @filter="filterDcUserEdit"
+              )
+    // Affiliate Payouts tab
+    div(v-if="tab == 'affiliate-payouts'" class="q-pa-sm")
+      .row.items-center.q-gutter-sm.q-mb-sm
+        h5.q-my-none Users With Pending Payouts
+        q-space
+        q-btn(icon="refresh" flat @click="refetchDiscounts" :loading="dcFetching || dcLoading")
+      q-table(
+        :rows="pendingPayoutRows"
+        :columns="pendingPayoutColumns"
+        row-key="userId"
+        flat bordered dense
+        :rows-per-page-options="[10,25,50,100,0]"
+        :no-data-label="'No pending payouts'"
+      )
+        template(#body-cell-user="props")
+          q-td(:props="props") {{ userLabelById[props.row.userId] || props.row.userId }}
+        template(#body-cell-pending="props")
+          q-td(:props="props") ${{ (props.row.pending || 0).toFixed(2) }}
+        template(#body-cell-actions="props")
+          q-td(:props="props")
+            q-btn(size="sm" color="primary" :disable="(props.row.pending||0) <= 0" label="Payout" @click="confirmAffiliatePayout(props.row.userId, props.row.pending)")
+        q-card-actions(align="right")
+          q-btn(flat label="Cancel" v-close-popup)
+          q-btn(color="primary" label="Save" :loading="dcSaving" @click="saveEditDiscount")
     div(v-if="tab == 'users'").q-pa-sm
       .row.items-center.q-gutter-sm.q-mb-sm
         q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
@@ -168,7 +262,7 @@ q-page.full-height.full-width.admin-page
     )
       template(#body-cell-preview="props")
         q-td(:props="props")
-          q-img(:src="s3Img('uploads/' + props.row.id)" style="width:60px; height:60px; object-fit:cover; border-radius:4px;")
+          q-img(:src="s3Img('uploads/' + props.row.id)" style="width:60px; height:60px; object-fit:cover; border-radius:4px; cursor:pointer;" @click="openImagePreview(props.row.id)")
       template(#body-cell-user="props")
         q-td(:props="props") {{ userDisplay(props.row.user) }}
       template(#body-cell-createdAt="props")
@@ -187,7 +281,7 @@ q-page.full-height.full-width.admin-page
         .col-6.col-sm-4.col-md-3.col-lg-2(v-for="row in uploadsRows" :key="row.id")
           q-card(flat bordered)
             div(style="position:relative;")
-              q-img(:src="s3Img('uploads/' + row.id)" style="width:100%; height:0; padding-bottom:100%; object-fit:cover;")
+              q-img(:src="s3Img('uploads/' + row.id)" style="width:100%; height:0; padding-bottom:100%; object-fit:cover; cursor:pointer;" @click="openImagePreview(row.id)")
               .row.items-center.q-gutter-xs(style="position:absolute; top:6px; right:6px;")
                 q-btn(size="sm" round dense color="negative" icon="delete" @click="confirmDeleteUpload(row)")
                 q-btn(size="sm" round dense color="negative" icon="block" @click="banUploader(row)")
@@ -207,7 +301,12 @@ q-page.full-height.full-width.admin-page
         color="primary"
         size="lg"
       )
-  .centered.q-gutter-lg.q-ma-md(v-else)
+
+  // Show a spinner while user data is loading to avoid false "not admin" flash
+  .centered.q-gutter-lg.q-ma-md(v-if="$userAuth.loggedIn && !$userAuth.userData")
+    q-spinner(size="40px" color="primary")
+    h6.q-mt-sm Loading admin data…
+  .centered.q-gutter-lg.q-ma-md(v-if="!$userAuth.loggedIn || !$userAuth.userData?.admin")
     h2 You need to be logged in as an admin to view this page
 
 
@@ -229,6 +328,14 @@ q-dialog(v-model="qrDialogOpen" maximized)
       .row.justify-center.q-gutter-sm.q-mt-lg
         q-btn(color="primary" icon="content_copy" label="Copy Link" @click="copyQrLink" rounded)
         q-btn(color="grey-7" icon="close" label="Close" @click="qrDialogOpen = false" flat rounded)
+
+// Fullscreen Image Preview dialog
+q-dialog(v-model="imgPreviewOpen" maximized)
+  q-card.q-dialog-plugin.qr-dialog-card
+    .centered.full-width.q-pa-lg(style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000;")
+      img(v-if="imgPreviewSrc" :src="imgPreviewSrc" style="max-width:95vw; max-height:90vh; object-fit:contain; display:block;")
+      .row.justify-center.q-gutter-sm.q-mt-lg
+        q-btn(color="grey-7" icon="close" label="Close" @click="imgPreviewOpen = false" flat rounded)
 </template>
 
 <script lang="ts">
@@ -239,7 +346,8 @@ import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import type { QTableColumn } from "quasar"
 import { defineComponent, ref, computed, watch } from "vue"
-import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments, creationsDescribeUploadedImage, adminListUsers } from "src/lib/orval"
+import type { RouteLocationRaw } from "vue-router"
+import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments, creationsDescribeUploadedImage, adminListUsers, adminDiscountCodesList, adminDiscountCodeCreate, adminDiscountCodeUpdate, adminDiscountCodeDelete, adminAffiliatePayoutUser } from "src/lib/orval"
 import QRCode from "qrcode"
 import axios from "axios"
 
@@ -521,11 +629,11 @@ export default defineComponent({
 
     // Uploaded Images state
     const uploadsAccount = ref("")
-    const uploadsView = ref<'table' | 'grid'>("grid")
+    const uploadsView = ref<"table" | "grid">("grid")
     const topPager = ref<HTMLElement | null>(null)
     const uploadsViewOptions = [
-      { label: 'Table', value: 'table', icon: 'table_rows' },
-      { label: 'Grid', value: 'grid', icon: 'grid_on' },
+      { label: "Table", value: "table", icon: "table_rows" },
+      { label: "Grid", value: "grid", icon: "grid_on" },
     ]
     const uploadsStart = ref<string | null>(null)
     const uploadsEnd = ref<string | null>(null)
@@ -618,22 +726,22 @@ export default defineComponent({
       () => {
         if (uploadsSilent.value) return
         void refetchUploads()
-      }
+      },
     )
     watch(
       () => uploadsPagination.value.rowsPerPage,
       () => {
         uploadsPagination.value.page = 1
-      }
+      },
     )
 
     function scrollTopPagerIntoView() {
       try {
         const el = topPager.value
-        if (!el || typeof window === 'undefined') return
+        if (!el || typeof window === "undefined") return
         const rect = el.getBoundingClientRect()
         const top = window.pageYOffset + rect.top - 8
-        window.scrollTo({ top, behavior: 'smooth' })
+        window.scrollTo({ top, behavior: "smooth" })
       } catch {}
     }
 
@@ -665,6 +773,217 @@ export default defineComponent({
       // fallback minimal row
       const fallbackRow = singleUploaderUser.value ? { id: singleUploaderUser.value.id, profile: { username: singleUploaderUser.value.username }, banned: false } : { id: search, profile: { username: search }, banned: false }
       confirmBan(fallbackRow as any)
+    }
+
+    // Discount Codes state and actions
+    const dcRows = ref<any[]>([])
+    const dcLoading = ref(false)
+    const dcFetching = ref(false)
+    const userLabelById = ref<Record<string, string>>({})
+    const dcColumns: QTableColumn<any>[] = [
+      { name: "actions", label: "Actions", field: "code", align: "left", sortable: false },
+      { name: "code", label: "Code", field: "code", sortable: true },
+      { name: "discount", label: "Discount", field: "discount", sortable: true },
+      { name: "uses", label: "Uses", field: (row: any) => `${row.used}/${row.maximumUses}`, sortable: true },
+      { name: "linkedUser", label: "Linked User", field: (row: any) => (row.linkedUserId ? userLabelById.value[row.linkedUserId] || row.linkedUserId : ""), sortable: true },
+      { name: "pendingPayout", label: "Pending", field: (row: any) => (row as any).pendingPayout || 0, align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "totalPayout", label: "Total Paid", field: (row: any) => (row as any).totalPayout || 0, align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "createdAt", label: "Created", field: "createdAt", sortable: true },
+    ]
+
+    const dcForm = ref({
+      code: "",
+      discountPct: 10,
+      maximumUses: 100,
+      linkedUserId: "" as string | null | undefined,
+    })
+
+    async function fetchDiscounts(initial = false) {
+      try {
+        if (initial) dcLoading.value = true
+        else dcFetching.value = true
+        const res = await adminDiscountCodesList()
+        dcRows.value = Array.isArray(res?.data) ? res.data : []
+        const ids = Array.from(new Set(dcRows.value.map((r: any) => r?.linkedUserId).filter((v: any) => typeof v === "string" && v))) as string[]
+        await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const resp = await adminListUsers({ search: id, limit: 1, offset: 0 })
+              const user = resp?.data?.users?.[0]
+              if (user) userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
+            } catch {}
+          }),
+        )
+      } catch (e) {
+        // show a toast
+        Notify.create({ type: "negative", message: "Failed to load discount codes" })
+      } finally {
+        dcLoading.value = false
+        dcFetching.value = false
+      }
+    }
+    const refetchDiscounts = () => fetchDiscounts(false)
+
+    const dcCreating = ref(false)
+    async function createDiscountCode() {
+      try {
+        if (!dcForm.value.code) {
+          Notify.create({ type: "warning", message: "Code is required" })
+          return
+        }
+        dcCreating.value = true
+        const discount = Math.max(0, Math.min(95, Number(dcForm.value.discountPct || 0))) / 100
+        await adminDiscountCodeCreate({
+          code: (dcForm.value.code || "").toUpperCase().trim(),
+          discount,
+          maximumUses: Math.max(1, Number(dcForm.value.maximumUses || 1)),
+          linkedUserId: typeof dcForm.value.linkedUserId === "string" && dcForm.value.linkedUserId.trim() ? dcForm.value.linkedUserId.trim() : null,
+        })
+        Notify.create({ type: "positive", message: "Discount code created" })
+        await refetchDiscounts()
+      } catch (error) {
+        catchErr(error)
+      } finally {
+        dcCreating.value = false
+      }
+    }
+
+    // Aggregate pending payouts by user from discount codes
+    const pendingPayoutRows = computed(() => {
+      const byUser = new Map<string, number>()
+      for (const r of dcRows.value) {
+        const uid = r?.linkedUserId
+        const pending = Number((r as any)?.pendingPayout || 0)
+        if (!uid || pending <= 0) continue
+        byUser.set(uid, (byUser.get(uid) || 0) + pending)
+      }
+      const rows = Array.from(byUser.entries()).map(([userId, pending]) => ({ userId, pending }))
+      // Sort by pending desc
+      rows.sort((a, b) => b.pending - a.pending)
+      return rows
+    })
+    const pendingPayoutColumns: QTableColumn<any>[] = [
+      { name: 'user', label: 'User', field: 'user', sortable: true },
+      { name: 'pending', label: 'Pending', field: 'pending', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: 'actions', label: 'Actions', field: 'userId', sortable: false },
+    ]
+
+    function confirmAffiliatePayout(userId: string, amount: number) {
+      Dialog.create({
+        title: 'Confirm Payout',
+        message: `Payout $${(amount || 0).toFixed(2)} to ${userLabelById.value[userId] || userId}?`,
+        cancel: true,
+        ok: { label: 'Payout', color: 'primary' },
+      }).onOk(async () => {
+        try {
+          await adminAffiliatePayoutUser({ userId })
+          Notify.create({ type: 'positive', message: 'Payout executed' })
+          await refetchDiscounts()
+        } catch (e) {
+          catchErr(e)
+        }
+      })
+    }
+
+    const dcEditOpen = ref(false)
+    const dcEdit = ref({ code: "", discountPct: 0, maximumUses: 1, linkedUserId: "" as string | null | undefined })
+    const dcSaving = ref(false)
+    const dcUserOptionsCreate = ref<{ label: string; value: string }[]>([])
+    const dcUserOptionsEdit = ref<{ label: string; value: string }[]>([])
+    async function filterDcUserCreate(val: string, update: (fn: () => void) => void) {
+      const q = (val || "").trim()
+      if (q.length < 2) {
+        update(() => {
+          dcUserOptionsCreate.value = []
+        })
+        return
+      }
+      try {
+        const res = await adminListUsers({ search: q, limit: 10, offset: 0 })
+        const users = res?.data?.users || []
+        const opts = users.map((u: any) => ({ label: userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id }), value: u.id }))
+        update(() => {
+          dcUserOptionsCreate.value = opts
+        })
+      } catch {
+        update(() => {
+          dcUserOptionsCreate.value = []
+        })
+      }
+    }
+    async function filterDcUserEdit(val: string, update: (fn: () => void) => void) {
+      const q = (val || "").trim()
+      if (q.length < 2) {
+        update(() => {
+          dcUserOptionsEdit.value = []
+        })
+        return
+      }
+      try {
+        const res = await adminListUsers({ search: q, limit: 10, offset: 0 })
+        const users = res?.data?.users || []
+        const opts = users.map((u: any) => ({ label: userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id }), value: u.id }))
+        update(() => {
+          dcUserOptionsEdit.value = opts
+        })
+      } catch {
+        update(() => {
+          dcUserOptionsEdit.value = []
+        })
+      }
+    }
+    function openEditDiscount(row: any) {
+      try {
+        dcEdit.value.code = row.code
+        dcEdit.value.discountPct = Math.round((row.discount || 0) * 100)
+        dcEdit.value.maximumUses = row.maximumUses || 1
+        dcEdit.value.linkedUserId = row.linkedUserId || ""
+        if (row.linkedUserId) {
+          // seed option so the select shows a readable label
+          const lbl = userLabelById.value[row.linkedUserId] || row.linkedUserId
+          dcUserOptionsEdit.value = [{ label: lbl, value: row.linkedUserId }]
+        }
+        dcEditOpen.value = true
+      } catch {}
+    }
+    async function saveEditDiscount() {
+      try {
+        dcSaving.value = true
+        const discount = Math.max(0, Math.min(95, Number(dcEdit.value.discountPct || 0))) / 100
+        await adminDiscountCodeUpdate({
+          code: (dcEdit.value.code || "").toUpperCase().trim(),
+          discount,
+          maximumUses: Math.max(1, Number(dcEdit.value.maximumUses || 1)),
+          linkedUserId: typeof dcEdit.value.linkedUserId === "string" && dcEdit.value.linkedUserId.trim() ? dcEdit.value.linkedUserId.trim() : null,
+        })
+        dcEditOpen.value = false
+        Notify.create({ type: "positive", message: "Discount code updated" })
+        await refetchDiscounts()
+      } catch (error) {
+        catchErr(error)
+      } finally {
+        dcSaving.value = false
+      }
+    }
+    function confirmDeleteDiscount(row: any) {
+      Dialog.create({
+        title: "Delete discount code",
+        message: `Are you sure you want to delete code ${row.code}?`,
+        cancel: true,
+        ok: { label: "Delete", color: "negative" },
+      }).onOk(async () => {
+        try {
+          await adminDiscountCodeDelete({
+            code: String(row.code || "")
+              .toUpperCase()
+              .trim(),
+          })
+          Notify.create({ type: "positive", message: "Discount code deleted" })
+          await refetchDiscounts()
+        } catch (error) {
+          catchErr(error)
+        }
+      })
     }
 
     async function lookupUploader(row: any) {
@@ -790,6 +1109,29 @@ export default defineComponent({
       banUploader,
       onBottomPageChange,
       confirmDeleteUpload,
+
+      // discount codes
+      dcRows,
+      dcLoading,
+      dcFetching,
+      dcColumns,
+      dcForm,
+      dcCreating,
+      createDiscountCode,
+      refetchDiscounts,
+      openEditDiscount,
+      dcEditOpen,
+      dcEdit,
+      dcSaving,
+      saveEditDiscount,
+      confirmDeleteDiscount,
+      dcUserOptionsCreate,
+      dcUserOptionsEdit,
+      filterDcUserCreate,
+      filterDcUserEdit,
+      pendingPayoutRows,
+      pendingPayoutColumns,
+      confirmAffiliatePayout,
     }
   },
   data() {
@@ -804,6 +1146,8 @@ export default defineComponent({
       qrTitle: "" as string,
       qrDataUrl: "" as string,
       qrLoading: false as boolean,
+      imgPreviewOpen: false as boolean,
+      imgPreviewSrc: "" as string,
     }
   },
   watch: {
@@ -813,16 +1157,49 @@ export default defineComponent({
         if (val) void this.load()
       },
     },
-    tab() {
+    tab(val: string) {
+      // keep URL in sync with current tab
+      const slug = this.slugForTab(val)
+      const to: RouteLocationRaw = { name: "admin", params: { adminTab: slug } }
+      // avoid navigation if already correct
+      if (this.$route.name === "admin" && this.$route.params?.adminTab === slug) {
+        // already in sync
+      } else {
+        void this.$router.replace(to)
+      }
       void this.load()
+    },
+    "$route.params.adminTab": {
+      immediate: true,
+      handler(val: any) {
+        const desired = this.normalizeAdminTab(typeof val === "string" ? val : undefined)
+        if (this.tab !== desired) this.tab = desired
+      },
     },
   },
   mounted() {},
 
   methods: {
+    normalizeAdminTab(slug?: string): string {
+      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "discount-codes", "affiliate-payouts"]) as Set<string>
+      if (!slug) return "promo-codes"
+      return allowed.has(slug) ? slug : "promo-codes"
+    },
+    slugForTab(tab: string): string {
+      return this.normalizeAdminTab(tab)
+    },
     async loginAsUser(userId: string) {
       await this.$userAuth.adminLoginAsUser(userId)
       await this.$router.push({ name: "settings" })
+    },
+    openImagePreview(imageId: string) {
+      try {
+        this.imgPreviewSrc = s3Img("uploads/" + imageId)
+        this.imgPreviewOpen = true
+      } catch {
+        this.imgPreviewSrc = ""
+        this.imgPreviewOpen = false
+      }
     },
     copyCode(codeId: string) {
       const claimUrl = `${window.location.origin}/claim/${longIdToShort(codeId)}`
@@ -915,6 +1292,10 @@ export default defineComponent({
         } else if (this.tab == "uploaded-images") {
           // Trigger initial fetch for uploads
           void this.refetchUploads()
+        } else if (this.tab == "discount-codes") {
+          void this.refetchDiscounts()
+        } else if (this.tab == "affiliate-payouts") {
+          void this.refetchDiscounts()
         }
       } catch (error) {
         catchErr(error)

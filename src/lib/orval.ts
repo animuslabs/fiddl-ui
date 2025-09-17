@@ -1313,6 +1313,7 @@ export const PointsInitBuyPackageBodyMethod = {
 export type PointsInitBuyPackageBody = {
   packageId: number;
   method: PointsInitBuyPackageBodyMethod;
+  discountCode?: string;
 };
 
 export type PointsInitBuyPackage200AnyOfLinksItem = {
@@ -1369,6 +1370,8 @@ export type PointsInitBuyPackage200AnyOfThree = {
   createdAt: string;
   /** @nullable */
   updatedAt: string | null;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
@@ -1486,6 +1489,8 @@ export type PointsGetOrder200AnyOf = {
   orderDataJSON: string | null;
   createdAt: string;
   updatedAt: string;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
@@ -1530,6 +1535,8 @@ export type PointsGetOrder200AnyOfTwo = {
   createdAt: string;
   /** @nullable */
   updatedAt: string | null;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
@@ -1564,6 +1571,36 @@ export type UserGet200 = {
   privyId: string | null;
   /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
+};
+
+export type UserGetAffiliatePayoutDetails200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
+export type UserSetAffiliatePayoutDetailsBody = {
+  paypalEmail: string;
+};
+
+export type UserSetAffiliatePayoutDetails200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
+export type UserAffiliatePayoutReceiptsParams = {
+limit?: number;
+offset?: number;
+};
+
+export type UserAffiliatePayoutReceipts200Item = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
 };
 
 export type UserProfileParams = {
@@ -1749,6 +1786,11 @@ export type UserPointsHistory200Item = {
   memo: string | null;
   quantity: number;
   userFinalBalance: number;
+};
+
+export type UserReferralsSummary200 = {
+  invitedCount: number;
+  earnedReferralPoints: number;
 };
 
 export type UserFindByUsernameParams = {
@@ -3105,6 +3147,107 @@ export type AdminListUploadedImages200 = {
   items: AdminListUploadedImages200ItemsItem[];
 };
 
+export type AdminDiscountCodesList200Item = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminDiscountCodeCreateBody = {
+  /** @minLength 1 */
+  code: string;
+  /**
+   * @minimum 0
+   * @maximum 0.95
+   */
+  discount: number;
+  /** @minimum 1 */
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId?: string | null;
+};
+
+export type AdminDiscountCodeCreate200 = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminDiscountCodeUpdateBody = {
+  /** @minLength 1 */
+  code: string;
+  /**
+   * @minimum 0
+   * @maximum 0.95
+   */
+  discount?: number;
+  /** @minimum 1 */
+  maximumUses?: number;
+  /** @nullable */
+  linkedUserId?: string | null;
+};
+
+export type AdminDiscountCodeUpdate200 = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminAffiliatePayoutUserBody = {
+  userId: string;
+};
+
+export type AdminAffiliatePayoutUser200Receipt = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
+};
+
+export type AdminAffiliatePayoutUser200 = {
+  receipt: AdminAffiliatePayoutUser200Receipt;
+  codesUpdated: number;
+};
+
+export type AdminAffiliatePayoutReceiptsParams = {
+limit?: number;
+offset?: number;
+};
+
+export type AdminAffiliatePayoutReceipts200Item = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
+};
+
+export type AdminDiscountCodeDeleteBody = {
+  /** @minLength 1 */
+  code: string;
+};
+
+export type AdminDiscountCodeDelete200 = {
+  ok: boolean;
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -3513,6 +3656,7 @@ export const EventsPublicEventsTypesItem = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -3530,6 +3674,7 @@ export const EventsPublicEvents200ItemType = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -3565,6 +3710,7 @@ export const EventsPrivateEventsTypesItem = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -3582,6 +3728,7 @@ export const EventsPrivateEvents200ItemType = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -3853,6 +4000,57 @@ export type TelegramConfirmDeviceLoginBody = {
 export type TelegramConfirmDeviceLogin200 = {
   token: string;
   userId: string;
+};
+
+export type DiscountsValidateParams = {
+code: string;
+packageId: number;
+};
+
+/**
+ * @nullable
+ */
+export type DiscountsValidate200Reason = typeof DiscountsValidate200Reason[keyof typeof DiscountsValidate200Reason] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DiscountsValidate200Reason = {
+  not_found: 'not_found',
+  exhausted: 'exhausted',
+} as const;
+
+export type DiscountsValidate200Pricing = {
+  packageId: number;
+  baseUsd: number;
+  finalUsd: number;
+  packageDiscountPct: number;
+  codeDiscountPct: number;
+  points: number;
+};
+
+export type DiscountsValidate200 = {
+  ok: boolean;
+  /** @nullable */
+  reason: DiscountsValidate200Reason;
+  /** @nullable */
+  code: string | null;
+  discountPct: number;
+  pricing: DiscountsValidate200Pricing;
+};
+
+export type DiscountsMyCodes200Item = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+  active: boolean;
+  remainingUses: number;
+  uniqueUsers: number;
+  /** @nullable */
+  lastUsedAt: string | null;
 };
 
 export const pkAuthRegisterStart = (
@@ -6077,6 +6275,176 @@ export function useUserGet<TData = Awaited<ReturnType<typeof userGet>>, TError =
 
 
 
+export const userGetAffiliatePayoutDetails = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserGetAffiliatePayoutDetails200>> => {
+    
+    
+    return axios.get(
+      `/user/getAffiliatePayoutDetails`,options
+    );
+  }
+
+
+export const getUserGetAffiliatePayoutDetailsQueryKey = () => {
+    return ['user','getAffiliatePayoutDetails'] as const;
+    }
+
+    
+export const getUserGetAffiliatePayoutDetailsQueryOptions = <TData = Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUserGetAffiliatePayoutDetailsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>> = ({ signal }) => userGetAffiliatePayoutDetails({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>, TError, TData> 
+}
+
+export type UserGetAffiliatePayoutDetailsQueryResult = NonNullable<Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>>
+export type UserGetAffiliatePayoutDetailsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUserGetAffiliatePayoutDetails<TData = Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userGetAffiliatePayoutDetails>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserGetAffiliatePayoutDetailsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const userSetAffiliatePayoutDetails = (
+    userSetAffiliatePayoutDetailsBody: MaybeRef<UserSetAffiliatePayoutDetailsBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserSetAffiliatePayoutDetails200>> => {
+    userSetAffiliatePayoutDetailsBody = unref(userSetAffiliatePayoutDetailsBody);
+    
+    return axios.post(
+      `/user/setAffiliatePayoutDetails`,
+      userSetAffiliatePayoutDetailsBody,options
+    );
+  }
+
+
+
+export const getUserSetAffiliatePayoutDetailsMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>, TError,{data: UserSetAffiliatePayoutDetailsBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>, TError,{data: UserSetAffiliatePayoutDetailsBody}, TContext> => {
+
+const mutationKey = ['userSetAffiliatePayoutDetails'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>, {data: UserSetAffiliatePayoutDetailsBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userSetAffiliatePayoutDetails(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserSetAffiliatePayoutDetailsMutationResult = NonNullable<Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>>
+    export type UserSetAffiliatePayoutDetailsMutationBody = UserSetAffiliatePayoutDetailsBody
+    export type UserSetAffiliatePayoutDetailsMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUserSetAffiliatePayoutDetails = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>, TError,{data: UserSetAffiliatePayoutDetailsBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof userSetAffiliatePayoutDetails>>,
+        TError,
+        {data: UserSetAffiliatePayoutDetailsBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUserSetAffiliatePayoutDetailsMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const userAffiliatePayoutReceipts = (
+    params?: MaybeRef<UserAffiliatePayoutReceiptsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserAffiliatePayoutReceipts200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/user/affiliatePayoutReceipts`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getUserAffiliatePayoutReceiptsQueryKey = (params?: MaybeRef<UserAffiliatePayoutReceiptsParams>,) => {
+    return ['user','affiliatePayoutReceipts', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUserAffiliatePayoutReceiptsQueryOptions = <TData = Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<UserAffiliatePayoutReceiptsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUserAffiliatePayoutReceiptsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>> = ({ signal }) => userAffiliatePayoutReceipts(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>, TError, TData> 
+}
+
+export type UserAffiliatePayoutReceiptsQueryResult = NonNullable<Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>>
+export type UserAffiliatePayoutReceiptsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUserAffiliatePayoutReceipts<TData = Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<UserAffiliatePayoutReceiptsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userAffiliatePayoutReceipts>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserAffiliatePayoutReceiptsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const userProfile = (
     params: MaybeRef<UserProfileParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserProfile200>> => {
@@ -6466,6 +6834,62 @@ export function useUserPointsHistory<TData = Awaited<ReturnType<typeof userPoint
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getUserPointsHistoryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const userReferralsSummary = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserReferralsSummary200>> => {
+    
+    
+    return axios.get(
+      `/user/referralsSummary`,options
+    );
+  }
+
+
+export const getUserReferralsSummaryQueryKey = () => {
+    return ['user','referralsSummary'] as const;
+    }
+
+    
+export const getUserReferralsSummaryQueryOptions = <TData = Awaited<ReturnType<typeof userReferralsSummary>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userReferralsSummary>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUserReferralsSummaryQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userReferralsSummary>>> = ({ signal }) => userReferralsSummary({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userReferralsSummary>>, TError, TData> 
+}
+
+export type UserReferralsSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof userReferralsSummary>>>
+export type UserReferralsSummaryQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUserReferralsSummary<TData = Awaited<ReturnType<typeof userReferralsSummary>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userReferralsSummary>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserReferralsSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9039,6 +9463,344 @@ export function useAdminListUploadedImages<TData = Awaited<ReturnType<typeof adm
 
 
 
+export const adminDiscountCodesList = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminDiscountCodesList200Item[]>> => {
+    
+    
+    return axios.get(
+      `/admin/discountCodesList`,options
+    );
+  }
+
+
+export const getAdminDiscountCodesListQueryKey = () => {
+    return ['admin','discountCodesList'] as const;
+    }
+
+    
+export const getAdminDiscountCodesListQueryOptions = <TData = Awaited<ReturnType<typeof adminDiscountCodesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDiscountCodesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminDiscountCodesListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDiscountCodesList>>> = ({ signal }) => adminDiscountCodesList({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminDiscountCodesList>>, TError, TData> 
+}
+
+export type AdminDiscountCodesListQueryResult = NonNullable<Awaited<ReturnType<typeof adminDiscountCodesList>>>
+export type AdminDiscountCodesListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminDiscountCodesList<TData = Awaited<ReturnType<typeof adminDiscountCodesList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDiscountCodesList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminDiscountCodesListQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminDiscountCodeCreate = (
+    adminDiscountCodeCreateBody: MaybeRef<AdminDiscountCodeCreateBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminDiscountCodeCreate200>> => {
+    adminDiscountCodeCreateBody = unref(adminDiscountCodeCreateBody);
+    
+    return axios.post(
+      `/admin/discountCodeCreate`,
+      adminDiscountCodeCreateBody,options
+    );
+  }
+
+
+
+export const getAdminDiscountCodeCreateMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeCreate>>, TError,{data: AdminDiscountCodeCreateBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeCreate>>, TError,{data: AdminDiscountCodeCreateBody}, TContext> => {
+
+const mutationKey = ['adminDiscountCodeCreate'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDiscountCodeCreate>>, {data: AdminDiscountCodeCreateBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminDiscountCodeCreate(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDiscountCodeCreateMutationResult = NonNullable<Awaited<ReturnType<typeof adminDiscountCodeCreate>>>
+    export type AdminDiscountCodeCreateMutationBody = AdminDiscountCodeCreateBody
+    export type AdminDiscountCodeCreateMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminDiscountCodeCreate = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeCreate>>, TError,{data: AdminDiscountCodeCreateBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminDiscountCodeCreate>>,
+        TError,
+        {data: AdminDiscountCodeCreateBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminDiscountCodeCreateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminDiscountCodeUpdate = (
+    adminDiscountCodeUpdateBody: MaybeRef<AdminDiscountCodeUpdateBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminDiscountCodeUpdate200>> => {
+    adminDiscountCodeUpdateBody = unref(adminDiscountCodeUpdateBody);
+    
+    return axios.post(
+      `/admin/discountCodeUpdate`,
+      adminDiscountCodeUpdateBody,options
+    );
+  }
+
+
+
+export const getAdminDiscountCodeUpdateMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeUpdate>>, TError,{data: AdminDiscountCodeUpdateBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeUpdate>>, TError,{data: AdminDiscountCodeUpdateBody}, TContext> => {
+
+const mutationKey = ['adminDiscountCodeUpdate'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDiscountCodeUpdate>>, {data: AdminDiscountCodeUpdateBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminDiscountCodeUpdate(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDiscountCodeUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof adminDiscountCodeUpdate>>>
+    export type AdminDiscountCodeUpdateMutationBody = AdminDiscountCodeUpdateBody
+    export type AdminDiscountCodeUpdateMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminDiscountCodeUpdate = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeUpdate>>, TError,{data: AdminDiscountCodeUpdateBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminDiscountCodeUpdate>>,
+        TError,
+        {data: AdminDiscountCodeUpdateBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminDiscountCodeUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminAffiliatePayoutUser = (
+    adminAffiliatePayoutUserBody: MaybeRef<AdminAffiliatePayoutUserBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminAffiliatePayoutUser200>> => {
+    adminAffiliatePayoutUserBody = unref(adminAffiliatePayoutUserBody);
+    
+    return axios.post(
+      `/admin/affiliatePayoutUser`,
+      adminAffiliatePayoutUserBody,options
+    );
+  }
+
+
+
+export const getAdminAffiliatePayoutUserMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAffiliatePayoutUser>>, TError,{data: AdminAffiliatePayoutUserBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminAffiliatePayoutUser>>, TError,{data: AdminAffiliatePayoutUserBody}, TContext> => {
+
+const mutationKey = ['adminAffiliatePayoutUser'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAffiliatePayoutUser>>, {data: AdminAffiliatePayoutUserBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminAffiliatePayoutUser(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminAffiliatePayoutUserMutationResult = NonNullable<Awaited<ReturnType<typeof adminAffiliatePayoutUser>>>
+    export type AdminAffiliatePayoutUserMutationBody = AdminAffiliatePayoutUserBody
+    export type AdminAffiliatePayoutUserMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminAffiliatePayoutUser = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAffiliatePayoutUser>>, TError,{data: AdminAffiliatePayoutUserBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminAffiliatePayoutUser>>,
+        TError,
+        {data: AdminAffiliatePayoutUserBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminAffiliatePayoutUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminAffiliatePayoutReceipts = (
+    params?: MaybeRef<AdminAffiliatePayoutReceiptsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminAffiliatePayoutReceipts200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/affiliatePayoutReceipts`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminAffiliatePayoutReceiptsQueryKey = (params?: MaybeRef<AdminAffiliatePayoutReceiptsParams>,) => {
+    return ['admin','affiliatePayoutReceipts', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminAffiliatePayoutReceiptsQueryOptions = <TData = Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminAffiliatePayoutReceiptsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminAffiliatePayoutReceiptsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>> = ({ signal }) => adminAffiliatePayoutReceipts(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>, TError, TData> 
+}
+
+export type AdminAffiliatePayoutReceiptsQueryResult = NonNullable<Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>>
+export type AdminAffiliatePayoutReceiptsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminAffiliatePayoutReceipts<TData = Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminAffiliatePayoutReceiptsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutReceipts>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminAffiliatePayoutReceiptsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminDiscountCodeDelete = (
+    adminDiscountCodeDeleteBody: MaybeRef<AdminDiscountCodeDeleteBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminDiscountCodeDelete200>> => {
+    adminDiscountCodeDeleteBody = unref(adminDiscountCodeDeleteBody);
+    
+    return axios.post(
+      `/admin/discountCodeDelete`,
+      adminDiscountCodeDeleteBody,options
+    );
+  }
+
+
+
+export const getAdminDiscountCodeDeleteMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeDelete>>, TError,{data: AdminDiscountCodeDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeDelete>>, TError,{data: AdminDiscountCodeDeleteBody}, TContext> => {
+
+const mutationKey = ['adminDiscountCodeDelete'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDiscountCodeDelete>>, {data: AdminDiscountCodeDeleteBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminDiscountCodeDelete(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDiscountCodeDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof adminDiscountCodeDelete>>>
+    export type AdminDiscountCodeDeleteMutationBody = AdminDiscountCodeDeleteBody
+    export type AdminDiscountCodeDeleteMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminDiscountCodeDelete = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDiscountCodeDelete>>, TError,{data: AdminDiscountCodeDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminDiscountCodeDelete>>,
+        TError,
+        {data: AdminDiscountCodeDeleteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminDiscountCodeDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const tonomyAuthLoginOrRegister = (
     tonomyAuthLoginOrRegisterBody: MaybeRef<TonomyAuthLoginOrRegisterBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TonomyAuthLoginOrRegister200>> => {
@@ -11080,3 +11842,114 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
       return useMutation(mutationOptions , queryClient);
     }
+    
+export const discountsValidate = (
+    params: MaybeRef<DiscountsValidateParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<DiscountsValidate200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/discounts/validate`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getDiscountsValidateQueryKey = (params: MaybeRef<DiscountsValidateParams>,) => {
+    return ['discounts','validate', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getDiscountsValidateQueryOptions = <TData = Awaited<ReturnType<typeof discountsValidate>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<DiscountsValidateParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof discountsValidate>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getDiscountsValidateQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof discountsValidate>>> = ({ signal }) => discountsValidate(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof discountsValidate>>, TError, TData> 
+}
+
+export type DiscountsValidateQueryResult = NonNullable<Awaited<ReturnType<typeof discountsValidate>>>
+export type DiscountsValidateQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useDiscountsValidate<TData = Awaited<ReturnType<typeof discountsValidate>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<DiscountsValidateParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof discountsValidate>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDiscountsValidateQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const discountsMyCodes = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<DiscountsMyCodes200Item[]>> => {
+    
+    
+    return axios.get(
+      `/discounts/myCodes`,options
+    );
+  }
+
+
+export const getDiscountsMyCodesQueryKey = () => {
+    return ['discounts','myCodes'] as const;
+    }
+
+    
+export const getDiscountsMyCodesQueryOptions = <TData = Awaited<ReturnType<typeof discountsMyCodes>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof discountsMyCodes>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getDiscountsMyCodesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof discountsMyCodes>>> = ({ signal }) => discountsMyCodes({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof discountsMyCodes>>, TError, TData> 
+}
+
+export type DiscountsMyCodesQueryResult = NonNullable<Awaited<ReturnType<typeof discountsMyCodes>>>
+export type DiscountsMyCodesQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useDiscountsMyCodes<TData = Awaited<ReturnType<typeof discountsMyCodes>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof discountsMyCodes>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDiscountsMyCodesQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}

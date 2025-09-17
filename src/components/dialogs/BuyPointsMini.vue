@@ -40,6 +40,7 @@ export default defineComponent({
       selectedUsd: 17 as number | null,
       selectedPoints: 2000 as number | null,
       isRenderingPaypal: false,
+      discountCode: undefined as string | undefined,
     }
   },
   async mounted() {
@@ -59,6 +60,11 @@ export default defineComponent({
     } catch {
       // Fallback defaults already set
     }
+    try {
+      // Use any discount previously applied on Add Points page
+      const stored = (localStorage.getItem("q_localStorage") && JSON.parse(localStorage.getItem("q_localStorage") || "{}")?.discountCode) || undefined
+      this.discountCode = typeof stored === "string" ? stored : undefined
+    } catch {}
     await this.ensurePaypalRendered()
   },
   beforeUnmount() {
@@ -97,7 +103,7 @@ export default defineComponent({
           message: { amount: this.selectedUsd || 17, position: "bottom", color: "black" },
           createOrder: async () => {
             if (this.selectedPkgIndex == null) throwErr("Failed to create order")
-            const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
+            const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountCode || undefined }).catch(catchErr)
             if (!res?.data) return ""
             try {
               metaPixel.trackInitiateCheckout({

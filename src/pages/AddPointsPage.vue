@@ -77,6 +77,52 @@ q-page.full-height.full-width
                 b Adding {{ selectedPkg?.points?.toLocaleString() }} points
                 span  with a {{ ((selectedPkg?.discountPct || 0) * 100) }}% discount for
                 b  ${{ selectedPkg?.usd }}
+            // Discount code box
+            q-card.q-mt-md
+              q-card-section
+                .centered
+                      h5.q-mb-md Enter Discount Code
+                .centered.items-center.q-gutter-sm.discount-row.q-mb-md
+                  .col-auto
+                    q-input.code-input(
+                      v-model="discountInput"
+                      debounce="300"
+                      dense
+                      outlined
+                      rounded
+                      clearable
+                      color="primary"
+                      :input-style="{ fontSize: '28px', letterSpacing: '0.06em', fontWeight: '600' }"
+                      input-class="text-uppercase"
+                      :disable="!!(discountStatus && discountStatus.ok)"
+                      @keyup.enter="applyDiscount"
+                    )
+                  .col-auto
+                    q-btn(color="primary" v-if="discountStatus && (!discountStatus.ok )" :loading="discountChecking" label="Apply" @click="applyDiscount" :disable="!normalizedDiscount || selectedPkgIndex == null || !!(discountStatus && discountStatus.ok)")
+                    q-btn(v-if="discountStatus && (discountStatus.ok || discountInput)" flat color="grey" icon="close" class="q-ml-sm" label="Clear Discount Code" @click="clearDiscount")
+                div(v-if="discountStatus && discountStatus.ok" class="q-mt-sm")
+                  q-banner(rounded class="bg-positive text-white")
+                    template(#avatar)
+                      q-icon(name="verified" color="white")
+                    div
+                      b {{ Math.round((discountStatus.discountPct || 0) * 100) }}% off applied
+                div(v-else-if="discountStatus && !discountStatus.ok && manualApplyAttempted" class="q-mt-sm")
+                  q-banner(rounded class="bg-negative text-white")
+                    template(#avatar)
+                      q-icon(name="error" color="white")
+                    div
+                      span(v-if="discountStatus.reason === 'not_found'") Code not found. Please check the spelling.
+                      span(v-else-if="discountStatus.reason === 'exhausted'") This code has reached the maximum number of uses.
+                      // Note: affiliate-linked codes are valid; no error message shown
+              q-separator
+              q-card-section(v-if="discountStatus?.ok")
+                .row.items-center.q-gutter-md
+                  .col-auto
+                    div Original Price: ${{ selectedPkg?.usd }}
+                  .col-auto(v-if="codeDiscountPct > 0")
+                    div Discount: -{{ Math.round(codeDiscountPct * 100) }}%
+                  .col-auto
+                    div Final Price: ${{ finalUsdString }}
             .centered.q-my-sm.full-width
               q-btn( outline color="primary" icon="refresh" label="Select Different Package" @click="selectedPkg = null")
             .row
@@ -92,7 +138,7 @@ q-page.full-height.full-width
                         div.bg-white(ref="paypal" class="paypal-container q-pa-md rounded-box bg-dark")
                     q-tab-panel(name="crypto")
                       .centered
-                        CryptoPayment.full-width(style="max-width:420px;" :selectedPackageId="selectedPkgIndex" @paymentComplete="paymentCompleted")
+                        CryptoPayment.full-width(style="max-width:420px;" :selectedPackageId="selectedPkgIndex" :discountCode="(discountStatus && discountStatus.ok) ? discountStatus.code : undefined" @paymentComplete="paymentCompleted")
               .col-xs-12.col-md-6
                 // Suggestions for selected package amount
                 q-card.q-mt-md.q-ma-sm
@@ -168,6 +214,26 @@ q-page.full-height.full-width
 
 .scroll-anchor
   scroll-margin-top: 72px
+
+// Discount input tweaks
+.discount-row
+  flex-wrap: wrap
+
+.code-input
+  width: 280px
+  max-width: 100%
+  // Increase label contrast and input readability
+  :deep(.q-field__label)
+    color: rgba(255, 255, 255, 0.75)
+    font-weight: 600
+  :deep(.q-field__native)
+    color: white
+  :deep(.q-field__control)
+    border-radius: 10px
+
+@media (max-width: 600px)
+  .code-input
+    width: 220px
 </style>
 
 <script lang="ts">
@@ -179,12 +245,13 @@ import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { catchErr, throwErr, getCookie } from "lib/util"
 import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/types/serverTypes"
-import { Dialog, LocalStorage } from "quasar"
+import { Dialog, LocalStorage, Notify } from "quasar"
 import umami from "lib/umami"
 import { metaPixel } from "lib/metaPixel"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
+import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
 
 interface PointsPackageRender extends PointsPackageWithUsd {
   bgColor: string
@@ -226,6 +293,13 @@ export default defineComponent({
       countdownTimer: null as any,
       tgPollTimer: null as any,
       tgPackages: [] as TelegramPackages200Item[],
+      // Discount code UI state
+      discountInput: "" as string,
+      discountChecking: false as boolean,
+      discountStatus: null as DiscountValidationStatus | null,
+      manualApplyAttempted: false as boolean,
+      discountDebounceTimer: null as any,
+      discountValidationToken: 0 as number,
     }
   },
   computed: {
@@ -264,8 +338,62 @@ export default defineComponent({
       const points = this.totalAfterPurchase
       return this.suggestionsForPoints(points)
     },
+    normalizedDiscount(): string | null {
+      return normalizeCode(this.discountInput)
+    },
+    codeDiscountPct(): number {
+      return this.discountStatus && this.discountStatus.ok ? this.discountStatus.discountPct || 0 : 0
+    },
+    finalUsd(): number {
+      const base = Number(this.selectedPkg?.usd || 0)
+      return applyDiscountUsd(base, this.codeDiscountPct)
+    },
+    finalUsdString(): string {
+      return usdToString(this.finalUsd)
+    },
   },
   watch: {
+    discountInput(val: string) {
+      // Reset manual-error gating on input changes
+      this.manualApplyAttempted = false
+      // Clear pending debounce
+      if (this.discountDebounceTimer) {
+        clearTimeout(this.discountDebounceTimer)
+        this.discountDebounceTimer = null
+      }
+      const code = this.normalizedDiscount
+      if (!code) {
+        this.discountStatus = null
+        try {
+          LocalStorage.remove("discountCode")
+        } catch {}
+        return
+      }
+      // Only auto-check if a package is selected
+      if (this.selectedPkgIndex == null) return
+      // Debounce validation to avoid spamming the API
+      this.discountDebounceTimer = setTimeout(() => {
+        this.discountDebounceTimer = null
+        void this.autoValidateDiscount()
+      }, 600)
+    },
+    selectedPkgIndex() {
+      // Re-validate current code when package changes (silently)
+      if (this.normalizedDiscount) {
+        this.manualApplyAttempted = false
+        void this.autoValidateDiscount()
+      }
+    },
+    discountStatus: {
+      deep: true,
+      handler() {
+        if (this.ppButton) {
+          void this.ppButton.updateProps({
+            message: { amount: this.finalUsd, color: "black", position: "bottom" },
+          })
+        }
+      },
+    },
     selectedPkg() {
       if (!this.selectedPkg) return
       LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
@@ -274,7 +402,7 @@ export default defineComponent({
       console.log(fundingEligibility)
       void this.ppButton?.updateProps({
         message: {
-          amount: this.selectedPkg.usd,
+          amount: this.finalUsd,
           color: "black",
           position: "bottom",
         },
@@ -333,6 +461,15 @@ export default defineComponent({
     void this.checkTgStatus()
     void this.loadTgPackages()
     void this.pricesStore.reloadPrices()
+    // Prefill any stored discount code (silently auto-validate)
+    try {
+      const stored = (LocalStorage.getItem("discountCode") as string) || ""
+      if (stored) {
+        this.discountInput = stored
+        this.manualApplyAttempted = false
+        void this.autoValidateDiscount()
+      }
+    } catch {}
     const orderDetails = LocalStorage.getItem("orderDetails") as { packageId: number; paymentMethod: "paypal" | "crypto" }
     console.log("orderDetails", orderDetails)
     if (orderDetails) {
@@ -349,6 +486,28 @@ export default defineComponent({
     if (this.tgPollTimer) clearInterval(this.tgPollTimer)
   },
   methods: {
+    async autoValidateDiscount() {
+      const code = this.normalizedDiscount
+      const pkgId = this.selectedPkgIndex
+      if (!code || pkgId == null) return
+      // Skip duplicate checks when already applied for same code
+      if (this.discountStatus?.ok && this.discountStatus.code === code) return
+      const token = ++this.discountValidationToken
+      try {
+        const { status } = await validateDiscountCode(code, pkgId)
+        // Ignore if another validation started after this one
+        if (token !== this.discountValidationToken) return
+        this.discountStatus = status
+        if (status.ok) {
+          try {
+            LocalStorage.set("discountCode", status.code)
+          } catch {}
+        }
+        // Do not notify or show errors here; banner is gated by manualApplyAttempted
+      } catch (e) {
+        // Silent on auto validation failures
+      }
+    },
     async checkTgStatus() {
       try {
         const { data } = await telegramLinkStatus()
@@ -511,7 +670,7 @@ export default defineComponent({
         if (this.ppButton && this.selectedPkg) {
           void this.ppButton.updateProps({
             message: {
-              amount: this.selectedPkg.usd,
+              amount: this.finalUsd,
               color: "black",
               position: "bottom",
             },
@@ -533,18 +692,18 @@ export default defineComponent({
         },
         createOrder: async () => {
           if (this.selectedPkgIndex == null) throwErr("Failed to create order")
-          const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex }).catch(catchErr)
+          const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountStatus && this.discountStatus.ok ? this.discountStatus.code : undefined }).catch(catchErr)
           if (!res?.data) return ""
           if (!res) return ""
           try {
             if (this.selectedPkg) {
               metaPixel.trackInitiateCheckout({
                 currency: "USD",
-                value: Number(this.selectedPkg.usd),
+                value: Number(this.finalUsd),
                 num_items: 1,
                 content_type: "product",
-                contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.selectedPkg.usd) }],
-                content_name: `Fiddl Points ${this.selectedPkg.points}`
+                contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
+                content_name: `Fiddl Points ${this.selectedPkg.points}`,
               })
             }
           } catch {}
@@ -607,15 +766,15 @@ export default defineComponent({
         if (this.selectedPkg) {
           metaPixel.trackPurchase({
             currency: "USD",
-            value: Number(this.selectedPkg.usd),
+            value: Number(this.finalUsd),
             num_items: 1,
             content_type: "product",
-            contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.selectedPkg.usd) }],
-            content_name: `Fiddl Points ${this.selectedPkg.points}`
+            contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
+            content_name: `Fiddl Points ${this.selectedPkg.points}`,
           })
         }
       } catch {}
-      umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.selectedPkg?.usd })
+      umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.finalUsd })
       LocalStorage.remove("orderDetails")
       this.selectedPkg = null
       Dialog.create({
@@ -625,6 +784,51 @@ export default defineComponent({
         ok: true,
         color: "positive",
       })
+    },
+    async applyDiscount() {
+      this.manualApplyAttempted = true
+      const code = this.normalizedDiscount
+      if (!code) {
+        this.discountStatus = null
+        return
+      }
+      if (this.selectedPkgIndex == null) {
+        Notify.create({ type: "warning", message: "Select a package first" })
+        return
+      }
+      try {
+        this.discountChecking = true
+        const { status } = await validateDiscountCode(code, this.selectedPkgIndex)
+        this.discountStatus = status
+        if (status.ok) {
+          LocalStorage.set("discountCode", status.code)
+          Notify.create({ type: "positive", message: `Applied ${Math.round(status.discountPct * 100)}% discount` })
+        } else {
+          Notify.create({ type: "negative", message: this.discountErrorMessage(status.reason) })
+        }
+      } catch {
+        Notify.create({ type: "negative", message: "Could not validate discount code" })
+      } finally {
+        this.discountChecking = false
+      }
+    },
+    clearDiscount() {
+      this.discountInput = ""
+      this.discountStatus = null
+      LocalStorage.remove("discountCode")
+      this.manualApplyAttempted = false
+      if (this.discountDebounceTimer) {
+        clearTimeout(this.discountDebounceTimer)
+        this.discountDebounceTimer = null
+      }
+    },
+    discountErrorMessage(reason: "not_found" | "exhausted") {
+      switch (reason) {
+        case "exhausted":
+          return "This code has reached maximum uses"
+        default:
+          return "Code not found"
+      }
     },
     suggestionsForPoints(points: number): SuggestionItem[] {
       const p = this.pricesStore.prices

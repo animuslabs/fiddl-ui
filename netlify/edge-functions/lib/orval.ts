@@ -1284,6 +1284,7 @@ export const PointsInitBuyPackageBodyMethod = {
 export type PointsInitBuyPackageBody = {
   packageId: number;
   method: PointsInitBuyPackageBodyMethod;
+  discountCode?: string;
 };
 
 export type PointsInitBuyPackage200AnyOfLinksItem = {
@@ -1340,6 +1341,8 @@ export type PointsInitBuyPackage200AnyOfThree = {
   createdAt: string;
   /** @nullable */
   updatedAt: string | null;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
@@ -1457,6 +1460,8 @@ export type PointsGetOrder200AnyOf = {
   orderDataJSON: string | null;
   createdAt: string;
   updatedAt: string;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
@@ -1501,6 +1506,8 @@ export type PointsGetOrder200AnyOfTwo = {
   createdAt: string;
   /** @nullable */
   updatedAt: string | null;
+  /** @nullable */
+  discountCode: string | null;
 };
 
 export type PointsGetOrder200 = PointsGetOrder200AnyOf | PointsGetOrder200AnyOfTwo;
@@ -1535,6 +1542,36 @@ export type UserGet200 = {
   privyId: string | null;
   /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
+};
+
+export type UserGetAffiliatePayoutDetails200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
+export type UserSetAffiliatePayoutDetailsBody = {
+  paypalEmail: string;
+};
+
+export type UserSetAffiliatePayoutDetails200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
+export type UserAffiliatePayoutReceiptsParams = {
+limit?: number;
+offset?: number;
+};
+
+export type UserAffiliatePayoutReceipts200Item = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
 };
 
 export type UserProfileParams = {
@@ -1720,6 +1757,11 @@ export type UserPointsHistory200Item = {
   memo: string | null;
   quantity: number;
   userFinalBalance: number;
+};
+
+export type UserReferralsSummary200 = {
+  invitedCount: number;
+  earnedReferralPoints: number;
 };
 
 export type UserFindByUsernameParams = {
@@ -3076,6 +3118,107 @@ export type AdminListUploadedImages200 = {
   items: AdminListUploadedImages200ItemsItem[];
 };
 
+export type AdminDiscountCodesList200Item = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminDiscountCodeCreateBody = {
+  /** @minLength 1 */
+  code: string;
+  /**
+   * @minimum 0
+   * @maximum 0.95
+   */
+  discount: number;
+  /** @minimum 1 */
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId?: string | null;
+};
+
+export type AdminDiscountCodeCreate200 = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminDiscountCodeUpdateBody = {
+  /** @minLength 1 */
+  code: string;
+  /**
+   * @minimum 0
+   * @maximum 0.95
+   */
+  discount?: number;
+  /** @minimum 1 */
+  maximumUses?: number;
+  /** @nullable */
+  linkedUserId?: string | null;
+};
+
+export type AdminDiscountCodeUpdate200 = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+};
+
+export type AdminAffiliatePayoutUserBody = {
+  userId: string;
+};
+
+export type AdminAffiliatePayoutUser200Receipt = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
+};
+
+export type AdminAffiliatePayoutUser200 = {
+  receipt: AdminAffiliatePayoutUser200Receipt;
+  codesUpdated: number;
+};
+
+export type AdminAffiliatePayoutReceiptsParams = {
+limit?: number;
+offset?: number;
+};
+
+export type AdminAffiliatePayoutReceipts200Item = {
+  id: string;
+  userId: string;
+  amount: number;
+  payoutDate: string;
+};
+
+export type AdminDiscountCodeDeleteBody = {
+  /** @minLength 1 */
+  code: string;
+};
+
+export type AdminDiscountCodeDelete200 = {
+  ok: boolean;
+};
+
 export type TonomyAuthLoginOrRegisterBody = {
   jwtString: string;
   referrerUsername?: string;
@@ -3484,6 +3627,7 @@ export const EventsPublicEventsTypesItem = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -3501,6 +3645,7 @@ export const EventsPublicEvents200ItemType = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -3536,6 +3681,7 @@ export const EventsPrivateEventsTypesItem = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -3553,6 +3699,7 @@ export const EventsPrivateEvents200ItemType = {
   removedImageFromCollection: 'removedImageFromCollection',
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
+  earnedComission: 'earnedComission',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -3824,6 +3971,57 @@ export type TelegramConfirmDeviceLoginBody = {
 export type TelegramConfirmDeviceLogin200 = {
   token: string;
   userId: string;
+};
+
+export type DiscountsValidateParams = {
+code: string;
+packageId: number;
+};
+
+/**
+ * @nullable
+ */
+export type DiscountsValidate200Reason = typeof DiscountsValidate200Reason[keyof typeof DiscountsValidate200Reason] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DiscountsValidate200Reason = {
+  not_found: 'not_found',
+  exhausted: 'exhausted',
+} as const;
+
+export type DiscountsValidate200Pricing = {
+  packageId: number;
+  baseUsd: number;
+  finalUsd: number;
+  packageDiscountPct: number;
+  codeDiscountPct: number;
+  points: number;
+};
+
+export type DiscountsValidate200 = {
+  ok: boolean;
+  /** @nullable */
+  reason: DiscountsValidate200Reason;
+  /** @nullable */
+  code: string | null;
+  discountPct: number;
+  pricing: DiscountsValidate200Pricing;
+};
+
+export type DiscountsMyCodes200Item = {
+  code: string;
+  discount: number;
+  createdAt: string;
+  used: number;
+  maximumUses: number;
+  totalUsdSpent: number;
+  totalUsdSaved: number;
+  active: boolean;
+  remainingUses: number;
+  uniqueUsers: number;
+  /** @nullable */
+  lastUsedAt: string | null;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -4795,6 +4993,77 @@ export const userGet = async (params: UserGetParams, options?: RequestInit): Pro
 
 
 
+export const getUserGetAffiliatePayoutDetailsUrl = () => {
+
+
+  
+
+  return `/user/getAffiliatePayoutDetails`
+}
+
+export const userGetAffiliatePayoutDetails = async ( options?: RequestInit): Promise<UserGetAffiliatePayoutDetails200> => {
+  
+  return fetcher<UserGetAffiliatePayoutDetails200>(getUserGetAffiliatePayoutDetailsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUserSetAffiliatePayoutDetailsUrl = () => {
+
+
+  
+
+  return `/user/setAffiliatePayoutDetails`
+}
+
+export const userSetAffiliatePayoutDetails = async (userSetAffiliatePayoutDetailsBody: UserSetAffiliatePayoutDetailsBody, options?: RequestInit): Promise<UserSetAffiliatePayoutDetails200> => {
+  
+  return fetcher<UserSetAffiliatePayoutDetails200>(getUserSetAffiliatePayoutDetailsUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSetAffiliatePayoutDetailsBody,)
+  }
+);}
+
+
+
+export const getUserAffiliatePayoutReceiptsUrl = (params?: UserAffiliatePayoutReceiptsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/user/affiliatePayoutReceipts?${stringifiedParams}` : `/user/affiliatePayoutReceipts`
+}
+
+export const userAffiliatePayoutReceipts = async (params?: UserAffiliatePayoutReceiptsParams, options?: RequestInit): Promise<UserAffiliatePayoutReceipts200Item[]> => {
+  
+  return fetcher<UserAffiliatePayoutReceipts200Item[]>(getUserAffiliatePayoutReceiptsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getUserProfileUrl = (params: UserProfileParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -4963,6 +5232,27 @@ export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams,) => {
 export const userPointsHistory = async (params?: UserPointsHistoryParams, options?: RequestInit): Promise<UserPointsHistory200Item[]> => {
   
   return fetcher<UserPointsHistory200Item[]>(getUserPointsHistoryUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUserReferralsSummaryUrl = () => {
+
+
+  
+
+  return `/user/referralsSummary`
+}
+
+export const userReferralsSummary = async ( options?: RequestInit): Promise<UserReferralsSummary200> => {
+  
+  return fetcher<UserReferralsSummary200>(getUserReferralsSummaryUrl(),
   {      
     ...options,
     method: 'GET'
@@ -6082,6 +6372,143 @@ export const adminListUploadedImages = async (params?: AdminListUploadedImagesPa
 
 
 
+export const getAdminDiscountCodesListUrl = () => {
+
+
+  
+
+  return `/admin/discountCodesList`
+}
+
+export const adminDiscountCodesList = async ( options?: RequestInit): Promise<AdminDiscountCodesList200Item[]> => {
+  
+  return fetcher<AdminDiscountCodesList200Item[]>(getAdminDiscountCodesListUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminDiscountCodeCreateUrl = () => {
+
+
+  
+
+  return `/admin/discountCodeCreate`
+}
+
+export const adminDiscountCodeCreate = async (adminDiscountCodeCreateBody: AdminDiscountCodeCreateBody, options?: RequestInit): Promise<AdminDiscountCodeCreate200> => {
+  
+  return fetcher<AdminDiscountCodeCreate200>(getAdminDiscountCodeCreateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminDiscountCodeCreateBody,)
+  }
+);}
+
+
+
+export const getAdminDiscountCodeUpdateUrl = () => {
+
+
+  
+
+  return `/admin/discountCodeUpdate`
+}
+
+export const adminDiscountCodeUpdate = async (adminDiscountCodeUpdateBody: AdminDiscountCodeUpdateBody, options?: RequestInit): Promise<AdminDiscountCodeUpdate200> => {
+  
+  return fetcher<AdminDiscountCodeUpdate200>(getAdminDiscountCodeUpdateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminDiscountCodeUpdateBody,)
+  }
+);}
+
+
+
+export const getAdminAffiliatePayoutUserUrl = () => {
+
+
+  
+
+  return `/admin/affiliatePayoutUser`
+}
+
+export const adminAffiliatePayoutUser = async (adminAffiliatePayoutUserBody: AdminAffiliatePayoutUserBody, options?: RequestInit): Promise<AdminAffiliatePayoutUser200> => {
+  
+  return fetcher<AdminAffiliatePayoutUser200>(getAdminAffiliatePayoutUserUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminAffiliatePayoutUserBody,)
+  }
+);}
+
+
+
+export const getAdminAffiliatePayoutReceiptsUrl = (params?: AdminAffiliatePayoutReceiptsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/affiliatePayoutReceipts?${stringifiedParams}` : `/admin/affiliatePayoutReceipts`
+}
+
+export const adminAffiliatePayoutReceipts = async (params?: AdminAffiliatePayoutReceiptsParams, options?: RequestInit): Promise<AdminAffiliatePayoutReceipts200Item[]> => {
+  
+  return fetcher<AdminAffiliatePayoutReceipts200Item[]>(getAdminAffiliatePayoutReceiptsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminDiscountCodeDeleteUrl = () => {
+
+
+  
+
+  return `/admin/discountCodeDelete`
+}
+
+export const adminDiscountCodeDelete = async (adminDiscountCodeDeleteBody: AdminDiscountCodeDeleteBody, options?: RequestInit): Promise<AdminDiscountCodeDelete200> => {
+  
+  return fetcher<AdminDiscountCodeDelete200>(getAdminDiscountCodeDeleteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminDiscountCodeDeleteBody,)
+  }
+);}
+
+
+
 export const getTonomyAuthLoginOrRegisterUrl = () => {
 
 
@@ -6942,5 +7369,54 @@ export const telegramConfirmDeviceLogin = async (telegramConfirmDeviceLoginBody:
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramConfirmDeviceLoginBody,)
+  }
+);}
+
+
+
+export const getDiscountsValidateUrl = (params: DiscountsValidateParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/discounts/validate?${stringifiedParams}` : `/discounts/validate`
+}
+
+export const discountsValidate = async (params: DiscountsValidateParams, options?: RequestInit): Promise<DiscountsValidate200> => {
+  
+  return fetcher<DiscountsValidate200>(getDiscountsValidateUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getDiscountsMyCodesUrl = () => {
+
+
+  
+
+  return `/discounts/myCodes`
+}
+
+export const discountsMyCodes = async ( options?: RequestInit): Promise<DiscountsMyCodes200Item[]> => {
+  
+  return fetcher<DiscountsMyCodes200Item[]>(getDiscountsMyCodesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}

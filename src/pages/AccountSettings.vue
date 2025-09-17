@@ -6,8 +6,8 @@ q-page.full-height.full-width
     q-card(v-if="$userAuth.loggedIn")
       q-card-section
         .row.q-gutter-md.items-center
-          h3 Profile
-          q-btn(@click="$router.push({name:'profile',params:{username:$userAuth.userProfile?.username}})" icon="link" flat round size="sm" :disable="!$userAuth.userProfile?.username")
+          //- h3 Account Settings
+          q-btn(@click="$router.push({name:'profile',params:{username:$userAuth.userProfile?.username}})" icon="link" flat size="sm" :disable="!$userAuth.userProfile?.username" label="Account Profile")
             q-tooltip
               p View your public profile
         .centered.q-mt-md
@@ -19,7 +19,7 @@ q-page.full-height.full-width
         div(v-if="!hasAvatar")
           h6 Avatar
             p(style="max-width:400px;") To change your Avatar, use the button at the top right when viewing an image
-        h6 Bio
+        h5 Bio
           q-btn(icon="edit" size="sm" round flat v-if="!bioEditMode" @click="bioEditMode = true")
             q-tooltip()
               p Edit Bio
@@ -30,10 +30,10 @@ q-page.full-height.full-width
         //- .row.q-gutter-md.items-center
         //-   .col-auto(v-if="$userAuth.userProfile?.bio")
         //-     q-input(v-model="$userAuth.userProfile?.bio" type="textarea")
-        h6.q-mt-md Username
+        h5.q-mt-md Username
         .row.q-gutter-md.items-center(v-if="!editingUsername")
           .col-auto
-            h5 {{ $userAuth.userProfile?.username || "no username" }}
+            p {{ $userAuth.userProfile?.username || "no username" }}
           .col-auto
             div
               q-btn(@click="editingUsername = true" round flat icon="edit" size="sm" )
@@ -50,11 +50,11 @@ q-page.full-height.full-width
               q-btn(@click="editingUsername = false" round flat icon="close" color="negative")
               q-btn(@click="setNewUsername()" round flat icon="check" color="positive")
         div(style="max-width: 400px;").q-mt-md
-          p You will earn a 10% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
-        h6.q-pt-md Email
+          small You will earn a 10% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
+        h5.q-pt-md Email
         .row.items-center
           div
-            h5 {{ $userAuth.userProfile?.email?.toLowerCase() || "no email" }}
+            p {{ $userAuth.userProfile?.email?.toLowerCase() || "no email" }}
           div.q-ml-md
             q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
@@ -68,13 +68,13 @@ q-page.full-height.full-width
         // Telegram linking panel
         .q-mt-lg
           .row.items-center.q-gutter-sm
-            h6 Telegram
+            h5 Telegram
             q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'" class="q-ml-sm") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
-          .centered(v-if="tgStatusChecked && !tgLinked")
-            small.text-positive If you have Telegram Premium, you'll earn 100 extra Points
           div(v-if="!tgLinked" class="q-mt-sm")
-            p.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
+            div.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
             TelegramConnect(mode="link" @linked="onTgLinked")
+          div.q-mt-sm(v-if="tgStatusChecked && !tgLinked")
+            div If you have Telegram Premium, you'll earn 100 extra Points
           div(v-else class="q-mt-sm")
             p You are connected to Telegram.
           // Stars purchase moved to Add Points page
@@ -82,6 +82,68 @@ q-page.full-height.full-width
         // Legacy widget mount (unused)
         .q-mt-sm
           div(ref="telegramLinkMount")
+        // Discount Codes (optional)
+        div(v-if="myCodes && myCodes.length > 0").q-mt-lg
+          .row.items-center.q-gutter-sm
+            h5.q-mt-none.q-mb-none Discount Codes
+          .row
+            div Share your codes with your friends & followers to give them a discount and earn rewards.
+          .row
+            div Codes can be applied when purchasing Fiddl Points. Affiliate earnings are credited monthly.
+          .q-mt-sm
+            div(v-for="c in myCodes" :key="c.code" class="q-pa-md q-mb-sm rounded-borders bg-dark-2")
+              .row.items-center.justify-between
+                .row.items-center.q-gutter-sm
+                  h4.q-my-none.text-white {{ c.code }}
+                  q-btn(flat round size="sm" icon="content_copy" @click="copyCode(c.code)")
+                    q-tooltip Copy code
+                  q-badge(:color="c.active ? 'positive' : 'grey'" :label="c.active ? 'Active' : 'Inactive'")
+                .col-auto
+                  q-badge(color="primary" text-color="white") {{ (c.discount * 100).toFixed(0) }}% off
+              .row.q-gutter-sm.q-mt-sm
+                q-badge(color="grey-8" text-color="white") Used {{ c.used }} / {{ c.maximumUses ?? '∞' }}
+                q-badge(color="grey-8" text-color="white") Remaining {{ c.remainingUses ?? 0 }}
+                q-badge(color="grey-8" text-color="white") Unique users {{ c.uniqueUsers ?? 0 }}
+              .row.q-gutter-sm.q-mt-sm
+                q-badge(color="accent" text-color="white") Spent ${{ usdToString(c.totalUsdSpent || 0) }}
+                q-badge(color="positive" text-color="white") Total Payout: ${{ usdToString(c.totalPayout || 0) }}
+                q-badge(color="warning" text-color="black") Pending Payout: ${{ usdToString(c.pendingPayout || 0) }}
+              .row.q-gutter-sm.q-mt-sm.text-white
+                div Created {{ new Date(c.createdAt).toLocaleDateString() }}
+                div(v-if="c.lastUsedAt") • Last used {{ new Date(c.lastUsedAt).toLocaleString() }}
+          // Affiliate payout section
+          .q-mt-lg
+            .row.items-center.q-gutter-sm
+              h5.q-mt-none.q-mb-none Affiliate Payout
+            .row.items-center.justify-between.q-mt-xs
+              .row.items-center.q-gutter-sm
+                div(v-if="affiliateLoading")
+                  q-spinner(size="20px" color="primary")
+                template(v-else)
+                  div.text-white
+                    span PayPal Email:
+                    span.q-ml-xs {{ affiliatePaypalEmail || 'Not linked' }}
+              .col-auto
+                q-btn(:label="affiliatePaypalEmail ? 'Update' : 'Link PayPal'" color="primary" icon="payments" flat @click="promptUpdateAffiliatePaypal" :loading="affiliateLoading")
+            .row.q-gutter-sm.q-mt-sm
+              q-badge(color="grey-8" text-color="white") Total Paid: ${{ usdToString(affiliateTotalPaid || 0) }}
+              q-badge(color="grey-8" text-color="white") Payouts are processed monthly
+          // Affiliate payout receipts
+          .q-mt-md
+            .row.items-center.q-gutter-sm
+              h6.q-mt-none.q-mb-none Payout Receipts
+              q-space
+              q-btn(flat dense icon="refresh" @click="loadAffiliateReceipts" :loading="affiliateReceiptsLoading")
+            div(v-if="affiliateReceiptsLoading" class="q-mt-sm")
+              q-spinner(size="24px" color="primary")
+            q-table(v-else
+              :rows="affiliateReceipts"
+              :columns="affiliateReceiptsColumns"
+              row-key="id"
+              flat bordered dense
+              :rows-per-page-options="[10,25,50,0]"
+              :no-data-label="'No payout receipts yet'"
+            )
         // QR Code dialog for Telegram linking (desktop)
         q-dialog(v-model="tgQrDialogOpen" :maximized="isMobile")
           q-card(style="width:520px; max-width:100vw;")
@@ -112,12 +174,16 @@ import { avatarImg } from "lib/netlifyImg"
 import { catchErr } from "lib/util"
 import QRCode from "qrcode"
 import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
+import type { QTableColumn } from "quasar"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import TelegramConnect from "src/components/TelegramConnect.vue"
 import { jwt } from "src/lib/jwt"
-import { privyLinkCurrentUser, telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, type TelegramCreateDeepLink200 } from "src/lib/orval"
+import { privyLinkCurrentUser, telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, discountsMyCodes, userGetAffiliatePayoutDetails, userSetAffiliatePayoutDetails, userAffiliatePayoutReceipts, type DiscountsMyCodes200Item, type TelegramCreateDeepLink200, type UserAffiliatePayoutReceipts200Item } from "src/lib/orval"
+import { usdToString } from "src/lib/discount"
 import { getPrivyAppConfig, handleEmailLogin, verifyEmailCode } from "src/lib/privy"
 import { defineComponent } from "vue"
+
+type DiscountCodeWithPayouts = DiscountsMyCodes200Item & { pendingPayout?: number; totalPayout?: number }
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -148,8 +214,19 @@ export default defineComponent({
       newUsername: "",
       validateUsername,
       avatarImg,
+      usdToString,
       userBio: "",
       bioEditMode: false,
+      // Discount Codes
+      myCodes: [] as DiscountCodeWithPayouts[],
+      loadingMyCodes: false,
+      // Affiliate payout
+      affiliateLoading: false,
+      affiliatePaypalEmail: null as string | null,
+      affiliateTotalPaid: 0 as number,
+      // Payout receipts
+      affiliateReceiptsLoading: false,
+      affiliateReceipts: [] as UserAffiliatePayoutReceipts200Item[],
       telegramLinkMount: null as HTMLElement | null,
       // Telegram linking state
       tgLinked: false,
@@ -166,6 +243,11 @@ export default defineComponent({
       tgQrDialogOpen: false as boolean,
       tgQrDataUrl: "" as string,
       tgQrLoading: false as boolean,
+      // Table columns
+      affiliateReceiptsColumns: [
+        { name: 'payoutDate', label: 'Date', field: 'payoutDate', sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : '') },
+        { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true, format: (val: number) => `$${usdToString(val || 0)}` },
+      ] as QTableColumn<any>[],
     }
   },
   computed: {
@@ -196,6 +278,7 @@ export default defineComponent({
       handler(val) {
         if (!val) return
         this.loadData()
+        void this.loadMyCodes()
         void this.checkTgStatus()
       },
     },
@@ -214,6 +297,92 @@ export default defineComponent({
     if (this.tgPollTimer) clearInterval(this.tgPollTimer)
   },
   methods: {
+    copyCode(code: string) {
+      void copyToClipboard(code)
+      Notify.create({ message: "Code copied", color: "positive", icon: "check" })
+    },
+    async loadMyCodes() {
+      try {
+        this.loadingMyCodes = true
+        const res = await discountsMyCodes()
+        const list = Array.isArray(res?.data) ? res.data : []
+        // Enrich with payout fields from backend if present
+        this.myCodes = list.map((it) => {
+          const raw = it as unknown as Record<string, unknown>
+          const toNum = (v: unknown) => {
+            const n = Number(v)
+            return Number.isFinite(n) ? n : 0
+          }
+          return {
+            ...it,
+            pendingPayout: toNum(raw.pendingPayout),
+            totalPayout: toNum(raw.totalPayout),
+          }
+        })
+        // If user has affiliate codes, load payout details
+        if (this.myCodes.length > 0) {
+          void this.loadAffiliatePayout()
+          void this.loadAffiliateReceipts()
+        }
+      } catch (e) {
+        // Optional section; ignore errors
+        this.myCodes = []
+      } finally {
+        this.loadingMyCodes = false
+      }
+    },
+    async loadAffiliatePayout() {
+      try {
+        this.affiliateLoading = true
+        const res = await userGetAffiliatePayoutDetails()
+        const data = res?.data
+        this.affiliatePaypalEmail = data?.paypalEmail ?? null
+        this.affiliateTotalPaid = Number(data?.totalPaid ?? 0)
+      } catch (e) {
+        // optional section
+        this.affiliatePaypalEmail = null
+        this.affiliateTotalPaid = 0
+      } finally {
+        this.affiliateLoading = false
+      }
+    },
+    async loadAffiliateReceipts() {
+      try {
+        this.affiliateReceiptsLoading = true
+        const res = await userAffiliatePayoutReceipts({ limit: 50, offset: 0 })
+        this.affiliateReceipts = Array.isArray(res?.data) ? res.data : []
+      } catch (e) {
+        this.affiliateReceipts = []
+      } finally {
+        this.affiliateReceiptsLoading = false
+      }
+    },
+    async promptUpdateAffiliatePaypal() {
+      const current = this.affiliatePaypalEmail || ""
+      Dialog.create({
+        title: this.affiliatePaypalEmail ? "Update PayPal Email" : "Link PayPal Email",
+        message: "Enter the PayPal email to receive affiliate payouts",
+        prompt: { model: current, type: "email" },
+        cancel: true,
+        ok: { label: this.affiliatePaypalEmail ? "Update" : "Link", color: "primary" },
+      }).onOk(async (email) => {
+        try {
+          const e = String(email || "").trim()
+          if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+            Notify.create({ type: "negative", message: "Please enter a valid email" })
+            return
+          }
+          this.affiliateLoading = true
+          await userSetAffiliatePayoutDetails({ paypalEmail: e })
+          await this.loadAffiliatePayout()
+          Notify.create({ type: "positive", message: "PayPal details updated" })
+        } catch (err) {
+          catchErr(err)
+        } finally {
+          this.affiliateLoading = false
+        }
+      })
+    },
     async checkTgStatus() {
       try {
         const { data } = await telegramLinkStatus()
