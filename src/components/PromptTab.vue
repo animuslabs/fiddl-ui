@@ -74,32 +74,7 @@
           @active-tab="setActiveCreationsStore"
         ).full-width
 
-  q-dialog(v-model="showMMChoice")
-    q-card(style="width:560px; max-width:95vw;")
-      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
-        .row.items-center.justify-between
-          h6.q-mt-none.q-mb-none Magic Mirror Options
-          q-btn(flat dense round icon="close" v-close-popup)
-      q-separator
-      q-card-section
-        .q-mb-sm
-          p We offer two Magic Mirror modes. Both create great results:
-          ul
-            li
-              strong Magic Mirror Pro:
-              |  higher quality and more creative. Uses a personalized model. Cost:
-              strong  {{ fluxCost }}
-              |  points (training set + Flux Pro training).
-            li
-              strong Magic Mirror Fast:
-              |  faster and simpler. No model training. Cost:
-              strong  {{ bananaCost }}
-              |  points per image (Nano Banana).
-          p.q-mt-sm Choose a mode to continue.
-      q-separator
-      q-card-actions(align="right")
-        q-btn( label="Use Magic Mirror Fast" no-caps @click="goBanana")
-        q-btn( label="Use Magic Mirror Pro" no-caps @click="goFlux")
+  MagicMirrorDialog(v-model="showMMChoice")
 
 </template>
 
@@ -108,7 +83,6 @@ import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import type { CreateImageRequest, CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
-import { LocalStorage } from "quasar"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { CustomModel } from "lib/api"
@@ -116,19 +90,20 @@ import { useCreateImageStore } from "src/stores/createImageStore"
 import { useQuasar } from "quasar"
 import { match } from "ts-pattern"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
-import { prices } from "src/stores/pricesStore"
 import mediaViwer from "lib/mediaViewer"
 import MediaGallery, { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { img, s3Video } from "lib/netlifyImg"
 import type { MediaType, UnifiedRequest } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
 import { useCreateContextStore } from "src/stores/createContextStore"
+import MagicMirrorDialog from "src/components/MagicMirrorDialog.vue"
 export default defineComponent({
   name: "PromptTab",
   components: {
     CreateCard,
     ImageRequestCard,
     MediaGallery,
+    MagicMirrorDialog,
   },
   props: {
     customModel: {
@@ -161,14 +136,6 @@ export default defineComponent({
     }
   },
   computed: {
-    fluxCost(): number {
-      // Training set + Flux Pro model training
-      return (prices.forge?.createTrainingSet || 0) + (prices.forge?.trainBaseModel?.fluxPro || 0)
-    },
-    bananaCost(): number {
-      // Cost per image using nano-banana model
-      return prices.image?.model?.["nano-banana"] || 0
-    },
     allMediaObjects() {
       const isImage = this.currentTab === "image"
       // Sort requests newest-first, then flatten to mediaIds
@@ -302,14 +269,6 @@ export default defineComponent({
     })
   },
   methods: {
-    goFlux() {
-      this.showMMChoice = false
-      void this.$router.push({ name: "magicMirror" })
-    },
-    goBanana() {
-      this.showMMChoice = false
-      void this.$router.push({ name: "magicMirrorBanana" })
-    },
     isImageCreations(store: any): store is ReturnType<typeof useImageCreations> {
       return "filter" in store && "customModelId" in store.filter
     },

@@ -44,6 +44,7 @@ div
              | Start Capture
 
             .centered.q-ma-md
+              small Magic Mirror will capture 4 photos in 2 second intervals.
               small For best results, move your head to provide multiple angles.
 
         //- Flash overlay

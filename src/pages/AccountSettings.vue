@@ -49,8 +49,17 @@ q-page.full-height.full-width
             div
               q-btn(@click="editingUsername = false" round flat icon="close" color="negative")
               q-btn(@click="setNewUsername()" round flat icon="check" color="positive")
+        // Referral summary chips
+        .row.q-gutter-sm.q-mt-sm(v-if="$userAuth.userProfile?.username")
+          div(v-if="referralsLoading" class="q-ml-sm")
+            q-spinner(size="20px" color="primary")
+          template(v-else)
+            q-badge(color="grey-9" text-color="white" )
+              q-icon(name="group")
+              .q-ml-sm Invited: {{ referralsSummary?.invitedCount ?? 0 }}
+            q-chip( color="grey-9" text-color="white" icon="img:/FiddlPointsLogo.svg") Earned: {{ referralsSummary?.earnedReferralPoints ?? 0 }} Points
         div(style="max-width: 400px;").q-mt-md
-          small You will earn a 10% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
+          small You will earn a 5% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
         h5.q-pt-md Email
         .row.items-center
           div
@@ -102,13 +111,12 @@ q-page.full-height.full-width
                   q-badge(color="primary" text-color="white") {{ (c.discount * 100).toFixed(0) }}% off
               .row.q-gutter-sm.q-mt-sm
                 q-badge(color="grey-8" text-color="white") Used {{ c.used }} / {{ c.maximumUses ?? '∞' }}
-                q-badge(color="grey-8" text-color="white") Remaining {{ c.remainingUses ?? 0 }}
                 q-badge(color="grey-8" text-color="white") Unique users {{ c.uniqueUsers ?? 0 }}
               .row.q-gutter-sm.q-mt-sm
-                q-badge(color="accent" text-color="white") Spent ${{ usdToString(c.totalUsdSpent || 0) }}
-                q-badge(color="positive" text-color="white") Total Payout: ${{ usdToString(c.totalPayout || 0) }}
-                q-badge(color="warning" text-color="black") Pending Payout: ${{ usdToString(c.pendingPayout || 0) }}
-              .row.q-gutter-sm.q-mt-sm.text-white
+                q-badge(color="grey-8" text-color="white") Spent ${{ usdToString(c.totalUsdSpent || 0) }}
+                q-badge(color="grey-8" text-color="white") Total Paid Out: ${{ usdToString(c.totalPayout || 0) }}
+                q-badge(color="grey-4" text-color="black") Pending Payout: ${{ usdToString(c.pendingPayout || 0) }}
+              //- .row.q-gutter-sm.q-mt-sm.text-white
                 div Created {{ new Date(c.createdAt).toLocaleDateString() }}
                 div(v-if="c.lastUsedAt") • Last used {{ new Date(c.lastUsedAt).toLocaleString() }}
           // Affiliate payout section
@@ -178,7 +186,23 @@ import type { QTableColumn } from "quasar"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import TelegramConnect from "src/components/TelegramConnect.vue"
 import { jwt } from "src/lib/jwt"
-import { privyLinkCurrentUser, telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, discountsMyCodes, userGetAffiliatePayoutDetails, userSetAffiliatePayoutDetails, userAffiliatePayoutReceipts, type DiscountsMyCodes200Item, type TelegramCreateDeepLink200, type UserAffiliatePayoutReceipts200Item } from "src/lib/orval"
+import {
+  privyLinkCurrentUser,
+  telegramCreateDeepLink,
+  telegramLinkStatus,
+  userSetBio,
+  userSetNotificationConfig,
+  userSetUsername,
+  discountsMyCodes,
+  userGetAffiliatePayoutDetails,
+  userSetAffiliatePayoutDetails,
+  userAffiliatePayoutReceipts,
+  userReferralsSummary,
+  type DiscountsMyCodes200Item,
+  type TelegramCreateDeepLink200,
+  type UserAffiliatePayoutReceipts200Item,
+  type UserReferralsSummary200,
+} from "src/lib/orval"
 import { usdToString } from "src/lib/discount"
 import { getPrivyAppConfig, handleEmailLogin, verifyEmailCode } from "src/lib/privy"
 import { defineComponent } from "vue"
@@ -245,9 +269,12 @@ export default defineComponent({
       tgQrLoading: false as boolean,
       // Table columns
       affiliateReceiptsColumns: [
-        { name: 'payoutDate', label: 'Date', field: 'payoutDate', sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : '') },
-        { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true, format: (val: number) => `$${usdToString(val || 0)}` },
+        { name: "payoutDate", label: "Date", field: "payoutDate", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
+        { name: "amount", label: "Amount", field: "amount", align: "right", sortable: true, format: (val: number) => `$${usdToString(val || 0)}` },
       ] as QTableColumn<any>[],
+      // Referral summary
+      referralsLoading: false as boolean,
+      referralsSummary: null as UserReferralsSummary200 | null,
     }
   },
   computed: {
@@ -280,6 +307,7 @@ export default defineComponent({
         this.loadData()
         void this.loadMyCodes()
         void this.checkTgStatus()
+        void this.loadReferralsSummary()
       },
     },
     $userAuth: {
@@ -355,6 +383,21 @@ export default defineComponent({
         this.affiliateReceipts = []
       } finally {
         this.affiliateReceiptsLoading = false
+      }
+    },
+    async loadReferralsSummary() {
+      try {
+        this.referralsLoading = true
+        const { data } = await userReferralsSummary()
+        this.referralsSummary = {
+          invitedCount: Number(data?.invitedCount || 0),
+          earnedReferralPoints: Number(data?.earnedReferralPoints || 0),
+        }
+      } catch (e) {
+        // Optional info, ignore errors
+        this.referralsSummary = { invitedCount: 0, earnedReferralPoints: 0 }
+      } finally {
+        this.referralsLoading = false
       }
     },
     async promptUpdateAffiliatePaypal() {
@@ -531,6 +574,7 @@ export default defineComponent({
         this.editingUsername = false
         void this.$userAuth.loadUserProfile()
         Notify.create({ message: "Username updated", color: "positive", icon: "check" })
+        void this.loadReferralsSummary()
       } catch (err) {
         console.error(err)
         Notify.create({ message: "Failed to update username", color: "negative", icon: "error" })

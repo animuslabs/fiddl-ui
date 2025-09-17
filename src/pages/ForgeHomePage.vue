@@ -4,12 +4,35 @@ q-page.full-height.full-width.q-px-lg
     h1.lobster-font Forge
   .centered.q-mt-md
     p Train custom models with your own images
-  // Responsive grid to avoid overflow on mobile
-  .row.items-start.justify-center.full-width(v-if="mode === 'pick'")
+
+  // Magic Mirror CTA + Advanced toggle
+  .centered.q-mt-lg
+    q-btn(
+      label="Magic Mirror"
+      color="primary"
+      rounded
+      :size="isAdvanced ? 'md' : 'xl'"
+      @click="showMMChoice = true"
+      icon="auto_awesome"
+    )
+  .centered.q-mt-sm
+    q-btn(
+      :label="isAdvanced ? 'Advanced: ON' : 'Advanced: OFF'"
+      :color="isAdvanced ? 'secondary' : 'grey-7'"
+      outline
+      rounded
+      size="sm"
+      icon="tune"
+      @click="toggleAdvanced"
+    )
+
+  // Responsive grid to avoid overflow on mobile (Advanced mode)
+  .row.items-start.justify-center.full-width(v-if="mode === 'pick' && isAdvanced")
     .col-12.col-md-6
       PickModel(@selectModel="selectModel" @createModel="mode = 'createModel'")
     .col-12.col-md-6
       PickTrainingSet(@selectSet="selectSet" @createSet="mode = 'createSet'")
+
   div(v-if="mode == 'createModel'").full-width
     CreateModel
     .centered
@@ -25,6 +48,8 @@ q-page.full-height.full-width.q-px-lg
     @back="pickMode()"
     @finished="useModel(targetModelData)"
   )
+
+  MagicMirrorDialog(v-model="showMMChoice")
 </template>
 
 <script lang="ts">
@@ -41,6 +66,8 @@ import { modelsGetCustomModel } from "src/lib/orval"
 import { CreateImageRequestWithCustomModel, useCreateImageStore } from "src/stores/createImageStore"
 import { useForgeStore } from "src/stores/forgeStore"
 import { defineComponent } from "vue"
+import { LocalStorage } from "quasar"
+import MagicMirrorDialog from "src/components/MagicMirrorDialog.vue"
 type forgeMode = "pick" | "createModel" | "train" | "createSet"
 export default defineComponent({
   components: {
@@ -50,6 +77,7 @@ export default defineComponent({
     UseModel,
     PickTrainingSet,
     CreateTrainingSet,
+    MagicMirrorDialog,
   },
   data() {
     return {
@@ -60,6 +88,8 @@ export default defineComponent({
       loadTrainingInterval: null as any,
       createStore: useCreateImageStore(),
       forgeStore: useForgeStore(),
+      isAdvanced: false,
+      showMMChoice: false,
     }
   },
   computed: {},
@@ -124,11 +154,21 @@ export default defineComponent({
       },
       immediate: true,
     },
+    isAdvanced(val: boolean) {
+      try {
+        LocalStorage.set("isAdvancedUser", val)
+      } catch (e) {
+        // noop
+      }
+    },
   },
   unmounted() {
     if (this.loadTrainingInterval) clearInterval(this.loadTrainingInterval)
   },
   methods: {
+    toggleAdvanced() {
+      this.isAdvanced = !this.isAdvanced
+    },
     selectSet(set: TrainingSet) {
       console.log("selected set", set)
       void this.$router.push({ name: "trainingSet", params: { trainingSetId: set.id } })
@@ -196,6 +236,14 @@ export default defineComponent({
     async loadUserModels() {
       await Promise.all([this.forgeStore.loadUserModels(), this.forgeStore.loadUserTrainingSets()])
     },
+  },
+  mounted() {
+    try {
+      const stored = LocalStorage.getItem("isAdvancedUser")
+      this.isAdvanced = stored === true
+    } catch (e) {
+      this.isAdvanced = false
+    }
   },
 })
 </script>
