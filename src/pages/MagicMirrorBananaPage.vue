@@ -154,8 +154,8 @@ q-page.full-width
       )
 
   // Animate dialog
-  q-dialog(v-model="animateDialogOpen")
-    q-card(style="width:520px; max-width:100vw;")
+  q-dialog(v-model="animateDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Animate Image
@@ -163,7 +163,12 @@ q-page.full-width
       q-separator
       q-card-section
         .centered.q-mb-md
-          q-img(v-if="animateDialogImageId" :src="img(animateDialogImageId, 'md')" style="max-height:220px; max-width:100%;")
+          q-img(
+            v-if="animateDialogImageId"
+            :src="img(animateDialogImageId, 'md')"
+            fit="contain"
+            style="max-height:60vh; width:100%; background:black;"
+          )
         .q-mt-sm
           p Animate this image into a short video using the Kling model.
           p.q-mt-sm It costs {{ prices.video.model.kling }} points per second. Estimated cost for 5s:
@@ -174,6 +179,17 @@ q-page.full-width
         q-btn(flat color="primary" label="See Video Creations" no-caps @click="goToCreateVideo")
         q-btn(color="primary" :disable="hasAnimatedSelected" :loading="animating" label="Animate now" no-caps @click="triggerAnimation")
         q-tooltip(v-if="hasAnimatedSelected") Animation was already triggered for this image
+
+  // Quick purchase dialog for insufficient credits on animation
+  q-dialog(v-model="quickBuyDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Add Fiddl Points
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
 
   // Floating prompt to go to video after triggering
   div(v-if="animPromptVisible" style="position:fixed; bottom:60px; left:0; right:0; z-index:1000;")
@@ -200,6 +216,7 @@ import MagicPreviewGrid from "src/components/magic/MagicPreviewGrid.vue"
 import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
 import BuyPointsMini from "src/components/dialogs/BuyPointsMini.vue"
+import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
 import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
@@ -211,6 +228,7 @@ import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
 import { prices } from "src/stores/pricesStore"
+import { magicMirrorFastTotalPoints } from "src/lib/magic/magicCosts"
 import { createUploadImage, createQueueAsyncBatch, creationsDescribeUploadedImage, createBatchStatus } from "lib/orval"
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
@@ -226,8 +244,8 @@ const router = useRouter()
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
 const loginDialogOpen = ref(false)
-// Cost: 3 nano-banana images + 4 uploads
-const fastRequiredPoints = computed(() => 3 * (prices.image?.model?.["nano-banana"] || 0) + 4 * (prices.image?.uploadSoloImage || 0))
+// Cost via helper: 3 nano-banana images + 4 uploads
+const fastRequiredPoints = computed(() => magicMirrorFastTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 const buyPointsDialogOpen = ref(false)
 const missingFastPoints = computed(() => Math.max(0, fastRequiredPoints.value - availablePoints.value))
@@ -286,6 +304,7 @@ const {
   startAnimPromptCountdown,
   stopAnimPromptCountdown,
   triggeredVideoIds,
+  quickBuyDialogOpen,
 } = useMagicMirrorResults({ animatedKey: "mmBananaAnimatedVideoIds", router })
 
 // displayTemplates, mapping, and selection provided by composable
@@ -322,7 +341,10 @@ const previewGridStyle = computed(() => ({
 const previewSkeletonCount = computed(() => Math.max(1, Math.min(3, initialLoadingTemplates.value.length || additionalLoadingTemplates.value.length || 3)))
 const previewLoadingMessage = computed(() => (initialLoadingTemplates.value.length > 0 ? "Generating your looks..." : additionalLoadingTemplates.value.length > 0 ? "Rendering more looks..." : "Processing..."))
 
-const showInitialPreview = computed(() => templatesConfirmed.value && generatedImageIds.value.length === 0)
+// Keep the initial template preview visible until the first 3 images
+// are present, avoiding a brief blank state between the first image
+// arriving and the results grid taking over.
+const showInitialPreview = computed(() => templatesConfirmed.value && generatedImageIds.value.length < 3)
 const showTemplatePreview = computed(() => isWaitingForImages.value || pendingNewCount.value > 0 || generatingMore.value)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
@@ -417,6 +439,7 @@ function onInsufficientPoints() {
 }
 function onBuyMiniComplete() {
   buyPointsDialogOpen.value = false
+  void userAuth.loadUserData()
   quasar.notify({ color: "positive", message: "Points added. Continue with Magic Mirror." })
 }
 
@@ -687,6 +710,12 @@ onBeforeUnmount(() => {
   stopBatchStatusWatch()
   if (signupTimer) window.clearTimeout(signupTimer)
 })
+
+function onQuickBuyComplete() {
+  quickBuyDialogOpen.value = false
+  void userAuth.loadUserData()
+  quasar.notify({ color: "positive", message: "Points added. You can animate now." })
+}
 
 // Delayed signup nudge after first results
 const signupNudgeOpen = ref(false)

@@ -47,6 +47,7 @@ q-dialog(v-model="proxyModel" :maximized="isMobile")
 import { defineComponent, computed } from "vue"
 import { useRouter } from "vue-router"
 import { prices } from "src/stores/pricesStore"
+import { magicMirrorFastTotalPoints, magicMirrorProTotalPoints } from "src/lib/magic/magicCosts"
 import { useQuasar } from "quasar"
 
 export default defineComponent({
@@ -63,8 +64,8 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (v: boolean) => emit("update:modelValue", v),
     })
-    const fluxCost = computed(() => (prices.forge?.createTrainingSet || 0) + (prices.forge?.trainBaseModel?.fluxDev || 0) + (prices.forge?.createTrainingSet || 0) + (prices.image?.model?.["flux-dev"] || 0) * 3)
-    const bananaCost = computed(() => prices.image?.model?.["nano-banana"] * 3 || 0)
+    const fluxCost = computed(() => magicMirrorProTotalPoints())
+    const bananaCost = computed(() => magicMirrorFastTotalPoints())
     const isMobile = computed(() => $q.screen.lt.md)
     const cardStyle = computed(() =>
       isMobile.value

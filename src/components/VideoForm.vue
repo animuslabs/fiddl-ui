@@ -68,12 +68,25 @@
       div(style="position:absolute; left:15px; top:15px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
       div(style="position:absolute; top:15px;")
-        q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || vidStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
+        q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="anyLoading || req.prompt.length < 5")
           .badge {{ vidStore.totalCost }}
       div(style="position:absolute; right:15px; top:15px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="anyLoading" :label="req.public ? 'Public' : 'Private'")
 
   UploadedImagesDialog(v-model="showImageDialog" @accept="onDialogAccept" :multiSelect="false" :thumbSizeMobile="95" context="video")
+
+  // Quick purchase dialog when insufficient points
+  q-dialog(v-model="quickBuyDialogOpen" :maximized="quasar.screen.lt.md")
+    q-card(:style="quasar.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; border-radius:0;' : 'width:520px; max-width:100vw;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Add Fiddl Points
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mb-sm
+          p You need {{ missingPoints }} more points to create this video. Purchase a points package below. Your balance updates automatically after payment.
+        QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
   </template>
 
 <script lang="ts" setup>
@@ -85,6 +98,8 @@ import { usePricesStore, prices } from "stores/pricesStore"
 import { img, s3Img } from "lib/netlifyImg"
 import { uploadTrainingImages } from "lib/api"
 import UploadedImagesDialog from "components/dialogs/UploadedImagesDialog.vue"
+import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
+import { useUserAuth } from "src/stores/userAuth"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -96,6 +111,8 @@ const emit = defineEmits(["created", "back"])
 // })
 const quasar = useQuasar()
 const showImageDialog = ref(false)
+const quickBuyDialogOpen = ref(false)
+const userAuth = useUserAuth()
 const vidStore = useCreateVideoStore()
 const anyLoading = computed(() => vidStore.state.anyLoading)
 const loading = computed(() => vidStore.state.loading)
@@ -106,6 +123,11 @@ function clearStartingImage() {
   req.value.uploadedStartImageId = undefined
 }
 function create() {
+  const available = userAuth.userData?.availablePoints || 0
+  if (vidStore.totalCost > available) {
+    quickBuyDialogOpen.value = true
+    return
+  }
   void vidStore.createVideoRequest().then(() => emit("created"))
 }
 function onDialogAccept(ids: string[]) {
@@ -119,6 +141,17 @@ const startingImageUrl = computed(() => {
   else if (req.value.uploadedStartImageId) return s3Img("uploads/" + req.value.uploadedStartImageId)
   else return false
 })
+
+const missingPoints = computed(() => {
+  const available = userAuth.userData?.availablePoints || 0
+  return Math.max(0, vidStore.totalCost - available)
+})
+
+function onQuickBuyComplete() {
+  quickBuyDialogOpen.value = false
+  void userAuth.loadUserData()
+  quasar.notify({ color: "positive", message: "Points added. You can create now." })
+}
 </script>
 
 <style scoped>

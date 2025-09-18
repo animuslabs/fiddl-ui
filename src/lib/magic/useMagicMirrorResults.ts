@@ -18,6 +18,10 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   const animateDialogOpen = ref(false)
   const animateDialogImageId = ref<string | null>(null)
   const animating = ref(false)
+  // Quick buy points dialog for insufficient credits
+  const quickBuyDialogOpen = ref(false)
+
+  const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 
   // Estimated video cost
   const defaultVideoDuration = 5
@@ -77,6 +81,13 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   async function triggerAnimation() {
     if (!animateDialogImageId.value) return
     try {
+      // Check points before creating the request
+      const required = estimatedVideoCost.value
+      if (availablePoints.value < required) {
+        quasar.notify({ color: "negative", message: `Not enough Fiddl Points. Need ${required} points.` })
+        quickBuyDialogOpen.value = true
+        return
+      }
       animating.value = true
       vidStore.setReq({ prompt: "Animate this image", model: "kling", aspectRatio: "9:16", public: false, quantity: 1, duration: defaultVideoDuration, startImageId: animateDialogImageId.value })
       await vidStore.createVideoRequest()
@@ -201,6 +212,7 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
     estimatedVideoCost,
     hasAnimatedSelected,
     triggeredVideoIds,
+    // Quick buy dialog
+    quickBuyDialogOpen,
   }
 }
-

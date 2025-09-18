@@ -131,33 +131,55 @@ q-page.full-width
         .q-mt-sm
           p.text-primary Save your Magic Mirror creations, earn bonus points, and unlock more features by creating an account.
         PrivyLogin
-  q-dialog(v-model="insufficientDialogOpen")
-    q-card(style="width:520px; max-width:100vw;")
+  q-dialog(v-model="insufficientDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:720px; max-width:95vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Not enough points for Magic Mirror Pro
           q-btn(flat dense round icon="close" v-close-popup)
       q-separator
       q-card-section
-        p You need {{ mmRequiredPoints }} Fiddl Points to use Magic Mirror Pro (training set + model + 3 images).
-        p.text-secondary You have {{ availablePoints }} points. Missing {{ missingPoints }} points.
-        .q-mt-md
-          p Consider Magic Mirror Fast instead:
-          ul.q-ml-md
-            li
-              strong Magic Mirror Fast:
-              |  {{ bananaCost }} points per image.
-            li
-              strong For 3 images:
-              |  {{ fastCostFor3 }} points (save ~{{ estimatedSavings }} points vs Pro)
-        .q-mt-sm
-          p.text-secondary Best results with Pro
-        .q-mt-md
-          BuyPointsMini(@paymentComplete="onBuyMiniComplete")
+        .q-mb-sm
+          p You need {{ mmRequiredPoints }} Fiddl Points to use Magic Mirror Pro (training set + model + 3 images).
+          p You have {{ availablePoints }} points. Missing {{ missingPoints }} points.
+        .row.q-col-gutter-md.items-stretch
+          .col-12.col-sm-6.flex
+            q-card(flat bordered class="option-card cursor-pointer fit" @click="goToMMFast")
+              q-card-section.option-body
+                .row.items-center.justify-between
+                  .row.items-center.no-wrap
+                    q-icon(name="flash_on" color="amber-5" size="28px").q-mr-sm
+                    .text-h6.text-weight-medium Magic Mirror Fast
+                  q-chip(color="primary" text-color="white" dense outline) {{ bananaCost }} pts
+                .text-body2.q-mt-xs.text-grey-5 Start in seconds. No training required.
+                .text-body2.text-grey-5 Great for first-time users and quick results.
+                .row.q-ml-sm.q-mt-sm
+                  q-chip(color="grey-8" text-color="white") Uses Nano Banana Model
+                .q-mt-sm
+                  .text-body2.text-grey-5 For 3 images: {{ fastCostFor3 }} pts (save ~{{ estimatedSavings }} vs Pro)
+              q-separator
+              q-card-actions(align="right")
+                q-btn(label="Use Fast" color="primary" size="lg" icon="flash_on" no-caps @click.stop="goToMMFast")
+
+          .col-12.col-sm-6.flex
+            q-card(flat bordered class="option-card fit")
+              q-card-section.option-body
+                .row.items-center.justify-between
+                  .row.items-center.no-wrap
+                    q-icon(name="auto_awesome" color="deep-purple-4" size="28px").q-mr-sm
+                    .text-h6.text-weight-medium Magic Mirror Pro
+                  q-chip(color="secondary" text-color="white" dense outline) Need +{{ missingPoints }} pts
+                .text-body2.q-mt-xs.text-grey-5 Best quality and most creative control.
+                .text-body2.text-grey-5 Uses a personalized model; takes longer to set up.
+                .row.q-ml-sm.q-mt-sm
+                  q-chip(color="grey-8" text-color="white") Uses Custom Flux Model
+                .q-mt-sm
+                  QuickBuyPointsDialog(@paymentComplete="onBuyMiniComplete")
+              q-separator
+              q-card-actions(align="right")
+                q-btn(color="secondary" label="Add Points" size="lg" icon="add" no-caps @click="goToAddPoints")
       q-card-actions(align="right")
-        q-btn(flat label="Cancel" v-close-popup)
-        q-btn(flat label="Try Magic Mirror Fast" color="primary" no-caps @click="goToMMFast")
-        q-btn(color="primary" label="Add Points" no-caps @click="goToAddPoints")
+        q-btn(flat label="Close" v-close-popup)
   q-dialog(v-model="dialogOpen")
     q-card(style="width:520px; max-width:100vw;")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
@@ -178,8 +200,8 @@ q-page.full-width
           @confirm="onDialogConfirm"
         )
 
-  q-dialog(v-model="animateDialogOpen")
-    q-card(style="width:520px; max-width:100vw;")
+  q-dialog(v-model="animateDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Animate Image
@@ -187,7 +209,12 @@ q-page.full-width
       q-separator
       q-card-section
         .centered.q-mb-md
-          q-img(v-if="animateDialogImageId" :src="img(animateDialogImageId, 'md')" style="max-height:220px; max-width:100%;")
+          q-img(
+            v-if="animateDialogImageId"
+            :src="img(animateDialogImageId, 'md')"
+            fit="contain"
+            style="max-height:60vh; width:100%; background:black;"
+          )
         .q-mt-sm
           p Animate this image into a short video using the Kling model.
           p.q-mt-sm It costs {{ prices.video.model.kling }} points per second. Estimated cost for 5s:
@@ -198,6 +225,17 @@ q-page.full-width
         q-btn(flat color="primary" label="See Video Creations" no-caps @click="goToCreateVideo")
         q-btn(color="primary" :disable="hasAnimatedSelected" :loading="animating" label="Animate now" no-caps @click="triggerAnimation")
         q-tooltip(v-if="hasAnimatedSelected") Animation was already triggered for this image
+
+  // Quick purchase dialog for insufficient credits on animation
+  q-dialog(v-model="quickBuyDialogOpen" :maximized="!isDesktop")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Add Fiddl Points
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
 
   div(v-if="animPromptVisible" style="position:fixed; bottom:60px; left:0; right:0; z-index:1000;")
     .centered
@@ -231,7 +269,8 @@ import PromptTemplateCard from "src/components/magic/PromptTemplateCard.vue"
 import MagicPreviewGrid from "src/components/magic/MagicPreviewGrid.vue"
 import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vue"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
-import BuyPointsMini from "src/components/dialogs/BuyPointsMini.vue"
+// Replaced inline mini with reusable QuickBuyPointsDialog
+import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
 import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
@@ -246,6 +285,7 @@ import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
 import { prices } from "src/stores/pricesStore"
+import { magicMirrorProTotalPoints, magicMirrorFastTotalPoints } from "src/lib/magic/magicCosts"
 import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
 
 type Step = "init" | "capture" | "training" | "selectTemplates" | "results"
@@ -263,12 +303,12 @@ const insufficientDialogOpen = ref(false)
 // Nudge dialog for signup post-results
 const signupNudgeOpen = ref(false)
 let signupTimer: number | null = null
-const mmRequiredPoints = computed(() => prices.forge.createTrainingSet + prices.forge.trainBaseModel.fluxDev + 3 * prices.image.model.custom)
+const mmRequiredPoints = computed(() => magicMirrorProTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 const missingPoints = computed(() => Math.max(0, mmRequiredPoints.value - availablePoints.value))
 // Magic Mirror Fast (Banana) costs
 const bananaCost = computed(() => prices.image?.model?.["nano-banana"] || 0)
-const fastCostFor3 = computed(() => bananaCost.value * 3)
+const fastCostFor3 = computed(() => magicMirrorFastTotalPoints())
 const estimatedSavings = computed(() => Math.max(0, mmRequiredPoints.value - fastCostFor3.value))
 
 const generatingMore = ref(false)
@@ -331,6 +371,7 @@ const {
   startAnimPromptCountdown,
   stopAnimPromptCountdown,
   triggeredVideoIds,
+  quickBuyDialogOpen,
 } = useMagicMirrorResults({ animatedKey: "mmAnimatedVideoIds", router })
 
 const genderForTemplates = computed<Gender | null>(() => {
@@ -518,6 +559,7 @@ function onInsufficientPoints() {
 }
 function onBuyMiniComplete() {
   insufficientDialogOpen.value = false
+  void userAuth.loadUserData()
   quasar.notify({ color: "positive", message: "Points added. Continue with Magic Mirror." })
 }
 
@@ -835,6 +877,12 @@ onBeforeUnmount(() => {
   stopBatchStatusWatch()
   if (signupTimer) window.clearTimeout(signupTimer)
 })
+
+function onQuickBuyComplete() {
+  quickBuyDialogOpen.value = false
+  void userAuth.loadUserData()
+  quasar.notify({ color: "positive", message: "Points added. You can animate now." })
+}
 </script>
 
 <style scoped>
@@ -933,5 +981,20 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+/* Option cards matching MagicMirrorDialog */
+.option-card {
+  transition: transform 80ms ease, box-shadow 80ms ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.option-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.option-body {
+  flex: 1 1 auto;
 }
 </style>

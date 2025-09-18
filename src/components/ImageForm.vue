@@ -95,7 +95,7 @@
       div(style="position:absolute; left:15px; top:15px;")
         q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
       div(style="position:absolute; top:15px; height:50px;" )
-        q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || createStore.totalCost > ($userAuth.userData?.availablePoints || 0) || req.prompt.length < 5")
+        q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || req.prompt.length < 5")
           .badge {{ createStore.totalCost }}
       div(style="position:absolute; right:15px; top:15px;")
         q-toggle(size="sm" v-model="req.public" color="primary" :disable="createStore.anyLoading" :label="req.public ? 'Public' : 'Private'")
@@ -126,6 +126,19 @@
     :preselectedIds="selectedImageIds"
     @accept="onImagesAccepted"
   )
+
+  // Quick purchase dialog when insufficient points
+  q-dialog(v-model="quickBuyDialogOpen" :maximized="$q.screen.lt.md")
+    q-card(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; border-radius:0;' : 'width:520px; max-width:100vw;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          h6.q-mt-none.q-mb-none Add Fiddl Points
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mb-sm
+          p You need {{ missingPoints }} more points to create these images. Purchase a points package below. Your balance updates automatically after payment.
+        QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
   </template>
 
 <script lang="ts" setup>
@@ -140,6 +153,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.vue"
 import UploadedImagesDialog from "src/components/dialogs/UploadedImagesDialog.vue"
 import { s3Img } from "lib/netlifyImg"
+import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -147,6 +161,7 @@ const $q = useQuasar()
 
 const createStore = useCreateImageStore()
 const creationsStore = useImageCreations()
+const userAuth = useUserAuth()
 
 const req = createStore.state.req
 const loading = createStore.state.loading
@@ -154,6 +169,7 @@ const loading = createStore.state.loading
 const showModelPicker = ref(false)
 const templatesDialogOpen = ref(false)
 const showImagesDialog = ref(false)
+const quickBuyDialogOpen = ref(false)
 
 const isNanoBanana = computed(() => req.model === "nano-banana")
 const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(req.model))
@@ -176,6 +192,11 @@ function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string 
 }
 
 function createImage() {
+  const available = userAuth.userData?.availablePoints || 0
+  if (createStore.totalCost > available) {
+    quickBuyDialogOpen.value = true
+    return
+  }
   if (req.model === "custom" && !req.customModelId) {
     $q.notify({ type: "warning", message: "Please select a custom model before creating." })
     showModelPicker.value = true
@@ -240,6 +261,17 @@ watch(
   },
   { immediate: true },
 )
+
+const missingPoints = computed(() => {
+  const available = userAuth.userData?.availablePoints || 0
+  return Math.max(0, createStore.totalCost - available)
+})
+
+function onQuickBuyComplete() {
+  quickBuyDialogOpen.value = false
+  void useUserAuth().loadUserData()
+  $q.notify({ color: "positive", message: "Points added. You can create now." })
+}
 </script>
 
 <style scoped>
