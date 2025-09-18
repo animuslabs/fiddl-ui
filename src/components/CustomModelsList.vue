@@ -75,6 +75,15 @@
           q-btn(label="Cancel" @click="showEditNameDialog=false" color="accent" flat)
           .col-grow
           q-btn(label="Update" @click="setModelName()" color="primary" flat)
+  q-dialog(v-model="showErrorDialog")
+    q-card
+      .q-ma-md
+        h5.q-mb-sm Model Training Error
+        p.q-mb-md {{ errorMessage || 'An unknown training error occurred.' }}
+        p.text-body2.text-grey
+          | An automatic refund was issued due to a training error. You can try training again, or you may need to create a different training set.
+        .row.q-gutter-md.q-mt-md
+          q-btn(label="Close" @click="showErrorDialog=false" color="primary" flat)
 </template>
 <script lang="ts">
 import { CustomModel, CustomModelWithRequests } from "lib/api"
@@ -114,6 +123,8 @@ export default defineComponent({
       newModelDescription: "" as string | null,
       showEditNameDialog: false,
       editingModelNameId: null as string | null,
+      showErrorDialog: false,
+      errorMessage: "" as string,
     }
   },
   computed: {},
@@ -207,9 +218,12 @@ export default defineComponent({
       }
     },
     handleModelClick(model: CustomModel) {
-      // console.log(model)
-      // this.$router.push({ name: "model", params: { modelId: model.id } })
-      console.log("handleModelClick")
+      // If model has a training error, show details dialog instead of selecting
+      if (model.status === "error" && model.trainingError) {
+        this.errorMessage = model.trainingError
+        this.showErrorDialog = true
+        return
+      }
       this.$emit("modelClicked", model)
     },
     async deleteModel(model: CustomModel) {
