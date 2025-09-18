@@ -57,7 +57,9 @@ q-page.full-height.full-width
             q-badge(color="grey-9" text-color="white" )
               q-icon(name="group")
               .q-ml-sm Invited: {{ referralsSummary?.invitedCount ?? 0 }}
-            q-chip( color="grey-9" text-color="white" icon="img:/FiddlPointsLogo.svg") Earned: {{ referralsSummary?.earnedReferralPoints ?? 0 }} Points
+            q-badge( color="grey-9" text-color="white" icon="img:/FiddlPointsLogo.svg")
+              q-icon(name="img:/FiddlPointsLogo.svg" class="q-ml-sm")
+              .q-ml-sm Earned: {{ referralsSummary?.earnedReferralPoints ?? 0 }} Points
         div(style="max-width: 400px;").q-mt-md
           small You will earn a 5% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
         h5.q-pt-md Email
