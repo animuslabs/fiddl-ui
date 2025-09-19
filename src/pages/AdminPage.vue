@@ -78,6 +78,15 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props") {{ Math.round((props.row.discount || 0) * 100) }}%
         template(#body-cell-uses="props")
           q-td(:props="props") {{ props.row.used }}/{{ props.row.maximumUses }}
+        template(#body-cell-linkedUser="props")
+          q-td(:props="props")
+            template(v-if="props.row.linkedUserId && profileLinkByUserId(props.row.linkedUserId)")
+              a.admin-link(:href="profileLinkByUserId(props.row.linkedUserId)" target="_blank" rel="noopener" @click.stop)
+                | {{ userLabelById[props.row.linkedUserId] || props.row.linkedUserId }}
+            template(v-else-if="props.row.linkedUserId")
+              span {{ userLabelById[props.row.linkedUserId] || props.row.linkedUserId }}
+            template(v-else)
+              span
         template(#body-cell-pendingPayout="props")
           q-td(:props="props") ${{ (props.row.pendingPayout || 0).toFixed(2) }}
         template(#body-cell-totalPayout="props")
@@ -123,7 +132,12 @@ q-page.full-height.full-width.admin-page
         :no-data-label="'No pending payouts'"
       )
         template(#body-cell-user="props")
-          q-td(:props="props") {{ userLabelById[props.row.userId] || props.row.userId }}
+          q-td(:props="props")
+            template(v-if="profileLinkByUserId(props.row.userId)")
+              a.admin-link(:href="profileLinkByUserId(props.row.userId)" target="_blank" rel="noopener" @click.stop)
+                | {{ userLabelById[props.row.userId] || props.row.userId }}
+            template(v-else)
+              span {{ userLabelById[props.row.userId] || props.row.userId }}
         template(#body-cell-pending="props")
           q-td(:props="props") ${{ (props.row.pending || 0).toFixed(2) }}
         template(#body-cell-actions="props")
@@ -160,6 +174,13 @@ q-page.full-height.full-width.admin-page
               q-btn(size="sm" icon="block" color="negative" flat @click="confirmBan(props.row)" :disable="props.row.banned")
               q-avatar(size="28px" class="q-ml-sm")
                 q-img(:src="avatarImg(props.row.id)")
+        template(#body-cell-username="props")
+          q-td(:props="props")
+            template(v-if="profileLinkForUser(props.row.profile)")
+              a.admin-link(:href="profileLinkForUser(props.row.profile)" target="_blank" rel="noopener" @click.stop)
+                | {{ props.row.profile?.username || '-' }}
+            template(v-else)
+              span {{ props.row.profile?.username || '-' }}
         template(#body-cell-banned="props")
           q-td(:props="props")
             q-chip(color="negative" text-color="white" v-if="props.row.banned" size="sm" label="BANNED")
@@ -200,7 +221,11 @@ q-page.full-height.full-width.admin-page
         q-td(:props="props")
           div
             template(v-if="props.row.user")
-              span {{ userDisplay(props.row.user) }}
+              template(v-if="profileLinkForUser(props.row.user)")
+                a.admin-link(:href="profileLinkForUser(props.row.user)" target="_blank" rel="noopener" @click.stop)
+                  | {{ userDisplay(props.row.user) }}
+              template(v-else)
+                span {{ userDisplay(props.row.user) }}
               q-btn(size="sm" icon="login" flat @click="loginAsUser(props.row.user.id)" class="q-ml-xs")
             template(v-else)
               span -
@@ -231,6 +256,7 @@ q-page.full-height.full-width.admin-page
       q-select(v-model="uploadsPagination.rowsPerPage" :options="[10,25,50,100]" label="Rows" dense outlined style="width:100px")
       q-space
       q-btn(v-if="uploadsAccount" icon="block" color="negative" flat :label="singleUploaderUser ? `Ban ${userDisplay(singleUploaderUser)}` : 'Ban account'" @click="banTopUser")
+      q-btn(v-if="uploadsProfileLink" icon="open_in_new" color="primary" flat :label="uploadsProfileLabel || 'Open profile'" :href="uploadsProfileLink" target="_blank" rel="noopener")
       q-btn(icon="refresh" flat @click="refetchUploads" :loading="uploadsFetching")
     // Top page navigation (centered, large)
     .row.justify-center.q-mb-sm(ref="topPager")
@@ -264,7 +290,22 @@ q-page.full-height.full-width.admin-page
         q-td(:props="props")
           q-img(:src="s3Img('uploads/' + props.row.id)" style="width:60px; height:60px; object-fit:cover; border-radius:4px; cursor:pointer;" @click="openImagePreview(props.row.id)")
       template(#body-cell-user="props")
-        q-td(:props="props") {{ userDisplay(props.row.user) }}
+        q-td(:props="props")
+          span.admin-link(@click="filterUploadsByUser(props.row.user)") {{ userDisplay(props.row.user) }}
+          q-btn(
+            v-if="profileLinkForUser(props.row.user)"
+            size="sm"
+            flat
+            round
+            dense
+            icon="open_in_new"
+            class="q-ml-xs"
+            :href="profileLinkForUser(props.row.user)"
+            target="_blank"
+            rel="noopener"
+            @click.stop
+            title="Open profile in new tab"
+          )
       template(#body-cell-createdAt="props")
         q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
       template(#body-cell-actions="props")
@@ -286,7 +327,22 @@ q-page.full-height.full-width.admin-page
                 q-btn(size="sm" round dense color="negative" icon="delete" @click="confirmDeleteUpload(row)")
                 q-btn(size="sm" round dense color="negative" icon="block" @click="banUploader(row)")
             q-card-section(class="q-pa-sm")
-              div(style="font-size:12px;" class="ellipsis") {{ userDisplay(row.user) }}
+              div(style="font-size:12px;" class="ellipsis row items-center no-wrap")
+                span.admin-link(@click="filterUploadsByUser(row.user)") {{ userDisplay(row.user) }}
+                q-btn(
+                  v-if="profileLinkForUser(row.user)"
+                  size="sm"
+                  flat
+                  round
+                  dense
+                  icon="open_in_new"
+                  class="q-ml-xs"
+                  :href="profileLinkForUser(row.user)"
+                  target="_blank"
+                  rel="noopener"
+                  @click.stop
+                  title="Open profile in new tab"
+                )
               div(style="font-size:11px; color:#777") {{ row.createdAt ? new Date(row.createdAt).toLocaleString() : '' }}
     // Bottom page navigation (centered, large)
     .row.justify-center.q-mt-sm
@@ -346,7 +402,7 @@ import { longIdToShort, catchErr } from "lib/util"
 import { copyToClipboard, Dialog, Notify } from "quasar"
 import type { QTableColumn } from "quasar"
 import { defineComponent, ref, computed, watch } from "vue"
-import type { RouteLocationRaw } from "vue-router"
+import { useRouter, type RouteLocationRaw } from "vue-router"
 import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments, creationsDescribeUploadedImage, adminListUsers, adminDiscountCodesList, adminDiscountCodeCreate, adminDiscountCodeUpdate, adminDiscountCodeDelete, adminAffiliatePayoutUser } from "src/lib/orval"
 import QRCode from "qrcode"
 import axios from "axios"
@@ -358,6 +414,7 @@ export default defineComponent({
   components: {},
 
   setup() {
+    const router = useRouter()
     const userSearch = ref("")
     const includeBanned = ref(false)
 
@@ -573,6 +630,27 @@ export default defineComponent({
       return "grey-6"
     }
 
+    const profileLinkForUsername = (username?: string | null) => {
+      if (!username) return ""
+      try {
+        return router.resolve({ name: "profile", params: { username } }).href
+      } catch {
+        return ""
+      }
+    }
+
+    const profileLinkForUser = (user: any) => {
+      if (!user) return ""
+      const username =
+        user?.username ||
+        user?.profile?.username ||
+        user?.userName ||
+        user?.originUsername ||
+        user?.creatorUsername ||
+        undefined
+      return profileLinkForUsername(typeof username === "string" ? username : undefined)
+    }
+
     const userDisplay = (user: any) => user?.username || user?.email || user?.telegramName || user?.telegramId || user?.id || "-"
 
     const paymentsColumns: QTableColumn<any>[] = [
@@ -735,6 +813,27 @@ export default defineComponent({
       },
     )
 
+    const uploadsAccountIdentifier = (user: any) => {
+      if (!user) return ""
+      return (
+        user?.username ||
+        user?.profile?.username ||
+        user?.email ||
+        user?.profile?.email ||
+        user?.telegramName ||
+        user?.telegramId ||
+        user?.id ||
+        ""
+      )
+    }
+
+    const filterUploadsByUser = (user: any) => {
+      const identifier = uploadsAccountIdentifier(user)
+      if (!identifier) return
+      uploadsAccount.value = identifier
+      if (uploadsPagination.value.page !== 1) uploadsPagination.value.page = 1
+    }
+
     function scrollTopPagerIntoView() {
       try {
         const el = topPager.value
@@ -761,6 +860,20 @@ export default defineComponent({
       return sample?.user || { id: onlyId }
     })
 
+    const uploadsProfileLink = computed(() => {
+      const user = singleUploaderUser.value
+      if (!user) return ""
+      return profileLinkForUser(user)
+    })
+
+    const uploadsProfileLabel = computed(() => {
+      const user = singleUploaderUser.value
+      if (!user) return ""
+      const username = user?.username || user?.profile?.username || user?.userName
+      if (username) return `Open @${username}`
+      return "Open profile"
+    })
+
     async function banTopUser() {
       // Prefer explicit filter value to lookup user; fallback to inferred single user
       const search = uploadsAccount.value?.trim() || (singleUploaderUser.value?.id as string | undefined)
@@ -780,6 +893,11 @@ export default defineComponent({
     const dcLoading = ref(false)
     const dcFetching = ref(false)
     const userLabelById = ref<Record<string, string>>({})
+    const userUsernameById = ref<Record<string, string>>({})
+    const profileLinkByUserId = (userId?: string | null) => {
+      if (!userId) return ""
+      return profileLinkForUsername(userUsernameById.value[userId])
+    }
     const dcColumns: QTableColumn<any>[] = [
       { name: "actions", label: "Actions", field: "code", align: "left", sortable: false },
       { name: "code", label: "Code", field: "code", sortable: true },
@@ -810,7 +928,10 @@ export default defineComponent({
             try {
               const resp = await adminListUsers({ search: id, limit: 1, offset: 0 })
               const user = resp?.data?.users?.[0]
-              if (user) userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
+              if (user) {
+                userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
+                if (user.profile?.username) userUsernameById.value[id] = user.profile.username
+              }
             } catch {}
           }),
         )
@@ -901,7 +1022,12 @@ export default defineComponent({
       try {
         const res = await adminListUsers({ search: q, limit: 10, offset: 0 })
         const users = res?.data?.users || []
-        const opts = users.map((u: any) => ({ label: userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id }), value: u.id }))
+        const opts = users.map((u: any) => {
+          const label = userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id })
+          userLabelById.value[u.id] = label
+          if (u.profile?.username) userUsernameById.value[u.id] = u.profile.username
+          return { label, value: u.id }
+        })
         update(() => {
           dcUserOptionsCreate.value = opts
         })
@@ -922,7 +1048,12 @@ export default defineComponent({
       try {
         const res = await adminListUsers({ search: q, limit: 10, offset: 0 })
         const users = res?.data?.users || []
-        const opts = users.map((u: any) => ({ label: userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id }), value: u.id }))
+        const opts = users.map((u: any) => {
+          const label = userDisplay({ username: u.profile?.username, email: u.profile?.email, telegramName: u.profile?.telegramName, id: u.id })
+          userLabelById.value[u.id] = label
+          if (u.profile?.username) userUsernameById.value[u.id] = u.profile.username
+          return { label, value: u.id }
+        })
         update(() => {
           dcUserOptionsEdit.value = opts
         })
@@ -941,6 +1072,7 @@ export default defineComponent({
         if (row.linkedUserId) {
           // seed option so the select shows a readable label
           const lbl = userLabelById.value[row.linkedUserId] || row.linkedUserId
+          userLabelById.value[row.linkedUserId] = lbl
           dcUserOptionsEdit.value = [{ label: lbl, value: row.linkedUserId }]
         }
         dcEditOpen.value = true
@@ -1086,6 +1218,9 @@ export default defineComponent({
       onPaymentsRequest,
       statusColor,
       userDisplay,
+      profileLinkForUser,
+      profileLinkForUsername,
+      profileLinkByUserId,
 
       // uploads
       uploadsAccount,
@@ -1109,12 +1244,16 @@ export default defineComponent({
       banUploader,
       onBottomPageChange,
       confirmDeleteUpload,
+      filterUploadsByUser,
+      uploadsProfileLink,
+      uploadsProfileLabel,
 
       // discount codes
       dcRows,
       dcLoading,
       dcFetching,
       dcColumns,
+      userLabelById,
       dcForm,
       dcCreating,
       createDiscountCode,
@@ -1308,6 +1447,14 @@ export default defineComponent({
 <style lang="sass" scoped>
 .admin-page
   overflow-x: hidden
+
+.admin-link
+  color: #1976d2
+  cursor: pointer
+  text-decoration: underline
+
+.admin-link:hover
+  color: #0d47a1
 
 .qr-dialog-card
   width: 100%

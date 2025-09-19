@@ -165,6 +165,14 @@ export default defineComponent({
   unmounted() {
     if (this.loadTrainingInterval) clearInterval(this.loadTrainingInterval)
   },
+  mounted() {
+    try {
+      const stored = LocalStorage.getItem("isAdvancedUser")
+      this.isAdvanced = stored === true
+    } catch (e) {
+      this.isAdvanced = false
+    }
+  },
   methods: {
     toggleAdvanced() {
       this.isAdvanced = !this.isAdvanced
@@ -236,14 +244,6 @@ export default defineComponent({
     async loadUserModels() {
       await Promise.all([this.forgeStore.loadUserModels(), this.forgeStore.loadUserTrainingSets()])
     },
-  },
-  mounted() {
-    try {
-      const stored = LocalStorage.getItem("isAdvancedUser")
-      this.isAdvanced = stored === true
-    } catch (e) {
-      this.isAdvanced = false
-    }
   },
 })
 </script>

@@ -207,7 +207,7 @@ async function uploadImages(files: File[]) {
   try {
     const addedIds: string[] = []
     for (const file of files) {
-      const [compressed] = await generateWebpThumbnails([file], 1920, 98)
+      const [compressed] = await generateWebpThumbnails([file], 1024, 0.95, { allowUpscale: false })
       if (!compressed) throwErr("error compressing image for upload")
       const { data } = await createUploadImage({ fileType: "image/webp" })
       await uploadToPresignedPost({ file: compressed, presignedPost: data.uploadUrl })

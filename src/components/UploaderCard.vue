@@ -30,6 +30,7 @@ import { computed, ref, defineEmits, onMounted } from "vue"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { useForgeStore } from "stores/forgeStore"
 import { sleep } from "lib/util"
+import { convertFilesToWebp } from "lib/imageUtils"
 const loading = ref(false)
 const quasar = useQuasar()
 const isMobile = computed(() => quasar.platform.is.mobile)
@@ -125,7 +126,6 @@ async function handleDrop(e: DragEvent) {
   console.log("handle drop")
   loading.value = true
   const dropped = Array.from(e.dataTransfer?.files || [])
-  // Enforce max files with a friendly warning and allow partial add
   const remainingSlots = Math.max(0, props.maxFiles - state.files.length)
   if (remainingSlots <= 0) {
     loading.value = false
@@ -147,27 +147,45 @@ async function handleDrop(e: DragEvent) {
   }
   const errors = validateFiles(limited)
   if (errors.length) {
-    loading.value = false
     Notify.create({
       type: "negative",
       message: errors.join("\n"),
       multiLine: true,
       position: "top",
     })
+    loading.value = false
     return
   }
 
-  void addFiles(limited.filter((f) => f.type.startsWith("image/"))).then(() => {
-    void sleep(100).then(() => {
-      loading.value = false
-    })
-  })
+  try {
+    const images = limited.filter((f) => f.type.startsWith("image/"))
+    if (!images.length) return
+    const usedNames = new Set(state.files.map((f) => f.name))
+    const converted = await convertFilesToWebp(images, 1024, 0.95, { usedNames, allowUpscale: false })
+    const existingBytes = state.files.reduce((sum, f) => sum + f.size, 0)
+    const newBytes = converted.reduce((sum, f) => sum + f.size, 0)
+    if ((existingBytes + newBytes) / (1024 * 1024) > props.maxTotalSizeMB) {
+      Notify.create({
+        type: "negative",
+        message: "Total size exceeds limit.",
+        multiLine: true,
+        position: "top",
+      })
+      return
+    }
+    await addFiles(converted)
+  } catch (err) {
+    console.error("Failed to preprocess dropped images", err)
+    Notify.create({ type: "negative", message: "Failed to process images before upload.", position: "top" })
+  } finally {
+    await sleep(100)
+    loading.value = false
+  }
 }
 
-function handleFiles(e: Event) {
+async function handleFiles(e: Event) {
   const input = e.target as HTMLInputElement
   const selected = Array.from(input.files || [])
-  // Enforce max files with a friendly warning and allow partial add
   const remainingSlots = Math.max(0, props.maxFiles - state.files.length)
   if (remainingSlots <= 0) {
     Notify.create({
@@ -195,10 +213,35 @@ function handleFiles(e: Event) {
       multiLine: true,
       position: "top",
     })
+    input.value = ""
     return
   }
-  void addFiles(limited.filter((f) => f.type.startsWith("image/")))
-  input.value = ""
+
+  loading.value = true
+  try {
+    const images = limited.filter((f) => f.type.startsWith("image/"))
+    if (!images.length) return
+    const usedNames = new Set(state.files.map((f) => f.name))
+    const converted = await convertFilesToWebp(images, 1024, 0.95, { usedNames, allowUpscale: false })
+    const existingBytes = state.files.reduce((sum, f) => sum + f.size, 0)
+    const newBytes = converted.reduce((sum, f) => sum + f.size, 0)
+    if ((existingBytes + newBytes) / (1024 * 1024) > props.maxTotalSizeMB) {
+      Notify.create({
+        type: "negative",
+        message: "Total size exceeds limit.",
+        multiLine: true,
+        position: "top",
+      })
+      return
+    }
+    await addFiles(converted)
+  } catch (err) {
+    console.error("Failed to preprocess selected images", err)
+    Notify.create({ type: "negative", message: "Failed to process images before upload.", position: "top" })
+  } finally {
+    loading.value = false
+    input.value = ""
+  }
 }
 
 function remove(index: number) {

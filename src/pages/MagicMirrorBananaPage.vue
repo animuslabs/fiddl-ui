@@ -453,7 +453,7 @@ function onBuyMiniComplete() {
 async function uploadBlobsBackground(blobs: Blob[]): Promise<void> {
   try {
     const files = blobs.map((b, i) => new File([b], `mm-${Date.now()}-${i + 1}.jpg`, { type: "image/jpeg" }))
-    const compressed = await generateWebpThumbnails(files as File[], 1920, 0.98)
+    const compressed = await generateWebpThumbnails(files as File[], 1024, 0.95, { allowUpscale: false })
     const ids: string[] = []
     let described = false
     for (const c of compressed) {

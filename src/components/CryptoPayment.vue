@@ -86,9 +86,6 @@ export default defineComponent({
       purchasePoints: null as number | null,
     }
   },
-  beforeUnmount() {
-    if (interval) clearInterval(interval)
-  },
   watch: {
     selectedMethod() {
       if (interval) clearInterval(interval)
@@ -97,6 +94,9 @@ export default defineComponent({
       if (!this.selectedMethod) return
       if (val != undefined) void this.initBuy(val, this.selectedMethod)
     },
+  },
+  beforeUnmount() {
+    if (interval) clearInterval(interval)
   },
   mounted() {
     const existingOrder = LocalStorage.getItem("cryptoOrder") as CryptoOrder
