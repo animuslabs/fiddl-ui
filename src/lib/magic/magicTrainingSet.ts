@@ -23,6 +23,7 @@ export interface CreateMagicTrainingSetOptions {
  */
 export async function createMagicTrainingSet(blobs: Blob[], opts: CreateMagicTrainingSetOptions = {}): Promise<{ trainingSetId: string }> {
   if (!Array.isArray(blobs) || blobs.length === 0) throw new Error("No images provided")
+  if (blobs.length > 100) throw new Error("Training sets can include at most 100 images.")
   // 1) Convert blobs to Files (zip worker expects File[])
   const files: File[] = blobs.map((b, i) => {
     const idx = String(i + 1).padStart(2, "0")

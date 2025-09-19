@@ -72,7 +72,16 @@ export async function hdUrl(imageId: string): Promise<string> {
 
 export async function originalDownloadUrl(imageId: string): Promise<string> {
   const secret = await getImageSecret(imageId)
-  return `${S3}/originalImages/${imageId}-${secret}-original.png`
+  const base = `${S3}/originalImages/${imageId}-${secret}-original`
+  // Prefer SVG originals when available; fall back to PNG
+  try {
+    const svgUrl = `${base}.svg`
+    const resp = await fetch(svgUrl, { method: "HEAD" })
+    if (resp.ok) return svgUrl
+  } catch {
+    // Ignore network/CORS issues; fall back to PNG
+  }
+  return `${base}.png`
 }
 
 export async function upscaledUrl(imageId: string): Promise<string> {

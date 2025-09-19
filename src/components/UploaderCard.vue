@@ -40,7 +40,8 @@ const { state, totalSizeMB, addFiles, clearFiles } = forgeStore
 const props = defineProps({
   maxTotalSizeMB: { type: Number, default: 800 },
   maxFileSizeMB: { type: Number, default: 10 },
-  maxFiles: { type: Number, default: 150 },
+  // Cap the number of images that can be added to a training set
+  maxFiles: { type: Number, default: 100 },
   hideUploadButton: { type: Boolean, default: false },
 })
 
@@ -80,7 +81,7 @@ function validateFiles(newFiles: File[]) {
   const errors: string[] = []
 
   if (state.files.length + newFiles.length > props.maxFiles) {
-    errors.push("Too many files.")
+    errors.push(`You can add up to ${props.maxFiles} images per training set.`)
   }
 
   for (const file of newFiles) {
@@ -124,7 +125,27 @@ async function handleDrop(e: DragEvent) {
   console.log("handle drop")
   loading.value = true
   const dropped = Array.from(e.dataTransfer?.files || [])
-  const errors = validateFiles(dropped)
+  // Enforce max files with a friendly warning and allow partial add
+  const remainingSlots = Math.max(0, props.maxFiles - state.files.length)
+  if (remainingSlots <= 0) {
+    loading.value = false
+    Notify.create({
+      type: "warning",
+      message: `Limit reached: ${props.maxFiles} images per training set.`,
+      position: "top",
+    })
+    return
+  }
+  const limited = dropped.slice(0, remainingSlots)
+  if (limited.length < dropped.length) {
+    Notify.create({
+      type: "warning",
+      message: `Only the first ${limited.length} of ${dropped.length} files were added to stay within the ${props.maxFiles}-image limit.`,
+      multiLine: true,
+      position: "top",
+    })
+  }
+  const errors = validateFiles(limited)
   if (errors.length) {
     loading.value = false
     Notify.create({
@@ -136,7 +157,7 @@ async function handleDrop(e: DragEvent) {
     return
   }
 
-  void addFiles(dropped.filter((f) => f.type.startsWith("image/"))).then(() => {
+  void addFiles(limited.filter((f) => f.type.startsWith("image/"))).then(() => {
     void sleep(100).then(() => {
       loading.value = false
     })
@@ -146,7 +167,27 @@ async function handleDrop(e: DragEvent) {
 function handleFiles(e: Event) {
   const input = e.target as HTMLInputElement
   const selected = Array.from(input.files || [])
-  const errors = validateFiles(selected)
+  // Enforce max files with a friendly warning and allow partial add
+  const remainingSlots = Math.max(0, props.maxFiles - state.files.length)
+  if (remainingSlots <= 0) {
+    Notify.create({
+      type: "warning",
+      message: `Limit reached: ${props.maxFiles} images per training set.`,
+      position: "top",
+    })
+    input.value = ""
+    return
+  }
+  const limited = selected.slice(0, remainingSlots)
+  if (limited.length < selected.length) {
+    Notify.create({
+      type: "warning",
+      message: `Only the first ${limited.length} of ${selected.length} files were added to stay within the ${props.maxFiles}-image limit.`,
+      multiLine: true,
+      position: "top",
+    })
+  }
+  const errors = validateFiles(limited)
   if (errors.length) {
     Notify.create({
       type: "negative",
@@ -156,7 +197,7 @@ function handleFiles(e: Event) {
     })
     return
   }
-  void addFiles(selected.filter((f) => f.type.startsWith("image/")))
+  void addFiles(limited.filter((f) => f.type.startsWith("image/")))
   input.value = ""
 }
 

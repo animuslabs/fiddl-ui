@@ -15,9 +15,9 @@ div.q-ma-md
   .centered
     div(v-if="!notEnoughPoints")
       div
-        p Upload 15-30 images of a subject or style.
+        p Upload 15-30 images of a subject or style. Maximum 100 images per training set.
         p.q-mb-md Adding more high quality images will generally improve the quality of models trained on this set.
-        UploaderCard( hideUploadButton style="max-width:600px;")
+        UploaderCard( hideUploadButton style="max-width:600px;" :maxFiles="100")
 
       div(style="max-width:600px; min-width:300px;").full-width.q-mt-md
         .row.q-gutter-sm.full-width
@@ -30,7 +30,7 @@ div.q-ma-md
 
         .centered.q-mt-lg
           div
-            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length " @click="handleFiles")
+            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length || forgeStore.state.files.length > 100" @click="handleFiles")
               .badge
                 p {{ prices.forge.createTrainingSet }}
         .centered
@@ -112,6 +112,11 @@ export default defineComponent({
     async handleFiles() {
       if (!this.setName) {
         catchErr("Please provide a name for the training set.")
+        return
+      }
+      // Enforce 100-image cap
+      if (this.forgeStore.state.files.length > 100) {
+        catchErr(new Error(`Training sets can include at most 100 images. You currently have ${this.forgeStore.state.files.length}.`))
         return
       }
       let targetThumbnail: null | string = null

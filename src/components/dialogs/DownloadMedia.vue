@@ -79,7 +79,8 @@ export default defineComponent({
         })
         if (this.type == "image") {
           const url = await originalDownloadUrl(this.currentMediaId)
-          void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.png`)
+          const ext = this.isSvg ? "svg" : "png"
+          void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.${ext}`)
         } else {
           const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
           void triggerDownload(data, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.mp4`)
