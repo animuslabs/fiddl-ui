@@ -403,7 +403,13 @@ async function loadSession() {
       generatedImageIds.value = sessionCreatedIds.value.slice()
       isWaitingForImages.value = sessionCreatedIds.value.length < sessionExpectedTotal.value
     }
-    if (uploadedIds.value.length && templatesConfirmed.value) startCreationsPoll()
+    if (
+      uploadedIds.value.length &&
+      templatesConfirmed.value &&
+      sessionCreatedIds.value.length < sessionExpectedTotal.value
+    ) {
+      startCreationsPoll()
+    }
     sessionLoaded.value = true
   } catch (e) {
     console.warn("failed to load session", e)
@@ -609,6 +615,11 @@ function startCreationsPoll() {
       additionalLoadingTemplates.value = []
       initialLoadingTemplates.value = []
       pendingNewCount.value = 0
+      if (sessionCreatedIds.value.length) {
+        const merged = new Set([...sessionBaselineIds.value, ...sessionCreatedIds.value])
+        sessionBaselineIds.value = Array.from(merged)
+      }
+      lastKnownIds.value = allIds.slice()
       saveSession()
     }
 
