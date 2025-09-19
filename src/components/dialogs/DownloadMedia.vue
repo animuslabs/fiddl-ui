@@ -73,29 +73,57 @@ export default defineComponent({
     async downloadOriginal() {
       if (!this.userOwnsMedia && !this.mediaUnlocked) return
       if (!this.currentMediaId) return
+      Loading.show({
+        message: "Downloading Image",
+      })
       try {
-        Loading.show({
-          message: "Downloading Image",
-        })
         if (this.type == "image") {
           const url = await originalDownloadUrl(this.currentMediaId)
-          const ext = this.isSvg ? "svg" : "png"
-          void triggerDownload(url, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.${ext}`)
+          const filename = `fiddl.art-${longIdToShort(this.currentMediaId)}-original`
+          if (this.isSvg) {
+            await this.downloadSvgAsset(url, `${filename}.svg`)
+          } else {
+            void triggerDownload(url, `${filename}.png`)
+          }
         } else {
           const { data } = await creationsHdVideo({ download: true, videoId: this.currentMediaId })
           void triggerDownload(data, `fiddl.art-${longIdToShort(this.currentMediaId)}-original.mp4`)
           await sleep(3000)
         }
-        Loading.hide()
         this.hide()
       } catch (error: any) {
         console.error(error)
-        Loading.hide()
         Notify.create({
           message: "error downloading image",
           color: "negative",
         })
+      } finally {
+        Loading.hide()
       }
+    },
+    async downloadSvgAsset(url: string, filename: string) {
+      const response = await fetch(url, { mode: "cors" })
+      if (!response.ok) throw new Error(`failed to fetch original asset: ${response.status}`)
+      const contentType = response.headers.get("content-type")?.toLowerCase() || ""
+      if (contentType.includes("svg")) {
+        const blob = await response.blob()
+        this.saveBlob(blob, filename)
+        return
+      }
+      const buffer = await response.arrayBuffer()
+      const blob = new Blob([buffer], { type: "image/svg+xml" })
+      this.saveBlob(blob, filename)
+    },
+    saveBlob(blob: Blob, filename: string) {
+      // Use a same-origin object URL so the download attribute is honored cross-origin
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = blobUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(blobUrl)
     },
     async downloadUpscaled() {
       if (this.isUpscaling) return
