@@ -58,7 +58,7 @@
                 q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
                 q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
 
-      .row.items-start.wrap.q-col-gutter-md
+      .row.items-start.wrap.q-ml-md.q-mt-md
         div.relative-position.col-12.col-md-6
           p.setting-label Model
           .row.items-center.relative-position
@@ -140,7 +140,7 @@ async function startCreateKeyboard() {
   const started = await startCreate()
   if (started) {
     const cost = (req.value.public ?? true) ? vidStore.publicTotalCost : vidStore.privateTotalCost
-    quasar.notify({ color: "positive", message: `Starting video creation ${req.value.public ? '(Public)' : '(Private)'} · ${cost} points` })
+    quasar.notify({ color: "positive", message: `Starting video creation ${req.value.public ? "(Public)" : "(Private)"} · ${cost} points` })
     actionCooldown.value = true
     setTimeout(() => (actionCooldown.value = false), 2000)
   }

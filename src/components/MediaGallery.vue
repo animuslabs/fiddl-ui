@@ -312,7 +312,9 @@ async function buildItems(src: MediaGalleryMeta[]) {
     if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
     const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
     const type: "image" | "video" = derived === "video" ? "video" : "image"
-    const aspectRatio = props.layout === "grid" ? 1 : (item.aspectRatio ?? 1)
+    const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
+    const fallbackAspect = type === "video" ? 16 / 9 : 1
+    const aspectRatio = props.layout === "grid" ? 1 : isPlaceholder ? 1.6 : item.aspectRatio ?? fallbackAspect
     return { ...item, type, aspectRatio }
   })
 
@@ -330,7 +332,14 @@ async function buildItems(src: MediaGalleryMeta[]) {
   for (const id of disappeared) {
     if (!stickyPendingMap.value[id]) {
       // Recreate a minimal placeholder tile so the user sees continued loading feedback
-      stickyPendingMap.value[id] = { id, url: img(id, "lg"), type: "image", placeholder: true, aspectRatio: props.layout === "grid" ? 1 : 1, addedAt: now } as any
+      stickyPendingMap.value[id] = {
+        id,
+        url: img(id, "lg"),
+        type: "image",
+        placeholder: true,
+        aspectRatio: props.layout === "grid" ? 1 : 1.6,
+        addedAt: now,
+      } as any
       stickyOrder.value.push(id)
     }
   }
@@ -517,12 +526,17 @@ function handleDeleteClick(item: MediaGalleryMeta) {
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
   const aspect = m.aspectRatio ?? 1
-  const colSpan = aspect > 1.5 && cols.value > 1 ? 2 : undefined
+  const isPlaceholder = m.placeholder === true || (typeof m.id === "string" && m.id.startsWith("pending-"))
+  const videoPending = m.type === "video" && showVideoOverlay(m.id)
+  const treatAsPlaceholder = isPlaceholder || videoPending
+  const layoutAspect = treatAsPlaceholder ? Math.max(aspect, 1.6) : aspect
+  const baseSpan = layoutAspect > 1.5 && cols.value > 1 ? 2 : undefined
+  const colSpan = treatAsPlaceholder && cols.value > 1 ? Math.min(2, cols.value) : baseSpan
 
   // When an item spans multiple columns, also increase its vertical span proportionally
   // so wide media aren’t visually cropped. We scale rows by the number of columns taken.
   const colFactor = colSpan ?? 1
-  const rows = Math.max(1, Math.ceil((colFactor / aspect) * props.rowHeightRatio))
+  const rows = Math.max(1, Math.ceil((colFactor / layoutAspect) * props.rowHeightRatio))
 
   return {
     gridRowEnd: `span ${rows}`,
@@ -657,12 +671,26 @@ function isVisible(id: string): boolean {
 }
 
 function showImageOverlay(id: string): boolean {
-  // Show heavy overlay for placeholders: explicit flag or legacy pending-* ids
+  // Always cover placeholder tiles so users see progress, even if loading UI is disabled elsewhere
   const item = galleryItems.value.find((i) => i.id === id)
   const isPending = (typeof id === "string" && id.startsWith("pending-")) || item?.placeholder === true
-  if (!isPending) return false
+  if (isPending) return true
+
+  if (!props.showLoading) return false
+
   // treat undefined as loading=true so overlay shows until first load
-  return props.showLoading && imageLoading.value[id] !== false
+  return imageLoading.value[id] !== false
+}
+
+function showVideoOverlay(id: string): boolean {
+  const item = galleryItems.value.find((i) => i.id === id)
+  const isPending = (typeof id === "string" && id.startsWith("pending-")) || item?.placeholder === true
+  if (isPending) return true
+
+  const state = videoLoading.value[id]
+  if (!props.showLoading) return state === true || state === undefined
+
+  return state !== false
 }
 </script>
 
@@ -680,12 +708,10 @@ function showImageOverlay(id: string): boolean {
         // Only mount heavy content when visible
         template(v-if="isVisible(m.id)")
           // Loading overlay for images that are still rendering/propagating
-          div(v-if="showImageOverlay(m.id)" style="position: relative;").full-height
-            div
-              .absolute-center.z-top.offset-down
-                h4 Loading
-              q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
-          // Actual image (hidden until loaded)
+          div.loading-overlay(v-if="showImageOverlay(m.id)")
+            h4 Loading
+            q-spinner-gears(color="grey-10" size="120px")
+          // Actual image (rendered underneath the overlay)
           q-img(
             :src="m.url"
             :key="imageReloadKey[m.id]"
@@ -693,7 +719,6 @@ function showImageOverlay(id: string): boolean {
             style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
             spinner-color="white"
             :class="props.selectable ? 'cursor-pointer' : ''"
-            v-show="!showImageOverlay(m.id)"
             :img-attrs="{ 'data-id': m.id }"
             @load="markImageLoaded(m.id)"
             @error="markImageErrored(m.id)"
@@ -747,12 +772,10 @@ function showImageOverlay(id: string): boolean {
       .media-wrapper(:style="mediaStyles")
         // Only mount heavy content when visible
         template(v-if="isVisible(m.id)")
-          div(v-if="props.showLoading && videoLoading[m.id] !== false" style="position: relative;" ).full-height
-            div
-              .absolute-center.z-top.offset-down
-                h4 Loading
-              q-spinner-gears.absolute-center.offset-down(color="grey-10" size="150px")
-          div(v-show="videoLoading[m.id] === false" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+          div.loading-overlay(v-if="showVideoOverlay(m.id)")
+            h4 Loading
+            q-spinner-gears(color="grey-10" size="120px")
+          div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
             video(
               :src="m.url"
               :key="videoReloadKey[m.id]"
@@ -840,6 +863,26 @@ function showImageOverlay(id: string): boolean {
   transition:
     transform 120ms ease,
     box-shadow 120ms ease;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  z-index: 2;
+  pointer-events: none;
+}
+.loading-overlay h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 /* Selected state: subtle scale + inset highlight */
