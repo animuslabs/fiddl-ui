@@ -74,6 +74,45 @@ async function toJpegBlob(file: File, maxSize: number, quality: number, allowUps
   }
 }
 
+async function toWebpBlob(file: File, maxSize: number, quality: number, allowUpscale: boolean): Promise<Blob> {
+  const { source, release } = await loadImageSource(file)
+  try {
+    const { width, height } = getImageDimensions(source)
+    if (!width || !height) throw new Error("Image has invalid dimensions")
+
+    const longestSide = Math.max(width, height)
+    const rawScale = maxSize / longestSide
+    let scale = rawScale
+    if (!Number.isFinite(scale) || scale <= 0) scale = 1
+    if (!allowUpscale && scale > 1) scale = 1
+
+    const targetWidth = Math.max(1, Math.round(width * scale))
+    const targetHeight = Math.max(1, Math.round(height * scale))
+
+    const canvas = document.createElement("canvas")
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("Canvas context not available")
+
+    ctx.drawImage(source, 0, 0, targetWidth, targetHeight)
+
+    // Normalize quality: accept 0..1 or 1..100
+    let q = quality
+    if (!Number.isFinite(q) || q <= 0) q = 0.8
+    if (q > 1) q = q > 100 ? 1 : q / 100
+
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to convert to blob"))), "image/webp", q),
+    )
+    if (!blob || blob.size === 0) throw new Error(`Generated blob is empty for ${file.name}`)
+    return blob
+  } finally {
+    release()
+  }
+}
+
 function ensureJpegFileName(originalName: string, usedNames?: Set<string>): string {
   const base = originalName.replace(/\.[^.]+$/i, "") || "image"
   let candidate = `${base}.jpg`

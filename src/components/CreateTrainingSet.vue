@@ -13,28 +13,28 @@ div.q-ma-md
         size="lg"
       )
   .centered
-    div(v-if="!notEnoughPoints")
+    div(v-if="!notEnoughPoints" style="width:100%; max-width:800px; margin:0 auto;")
       div
         p Upload 15-30 images of a subject or style. Maximum 100 images per training set.
-        p.q-mb-md Adding more high quality images will generally improve the quality of models trained on this set.
-        UploaderCard( hideUploadButton style="max-width:600px;" :maxFiles="100")
+        p.q-mb-lg Adding more high quality images will generally improve the quality of models trained on this set.
+        UploaderCard( hideUploadButton style="max-width:600px; margin:0 auto;" :maxFiles="100")
 
-      div(style="max-width:600px; min-width:300px;").full-width.q-mt-md
-        .row.q-gutter-sm.full-width
-          .col-5.q-mr-md
-            p.q-mb-sm Name
-            q-input( v-model="setName" filled)
-          .col
-            p.q-mb-sm Note (optional)
-            q-input( v-model="setDescription" filled type="textarea" :rows="3" )
+    .centered(style="max-width:600px; min-width:300px; margin:0 auto;").full-width.q-mt-lg.q-pt-md
+      .row.q-gutter-sm.full-width
+        .col-5.q-mr-md
+          p.q-mb-sm Name
+          q-input( v-model="setName" filled)
+        .col
+          p.q-mb-sm Note (optional)
+          q-input( v-model="setDescription" filled type="textarea" :rows="3" )
 
-        .centered.q-mt-lg
-          div
-            q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length || forgeStore.state.files.length > 100" @click="handleFiles")
-              .badge
-                p {{ prices.forge.createTrainingSet }}
-        .centered
-          p.q-mt-md Once created, a Training Set can be used to train multiple models.
+      .centered.q-mt-lg
+        div
+          q-btn( label="Create Training Set" size="lg" icon="photo_library" color="primary"  :disable="!setName || notEnoughPoints || !forgeStore.state.files.length || forgeStore.state.files.length > 100" @click="handleFiles")
+            .badge
+              p {{ prices.forge.createTrainingSet }}
+      .centered
+        p.q-mt-md Once created, a Training Set can be used to train multiple models.
   q-dialog( v-model="finishModal" persistent )
     q-card.q-pa-md
       q-card-section
@@ -153,7 +153,7 @@ export default defineComponent({
           spinnerSize: 50,
           spinnerColor: "primary",
         })
-        const thumbnails = await generateWebpThumbnails(files, 512, 80)
+        const thumbnails = await generateWebpThumbnails(files, 512, 0.8)
         for (let i = 0; i < thumbnails.length; i++) {
           const file = thumbnails[i]
           const presignedPost = newTrainingSet.signedThumbnailUploadDatas[i]

@@ -37,10 +37,8 @@ q-page.full-height.full-width.q-px-lg
     CreateModel
     .centered
       q-btn(label="back" @click="mode='pick'" color="primary" flat)
-  div(v-if="mode == 'createSet'")
+  div.centered.full-width(v-if="mode == 'createSet'")
     CreateTrainingSet()
-    //- .centered
-    //-   q-btn(label="back" @click="mode='pick'" color="primary" flat)
   WatchTraining(
     v-if="mode === 'train' && targetModelData"
     :trainingData="trainingData"
