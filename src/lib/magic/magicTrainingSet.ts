@@ -33,7 +33,8 @@ export async function createMagicTrainingSet(blobs: Blob[], opts: CreateMagicTra
   // 2) Zip
   opts.onStage?.("zip")
   const zipped = await zipFiles(files)
-  const zipBlob = new Blob([zipped], { type: "application/zip" })
+  const zipBuffer = zipped.buffer.slice(zipped.byteOffset, zipped.byteOffset + zipped.byteLength) as ArrayBuffer
+  const zipBlob = new Blob([zipBuffer], { type: "application/zip" })
 
   // 3) Create training set to obtain presigned URLs
   opts.onStage?.("create")

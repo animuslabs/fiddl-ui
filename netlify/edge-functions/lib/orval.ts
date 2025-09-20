@@ -1266,6 +1266,7 @@ export type PointsPrices200 = {
   video: PointsPrices200Video;
   socialRewards: PointsPrices200SocialRewards;
   promptTools: PointsPrices200PromptTools;
+  privateTax: number;
 };
 
 export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
@@ -3300,7 +3301,7 @@ export type TrainingSetsCreateSetBody = {
   description: string;
   /**
    * @minimum 1
-   * @maximum 200
+   * @maximum 100
    */
   numImages: number;
   /** @maximum 800 */

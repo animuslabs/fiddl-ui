@@ -129,7 +129,8 @@ export default defineComponent({
         let files = [...this.forgeStore.state.files]
         console.log("Files received:", files)
         const zipped = await zipFiles(files)
-        const blob = new Blob([zipped], { type: "application/zip" })
+        const zipBuffer = zipped.buffer.slice(zipped.byteOffset, zipped.byteOffset + zipped.byteLength) as ArrayBuffer
+        const blob = new Blob([zipBuffer], { type: "application/zip" })
         console.log("Zipped blob size:", blob.size)
         const trainingSetResult = await trainingSetsCreateSet({
           name: String(this.setName),

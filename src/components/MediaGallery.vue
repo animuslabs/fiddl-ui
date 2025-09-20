@@ -10,6 +10,10 @@ import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { isOwned } from "lib/ownedMediaCache"
 import LikeMedia from "src/components/dialogs/LikeMedia.vue"
 import type { MediaType } from "lib/types"
+import { creationsSetRequestPrivacy, creationsDeleteRequest, creationsDeleteMedia } from "lib/orval"
+import { prices } from "stores/pricesStore"
+import { useImageCreations } from "src/stores/imageCreationsStore"
+import { useVideoCreations } from "src/stores/videoCreationsStore"
 
 export interface MediaGalleryMeta {
   id: string
@@ -19,6 +23,11 @@ export interface MediaGalleryMeta {
   type?: "image" | "video"
   // Back-compat for API objects that provide `mediaType`
   mediaType?: "image" | "video"
+  requestId?: string
+  requestType?: "image" | "video"
+  isPublic?: boolean
+  requestQuantity?: number
+  placeholder?: boolean
 }
 
 const props = withDefaults(
@@ -37,6 +46,8 @@ const props = withDefaults(
     showLoading?: boolean
     centerAlign?: boolean
     showPopularity?: boolean
+    showVisibilityToggle?: boolean
+    showDeleteButton?: boolean
   }>(),
   {
     layout: "grid",
@@ -51,6 +62,8 @@ const props = withDefaults(
     showLoading: true,
     centerAlign: false,
     showPopularity: false,
+    showVisibilityToggle: false,
+    showDeleteButton: false,
   },
 )
 
@@ -117,6 +130,11 @@ const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
 const popIconSize = ref("8px")
+
+const imageCreations = useImageCreations()
+const videoCreations = useVideoCreations()
+const privacyLoading = ref<Record<string, boolean>>({})
+const deleteLoading = ref<Record<string, boolean>>({})
 
 /**
  * Popularity polling (use setTimeout loop to avoid overlap; pause when tab hidden)
@@ -259,6 +277,12 @@ const mediaStyles = computed(() => {
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
 
+// Sticky placeholder support to keep loading tiles visible even if upstream removes them too early
+const stickyPendingMap = ref<Record<string, MediaGalleryMeta & { addedAt: number }>>({})
+const stickyOrder = ref<string[]>([])
+const prevRealIds = ref<Set<string>>(new Set())
+const prevPlaceholderIds = ref<Set<string>>(new Set())
+
 const filteredGalleryItems = computed(() => {
   // const list = props.showLoading ? galleryItems.value : galleryItems.value.filter((el) => videoLoading.value[el.id])
   // console.log(list)
@@ -283,14 +307,60 @@ watch(
 async function buildItems(src: MediaGalleryMeta[]) {
   // IMPORTANT: avoid preloading image/video metadata for offscreen items to keep memory low.
   // We only compute aspect ratio from existing data; otherwise fall back to 1 until media loads.
-  galleryItems.value = src.map((item) => {
+  const normalized = src.map((item) => {
     const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
     if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
     const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
     const type: "image" | "video" = derived === "video" ? "video" : "image"
-    const aspectRatio = props.layout === "grid" ? 1 : item.aspectRatio ?? 1
+    const aspectRatio = props.layout === "grid" ? 1 : (item.aspectRatio ?? 1)
     return { ...item, type, aspectRatio }
   })
+
+  // Helper predicates
+  const isPlaceholderId = (id: string | undefined) => typeof id === "string" && id.startsWith("pending-")
+  const isPlaceholderItem = (it: MediaGalleryMeta) => it.placeholder === true || isPlaceholderId(it.id as any)
+
+  // Current placeholder and real id sets
+  const placeholderIdsNow = new Set(normalized.filter((i) => isPlaceholderItem(i)).map((i) => i.id))
+  const realIdsNow = new Set(normalized.filter((i) => !isPlaceholderItem(i) && i.type !== "video").map((i) => i.id))
+
+  // Detect placeholders that disappeared upstream (likely because the store removed them early)
+  const disappeared = Array.from(prevPlaceholderIds.value).filter((id) => !placeholderIdsNow.has(id))
+  const now = Date.now()
+  for (const id of disappeared) {
+    if (!stickyPendingMap.value[id]) {
+      // Recreate a minimal placeholder tile so the user sees continued loading feedback
+      stickyPendingMap.value[id] = { id, url: img(id, "lg"), type: "image", placeholder: true, aspectRatio: props.layout === "grid" ? 1 : 1, addedAt: now } as any
+      stickyOrder.value.push(id)
+    }
+  }
+
+  // Count newly-arrived real images since last render to release stickies 1:1
+  let newlyArrived = 0
+  for (const id of realIdsNow) {
+    if (!prevRealIds.value.has(id)) newlyArrived++
+  }
+
+  // Drop that many sticky placeholders (FIFO)
+  while (newlyArrived > 0 && stickyOrder.value.length) {
+    const dropId = stickyOrder.value.shift()!
+    delete stickyPendingMap.value[dropId]
+    newlyArrived--
+  }
+
+  // Build final list: include sticky placeholders only if not already provided upstream
+  const upstreamIds = new Set(normalized.map((i) => i.id))
+  const stickyList = stickyOrder.value
+    .filter((id) => !upstreamIds.has(id))
+    .map((id) => stickyPendingMap.value[id])
+    .filter(Boolean) as MediaGalleryMeta[]
+
+  galleryItems.value = [...stickyList, ...normalized]
+
+  // Update snapshots for next build
+  prevRealIds.value = realIdsNow
+  prevPlaceholderIds.value = placeholderIdsNow
+
   if (props.showPopularity) {
     const items = galleryItems.value.map((i) => ({
       id: i.id,
@@ -346,6 +416,102 @@ function markImageLoaded(id: string) {
 function markImageErrored(id: string) {
   // Keep in loading state and allow periodic reload attempts
   imageLoading.value[id] = true
+}
+
+function canTogglePrivacy(item: MediaGalleryMeta): boolean {
+  return props.showVisibilityToggle && !!item.requestId && item.placeholder !== true
+}
+
+function canDelete(item: MediaGalleryMeta): boolean {
+  return !!props.showDeleteButton && item.placeholder !== true
+}
+
+function updateStoreRequestPublic(requestId: string, requestType: "image" | "video", value: boolean) {
+  const stores = requestType === "image" ? [imageCreations] : [videoCreations]
+  for (const store of stores) {
+    const creation = store.creations.find((c) => c.id === requestId)
+    if (creation) creation.public = value
+  }
+}
+
+function updateLocalItemsPublic(requestId: string, value: boolean) {
+  for (const item of galleryItems.value) {
+    if (item.requestId === requestId) item.isPublic = value
+  }
+}
+
+function handleVisibilityClick(item: MediaGalleryMeta) {
+  if (!canTogglePrivacy(item) || !item.requestId) return
+  const currentPublic = item.isPublic !== false
+  const nextPublic = !currentPublic
+  const requestType = (item.requestType || item.type || "image") as "image" | "video"
+  const requestId = item.requestId
+  const quantity = item.requestQuantity ?? 1
+  const taxPer = prices.privateTax ?? 0
+  const totalTax = !nextPublic ? taxPer * quantity : 0
+  const message = nextPublic ? "Make this creation public? It will appear in the community feed." : taxPer > 0 ? `Make this creation private? This costs ${totalTax} points (${taxPer} per item).` : "Make this creation private?"
+
+  Dialog.create({
+    title: nextPublic ? "Share creation publicly?" : "Make creation private?",
+    message,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      privacyLoading.value[requestId] = true
+      await creationsSetRequestPrivacy({
+        public: nextPublic,
+        imageRequestId: requestType === "image" ? requestId : undefined,
+        videoRequestId: requestType === "video" ? requestId : undefined,
+      })
+      updateStoreRequestPublic(requestId, requestType, nextPublic)
+      updateLocalItemsPublic(requestId, nextPublic)
+      item.isPublic = nextPublic
+      $q.notify({
+        type: "positive",
+        message: nextPublic ? "Creation is now public." : "Creation set to private.",
+      })
+    } catch (err) {
+      console.error("Failed to toggle privacy", err)
+      $q.notify({ type: "negative", message: "Unable to update visibility. Please try again." })
+    } finally {
+      privacyLoading.value[requestId] = false
+    }
+  })
+}
+
+function handleDeleteClick(item: MediaGalleryMeta) {
+  Dialog.create({
+    title: "Delete Creation",
+    message: "Are you sure you want to delete this creation?",
+    ok: { label: "Delete", color: "negative" },
+    cancel: { label: "Cancel", color: "primary" },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      deleteLoading.value[item.id] = true
+      await creationsDeleteMedia(item.type === "video" ? { videoId: item.id } : { imageId: item.id })
+
+      // Remove from local gallery
+      galleryItems.value = galleryItems.value.filter((i) => i.id !== item.id)
+
+      // Update stores so other views stay in sync
+      if (item.type === "image") {
+        const creation = imageCreations.creations.find((c) => c.mediaIds.includes(item.id))
+        if (creation) imageCreations.deleteImage(item.id, creation.id)
+      } else {
+        const creation = videoCreations.creations.find((c) => c.mediaIds.includes(item.id))
+        if (creation) videoCreations.deleteVideo(item.id, creation.id)
+      }
+
+      $q.notify({ type: "positive", message: "Deleted" })
+    } catch (err) {
+      console.error("Failed to delete media", err)
+      $q.notify({ type: "negative", message: "Unable to delete. Please try again." })
+    } finally {
+      delete deleteLoading.value[item.id]
+    }
+  })
 }
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
@@ -491,8 +657,9 @@ function isVisible(id: string): boolean {
 }
 
 function showImageOverlay(id: string): boolean {
-  // Only show heavy overlay for placeholders (pending-*) to avoid extra DOM
-  const isPending = typeof id === 'string' && id.startsWith('pending-')
+  // Show heavy overlay for placeholders: explicit flag or legacy pending-* ids
+  const item = galleryItems.value.find((i) => i.id === id)
+  const isPending = (typeof id === "string" && id.startsWith("pending-")) || item?.placeholder === true
   if (!isPending) return false
   // treat undefined as loading=true so overlay shows until first load
   return props.showLoading && imageLoading.value[id] !== false
@@ -535,6 +702,30 @@ function showImageOverlay(id: string): boolean {
         template(v-else)
           // Placeholder keeps layout without mounting the image element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
+        q-btn.delete-chip(
+          v-if="canDelete(m) && isVisible(m.id)"
+          dense
+          flat
+          round
+          color="grey-5"
+          icon="delete"
+          @click.stop="handleDeleteClick(m)"
+          :loading="!!deleteLoading[m.id]"
+          :disable="deleteLoading[m.id] === true"
+        )
+        q-btn.visibility-chip(
+          v-if="canTogglePrivacy(m) && isVisible(m.id)"
+          dense
+          flat
+          round
+          padding="0"
+          color="grey-5"
+          :icon="m.isPublic ? 'public' : 'visibility_off'"
+          @click.stop="handleVisibilityClick(m)"
+          :loading="!!privacyLoading[m.requestId || '']"
+          :disable="privacyLoading[m.requestId || ''] === true"
+        )
+          q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
@@ -578,6 +769,29 @@ function showImageOverlay(id: string): boolean {
         template(v-else)
           // Placeholder keeps layout without mounting the video element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
+        q-btn.delete-chip(
+          v-if="canDelete(m) && isVisible(m.id)"
+          dense
+          flat
+          round
+          color="grey-5"
+          icon="delete"
+          @click.stop="handleDeleteClick(m)"
+          :loading="!!deleteLoading[m.id]"
+          :disable="deleteLoading[m.id] === true"
+        )
+        q-btn.visibility-chip(
+          v-if="canTogglePrivacy(m) && isVisible(m.id)"
+          dense
+          flat
+          round
+          :color="m.isPublic ? 'primary' : 'grey-5'"
+          :icon="m.isPublic ? 'public' : 'visibility_off'"
+          @click.stop="handleVisibilityClick(m)"
+          :loading="!!privacyLoading[m.requestId || '']"
+          :disable="privacyLoading[m.requestId || ''] === true"
+        )
+          q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
         // Hidden overlay - keeps layout stable
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
@@ -623,7 +837,9 @@ function showImageOverlay(id: string): boolean {
   width: 100%;
   height: 100%;
   /* Smooth selection feedback */
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 
 /* Selected state: subtle scale + inset highlight */
@@ -657,6 +873,34 @@ function showImageOverlay(id: string): boolean {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
   z-index: 2;
   pointer-events: auto;
+}
+
+.visibility-chip {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  z-index: 4;
+  filter: opacity(0.5);
+}
+
+.visibility-chip .q-spinner {
+  color: white;
+}
+
+.delete-chip {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  z-index: 4;
+  filter: opacity(0.5);
+}
+
+.delete-chip .q-spinner {
+  color: white;
 }
 
 /* Lower the absolute-center slightly to appear visually centered within varying thumbnails */

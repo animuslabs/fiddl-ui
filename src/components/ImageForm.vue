@@ -1,12 +1,12 @@
 <template lang="pug">
-  q-form.create-form.col.fit(@submit.prevent="createImage")
+  q-form.create-form.col.fit(@submit.prevent="startCreateKeyboard()")
     component(:is="scrollWrapperComponent" :class="{'form-scroll':$q.screen.lt.md}")
       .centered.relative-position
         q-input(
           v-model="req.prompt"
           style="resize:none;"
           :disable="createStore.anyLoading"
-          @keydown.enter.prevent="createImage"
+          @keydown.enter.prevent="startCreateKeyboard()"
           color="primary"
           filled
           type="textarea"
@@ -35,44 +35,63 @@
             p Browse Templates
 
       q-separator(color="grey-9" spaced="20px" inset)
-      .centered.q-gutter-md
-        div
-          p Quantity
-          .row
-            q-input(v-model.number="req.quantity" type="number" :min="1" :max="100" style="width:45px; max-width:20vw;" no-error-icon :disable="createStore.anyLoading || req.seed != undefined")
-            q-tooltip(v-if="$q.screen.gt.sm && req.seed != undefined") Can't adjust quantity when using custom seed
-            .column
-              q-btn(size="sm" icon="add" flat round @click="req.quantity++" :disable="req.quantity >= 100 || req.seed != undefined")
-              q-btn(size="sm" icon="remove" flat round @click="req.quantity--" :disable="req.quantity <= 1 || req.seed != undefined")
-        div
-          p Aspect Ratio
-          .row
-            q-select(v-if="!isNanoBanana" v-model="createStore.state.req.aspectRatio" :options="createStore.availableAspectRatios" style="font-size:20px;" :disable="createStore.anyLoading")
-            div(v-else)
-              q-badge(color="grey-7" label="Aspect ratio fixed by model")
-        div.q-ma-md(v-if="req.seed != undefined")
-          p Seed
-          .row(style="max-width:150px;").no-wrap
-            q-input(v-model.number="req.seed" type="number" placeholder="Random" clearable :disable="createStore.anyLoading")
-            .column
-              q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
-              q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
-
-      .row
-        div.q-ma-md.relative-position
-          p Model
-          .row.items-center.relative-position
-            q-select.relative-position.text-capitalize(label="Quick Select" v-model="req.model" :options="createStore.availableModels" style="font-size:20px; min-width:140px;" :disable="createStore.anyLoading")
+      .centered.settings-grid
+        .row.q-col-gutter-md.full-width.items-start
+          .col-12.col-md-3
+            p.setting-label Aspect Ratio
+            q-select(
+              v-if="!isNanoBanana"
+              v-model="createStore.state.req.aspectRatio"
+              :options="createStore.availableAspectRatios"
+              style="font-size:20px;"
+              :disable="createStore.anyLoading"
+              dense
+            )
+            q-badge.q-mt-xs(v-else color="grey-7" label="Aspect ratio fixed by model")
+          .col-12.col-md-3(v-if="req.seed != undefined")
+            p.setting-label Seed
+            .row.items-start.no-wrap.q-gutter-sm
+              q-input.col(
+                v-model.number="req.seed"
+                type="number"
+                placeholder="Random"
+                clearable
+                :disable="createStore.anyLoading"
+                dense
+              )
+              .column.col-shrink
+                q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
+                q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
+          div.relative-position.col-12.col-md-6.full-width
+            p.setting-label Model
+            // Keep selector on its own row
+            q-select.relative-position.text-capitalize(
+              v-model="req.model"
+              :options="createStore.availableModels"
+              style="font-size:20px; min-width:140px; max-width:220px;"
+              :disable="createStore.anyLoading"
+              dense
+            )
               .badge-sm.text-white {{ createStore.selectedModelPrice }}
-            div.q-ml-md(v-if="req.model === 'custom'")
-              .row.q-gutter-md
-                h4 {{ req.customModelName }}
-                q-btn(round flat icon="list" @click="showModelPicker = true")
-          q-btn.q-mt-md(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Image Models")
+            // Custom model name shown below selector
+            .custom-model-card.row.items-center.no-wrap.q-mt-sm(v-if="req.model === 'custom'")
+              q-icon(name="category" size="16px" class="q-mr-sm")
+              div.custom-model-name {{ req.customModelName || 'Pick a custom model' }}
+              q-space
+              q-btn(flat round dense icon="list" no-caps label="Change" @click="showModelPicker = true")
+              q-tooltip(v-if="req.customModelName") {{ req.customModelName }}
+            // Model pickers: public vs private
+            .row.q-mt-md.no-wrap
+              .col-auto
+                q-btn.q-mr-sm(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Public Models")
+              .col-6
+                q-btn(@click="showModelPicker = true" no-caps outline color="primary" icon="category" label="Private Models")
+
+      .row.items-start.wrap.q-col-gutter-md
 
         // Reference / input images section
-        div.q-ma-md.relative-position(v-if="supportsInputImages")
-          p.q-mb-sm {{ supportsMulti ? 'Input Images' : 'Input Image' }}
+        div.relative-position.col-12.col-md-6.q-mt-md(v-if="supportsInputImages")
+          p.setting-label.q-ml-md {{ supportsMulti ? 'Input Images' : 'Input Image' }}
           // Thumbnails
           div(v-if="supportsMulti")
             .row.q-gutter-sm.q-mb-sm
@@ -85,21 +104,26 @@
               q-badge(v-if="selectedImageIds.length" color="grey-7") {{ selectedImageIds.length }}/{{ maxMulti }}
               q-btn(v-if="selectedImageIds.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
           div(v-else)
-            q-img.q-mb-sm(v-if="selectedImageIds[0]" :src="s3Img('uploads/' + selectedImageIds[0])" style="max-height:160px; min-width:100px;")
+            q-img.q-mb-sm.q-mt-xs(v-if="selectedImageIds[0]" :src="s3Img('uploads/' + selectedImageIds[0])" style="max-height:160px; min-width:100px;")
             .row.items-center.q-gutter-sm
               q-btn(flat color="primary" icon="photo_library" :label="selectedImageIds[0] ? 'Change image' : 'Choose image'" @click="openImagesDialog")
               q-btn(v-if="selectedImageIds[0]" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
 
     .full-width(style="height:30px;").gt-sm
-    .centered.relative-position.q-pb-md.q-pt-md.bg-grey-10(v-if="$userAuth.userData" style="height:50px;")
-      div(style="position:absolute; left:15px; top:15px;")
-        q-btn(label="< Back" color="accent" outline @click="$emit('back')" v-if="showBackBtn")
-      div(style="position:absolute; top:15px; height:50px;" )
-        q-btn(type="submit" label="Create" color="primary" :loading="loading.create" :disable="createStore.anyLoading || req.prompt.length < 5")
-          .badge {{ createStore.totalCost }}
-      div(style="position:absolute; right:15px; top:15px;")
-        q-toggle(size="sm" v-model="req.public" color="primary" :disable="createStore.anyLoading" :label="req.public ? 'Public' : 'Private'")
-
+    CreateActionBar(
+      v-if="$userAuth.userData"
+      :publicCost="createStore.publicTotalCost"
+      :privateCost="createStore.privateTotalCost"
+      :disabled="createDisabled"
+      :loadingCreate="loading.create"
+      :currentPublic="req.public"
+      :showBackBtn="showBackBtnComputed"
+      :extraDisabled="actionCooldown"
+      :onCreate="startCreateImage"
+      caption="Public creations appear in the community feed."
+      kind="image"
+      @back="$emit('back')"
+    )
   q-dialog(v-model="showModelPicker")
     q-card
       .q-ma-md
@@ -110,7 +134,7 @@
         q-separator(color="primary").q-mb-lg
         CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
 
-  q-dialog(v-model="templatesDialogOpen")
+  q-dialog(v-model="templatesDialogOpen" :maximized="$q.screen.lt.md")
     PromptTemplatesDialog(
       @apply="applyResolvedPrompt"
       @close="templatesDialogOpen = false"
@@ -154,6 +178,7 @@ import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.
 import UploadedImagesDialog from "src/components/dialogs/UploadedImagesDialog.vue"
 import { s3Img } from "lib/netlifyImg"
 import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
+import CreateActionBar from "src/components/CreateActionBar.vue"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -166,10 +191,24 @@ const userAuth = useUserAuth()
 const req = createStore.state.req
 const loading = createStore.state.loading
 
+const createDisabled = computed(() => createStore.anyLoading || (req.prompt?.length || 0) < 5)
+const showBackBtnComputed = computed(() => props.showBackBtn ?? $q.screen.lt.md)
+
 const showModelPicker = ref(false)
 const templatesDialogOpen = ref(false)
 const showImagesDialog = ref(false)
 const quickBuyDialogOpen = ref(false)
+const actionCooldown = ref(false)
+
+async function startCreateKeyboard() {
+  const started = await startCreateImage()
+  if (started) {
+    const cost = (req.public ?? true) ? createStore.publicTotalCost : createStore.privateTotalCost
+    $q.notify({ color: "positive", message: `Starting image creation ${req.public ? "(Public)" : "(Private)"} · ${cost} points` })
+    actionCooldown.value = true
+    setTimeout(() => (actionCooldown.value = false), 2000)
+  }
+}
 
 const isNanoBanana = computed(() => req.model === "nano-banana")
 const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(req.model))
@@ -191,22 +230,27 @@ function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string 
   templatesDialogOpen.value = false
 }
 
-function createImage() {
+async function startCreateImage(isPublic: boolean = req.public ?? true) {
+  if (createDisabled.value) return false
+  req.public = isPublic
+  const targetCost = isPublic ? createStore.publicTotalCost : createStore.privateTotalCost
   const available = userAuth.userData?.availablePoints || 0
-  if (createStore.totalCost > available) {
+  if (targetCost > available) {
     quickBuyDialogOpen.value = true
-    return
+    return false
   }
   if (req.model === "custom" && !req.customModelId) {
     $q.notify({ type: "warning", message: "Please select a custom model before creating." })
     showModelPicker.value = true
-    return
+    return false
   }
   void createStore.createImage().then(() => emit("created"))
+  return true
 }
 const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))
 function setCustomModel(model: CustomModel) {
   showModelPicker.value = false
+  req.model = "custom"
   req.customModelId = model.id
   req.customModelName = model.name
   createStore.state.customModel = model
@@ -283,16 +327,49 @@ textarea::-webkit-resizer {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  /* Prevent tiny horizontal overflow from gutter/margins */
+  overflow-x: hidden;
+}
+
+.settings-grid {
+  width: 100%;
+}
+
+.setting-label {
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .form-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 700px;
 }
 @media (max-width: 1000px) {
   .form-scroll {
     height: calc(100vh - 150px);
   }
+}
+
+/* New layout improvements */
+.custom-model-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  min-height: 36px;
+}
+.custom-model-card .ellipsis {
+  min-width: 0;
+}
+.custom-model-name {
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
 }
 </style>

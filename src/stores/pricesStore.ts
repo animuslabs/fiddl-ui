@@ -61,6 +61,7 @@ export const prices = reactive<PointsPrices200>({
     improvePrompt: 3,
     randomPrompt: 2,
   },
+  privateTax: 5,
 })
 async function reloadPrices() {
   const newPrices = await pointsPrices().catch(console.error)

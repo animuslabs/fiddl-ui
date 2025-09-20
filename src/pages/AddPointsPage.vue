@@ -244,7 +244,7 @@ import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { catchErr, throwErr, getCookie } from "lib/util"
-import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/types/serverTypes"
+import type { PointsPackagesAvailable200Item } from "src/lib/orval"
 import { Dialog, LocalStorage, Notify } from "quasar"
 import umami from "lib/umami"
 import { metaPixel } from "lib/metaPixel"
@@ -253,7 +253,7 @@ import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
 import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
 
-interface PointsPackageRender extends PointsPackageWithUsd {
+interface PointsPackageRender extends PointsPackagesAvailable200Item {
   bgColor: string
 }
 

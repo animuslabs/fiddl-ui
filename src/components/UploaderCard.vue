@@ -30,7 +30,7 @@ import { computed, ref, defineEmits, onMounted } from "vue"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { useForgeStore } from "stores/forgeStore"
 import { sleep } from "lib/util"
-import { convertFilesToWebp } from "lib/imageUtils"
+import { convertFilesToJpeg } from "lib/imageUtils"
 const loading = ref(false)
 const quasar = useQuasar()
 const isMobile = computed(() => quasar.platform.is.mobile)
@@ -161,7 +161,7 @@ async function handleDrop(e: DragEvent) {
     const images = limited.filter((f) => f.type.startsWith("image/"))
     if (!images.length) return
     const usedNames = new Set(state.files.map((f) => f.name))
-    const converted = await convertFilesToWebp(images, 1024, 0.95, { usedNames, allowUpscale: false })
+    const converted = await convertFilesToJpeg(images, 1024, 0.95, { usedNames, allowUpscale: false })
     const existingBytes = state.files.reduce((sum, f) => sum + f.size, 0)
     const newBytes = converted.reduce((sum, f) => sum + f.size, 0)
     if ((existingBytes + newBytes) / (1024 * 1024) > props.maxTotalSizeMB) {
@@ -222,7 +222,7 @@ async function handleFiles(e: Event) {
     const images = limited.filter((f) => f.type.startsWith("image/"))
     if (!images.length) return
     const usedNames = new Set(state.files.map((f) => f.name))
-    const converted = await convertFilesToWebp(images, 1024, 0.95, { usedNames, allowUpscale: false })
+    const converted = await convertFilesToJpeg(images, 1024, 0.95, { usedNames, allowUpscale: false })
     const existingBytes = state.files.reduce((sum, f) => sum + f.size, 0)
     const newBytes = converted.reduce((sum, f) => sum + f.size, 0)
     if ((existingBytes + newBytes) / (1024 * 1024) > props.maxTotalSizeMB) {

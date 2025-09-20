@@ -124,6 +124,7 @@ q-page.full-height.full-width
           :layout="galleryLayout"
           :mediaObjects="currentMediaObjects"
           show-popularity
+          :show-delete-button="userAuth.userId === userId && tab === 'creations'"
         )
 
       template(v-else-if="tab === 'favorites' || tab === 'purchased' || tab === 'unlocked'")

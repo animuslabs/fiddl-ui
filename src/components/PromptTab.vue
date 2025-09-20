@@ -39,13 +39,16 @@
                 :mediaObjects="allMediaObjects"
                 layout="mosaic"
                 :rowHeightRatio="1.2"
+                :show-loading="false"
                 gap="8px"
                 :cols-desktop="8"
-                :thumb-size-desktop="60"
+                :thumb-size-desktop="90"
                 :cols-mobile="3"
                 :thumb-size-mobile="60"
+                :show-visibility-toggle="true"
+                :show-delete-button="true"
               )
-              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects")
+              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects" :show-visibility-toggle="true" :show-delete-button="true")
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")
@@ -145,16 +148,48 @@ export default defineComponent({
         return bt - at
       })
       const data = sorted.flatMap((req) =>
-        req.mediaIds.map((id) =>
-          isImage ? { id, url: img(id, "md"), type: "image" as MediaType } : { id, url: s3Video(id, "preview-sm"), type: "video" as MediaType },
-        ),
+        req.mediaIds.map((id) => {
+          const base =
+            isImage
+              ? { id, url: img(id, "md"), type: "image" as MediaType }
+              : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
+
+          // Derive a numeric aspect ratio from the request (e.g. "16:9" -> 16/9)
+          const raw = req.aspectRatio as string | undefined
+          let ar: number | undefined
+          if (raw) {
+            if (raw.includes(":")) {
+              const parts = raw.split(":").map((x) => parseFloat(x))
+              const w = parts[0]
+              const h = parts[1]
+              ar = h && w ? w / h : undefined
+            } else {
+              const n = parseFloat(raw)
+              ar = Number.isFinite(n) ? n : undefined
+            }
+          }
+
+          return {
+            ...base,
+            requestId: req.id,
+            requestType: req.type,
+            isPublic: req.public,
+            requestQuantity: req.quantity,
+            aspectRatio: ar,
+          }
+        }),
       )
 
       // While an image batch is rendering, show placeholder tiles at the front
       if (isImage) {
         const pending = this.createImageStore.state.pendingPlaceholders || []
         if (pending.length) {
-          const placeholders = pending.map((id: string) => ({ id, url: img(id, "md"), type: "image" as MediaType }))
+          const placeholders = pending.map((id: string) => ({
+            id,
+            url: img(id, "md"),
+            type: "image" as MediaType,
+            placeholder: true,
+          }))
           return [...placeholders, ...data]
         }
       }

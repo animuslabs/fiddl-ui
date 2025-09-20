@@ -126,14 +126,14 @@ import { defineComponent, nextTick } from "vue"
 import { LocalStorage, Notify } from "quasar"
 import { loadPayPal } from "lib/payPal"
 import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage } from "src/lib/orval"
-import type { PointsPackageWithUsd } from "../../../fiddl-server/src/lib/types/serverTypes"
+import type { PointsPackagesAvailable200Item } from "src/lib/orval"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
 import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
 import { metaPixel } from "lib/metaPixel"
 
-interface PointsPackageRender extends PointsPackageWithUsd {
+interface PointsPackageRender extends PointsPackagesAvailable200Item {
   bgColor?: string
 }
 
@@ -315,7 +315,7 @@ export default defineComponent({
           LocalStorage.set("discountCode", status.code)
           Notify.create({ type: "positive", message: `Applied ${Math.round((status.discountPct || 0) * 100)}% discount` })
         } else {
-          Notify.create({ type: "negative", message: status.reason === 'exhausted' ? 'This code has reached maximum uses' : 'Code not found' })
+          Notify.create({ type: "negative", message: status.reason === "exhausted" ? "This code has reached maximum uses" : "Code not found" })
         }
       } catch {
         Notify.create({ type: "negative", message: "Could not validate discount code" })
@@ -334,7 +334,12 @@ export default defineComponent({
       }
     },
     teardownPaypal() {
-      try { (this.ppButton as any)?.close?.() } catch {}
+      try {
+        const close = (this.ppButton as PayPalButtonsComponent | null)?.close
+        if (typeof close === "function") {
+          void close.call(this.ppButton as PayPalButtonsComponent)
+        }
+      } catch {}
       const el = this.$refs.paypal as HTMLDivElement
       if (el) el.innerHTML = ""
       this.ppButton = null
@@ -344,41 +349,52 @@ export default defineComponent({
       await nextTick()
       await this.ensurePaypalRendered()
     },
-    ensurePaypalRendered(attempt = 0) {
+    async ensurePaypalRendered(attempt = 0): Promise<void> {
       if (!this.selectedPkg) return
       const maxAttempts = 40
       const delayMs = 50
       const container = this.$refs.paypal as HTMLDivElement | undefined
-      const visible = !!container && container.offsetParent !== null && container.getBoundingClientRect().width > 0 && container.getBoundingClientRect().height > 0
+      const visible =
+        !!container &&
+        container.offsetParent !== null &&
+        container.getBoundingClientRect().width > 0 &&
+        container.getBoundingClientRect().height > 0
       if (!container || !visible) {
-        if (attempt < maxAttempts) setTimeout(() => this.ensurePaypalRendered(attempt + 1), delayMs)
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
+          await this.ensurePaypalRendered(attempt + 1)
+        }
         return
       }
-      void (async () => {
-        if (this.isRenderingPaypal) return
-        const el = this.$refs.paypal as HTMLDivElement
-        if (!this.payPal) this.payPal = await loadPayPal()
-        if (!el) return
-        // If container already has PayPal DOM but our handle is missing, clear it to avoid duplicates
-        if (el.childElementCount > 0 && !this.ppButton) {
-          el.innerHTML = ""
-        }
-        if (el.childElementCount === 0) {
-          this.isRenderingPaypal = true
+      if (this.isRenderingPaypal) return
+      if (!this.payPal) this.payPal = await loadPayPal()
+      if (!this.payPal?.Buttons) return
+      if (container.childElementCount > 0 && !this.ppButton) {
+        container.innerHTML = ""
+      }
+      if (container.childElementCount === 0) {
+        this.isRenderingPaypal = true
+        try {
           if (this.ppButton) {
-            try { await (this.ppButton as any).close?.() } catch {}
+            const close = (this.ppButton as { close?: () => Promise<void> | void }).close
+            if (typeof close === "function") await close.call(this.ppButton)
             this.ppButton = null
           }
           this.initPPButton()
           await this.$nextTick()
-          const el2 = this.$refs.paypal as HTMLDivElement
-          if (el2) await this.ppButton!.render(el2)
+          const renderEl = this.$refs.paypal as HTMLDivElement | undefined
+          const button = this.ppButton as PayPalButtonsComponent | null
+          if (renderEl && button) {
+            await button.render(renderEl)
+            this.ppButton = button
+          }
+        } finally {
           this.isRenderingPaypal = false
         }
-        if (this.ppButton && this.selectedPkg) {
-          void this.ppButton.updateProps({ message: { amount: this.finalUsd, color: "black" } as any })
-        }
-      })()
+      }
+      if (this.ppButton && this.selectedPkg) {
+        void this.ppButton.updateProps({ message: { amount: this.finalUsd, color: "black" } as any })
+      }
     },
     initPPButton() {
       if (!this.payPal?.Buttons) return
@@ -421,7 +437,12 @@ export default defineComponent({
                 content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
               })
             } catch {}
-            umami.track && umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.finalUsd || this.selectedPkg?.usd })
+            if (typeof umami.track === "function") {
+              umami.track("buyPointsPkgSuccess", {
+                points: this.selectedPkg?.points,
+                paid: this.finalUsd || this.selectedPkg?.usd,
+              })
+            }
             this.$emit("paymentComplete")
           } catch (error: any) {
             if (error?.response?.data?.details?.[0]?.issue === "INSTRUMENT_DECLINED") return actions.restart()

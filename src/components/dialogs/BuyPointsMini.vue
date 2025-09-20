@@ -73,37 +73,46 @@ export default defineComponent({
   methods: {
     teardownPaypal() {
       try {
-        const closeFn = this.ppButton && (this.ppButton as any).close
-        if (typeof closeFn === "function") {
-          void closeFn.call(this.ppButton)
+        const close = (this.ppButton as PayPalButtonsComponent | null)?.close
+        if (typeof close === "function") {
+          void close.call(this.ppButton as PayPalButtonsComponent)
         }
       } catch {}
       const el = this.$refs.paypal as HTMLDivElement
       if (el) el.innerHTML = ""
       this.ppButton = null
     },
-    async ensurePaypalRendered(attempt = 0) {
+    async ensurePaypalRendered(attempt = 0): Promise<void> {
       const maxAttempts = 40
       const delayMs = 50
       const container = this.$refs.paypal as HTMLDivElement | undefined
-      const visible = !!container && container.offsetParent !== null && container.getBoundingClientRect().width > 0 && container.getBoundingClientRect().height > 0
+      const visible =
+        !!container &&
+        container.offsetParent !== null &&
+        container.getBoundingClientRect().width > 0 &&
+        container.getBoundingClientRect().height > 0
       if (!container || !visible) {
         if (attempt < maxAttempts) {
-          setTimeout(() => this.ensurePaypalRendered(attempt + 1), delayMs)
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
+          await this.ensurePaypalRendered(attempt + 1)
         }
         return
       }
-      const el = this.$refs.paypal as HTMLDivElement
-      if (!this.payPal) {
-        this.payPal = await loadPayPal()
+      if (this.isRenderingPaypal) return
+      if (!this.payPal) this.payPal = await loadPayPal()
+      if (!this.payPal?.Buttons) return
+      if (container.childElementCount > 0 && !this.ppButton) {
+        container.innerHTML = ""
       }
       if (!this.ppButton) {
-        this.ppButton = this.payPal!.Buttons({
-          style: { label: "pay" },
-          message: { amount: this.selectedUsd || 17, position: "bottom", color: "black" },
-          createOrder: async () => {
-            if (this.selectedPkgIndex == null) throwErr("Failed to create order")
-            const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountCode || undefined }).catch(catchErr)
+        this.isRenderingPaypal = true
+        try {
+          this.ppButton = this.payPal.Buttons({
+            style: { label: "pay" },
+            message: { amount: this.selectedUsd || 17, position: "bottom", color: "black" },
+            createOrder: async () => {
+              if (this.selectedPkgIndex == null) throwErr("Failed to create order")
+              const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountCode || undefined }).catch(catchErr)
             if (!res?.data) return ""
             try {
               metaPixel.trackInitiateCheckout({
@@ -112,7 +121,7 @@ export default defineComponent({
                 num_items: 1,
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
-                content_name: `Fiddl Points ${this.selectedPoints || 0}`
+                content_name: `Fiddl Points ${this.selectedPoints || 0}`,
               })
             } catch {}
             return (res.data as any).id || ""
@@ -131,29 +140,38 @@ export default defineComponent({
                   currency: "USD",
                   value: Number(this.selectedUsd || 0),
                   num_items: 1,
-                  content_type: "product",
-                  contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
-                  content_name: `Fiddl Points ${this.selectedPoints || 0}`
-                })
-              } catch {}
-              umami.track && umami.track("buyPointsPkgSuccess", { points: this.selectedPoints, paid: this.selectedUsd })
-              this.$emit("paymentComplete")
-            } catch (error: any) {
-              if (error?.response?.data?.details?.[0]?.issue === "INSTRUMENT_DECLINED") {
-                return actions.restart()
-              }
-              const errorDetail = error?.response?.data?.details?.[0] || { description: "Unknown error occurred" }
-              Dialog.create({ title: "Error", message: errorDetail.description, ok: true })
-              throwErr("Failed to capture order: " + errorDetail.description)
+                content_type: "product",
+                contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
+                content_name: `Fiddl Points ${this.selectedPoints || 0}`,
+              })
+            } catch {}
+            if (typeof umami.track === "function") {
+              umami.track("buyPointsPkgSuccess", {
+                points: this.selectedPoints,
+                paid: this.selectedUsd,
+              })
             }
-          },
+            this.$emit("paymentComplete")
+          } catch (error: any) {
+            if (error?.response?.data?.details?.[0]?.issue === "INSTRUMENT_DECLINED") {
+              return actions.restart()
+            }
+            const errorDetail = error?.response?.data?.details?.[0] || { description: "Unknown error occurred" }
+            Dialog.create({ title: "Error", message: errorDetail.description, ok: true })
+            throwErr("Failed to capture order: " + errorDetail.description)
+          }
+        },
         })
-        await nextTick()
-        const el2 = this.$refs.paypal as HTMLDivElement
-        if (el2) {
-          await this.ppButton!.render(el2)
+          await nextTick()
+          const target = this.$refs.paypal as HTMLDivElement | undefined
+          const button = this.ppButton as PayPalButtonsComponent | null
+          if (target && button) {
+            await button.render(target)
+          }
+        } finally {
+          this.isRenderingPaypal = false
         }
-      } else {
+      } else if (this.ppButton) {
         void this.ppButton.updateProps({
           message: { amount: this.selectedUsd || 17, position: "bottom", color: "black" },
         })

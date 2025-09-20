@@ -1,6 +1,6 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" :maximized="$q.screen.lt.md")
-  q-card.q-dialog-plugin(:style="$q.screen.lt.md ? { width: '100vw', maxWidth: '100vw', height: '100vh', maxHeight: '100vh', overflow: 'auto' } : { width: '800px', maxWidth: '95vw' }")
+q-dialog(ref="dialog" @hide="onDialogHide" :maximized="isScreenLtMd")
+  q-card.q-dialog-plugin(:style="cardStyle")
     div.q-pa-md
       .row.items-center.justify-between.q-mb-sm
         h5.q-mt-none.q-mb-none Request Details
@@ -54,6 +54,18 @@ export default defineComponent({
       creatorUsername: "" as string | null,
       avatarImg,
     }
+  },
+  computed: {
+    isScreenLtMd(): boolean {
+      const screen = (this.$q as typeof this.$q & { screen?: { lt?: Record<string, boolean> } }).screen
+      return Boolean(screen?.lt?.md)
+    },
+    cardStyle(): Record<string, string> {
+      if (this.isScreenLtMd) {
+        return { width: "100vw", maxWidth: "100vw", height: "100vh", maxHeight: "100vh", overflow: "auto" }
+      }
+      return { width: "800px", maxWidth: "95vw" }
+    },
   },
   async mounted() {
     try {

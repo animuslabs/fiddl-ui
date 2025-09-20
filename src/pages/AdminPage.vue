@@ -403,7 +403,22 @@ import { copyToClipboard, Dialog, Notify } from "quasar"
 import type { QTableColumn } from "quasar"
 import { defineComponent, ref, computed, watch } from "vue"
 import { useRouter, type RouteLocationRaw } from "vue-router"
-import { promoCreatePromoCode, promoGetPromoCodes, useAdminListUsers, useAdminBanUser, useAdminListPayments, creationsDescribeUploadedImage, adminListUsers, adminDiscountCodesList, adminDiscountCodeCreate, adminDiscountCodeUpdate, adminDiscountCodeDelete, adminAffiliatePayoutUser } from "src/lib/orval"
+import {
+  promoCreatePromoCode,
+  promoGetPromoCodes,
+  useAdminListUsers,
+  useAdminBanUser,
+  useAdminListPayments,
+  creationsDescribeUploadedImage,
+  adminListUsers,
+  adminDiscountCodesList,
+  adminDiscountCodeCreate,
+  adminDiscountCodeUpdate,
+  adminDiscountCodeDelete,
+  adminAffiliatePayoutUser,
+  type AdminListUsersSortBy,
+  type AdminListUsersSortDir,
+} from "src/lib/orval"
 import QRCode from "qrcode"
 import axios from "axios"
 
@@ -436,21 +451,27 @@ export default defineComponent({
       return (page - 1) * rpp
     })
 
-    const params = computed(() => {
-      // Map UI sort to API-supported sort fields
-      const apiSortable = new Set(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"]) as Set<string>
-      const currentSort = usersPagination.value.sortBy || "spentPoints"
-      const sortBy = apiSortable.has(currentSort) ? (currentSort as any) : undefined
-      const sortDir = sortBy ? (usersPagination.value.descending ? "desc" : "asc") : undefined
+    const params = computed({
+      get: () => {
+        // Map UI sort to API-supported sort fields
+        const apiSortable = new Set<AdminListUsersSortBy>(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"])
+        const currentSort = usersPagination.value.sortBy || "spentPoints"
+        const maybeSort = currentSort as AdminListUsersSortBy
+        const sortBy = apiSortable.has(maybeSort) ? maybeSort : undefined
+        const sortDir: AdminListUsersSortDir | undefined = sortBy ? (usersPagination.value.descending ? "desc" : "asc") : undefined
 
-      return {
-        limit: limit.value,
-        offset: offset.value,
-        search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
-        includeBanned: includeBanned.value ? true : undefined,
-        sortBy,
-        sortDir,
-      }
+        return {
+          limit: limit.value,
+          offset: offset.value,
+          search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
+          includeBanned: includeBanned.value ? true : undefined,
+          sortBy,
+          sortDir,
+        }
+      },
+      set: () => {
+        // read-only interface; setter present to satisfy MaybeRef typing
+      },
     })
 
     const usersQuery = useAdminListUsers(params)

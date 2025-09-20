@@ -108,14 +108,23 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
   })
 
   const selectedModelPrice = computed(() => {
-    return prices.video.model[state.req.model]
+    const cost = prices.video.model[state.req.model]
+    return typeof cost === "number" && Number.isFinite(cost) ? cost : 0
   })
 
-  const totalCost = computed(() => {
-    const duration = state.req.duration || 5
-    const cost = selectedModelPrice
-    return cost.value * duration * state.req.quantity
+  const quantity = computed(() => 1)
+  const duration = computed(() => Math.max(1, Number(state.req.duration || 5)))
+
+  const privatePremiumPerItem = computed(() => {
+    const tax = prices.privateTax
+    return typeof tax === "number" && Number.isFinite(tax) ? tax : 5
   })
+
+  const publicTotalCost = computed(() => selectedModelPrice.value * duration.value * quantity.value)
+
+  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumPerItem.value * quantity.value)
+
+  const totalCost = computed(() => (state.req.public === false ? privateTotalCost.value : publicTotalCost.value))
 
   // async function createVideoRequest() {
   //   console.log("create video", state.req)
@@ -129,7 +138,7 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
     state.loading.create = true
     LocalStorage.set("videoReq", state.req)
     if (typeof state.req.seed !== "number") state.req.seed = undefined
-    await creations.generateVideo(toObject(state.req)).catch(catchErr)
+    await creations.generateVideo({ ...toObject(state.req), quantity: 1 }).catch(catchErr)
     state.loading.create = false
     await userAuth.loadUserData()
     umami.track("createImage")
@@ -141,7 +150,6 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
     state.req.prompt = res.data || state.req.prompt
     if (state.req.seed) {
       state.req.seed = undefined
-      state.req.quantity = 4
     }
     state.loading.new = false
     await userAuth.loadUserData()
@@ -174,6 +182,9 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
     availableAspectRatios,
     availableDurations,
     selectedModelPrice,
+    privatePremiumPerItem,
+    publicTotalCost,
+    privateTotalCost,
     totalCost,
     createVideoRequest,
     newPrompt,

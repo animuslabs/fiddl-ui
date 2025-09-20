@@ -4,7 +4,7 @@ div.q-mt-md
     .q-ma-md
       h6 Training Model:
       h2 {{ modelData.name }}
-      .centered
+      .centered(v-if="!trainingData?.error")
         .q-pa-md.relative-position(style="height:110px; width:110px; border-radius: 100%;")
           q-spinner-grid.absolute-center(size="80px" color="primary" )
           q-spinner-cube.absolute-center(size="80px" color="primary" )
@@ -18,7 +18,7 @@ div.q-mt-md
           div.q-ma-md(v-if="trainingData.error")
             h6.text-accent Error:
             p {{ trainingData.error }}
-          div
+          div(v-if="!trainingData.error")
             h6 Status:
             .full-width(style="height: 200px; overflow-y: auto")
               h3(v-if="(trainingData.progress||0)>0")
@@ -44,6 +44,15 @@ div.q-mt-md
             //-   pre(style="height:900px;") {{trainingData}}
   .centered.q-ma-md
     q-btn( label="Back" @click="$emit('back')" flat color="primary" size="lg" )
+  q-dialog(v-model="showErrorDialog")
+    q-card
+      .q-ma-md
+        h5.q-mb-sm Model Training Error
+        p.q-mb-md {{ errorMessage || 'An unknown training error occurred.' }}
+        p.text-body2.text-grey
+          | An automatic points refund was issued due to a training error. You can try training again, or you may need to create a different training set.
+        .row.q-gutter-md.q-mt-md
+          q-btn(label="Close" @click="onErrorDialogClose" color="primary" flat)
 </template>
 
 <script lang="ts">
@@ -57,6 +66,13 @@ export default defineComponent({
     modelData: { required: true, type: Object as PropType<CustomModel> },
   },
   emits: ["back", "finished"],
+  data() {
+    return {
+      showErrorDialog: false,
+      errorMessage: "" as string,
+      errorHandled: false,
+    }
+  },
   computed: {
     trainingProgress() {
       if (!this.trainingData) return null
@@ -73,10 +89,20 @@ export default defineComponent({
             ok: true,
           }).onOk(() => this.$emit("finished"))
           // void this.$emit("finished")
+        } else if ((val?.status === "failed" || val?.error) && !this.errorHandled) {
+          this.errorMessage = val?.error || "An unknown training error occurred."
+          this.showErrorDialog = true
+          this.errorHandled = true
         }
       },
       immediate: true,
       deep: true,
+    },
+  },
+  methods: {
+    onErrorDialogClose() {
+      this.showErrorDialog = false
+      this.$emit("back")
     },
   },
 })

@@ -32,7 +32,8 @@ export const useCreateSession = defineStore("createSession", {
       // const rev = this.reverse
     },
     async generateImage(request: CreateImageRequest) {
-      const creatorId = useUserAuth().userId
+      const userAuth = useUserAuth()
+      const creatorId = userAuth.userId
       if (!creatorId) throw new Error("User not authenticated")
 
       const response = await createImage(request as CreateImageBody)
@@ -56,6 +57,7 @@ export const useCreateSession = defineStore("createSession", {
         id: result.id,
         createdAt: new Date(),
         creatorId,
+        creatorUsername: userAuth.userProfile?.username || "",
       }
 
       this.addItem(createdItem)

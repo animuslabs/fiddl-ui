@@ -13,7 +13,10 @@ const mediaViwer = {
     }
     try {
       const popularity = usePopularityStore()
-      const items = mediaObjects.map((m) => ({ id: m.id, mediaType: m.type === "video" ? "video" : "image" }))
+      const items: { id: string; mediaType: "image" | "video" }[] = mediaObjects.map((m) => ({
+        id: m.id,
+        mediaType: m.type === "video" || m.mediaType === "video" ? "video" : "image",
+      }))
       void popularity.fetchBatchByItems(items)
     } catch (e) {
       console.error("[mediaViewer] failed to prefetch popularity", e)

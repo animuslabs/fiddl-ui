@@ -40,7 +40,7 @@ function getImageDimensions(source: ImageBitmap | HTMLImageElement): { width: nu
   return { width, height }
 }
 
-async function toWebpBlob(file: File, maxSize: number, quality: number, allowUpscale: boolean): Promise<Blob> {
+async function toJpegBlob(file: File, maxSize: number, quality: number, allowUpscale: boolean): Promise<Blob> {
   const { source, release } = await loadImageSource(file)
   try {
     const { width, height } = getImageDimensions(source)
@@ -65,7 +65,7 @@ async function toWebpBlob(file: File, maxSize: number, quality: number, allowUps
     ctx.drawImage(source, 0, 0, targetWidth, targetHeight)
 
     const blob = await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to convert to blob"))), "image/webp", quality),
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to convert to blob"))), "image/jpeg", quality),
     )
     if (!blob || blob.size === 0) throw new Error(`Generated blob is empty for ${file.name}`)
     return blob
@@ -74,32 +74,32 @@ async function toWebpBlob(file: File, maxSize: number, quality: number, allowUps
   }
 }
 
-function ensureWebpFileName(originalName: string, usedNames?: Set<string>): string {
+function ensureJpegFileName(originalName: string, usedNames?: Set<string>): string {
   const base = originalName.replace(/\.[^.]+$/i, "") || "image"
-  let candidate = `${base}.webp`
+  let candidate = `${base}.jpg`
   if (!usedNames) return candidate
   let counter = 1
   while (usedNames.has(candidate)) {
-    candidate = `${base}-${counter}.webp`
+    candidate = `${base}-${counter}.jpg`
     counter += 1
   }
   return candidate
 }
 
-export async function convertImageFileToWebp(
+export async function convertImageFileToJpeg(
   file: File,
   maxSize = 1024,
   quality = 0.95,
   opts?: { usedNames?: Set<string>; allowUpscale?: boolean },
 ): Promise<File> {
   const usedNames = opts?.usedNames
-  const blob = await toWebpBlob(file, maxSize, quality, opts?.allowUpscale ?? false)
-  const name = ensureWebpFileName(file.name, usedNames)
+  const blob = await toJpegBlob(file, maxSize, quality, opts?.allowUpscale ?? false)
+  const name = ensureJpegFileName(file.name, usedNames)
   if (usedNames) usedNames.add(name)
-  return new File([blob], name, { type: "image/webp", lastModified: file.lastModified })
+  return new File([blob], name, { type: "image/jpeg", lastModified: file.lastModified })
 }
 
-export async function convertFilesToWebp(
+export async function convertFilesToJpeg(
   files: File[],
   maxSize = 1024,
   quality = 0.95,
@@ -108,7 +108,7 @@ export async function convertFilesToWebp(
   const converted: File[] = []
   const usedNames = opts?.usedNames ?? new Set<string>()
   for (const file of files) {
-    const convertedFile = await convertImageFileToWebp(file, maxSize, quality, { usedNames, allowUpscale: opts?.allowUpscale })
+    const convertedFile = await convertImageFileToJpeg(file, maxSize, quality, { usedNames, allowUpscale: opts?.allowUpscale })
     converted.push(convertedFile)
     await sleep(1)
   }

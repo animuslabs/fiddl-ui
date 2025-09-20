@@ -96,10 +96,18 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     return baseCost
   })
 
-  const totalCost = computed(() => {
-    const baseCost = selectedModelPrice
-    return baseCost.value * state.req.quantity
+  const privatePremiumPerImage = computed(() => {
+    const tax = prices.privateTax
+    return typeof tax === "number" && Number.isFinite(tax) ? tax : 5
   })
+
+  const quantity = computed(() => 1)
+
+  const publicTotalCost = computed(() => selectedModelPrice.value * quantity.value)
+
+  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumPerImage.value * quantity.value)
+
+  const totalCost = computed(() => (state.req.public === false ? privateTotalCost.value : publicTotalCost.value))
 
   const anyLoading = computed(() => Object.values(state.loading).some(Boolean))
 
@@ -135,7 +143,6 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     state.req.prompt = res.data || state.req.prompt
     if (state.req.seed) {
       state.req.seed = undefined
-      state.req.quantity = 4
     }
     state.loading.new = false
     await userAuth.loadUserData()
@@ -180,7 +187,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     const requestPayload = {
       prompt: state.req.prompt,
       negativePrompt: undefined as string | undefined,
-      quantity: state.req.quantity,
+      quantity: 1,
       seed: state.req.seed,
       model: state.req.model,
       public: state.req.public,
@@ -201,7 +208,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     }
 
     // Immediately add placeholder tiles so users see progress while the batch runs
-    const qty = Math.max(1, Number(state.req.quantity || 1))
+    const qty = 1
     const stamp = Date.now()
     const placeholders = Array.from({ length: qty }, (_, i) => `pending-${stamp}-${Math.random().toString(36).slice(2, 8)}-${i}`)
     // Add to the front so placeholders appear first in galleries
@@ -257,7 +264,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
                   createdAt: new Date(reqData.createdAt),
                 } as any)
                 // Remove as many placeholders as the finished images we just added
-                const removeCount = Math.min(state.pendingPlaceholders.length, (reqData.imageIds?.length || 0))
+                const removeCount = Math.min(state.pendingPlaceholders.length, reqData.imageIds?.length || 0)
                 if (removeCount > 0) state.pendingPlaceholders.splice(0, removeCount)
               }
             } catch (e) {
@@ -285,7 +292,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
           if (processedReqs.size > 0 || failed) {
             Notify.create({
               type: failed ? "warning" : "positive",
-              message: failed ? "Some images failed to render" : "Your images are ready",
+              message: failed ? "Some images failed to render" : "Your image is ready",
               position: "top",
             })
           }
@@ -329,13 +336,13 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       if (!state.req.aspectRatio) {
         // Keep undefined for models where UI disables selection (handled in the form)
         if (state.req.model !== "nano-banana") {
-          (state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
+          ;(state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
         }
         return
       }
       // If current value is not available for the selected model, coerce to a valid option
       if (!opts.includes(state.req.aspectRatio)) {
-        (state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
+        ;(state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
       }
     },
   )
@@ -348,6 +355,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     availableModels: imageModels,
     availableAspectRatios: availableAspectRatiosComputed,
     selectedModelPrice,
+    privatePremiumPerImage,
+    publicTotalCost,
+    privateTotalCost,
     totalCost,
     anyLoading,
     loadCustomModel,

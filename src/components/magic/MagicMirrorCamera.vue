@@ -413,7 +413,7 @@ function openGalleryPicker() {
   fileInputRef.value?.click()
 }
 
-function onFileInputChange(e: Event) {
+async function onFileInputChange(e: Event) {
   if (!userAuth.loggedIn) {
     emit("auth-required")
     if (fileInputRef.value) fileInputRef.value.value = ""
@@ -434,27 +434,28 @@ function onFileInputChange(e: Event) {
     quasar.notify({ color: "primary", message: `Using first ${MAX} images (max).` })
   }
 
-  Promise.allSettled(selected.map((f) => readAsImage(f)))
-    .then((results) => {
-      const blobs = results.filter((r): r is PromiseFulfilledResult<Blob> => r.status === "fulfilled").map((r) => r.value)
-      const failed = results.length - blobs.length
-      if (failed > 0) {
-        quasar.notify({ color: "warning", message: `Skipped ${failed} unsupported image${failed > 1 ? "s" : ""}.` })
-      }
-      if (blobs.length > 0) {
-        emit("captured", blobs)
-      } else {
-        emit("error", "gallery_failed")
-      }
-    })
-    .catch((err) => {
-      catchErr(err)
+  const singleSelection = selected.length === 1
+
+  try {
+    const results = await Promise.allSettled(selected.map((f) => readAsImage(f)))
+    const blobs = results.filter((r): r is PromiseFulfilledResult<Blob> => r.status === "fulfilled").map((r) => r.value)
+    const failed = results.length - blobs.length
+    if (failed > 0) {
+      quasar.notify({ color: "warning", message: `Skipped ${failed} unsupported image${failed > 1 ? "s" : ""}.` })
+    }
+    if (blobs.length > 0) {
+      const payload = singleSelection ? [blobs[0]] : blobs
+      emit("captured", payload)
+    } else {
       emit("error", "gallery_failed")
-    })
-    .finally(() => {
-      // Reset input so selecting the same file again will re-trigger change
-      if (fileInputRef.value) fileInputRef.value.value = ""
-    })
+    }
+  } catch (err) {
+    catchErr(err)
+    emit("error", "gallery_failed")
+  } finally {
+    // Reset input so selecting the same file again will re-trigger change
+    if (fileInputRef.value) fileInputRef.value.value = ""
+  }
 }
 
 async function readAsImage(file: File): Promise<Blob> {
@@ -524,33 +525,6 @@ async function readAsImage(file: File): Promise<Blob> {
   }
 }
 
-async function readAsImageAndSynthesize(file: File): Promise<Blob[]> {
-  const imgUrl = URL.createObjectURL(file)
-  const img = new Image()
-  img.crossOrigin = "anonymous"
-  await new Promise<void>((res, rej) => {
-    img.onload = () => res()
-    img.onerror = (e) => rej(e)
-    img.src = imgUrl
-  })
-
-  const s = 512
-  const canvas = document.createElement("canvas")
-  canvas.width = s
-  canvas.height = s
-  const ctx = canvas.getContext("2d")
-  if (!ctx) throw new Error("no_ctx")
-
-  const blobs: Blob[] = []
-  for (let i = 0; i < targetFrames; i++) {
-    ctx.clearRect(0, 0, s, s)
-    ctx.drawImage(img, 0, 0, s, s)
-    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b as Blob), mimeType, quality))
-    blobs.push(blob)
-  }
-  URL.revokeObjectURL(imgUrl)
-  return blobs
-}
 </script>
 
 <style scoped>
