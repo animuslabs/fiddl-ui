@@ -3,39 +3,52 @@
   <!-- Main pages -->
   <url>
     <loc>https://app.fiddl.art</loc>
-    <lastmod>2025-08-05T16:30:00.000Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>1.0</priority>
   </url>
 
   <!-- Core app pages -->
   <url>
     <loc>https://app.fiddl.art/browse</loc>
-    <lastmod>2025-08-05T16:30:00.000Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://app.fiddl.art/models</loc>
-    <lastmod>2025-08-05T16:30:00.000Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://app.fiddl.art/create</loc>
-    <lastmod>2025-08-05T16:30:00.000Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://app.fiddl.art/forge</loc>
-    <lastmod>2025-08-05T16:30:00.000Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://app.fiddl.art/missions</loc>
-    <lastmod>2025-08-24T18:07:53.666Z</lastmod>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
     <priority>0.8</priority>
+  </url>
+
+  <!-- Engagement & rewards pages -->
+  <url>
+    <loc>https://app.fiddl.art/events</loc>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://app.fiddl.art/claim</loc>
+    <lastmod>2025-09-21T21:53:17.000Z</lastmod>
+    <priority>0.7</priority>
   </url>
 
 </urlset>

@@ -31,6 +31,11 @@
   cache = "manual"
 
 [[edge_functions]]
+  function = "events"
+  path     = "/events"
+  cache = "manual"
+
+[[edge_functions]]
   function = "profile"
   path     = "/@:username"
   cache = "manual"
@@ -38,6 +43,11 @@
 [[edge_functions]]
   function = "magicMirror"
   path     = "/magicMirror"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "claim"
+  path     = "/claim/*"
   cache = "manual"
 
 [[edge_functions]]
@@ -64,6 +74,5 @@
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
-
 
 
