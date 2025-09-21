@@ -524,6 +524,31 @@ export function arraysEqual(a: unknown[], b: unknown[]) {
   return true
 }
 
+export function decodeHtmlEntities(input: string): string {
+  if (!input) return ""
+  const basicNamed: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: String.fromCharCode(160),
+  }
+
+  let result = input
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (match, name) => basicNamed[name] ?? match)
+
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    const textarea = document.createElement("textarea")
+    textarea.innerHTML = result
+    result = textarea.value
+  }
+
+  return result
+}
+
 export function goToModelPage(router: any, modelName: string, customModelId?: string) {
   if (customModelId) {
     router.push({ name: "model", params: { modelName, customModelId } })

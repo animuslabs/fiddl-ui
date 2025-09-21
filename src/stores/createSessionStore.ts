@@ -51,13 +51,23 @@ export const useCreateSession = defineStore("createSession", {
         }
       }
 
+      const imageIds = [...result.ids].reverse()
       const createdItem: CreateImageRequestData = {
         ...request,
-        imageIds: result.ids.reverse(),
+        imageIds,
+        images: imageIds.map((id) => ({ id, nsfw: false })),
         id: result.id,
         createdAt: new Date(),
+        public: request.public ?? true,
+        aspectRatio: request.aspectRatio ?? "1:1",
+        quantity: request.quantity,
         creatorId,
         creatorUsername: userAuth.userProfile?.username || "",
+        model: request.model,
+        seed: request.seed,
+        prompt: request.prompt,
+        negativePrompt: request.negativePrompt,
+        customModelId: request.customModelId,
       }
 
       this.addItem(createdItem)

@@ -42,8 +42,15 @@ q-page.q-pa-md
           q-avatar(:size="isMobile ? '32px' : '40px'" square)
             q-img(:src="previewFor(ev)" :ratio="1" no-spinner)
         q-item-section
-          .row.items-center.justify-between
-            .text-body2 {{ messageFor(ev) }}
+          .row.items-start.justify-between(:style="{ gap: '8px' }")
+            .column(:style="{ flex: '1 1 0', minWidth: 0 }")
+              .text-body2(:style="{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }")
+                template(v-if="ev.originUsername && hasUserInMessage(ev)")
+                  router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
+                  |  {{ actionTextFor(ev) }}
+                template(v-else) {{ messageFor(ev) }}
+              .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
+                span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
             .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
         q-item-section(side)
           q-btn(flat round dense size="sm" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'positive' : 'primary'" @click.stop="toggleSeen(ev)")
@@ -66,6 +73,9 @@ q-page.q-pa-md
 import { defineComponent } from "vue"
 import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
+import mediaViwer from "../lib/mediaViewer"
+import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
+import { decodeHtmlEntities } from "../lib/util"
 
 const ALL_TYPES = Object.values(EventsTypeConst) as EventsPrivateEvents200ItemType[]
 
@@ -80,6 +90,7 @@ export default defineComponent({
       showUnseenOnly: false as boolean,
       selectedTypes: [] as EventsPrivateEvents200ItemType[],
       typeOptions: ALL_TYPES.map((t) => ({ label: t, value: t })),
+      seenCleanup: null as null | (() => void),
     }
   },
   computed: {
@@ -128,8 +139,24 @@ export default defineComponent({
   },
   mounted() {
     if (this.$userAuth.loggedIn) void this.refresh()
+    this.seenCleanup = listenNotificationsSeen(this.onExternalSeen)
+  },
+  beforeUnmount() {
+    if (this.seenCleanup) {
+      this.seenCleanup()
+      this.seenCleanup = null
+    }
   },
   methods: {
+    onExternalSeen(ids: string[]) {
+      if (!Array.isArray(ids) || ids.length === 0) return
+      const idSet = new Set(ids)
+      this.events.forEach((event) => {
+        if (!event.seen && idSet.has(event.id)) {
+          event.seen = true
+        }
+      })
+    },
     parseData(ev: EventsPrivateEvents200Item): any {
       try {
         return JSON.parse(ev.dataJSON)
@@ -139,8 +166,10 @@ export default defineComponent({
     },
     previewFor(ev: EventsPrivateEvents200Item): string {
       const data = this.parseData(ev) || {}
-      const imageId = data.imageId || data.image_id
-      const videoId = data.videoId || data.video_id
+      const mediaType = data.mediaType || data.media_type
+      const mediaId = data.mediaId || data.media_id
+      const imageId = data.imageId || data.image_id || (mediaType === "image" ? mediaId : undefined)
+      const videoId = data.videoId || data.video_id || (mediaType === "video" ? mediaId : undefined)
       if (imageId) return img(String(imageId), "md")
       if (videoId) return s3Video(String(videoId), "thumbnail")
       return "/blankAvatar.webp"
@@ -155,18 +184,22 @@ export default defineComponent({
           const sinceTs = times.length ? Math.max(...times) : 0
           if (sinceTs > 0) since = new Date(sinceTs).toISOString()
         }
-        const params: EventsPrivateEventsParams = since
-          ? { since, limit: 200, includeSeen: true }
-          : { limit: 200, includeSeen: true }
+
+        const baseParams: EventsPrivateEventsParams = { limit: 200, includeSeen: true }
+        const params = since ? { ...baseParams, since } : baseParams
         const { data } = await eventsPrivateEvents(params)
-        const incoming = Array.isArray(data) ? data : []
+        let incoming = Array.isArray(data) ? data : []
+
+        if (since && incoming.length === 0) {
+          const fullResponse = await eventsPrivateEvents({ ...baseParams })
+          incoming = Array.isArray(fullResponse.data) ? fullResponse.data : []
+          since = undefined
+        }
+
         if (since) {
-          if (incoming.length > 0) {
-            const byId = new Map<string, EventsPrivateEvents200Item>()
-            const all = [...incoming, ...this.events]
-            all.forEach((e) => byId.set(e.id, e))
-            this.events = Array.from(byId.values())
-          }
+          const byId = new Map<string, EventsPrivateEvents200Item>()
+          ;[...incoming, ...this.events].forEach((e) => byId.set(e.id, e))
+          this.events = Array.from(byId.values())
         } else {
           this.events = incoming
         }
@@ -180,6 +213,7 @@ export default defineComponent({
       try {
         await eventsMarkEventSeen({ eventId: ev.id })
         ev.seen = true
+        emitNotificationsSeen([ev.id])
       } catch (e) {
         // ignore
       }
@@ -189,24 +223,72 @@ export default defineComponent({
       if (unseen.length === 0) return
       this.loading = true
       try {
+        const seenIds: string[] = []
         await Promise.all(
-          unseen.map((e) =>
-            eventsMarkEventSeen({ eventId: e.id })
-              .then(() => (e.seen = true))
-              .catch(() => {}),
-          ),
+          unseen.map(async (e) => {
+            try {
+              await eventsMarkEventSeen({ eventId: e.id })
+              e.seen = true
+              seenIds.push(e.id)
+            } catch (err) {
+              // ignore individual failures
+            }
+          }),
         )
+        if (seenIds.length > 0) emitNotificationsSeen(seenIds)
       } finally {
         this.loading = false
       }
     },
     handleClick(ev: EventsPrivateEvents200Item) {
-      void this.toggleSeen(ev)
+      if (ev.type === "creationCommented" || ev.type === "commentMentioned") {
+        void this.openCommentFromEvent(ev)
+      } else {
+        void this.toggleSeen(ev)
+      }
     },
     iconFor(type: string) {
       if (type.includes("Video")) return "smart_display"
       if (type.includes("Image")) return "image"
       return "notifications"
+    },
+    hasUserInMessage(ev: EventsPrivateEvents200Item) {
+      return String(this.messageFor(ev)).startsWith("@")
+    },
+    actionTextFor(ev: EventsPrivateEvents200Item) {
+      const u = ev.originUsername || "someone"
+      switch (ev.type) {
+        case "likedImage":
+          return "liked your image"
+        case "likedVideo":
+          return "liked your video"
+        case "unlikedImage":
+          return "removed their like on your image"
+        case "unlikedVideo":
+          return "removed their like on your video"
+        case "addedImageToCollection":
+          return "added your image to a collection"
+        case "removedImageFromCollection":
+          return "removed your image from a collection"
+        case "unlockedImage":
+          return "unlocked your image"
+        case "unlockedVideo":
+          return "unlocked your video"
+        case "referredUser":
+          return "joined from your referral"
+        case "missionCompleted":
+          return "Mission completed"
+        case "creationCommented": {
+          const mediaType = this.commentMediaType(ev)
+          return mediaType === "video" ? "commented on your video" : "commented on your image"
+        }
+        case "commentMentioned": {
+          const mediaType = this.commentMediaType(ev)
+          return mediaType === "video" ? "mentioned you in a video comment" : "mentioned you in an image comment"
+        }
+        default:
+          return `Activity: ${ev.type}`
+      }
     },
     messageFor(ev: EventsPrivateEvents200Item) {
       const u = ev.originUsername || "someone"
@@ -231,9 +313,62 @@ export default defineComponent({
           return `@${u} joined from your referral`
         case "missionCompleted":
           return `Mission completed`
+        case "creationCommented": {
+          const mediaType = this.commentMediaType(ev)
+          return `@${u} commented on your ${mediaType}`
+        }
+        case "commentMentioned": {
+          const mediaType = this.commentMediaType(ev)
+          const subject = mediaType === "video" ? "video" : "image"
+          return `@${u} mentioned you in a ${subject} comment`
+        }
         default:
           return `Activity: ${ev.type}`
       }
+    },
+    commentMediaType(ev: EventsPrivateEvents200Item): "image" | "video" {
+      const data = this.parseData(ev) || {}
+      const direct = data.mediaType || data.media_type
+      if (direct === "video") return "video"
+      if (direct === "image") return "image"
+      if (data.videoId || data.video_id) return "video"
+      return "image"
+    },
+    commentPreview(ev: EventsPrivateEvents200Item): string {
+      if (ev.type !== "creationCommented" && ev.type !== "commentMentioned") return ""
+      const data = this.parseData(ev) || {}
+      const preview = data.preview || data.commentPreview || data.comment_preview
+      if (!preview) return ""
+      const raw = String(preview).trim()
+      if (!raw) return ""
+      const decoded = decodeHtmlEntities(raw)
+      if (!decoded) return ""
+      if (decoded.length > 160) return `${decoded.slice(0, 157)}…`
+      return decoded
+    },
+    commentPayload(ev: EventsPrivateEvents200Item) {
+      if (ev.type !== "creationCommented" && ev.type !== "commentMentioned") return null
+      const data = this.parseData(ev) || {}
+      const mediaId =
+        data.mediaId || data.media_id || data.imageId || data.image_id || data.videoId || data.video_id
+      if (!mediaId) return null
+      const commentId = data.commentId || data.comment_id || null
+      const mediaType = this.commentMediaType(ev)
+      return {
+        mediaId: String(mediaId),
+        mediaType,
+        commentId: commentId ? String(commentId) : null,
+      }
+    },
+    async openCommentFromEvent(ev: EventsPrivateEvents200Item) {
+      const payload = this.commentPayload(ev)
+      if (!payload) {
+        await this.toggleSeen(ev)
+        return
+      }
+      await this.toggleSeen(ev)
+      const media = { id: payload.mediaId, type: payload.mediaType }
+      void mediaViwer.show([media as any], 0, true, { initialCommentId: payload.commentId ?? undefined })
     },
     timeAgo(iso: string) {
       const diff = Date.now() - new Date(iso).getTime()

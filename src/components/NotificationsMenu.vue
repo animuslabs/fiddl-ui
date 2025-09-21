@@ -29,9 +29,9 @@ div.relative-position.self-center
         q-separator
         q-scroll-area(:style="menuScrollStyle")
           q-list(v-if="recentEvents.length > 0" :dense="isMobile")
-            q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
+            q-item(v-for="ev in recentEvents" :key="ev.id" clickable @click.stop="handleClick(ev)" class="items-start notif-item")
               q-item-section(avatar)
-                q-avatar(:size="isMobile ? '24px' : '48px'" square)
+                q-avatar(:size="avatarSize" square)
                   q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
                 .text-body2(:style="{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }")
@@ -39,8 +39,10 @@ div.relative-position.self-center
                     router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
+                .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
+                  span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
-              q-item-section(side)
+              q-item-section(side top)
                 q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
@@ -62,19 +64,21 @@ div.relative-position.self-center
               q-tooltip Close
         q-separator
         q-scroll-area(:style="menuScrollStyle")
-          q-list(v-if="recentEvents.length > 0" :dense="isMobile")
-            q-item(v-for="ev in recentEvents" :key="ev.id" clickable :dense="isMobile" @click.stop="handleClick(ev)")
+          q-list(v-if="recentEvents.length > 0")
+            q-item(v-for="ev in recentEvents" :key="ev.id" clickable @click.stop="handleClick(ev)" class="items-start notif-item")
               q-item-section(avatar)
-                q-avatar(:size="isMobile ? '24px' : '28px'" square)
+                q-avatar(:size="avatarSize" square)
                   q-img(:src="previewFor(ev)" :ratio="1" no-spinner class="cursor-pointer" @click.stop="openMediaFromEvent(ev)")
               q-item-section(:style="{ minWidth: 0 }")
-                .text-body2(:style="isMobile ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {}")
+                .text-body2(:style="{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }")
                   template(v-if="ev.originUsername && hasUserInMessage(ev)")
                     router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
+                .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
+                  span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
-              q-item-section(side)
+              q-item-section(side top)
                 q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
@@ -89,6 +93,8 @@ import { defineComponent } from "vue"
 import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
+import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
+import { decodeHtmlEntities } from "../lib/util"
 
 export default defineComponent({
   name: "NotificationsMenu",
@@ -98,6 +104,7 @@ export default defineComponent({
       loading: false as boolean,
       events: [] as EventsPrivateEvents200Item[],
       pollId: null as any,
+      seenCleanup: null as null | (() => void),
     }
   },
   computed: {
@@ -164,6 +171,9 @@ export default defineComponent({
         }
       }
     },
+    avatarSize(): string {
+      return this.isMobile ? "32px" : "48px"
+    },
   },
   watch: {
     "$userAuth.loggedIn": {
@@ -184,14 +194,28 @@ export default defineComponent({
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this.onVisibilityChange)
     }
+    this.seenCleanup = listenNotificationsSeen(this.onExternalSeen)
   },
   beforeUnmount() {
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this.onVisibilityChange)
     }
+    if (this.seenCleanup) {
+      this.seenCleanup()
+      this.seenCleanup = null
+    }
     this.stopPolling()
   },
   methods: {
+    onExternalSeen(ids: string[]) {
+      if (!Array.isArray(ids) || ids.length === 0) return
+      const idSet = new Set(ids)
+      this.events.forEach((event) => {
+        if (!event.seen && idSet.has(event.id)) {
+          event.seen = true
+        }
+      })
+    },
     onVisibilityChange() {
       // When the tab becomes visible, re-arm the timer to run immediately
       if (typeof document !== "undefined" && !document.hidden) {
@@ -225,13 +249,19 @@ export default defineComponent({
     },
     previewFor(ev: EventsPrivateEvents200Item): string {
       const data = this.parseData(ev) || {}
-      const imageId = data.imageId || data.image_id
-      const videoId = data.videoId || data.video_id
+      const mediaType = data.mediaType || data.media_type
+      const mediaId = data.mediaId || data.media_id
+      const imageId = data.imageId || data.image_id || (mediaType === "image" ? mediaId : undefined)
+      const videoId = data.videoId || data.video_id || (mediaType === "video" ? mediaId : undefined)
       if (imageId) return img(String(imageId), "sm")
       if (videoId) return s3Video(String(videoId), "thumbnail")
       return "/blankAvatar.webp"
     },
     openMediaFromEvent(ev: EventsPrivateEvents200Item) {
+      if (ev.type === "creationCommented" || ev.type === "commentMentioned") {
+        void this.openCommentFromEvent(ev)
+        return
+      }
       const data = this.parseData(ev) || {}
       const imageId = data.imageId || data.image_id
       const videoId = data.videoId || data.video_id
@@ -261,8 +291,7 @@ export default defineComponent({
       }
     },
     async refresh(forceFull = false) {
-      if (!this.$userAuth.loggedIn) return
-      if (this.loading) return
+      if (!this.$userAuth.loggedIn || this.loading) return
       this.loading = true
       try {
         let since: string | undefined
@@ -271,11 +300,19 @@ export default defineComponent({
           const sinceTs = times.length ? Math.max(...times) : 0
           if (sinceTs > 0) since = new Date(sinceTs).toISOString()
         }
-        const params: EventsPrivateEventsParams = since ? { since, limit: 25, includeSeen: true } : { limit: 25, includeSeen: true }
+
+        const baseParams: EventsPrivateEventsParams = { limit: 25, includeSeen: true }
+        const params = since ? { ...baseParams, since } : baseParams
         const { data } = await eventsPrivateEvents(params)
-        const incoming = Array.isArray(data) ? data : []
+        let incoming = Array.isArray(data) ? data : []
+
+        if (!forceFull && since && incoming.length === 0) {
+          const fullResponse = await eventsPrivateEvents({ ...baseParams })
+          incoming = Array.isArray(fullResponse.data) ? fullResponse.data : []
+          since = undefined
+        }
+
         if (since) {
-          if (incoming.length === 0) return
           const byId = new Map<string, EventsPrivateEvents200Item>()
           ;[...incoming, ...this.events].forEach((e) => byId.set(e.id, e))
           this.events = Array.from(byId.values())
@@ -293,22 +330,34 @@ export default defineComponent({
       try {
         await eventsMarkEventSeen({ eventId: ev.id })
         ev.seen = true
+        emitNotificationsSeen([ev.id])
       } catch (e) {
         // ignore
       }
     },
     async markAllSeen() {
       const unseen = this.events.filter((e) => !e.seen)
+      if (unseen.length === 0) return
+      const seenIds: string[] = []
       await Promise.all(
-        unseen.map((e) =>
-          eventsMarkEventSeen({ eventId: e.id })
-            .then(() => (e.seen = true))
-            .catch(() => {}),
-        ),
+        unseen.map(async (e) => {
+          try {
+            await eventsMarkEventSeen({ eventId: e.id })
+            e.seen = true
+            seenIds.push(e.id)
+          } catch (err) {
+            // ignore individual failures
+          }
+        }),
       )
+      if (seenIds.length > 0) emitNotificationsSeen(seenIds)
     },
     handleClick(ev: EventsPrivateEvents200Item) {
-      void this.toggleSeen(ev)
+      if (ev.type === "creationCommented" || ev.type === "commentMentioned") {
+        void this.openCommentFromEvent(ev)
+      } else {
+        void this.toggleSeen(ev)
+      }
     },
     iconFor(type: string) {
       if (type.includes("Video")) return "smart_display"
@@ -341,6 +390,14 @@ export default defineComponent({
           return "joined from your referral"
         case "missionCompleted":
           return "Mission completed"
+        case "creationCommented": {
+          const mediaType = this.commentMediaType(ev)
+          return mediaType === "video" ? "commented on your video" : "commented on your image"
+        }
+        case "commentMentioned": {
+          const mediaType = this.commentMediaType(ev)
+          return mediaType === "video" ? "mentioned you in a video comment" : "mentioned you in an image comment"
+        }
         default:
           return `Activity: ${ev.type}`
       }
@@ -368,9 +425,62 @@ export default defineComponent({
           return `@${u} joined from your referral`
         case "missionCompleted":
           return `Mission completed`
+        case "creationCommented": {
+          const mediaType = this.commentMediaType(ev)
+          return `@${u} commented on your ${mediaType}`
+        }
+        case "commentMentioned": {
+          const mediaType = this.commentMediaType(ev)
+          const subject = mediaType === "video" ? "video" : "image"
+          return `@${u} mentioned you in a ${subject} comment`
+        }
         default:
           return `Activity: ${ev.type}`
       }
+    },
+    commentMediaType(ev: EventsPrivateEvents200Item): "image" | "video" {
+      const data = this.parseData(ev) || {}
+      const direct = data.mediaType || data.media_type
+      if (direct === "video") return "video"
+      if (direct === "image") return "image"
+      if (data.videoId || data.video_id) return "video"
+      return "image"
+    },
+    commentPreview(ev: EventsPrivateEvents200Item): string {
+      if (ev.type !== "creationCommented" && ev.type !== "commentMentioned") return ""
+      const data = this.parseData(ev) || {}
+      const preview = data.preview || data.commentPreview || data.comment_preview
+      if (!preview) return ""
+      const raw = String(preview).trim()
+      if (!raw) return ""
+      const decoded = decodeHtmlEntities(raw)
+      if (!decoded) return ""
+      if (decoded.length > 160) return `${decoded.slice(0, 157)}…`
+      return decoded
+    },
+    commentPayload(ev: EventsPrivateEvents200Item) {
+      if (ev.type !== "creationCommented" && ev.type !== "commentMentioned") return null
+      const data = this.parseData(ev) || {}
+      const mediaId = data.mediaId || data.media_id || data.imageId || data.image_id || data.videoId || data.video_id
+      if (!mediaId) return null
+      const commentId = data.commentId || data.comment_id || null
+      const mediaType = this.commentMediaType(ev)
+      return {
+        mediaId: String(mediaId),
+        mediaType,
+        commentId: commentId ? String(commentId) : null,
+      }
+    },
+    async openCommentFromEvent(ev: EventsPrivateEvents200Item) {
+      const payload = this.commentPayload(ev)
+      if (!payload) {
+        await this.toggleSeen(ev)
+        return
+      }
+      this.open = false
+      await this.toggleSeen(ev)
+      const media = { id: payload.mediaId, type: payload.mediaType }
+      void mediaViwer.show([media as any], 0, true, { initialCommentId: payload.commentId ?? undefined })
     },
     timeAgo(iso: string) {
       const diff = Date.now() - new Date(iso).getTime()
@@ -399,6 +509,27 @@ export default defineComponent({
     color: #c7f3ff
   &:visited
     color: #9be9ff
+
+.notif-comment-preview
+  color: #cfd8dc
+  word-break: break-word
+
+.notif-comment-link
+  color: #9be9ff
+  cursor: pointer
+  text-decoration: none
+  &:hover
+    text-decoration: underline
+
+.notif-item
+  align-items: flex-start
+  padding-top: 12px
+  padding-bottom: 12px
+  .q-item__section--avatar
+    padding-top: 4px
+  .q-item__section--side
+    align-self: flex-start
+    padding-top: 4px
 
 .notif-menu-mobile
   position: fixed !important

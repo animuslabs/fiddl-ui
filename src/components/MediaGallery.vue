@@ -4,6 +4,7 @@ import { useQuasar, LocalStorage } from "quasar"
 import { Dialog } from "quasar"
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
+import mediaViwer, { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import { usePopularityStore } from "src/stores/popularityStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
@@ -222,6 +223,16 @@ function onFavorite(id: string, type: MediaType) {
 
   // User owns/unlocked -> proceed
   void popularity.toggleFavorite(id, type)
+}
+
+function openCommentsFromOverlay(media: MediaGalleryMeta) {
+  if (!media?.id || media.placeholder === true) return
+  const items = galleryItems.value
+  if (!items.length) return
+  const targetIndex = items.findIndex((item) => item.id === media.id)
+  const startIndex = targetIndex >= 0 ? targetIndex : 0
+  const allowDelete = !!props.showDeleteButton
+  void mediaViwer.show(items, startIndex, allowDelete, { initialCommentId: COMMENT_DIALOG_SENTINEL })
 }
 
 const wrapperStyles = computed(() => {
@@ -759,6 +770,16 @@ function showVideoOverlay(id: string): boolean {
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            q-btn(
+              :size="popIconSize"
+              flat
+              dense
+              round
+              icon="chat_bubble"
+              color="white"
+              @click.stop="openCommentsFromOverlay(m)"
+            )
+            span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
             .upvote-burst-wrap
               q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
               transition(name="burst")
@@ -824,6 +845,16 @@ function showVideoOverlay(id: string): boolean {
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            q-btn(
+              :size="popIconSize"
+              flat
+              dense
+              round
+              icon="chat_bubble"
+              color="white"
+              @click.stop="openCommentsFromOverlay(m)"
+            )
+            span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
             .upvote-burst-wrap
               q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
               transition(name="burst")

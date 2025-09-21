@@ -14,7 +14,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
       "lib/*": ["src/lib/*"],

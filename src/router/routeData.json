@@ -128,11 +128,20 @@
     "missions",
     "/missions",
     "MissionsPage"
-  ]
-  ,
+  ],
   [
     "tgLogin",
     "/tg-login",
     "TgLogin"
+  ],
+  [
+    "imageMedia",
+    "/image/:mediaId",
+    "MediaCreationPage"
+  ],
+  [
+    "videoMedia",
+    "/video/:mediaId",
+    "MediaCreationPage"
   ]
 ]

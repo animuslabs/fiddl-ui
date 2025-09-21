@@ -234,6 +234,7 @@ export type CreateVideo200VideosItem = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
   replicatePredictionId: string | null;
@@ -520,13 +521,34 @@ imageId?: string;
 videoId?: string;
 };
 
+/**
+ * @nullable
+ */
+export type CreationsGetCreationData200Metadata = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  publishedById: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+} | null;
+
 export type CreationsGetCreationData200 = {
   id: string;
   createdAt: string;
+  nsfw: boolean;
   requestId: string;
   seed?: number;
   creatorId: string;
   numCollections: number;
+  /** @nullable */
+  metadata: CreationsGetCreationData200Metadata;
 };
 
 export type CreationsUserImagePurchasesParams = {
@@ -732,9 +754,15 @@ export const CreationsCreateImageRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsCreateImageRequests200ItemImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsCreateImageRequests200Item = {
   id: string;
   imageIds: string[];
+  images: CreationsCreateImageRequests200ItemImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -813,9 +841,15 @@ export const CreationsCreateVideoRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsCreateVideoRequests200ItemVideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsCreateVideoRequests200Item = {
   id: string;
   videoIds: string[];
+  videos: CreationsCreateVideoRequests200ItemVideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -894,6 +928,11 @@ export const CreationsGetMediaRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsGetMediaRequests200ItemAnyOfImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetMediaRequests200ItemAnyOfMediaType = typeof CreationsGetMediaRequests200ItemAnyOfMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfMediaType];
 
 
@@ -905,6 +944,7 @@ export const CreationsGetMediaRequests200ItemAnyOfMediaType = {
 export type CreationsGetMediaRequests200ItemAnyOf = {
   id: string;
   imageIds: string[];
+  images: CreationsGetMediaRequests200ItemAnyOfImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -921,17 +961,23 @@ export type CreationsGetMediaRequests200ItemAnyOf = {
   mediaType: CreationsGetMediaRequests200ItemAnyOfMediaType;
 };
 
-export type CreationsGetMediaRequests200ItemAnyOfThreeMediaType = typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType];
+export type CreationsGetMediaRequests200ItemAnyOfFourVideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
+export type CreationsGetMediaRequests200ItemAnyOfFourMediaType = typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsGetMediaRequests200ItemAnyOfThreeMediaType = {
+export const CreationsGetMediaRequests200ItemAnyOfFourMediaType = {
   video: 'video',
 } as const;
 
-export type CreationsGetMediaRequests200ItemAnyOfThree = {
+export type CreationsGetMediaRequests200ItemAnyOfFour = {
   id: string;
   videoIds: string[];
+  videos: CreationsGetMediaRequests200ItemAnyOfFourVideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -945,18 +991,24 @@ export type CreationsGetMediaRequests200ItemAnyOfThree = {
   quantity: number;
   startImageId?: string;
   uploadedStartImageId?: string;
-  mediaType: CreationsGetMediaRequests200ItemAnyOfThreeMediaType;
+  mediaType: CreationsGetMediaRequests200ItemAnyOfFourMediaType;
 };
 
-export type CreationsGetMediaRequests200Item = CreationsGetMediaRequests200ItemAnyOf | CreationsGetMediaRequests200ItemAnyOfThree;
+export type CreationsGetMediaRequests200Item = CreationsGetMediaRequests200ItemAnyOf | CreationsGetMediaRequests200ItemAnyOfFour;
 
 export type CreationsGetImageRequestParams = {
 imageRequestId: string;
 };
 
+export type CreationsGetImageRequest200ImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetImageRequest200 = {
   id: string;
   imageIds: string[];
+  images: CreationsGetImageRequest200ImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -976,9 +1028,15 @@ export type CreationsGetVideoRequestParams = {
 videoRequestId: string;
 };
 
+export type CreationsGetVideoRequest200VideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetVideoRequest200 = {
   id: string;
   videoIds: string[];
+  videos: CreationsGetVideoRequest200VideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -1105,6 +1163,33 @@ imageId: string;
 export type CreationsPurchaseMediaBody = {
   imageId?: string;
   videoId?: string;
+};
+
+export type CreationsPublishMediaBody = {
+  imageId?: string;
+  videoId?: string;
+  /**
+   * @minLength 1
+   * @maxLength 120
+   */
+  title: string;
+  /** @maxLength 500 */
+  description?: string;
+};
+
+export type CreationsPublishMedia200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  publishedById: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
 };
 
 export type CreationsDeleteMediaBody = {
@@ -2075,6 +2160,7 @@ export type CollectionsGetCollectionImages200Item = {
   errored: boolean;
   filtered: boolean;
   deleted: boolean;
+  nsfw: boolean;
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
 
@@ -2123,6 +2209,7 @@ export type CollectionsGetCollectionVideos200Item = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
   replicatePredictionId: string | null;
@@ -3602,6 +3689,7 @@ export type PopularityBatch200Item = {
   favorites: number;
   upvotes: number;
   downvotes: number;
+  commentsCount: number;
   isFavoritedByMe?: boolean;
   isUpvotedByMe?: boolean;
   hidden?: boolean;
@@ -3629,6 +3717,8 @@ export const EventsPublicEventsTypesItem = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -3647,6 +3737,8 @@ export const EventsPublicEvents200ItemType = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -3683,6 +3775,8 @@ export const EventsPrivateEventsTypesItem = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -3701,6 +3795,8 @@ export const EventsPrivateEvents200ItemType = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -4023,6 +4119,134 @@ export type DiscountsMyCodes200Item = {
   uniqueUsers: number;
   /** @nullable */
   lastUsedAt: string | null;
+};
+
+export type CommentsCountParams = {
+imageId?: string;
+videoId?: string;
+};
+
+export type CommentsCount200 = {
+  count: number;
+};
+
+export type CommentsListParams = {
+imageId?: string;
+videoId?: string;
+limit?: number;
+before?: string;
+};
+
+export type CommentsList200CommentsItemAuthor = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsList200CommentsItemMentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsList200CommentsItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsList200CommentsItemAuthor;
+  mentions: CommentsList200CommentsItemMentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsList200 = {
+  comments: CommentsList200CommentsItem[];
+};
+
+export type CommentsCreateBody = {
+  imageId?: string;
+  videoId?: string;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  content: string;
+};
+
+export type CommentsCreate200Author = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsCreate200MentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsCreate200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsCreate200Author;
+  mentions: CommentsCreate200MentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsEditBody = {
+  commentId: string;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  content: string;
+};
+
+export type CommentsEdit200Author = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsEdit200MentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsEdit200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsEdit200Author;
+  mentions: CommentsEdit200MentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsDeleteBody = {
+  commentId: string;
+};
+
+export type CommentsDelete200 = {
+  success: boolean;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -4682,6 +4906,28 @@ export const creationsPurchaseMedia = async (creationsPurchaseMediaBody: Creatio
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       creationsPurchaseMediaBody,)
+  }
+);}
+
+
+
+export const getCreationsPublishMediaUrl = () => {
+
+
+  
+
+  return `/creations/publishMedia`
+}
+
+export const creationsPublishMedia = async (creationsPublishMediaBody: CreationsPublishMediaBody, options?: RequestInit): Promise<CreationsPublishMedia200> => {
+  
+  return fetcher<CreationsPublishMedia200>(getCreationsPublishMediaUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creationsPublishMediaBody,)
   }
 );}
 
@@ -7419,5 +7665,127 @@ export const discountsMyCodes = async ( options?: RequestInit): Promise<Discount
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getCommentsCountUrl = (params?: CommentsCountParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/comments/count?${stringifiedParams}` : `/comments/count`
+}
+
+export const commentsCount = async (params?: CommentsCountParams, options?: RequestInit): Promise<CommentsCount200> => {
+  
+  return fetcher<CommentsCount200>(getCommentsCountUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getCommentsListUrl = (params?: CommentsListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/comments/list?${stringifiedParams}` : `/comments/list`
+}
+
+export const commentsList = async (params?: CommentsListParams, options?: RequestInit): Promise<CommentsList200> => {
+  
+  return fetcher<CommentsList200>(getCommentsListUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getCommentsCreateUrl = () => {
+
+
+  
+
+  return `/comments/create`
+}
+
+export const commentsCreate = async (commentsCreateBody: CommentsCreateBody, options?: RequestInit): Promise<CommentsCreate200> => {
+  
+  return fetcher<CommentsCreate200>(getCommentsCreateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      commentsCreateBody,)
+  }
+);}
+
+
+
+export const getCommentsEditUrl = () => {
+
+
+  
+
+  return `/comments/edit`
+}
+
+export const commentsEdit = async (commentsEditBody: CommentsEditBody, options?: RequestInit): Promise<CommentsEdit200> => {
+  
+  return fetcher<CommentsEdit200>(getCommentsEditUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      commentsEditBody,)
+  }
+);}
+
+
+
+export const getCommentsDeleteUrl = () => {
+
+
+  
+
+  return `/comments/delete`
+}
+
+export const commentsDelete = async (commentsDeleteBody: CommentsDeleteBody, options?: RequestInit): Promise<CommentsDelete200> => {
+  
+  return fetcher<CommentsDelete200>(getCommentsDeleteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      commentsDeleteBody,)
   }
 );}

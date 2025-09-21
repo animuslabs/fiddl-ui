@@ -1,5 +1,5 @@
 import { boot } from "quasar/wrappers"
-import { QInput, QBtn, QCard, QRouteTab, QTab } from "quasar"
+import { QInput, QBtn, QCard, QDialog, QRouteTab, QTab } from "quasar"
 
 const setDefault = (component: any, key: string, value: any) => {
   const prop = component.props[key]
@@ -37,4 +37,5 @@ export default boot(({ app }) => {
   setDefault(QBtn, "ripple", false)
 
   setDefault(QRouteTab, "ripple", false)
+  setDefault(QDialog, "transitionDuration", 200)
 })

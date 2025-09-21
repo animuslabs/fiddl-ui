@@ -2,14 +2,23 @@ import { Dialog } from "quasar"
 import MediaViewer from "src/components/dialogs/MediaViewer.vue"
 import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 import { usePopularityStore } from "src/stores/popularityStore"
+
+export const COMMENT_DIALOG_SENTINEL = "__media_viewer_open_comments__"
 type Props = InstanceType<typeof MediaViewer>["$props"]
 
+interface MediaViewerShowOptions {
+  requestId?: string
+  initialCommentId?: string | null
+}
+
 const mediaViwer = {
-  show(mediaObjects: MediaGalleryMeta[], startIndex = 0, allowDelete = true) {
+  show(mediaObjects: MediaGalleryMeta[], startIndex = 0, allowDelete = true, options: MediaViewerShowOptions = {}) {
     const componentProps: Props = {
       mediaObjects,
       startIndex,
       allowDelete,
+      requestId: options.requestId,
+      initialCommentId: options.initialCommentId ?? null,
     }
     try {
       const popularity = usePopularityStore()

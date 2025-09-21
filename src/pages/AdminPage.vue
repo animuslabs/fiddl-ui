@@ -229,6 +229,29 @@ q-page.full-height.full-width.admin-page
               q-btn(size="sm" icon="login" flat @click="loginAsUser(props.row.user.id)" class="q-ml-xs")
             template(v-else)
               span -
+      template(#body-cell-discount="props")
+        q-td(:props="props")
+          template(v-if="props.row.discountInfo")
+            .row.items-center.q-gutter-xs
+              q-chip(v-if="props.row.discountInfo.code" size="sm" dense color="primary" text-color="white" :label="props.row.discountInfo.code")
+              q-chip(
+                v-if="props.row.discountInfo.percent != null"
+                size="sm"
+                dense
+                color="positive"
+                text-color="white"
+                :label="`-${formatDiscountPercent(props.row.discountInfo.percent)}`"
+              )
+              q-chip(
+                v-if="props.row.discountInfo.amountUsd != null"
+                size="sm"
+                dense
+                color="positive"
+                text-color="white"
+                :label="`-${formatDiscountAmount(props.row.discountInfo.amountUsd)}`"
+              )
+          template(v-else)
+            span -
       template(#body-cell-package="props")
         q-td(:props="props")
           div(v-if="props.row.package")
@@ -607,7 +630,7 @@ export default defineComponent({
             return row[sortBy]
         }
       }
-      return rows.slice().sort((a: any, b: any) => {
+      const sorted = rows.slice().sort((a: any, b: any) => {
         const av = val(a)
         const bv = val(b)
         let cmp = 0
@@ -616,6 +639,10 @@ export default defineComponent({
         else cmp = String(av ?? "").localeCompare(String(bv ?? ""))
         return desc ? -cmp : cmp
       })
+      return sorted.map((row: any) => ({
+        ...row,
+        discountInfo: paymentDiscountInfo(row),
+      }))
     })
     const paymentsTotal = computed(() => paymentsQuery.data?.value?.data?.total || paymentsRows.value.length)
     const paymentsLoading = paymentsQuery.isLoading
@@ -674,6 +701,73 @@ export default defineComponent({
 
     const userDisplay = (user: any) => user?.username || user?.email || user?.telegramName || user?.telegramId || user?.id || "-"
 
+    const normalizeDiscountPercent = (raw: unknown): number | null => {
+      if (raw == null) return null
+      const value = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : Number.NaN
+      if (!Number.isFinite(value) || value <= 0) return null
+      const percent = value <= 1 ? value * 100 : value
+      return Math.round(percent * 100) / 100
+    }
+
+    const normalizeDiscountAmount = (raw: unknown): number | null => {
+      if (raw == null) return null
+      const value = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : Number.NaN
+      if (!Number.isFinite(value) || Math.abs(value) <= 0) return null
+      return Math.round(Math.abs(value) * 100) / 100
+    }
+
+    const paymentDiscountInfo = (row: any): { code?: string; percent?: number; amountUsd?: number } | null => {
+      if (!row) return null
+
+      const details = row.details || {}
+      const pkg = row.package || {}
+
+      const possibleCodes = [row.discountCode, details.discountCode, details.discount_code, details.discountcode]
+      const discountCode = possibleCodes
+        .map((code: unknown) => (typeof code === "string" ? code.trim() : ""))
+        .find((code) => !!code)
+
+      const discountPctRaw =
+        row.discountPct ??
+        details.discountPct ??
+        details.discount_pct ??
+        details.discountPercent ??
+        details.discount_percent ??
+        pkg.discountPct ??
+        pkg.discount_pct
+
+      const percent = normalizeDiscountPercent(discountPctRaw)
+
+      const discountAmountRaw =
+        row.discountAmount ??
+        row.discountUsd ??
+        details.discountAmount ??
+        details.discount_amount ??
+        details.discountUsd ??
+        details.discount_usd
+
+      const amountUsd = normalizeDiscountAmount(discountAmountRaw)
+
+      if (!discountCode && percent == null && amountUsd == null) return null
+
+      return {
+        code: discountCode || undefined,
+        percent: percent ?? undefined,
+        amountUsd: amountUsd ?? undefined,
+      }
+    }
+
+    const formatDiscountPercent = (pct: number) => {
+      if (!Number.isFinite(pct)) return ""
+      const rounded = Math.abs(pct)
+      return rounded % 1 === 0 ? `${rounded.toFixed(0)}%` : `${rounded.toFixed(2)}%`
+    }
+
+    const formatDiscountAmount = (amount: number) => {
+      if (!Number.isFinite(amount)) return ""
+      return `$${Math.abs(amount).toFixed(2)}`
+    }
+
     const paymentsColumns: QTableColumn<any>[] = [
       { name: "createdAt", label: "Date", field: "createdAt", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
       { name: "user", label: "User", field: (row: any) => row.user?.username || row.user?.email || row.user?.telegramName || row.user?.telegramId || row.user?.id || "-", sortable: true },
@@ -681,6 +775,7 @@ export default defineComponent({
       { name: "status", label: "Status", field: "status", sortable: true },
       { name: "points", label: "Points", field: "points", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
       { name: "amountUsd", label: "USD", field: "amountUsd", align: "right", sortable: true, format: (val: number) => (val != null ? `$${val.toFixed(2)}` : "") },
+      { name: "discount", label: "Discount", field: (row: any) => row, sortable: false },
       { name: "package", label: "Package", field: (row: any) => row.package, sortable: false },
       { name: "details", label: "Details", field: (row: any) => row.details, sortable: false },
       { name: "updatedAt", label: "Updated", field: "updatedAt", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
@@ -1239,6 +1334,9 @@ export default defineComponent({
       onPaymentsRequest,
       statusColor,
       userDisplay,
+      paymentDiscountInfo,
+      formatDiscountPercent,
+      formatDiscountAmount,
       profileLinkForUser,
       profileLinkForUsername,
       profileLinkByUserId,

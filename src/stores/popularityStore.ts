@@ -11,6 +11,7 @@ export interface PopularityEntry {
   favorites: number
   upvotes: number
   downvotes: number
+  commentsCount?: number
   isFavoritedByMe?: boolean
   isUpvotedByMe?: boolean
   hidden?: boolean
@@ -166,6 +167,7 @@ export const usePopularityStore = defineStore("popularityStore", {
             favorites: p.favorites ?? 0,
             upvotes: p.upvotes ?? 0,
             downvotes: p.downvotes ?? 0,
+            commentsCount: p.commentsCount ?? 0,
             isFavoritedByMe: p.isFavoritedByMe,
             isUpvotedByMe: p.isUpvotedByMe,
             hidden: p.hidden ?? false,
@@ -225,6 +227,7 @@ export const usePopularityStore = defineStore("popularityStore", {
             favorites: p.favorites ?? 0,
             upvotes: p.upvotes ?? 0,
             downvotes: p.downvotes ?? 0,
+            commentsCount: p.commentsCount ?? 0,
             isFavoritedByMe: p.isFavoritedByMe,
             isUpvotedByMe: p.isUpvotedByMe,
             hidden: p.hidden ?? false,
@@ -243,7 +246,7 @@ export const usePopularityStore = defineStore("popularityStore", {
       try {
         let e = this.entries[id]
         if (!e) {
-          e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, hidden: false }
+          e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, commentsCount: 0, hidden: false }
         }
         const type = mediaType || e.mediaType || "image"
         const prev = { ...e }
@@ -278,7 +281,7 @@ export const usePopularityStore = defineStore("popularityStore", {
               },
             }).onOk(async () => {
               try {
-                const entry = this.entries[id] || { id, mediaType: type, favorites: 0, upvotes: 0, downvotes: 0, hidden: false }
+                const entry = this.entries[id] || { id, mediaType: type, favorites: 0, upvotes: 0, downvotes: 0, commentsCount: 0, hidden: false }
                 if (!entry.isFavoritedByMe) {
                   entry.isFavoritedByMe = true
                   entry.favorites = Math.max(0, (entry.favorites ?? 0) + 1)
@@ -340,7 +343,7 @@ export const usePopularityStore = defineStore("popularityStore", {
       // Allow parallel upvote calls: no per-id _mutating lock here
       let e = this.entries[id]
       if (!e) {
-        e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, hidden: false }
+        e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, commentsCount: 0, hidden: false }
       }
       const type = mediaType || e.mediaType || "image"
 
@@ -376,7 +379,7 @@ export const usePopularityStore = defineStore("popularityStore", {
       try {
         let e = this.entries[id]
         if (!e) {
-          e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, hidden: false }
+          e = { id, mediaType, favorites: 0, upvotes: 0, downvotes: 0, commentsCount: 0, hidden: false }
         }
         const type = mediaType || e.mediaType || "image"
         const prev = { ...e }

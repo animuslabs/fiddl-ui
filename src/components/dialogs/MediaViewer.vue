@@ -4,6 +4,7 @@ MediaViewerDialog(
   :requestId="requestId"
   :startIndex="startIndex"
   :allowDelete="allowDelete"
+  :initialCommentId="initialCommentId"
   @ok="onOKClick"
   @hide="onDialogHide"
   ref="dialogRef"
@@ -37,6 +38,11 @@ export default defineComponent({
     allowDelete: {
       type: Boolean,
       default: true,
+    },
+    initialCommentId: {
+      type: String,
+      default: null,
+      required: false,
     },
   },
   emits: ["ok", "hide"],

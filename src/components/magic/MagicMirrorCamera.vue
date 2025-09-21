@@ -444,7 +444,7 @@ async function onFileInputChange(e: Event) {
       quasar.notify({ color: "warning", message: `Skipped ${failed} unsupported image${failed > 1 ? "s" : ""}.` })
     }
     if (blobs.length > 0) {
-      const payload = singleSelection ? [blobs[0]] : blobs
+      const payload: Blob[] = singleSelection ? [blobs[0]!] : blobs
       emit("captured", payload)
     } else {
       emit("error", "gallery_failed")

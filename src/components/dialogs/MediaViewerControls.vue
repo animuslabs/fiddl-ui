@@ -35,6 +35,15 @@
     v-if="mediaViewerStore.loadedRequestId"
   )
 
+  q-btn(
+    icon="chat_bubble"
+    flat
+    round
+    color="grey-5"
+    @click.stop="showCommentsDialog()"
+  )
+  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.commentsCount") {{ popularity.get(mediaViewerStore.currentMediaId)?.commentsCount ?? 0 }}
+
   div
     q-btn(
       icon="download"
@@ -119,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, ref, watch, nextTick } from "vue"
 import { Dialog } from "quasar"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
@@ -128,22 +137,26 @@ import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { creationsDeleteMedia, creationsGetCreationData } from "src/lib/orval"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
+import { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
 import EditMedia from "./EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
 import RequestInfoDialog from "./RequestInfoDialog.vue"
+import MediaCommentsDialog from "components/dialogs/MediaCommentsDialog.vue"
 import { useRouter } from "vue-router"
 import { usePopularityStore } from "src/stores/popularityStore"
 
 interface Props {
   allowDelete?: boolean
   downloadMode?: boolean
+  initialCommentId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   allowDelete: true,
   downloadMode: false,
+  initialCommentId: null,
 })
 
 const emit = defineEmits<{
@@ -156,6 +169,8 @@ const router = useRouter()
 const shareMenuOpen = ref(true)
 const moreMenuOpen = ref(true)
 const popularity = usePopularityStore()
+const pendingCommentId = ref<string | null>(props.initialCommentId)
+const autoOpenedInitialComment = ref(false)
 
 // Optional privacy knowledge propagated via mediaObjects entries
 // const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
@@ -235,6 +250,29 @@ function showRequestInfoDialog() {
       type: mediaViewerStore.currentMediaType,
     },
   })
+}
+
+function showCommentsDialog(targetCommentId?: string | null) {
+  if (!mediaViewerStore.currentMediaId) return
+  const previewUrl = mediaViewerStore.getCurrentMediaUrl()
+  Dialog.create({
+    component: MediaCommentsDialog,
+    componentProps: {
+      mediaId: mediaViewerStore.currentMediaId,
+      mediaType: mediaViewerStore.currentMediaType,
+      previewUrl,
+      targetCommentId: targetCommentId ?? null,
+    },
+  })
+}
+
+function openPendingCommentDialog() {
+  const target = pendingCommentId.value
+  if (!target) return
+  autoOpenedInitialComment.value = true
+  const resolvedTarget = target === COMMENT_DIALOG_SENTINEL ? null : target
+  showCommentsDialog(resolvedTarget)
+  pendingCommentId.value = null
 }
 
 async function toggleFavorite() {
@@ -335,6 +373,32 @@ function showDownloadWindow() {
       void mediaViewerStore.loadHdMedia()
     })
 }
+
+watch(
+  () => mediaViewerStore.currentMediaId,
+  async (mediaId) => {
+    if (!mediaId) return
+    if (!pendingCommentId.value) return
+    if (autoOpenedInitialComment.value) return
+    await nextTick()
+    if (!pendingCommentId.value || autoOpenedInitialComment.value) return
+    openPendingCommentDialog()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.initialCommentId,
+  async (value) => {
+    if (!value) return
+    pendingCommentId.value = value
+    autoOpenedInitialComment.value = false
+    if (!mediaViewerStore.currentMediaId) return
+    await nextTick()
+    if (!pendingCommentId.value || autoOpenedInitialComment.value) return
+    openPendingCommentDialog()
+  },
+)
 
 function setProfileImage() {
   Dialog.create({

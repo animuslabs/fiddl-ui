@@ -7,6 +7,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="mediaViewerSto
           .relative-position
             MediaViewerControls(
               :allowDelete="allowDelete"
+              :initialCommentId="initialCommentId"
               @close="hide"
             )
 
@@ -29,12 +30,14 @@ interface Props {
   requestId?: string
   startIndex?: number
   allowDelete?: boolean
+  initialCommentId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   requestId: "",
   startIndex: 0,
   allowDelete: true,
+  initialCommentId: null,
 })
 
 const emit = defineEmits<{

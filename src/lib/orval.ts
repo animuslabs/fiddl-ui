@@ -263,6 +263,7 @@ export type CreateVideo200VideosItem = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
   replicatePredictionId: string | null;
@@ -549,13 +550,34 @@ imageId?: string;
 videoId?: string;
 };
 
+/**
+ * @nullable
+ */
+export type CreationsGetCreationData200Metadata = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  publishedById: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+} | null;
+
 export type CreationsGetCreationData200 = {
   id: string;
   createdAt: string;
+  nsfw: boolean;
   requestId: string;
   seed?: number;
   creatorId: string;
   numCollections: number;
+  /** @nullable */
+  metadata: CreationsGetCreationData200Metadata;
 };
 
 export type CreationsUserImagePurchasesParams = {
@@ -761,9 +783,15 @@ export const CreationsCreateImageRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsCreateImageRequests200ItemImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsCreateImageRequests200Item = {
   id: string;
   imageIds: string[];
+  images: CreationsCreateImageRequests200ItemImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -842,9 +870,15 @@ export const CreationsCreateVideoRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsCreateVideoRequests200ItemVideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsCreateVideoRequests200Item = {
   id: string;
   videoIds: string[];
+  videos: CreationsCreateVideoRequests200ItemVideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -923,6 +957,11 @@ export const CreationsGetMediaRequestsAspectRatio = {
   '4:3': '4:3',
 } as const;
 
+export type CreationsGetMediaRequests200ItemAnyOfImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetMediaRequests200ItemAnyOfMediaType = typeof CreationsGetMediaRequests200ItemAnyOfMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfMediaType];
 
 
@@ -934,6 +973,7 @@ export const CreationsGetMediaRequests200ItemAnyOfMediaType = {
 export type CreationsGetMediaRequests200ItemAnyOf = {
   id: string;
   imageIds: string[];
+  images: CreationsGetMediaRequests200ItemAnyOfImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -950,17 +990,23 @@ export type CreationsGetMediaRequests200ItemAnyOf = {
   mediaType: CreationsGetMediaRequests200ItemAnyOfMediaType;
 };
 
-export type CreationsGetMediaRequests200ItemAnyOfThreeMediaType = typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfThreeMediaType];
+export type CreationsGetMediaRequests200ItemAnyOfFourVideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
+export type CreationsGetMediaRequests200ItemAnyOfFourMediaType = typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreationsGetMediaRequests200ItemAnyOfThreeMediaType = {
+export const CreationsGetMediaRequests200ItemAnyOfFourMediaType = {
   video: 'video',
 } as const;
 
-export type CreationsGetMediaRequests200ItemAnyOfThree = {
+export type CreationsGetMediaRequests200ItemAnyOfFour = {
   id: string;
   videoIds: string[];
+  videos: CreationsGetMediaRequests200ItemAnyOfFourVideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -974,18 +1020,24 @@ export type CreationsGetMediaRequests200ItemAnyOfThree = {
   quantity: number;
   startImageId?: string;
   uploadedStartImageId?: string;
-  mediaType: CreationsGetMediaRequests200ItemAnyOfThreeMediaType;
+  mediaType: CreationsGetMediaRequests200ItemAnyOfFourMediaType;
 };
 
-export type CreationsGetMediaRequests200Item = CreationsGetMediaRequests200ItemAnyOf | CreationsGetMediaRequests200ItemAnyOfThree;
+export type CreationsGetMediaRequests200Item = CreationsGetMediaRequests200ItemAnyOf | CreationsGetMediaRequests200ItemAnyOfFour;
 
 export type CreationsGetImageRequestParams = {
 imageRequestId: string;
 };
 
+export type CreationsGetImageRequest200ImagesItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetImageRequest200 = {
   id: string;
   imageIds: string[];
+  images: CreationsGetImageRequest200ImagesItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -1005,9 +1057,15 @@ export type CreationsGetVideoRequestParams = {
 videoRequestId: string;
 };
 
+export type CreationsGetVideoRequest200VideosItem = {
+  id: string;
+  nsfw: boolean;
+};
+
 export type CreationsGetVideoRequest200 = {
   id: string;
   videoIds: string[];
+  videos: CreationsGetVideoRequest200VideosItem[];
   createdAt: string;
   aspectRatio: string;
   public: boolean;
@@ -1134,6 +1192,33 @@ imageId: string;
 export type CreationsPurchaseMediaBody = {
   imageId?: string;
   videoId?: string;
+};
+
+export type CreationsPublishMediaBody = {
+  imageId?: string;
+  videoId?: string;
+  /**
+   * @minLength 1
+   * @maxLength 120
+   */
+  title: string;
+  /** @maxLength 500 */
+  description?: string;
+};
+
+export type CreationsPublishMedia200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  publishedById: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
 };
 
 export type CreationsDeleteMediaBody = {
@@ -2104,6 +2189,7 @@ export type CollectionsGetCollectionImages200Item = {
   errored: boolean;
   filtered: boolean;
   deleted: boolean;
+  nsfw: boolean;
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
 
@@ -2152,6 +2238,7 @@ export type CollectionsGetCollectionVideos200Item = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
   replicatePredictionId: string | null;
@@ -3631,6 +3718,7 @@ export type PopularityBatch200Item = {
   favorites: number;
   upvotes: number;
   downvotes: number;
+  commentsCount: number;
   isFavoritedByMe?: boolean;
   isUpvotedByMe?: boolean;
   hidden?: boolean;
@@ -3658,6 +3746,8 @@ export const EventsPublicEventsTypesItem = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -3676,6 +3766,8 @@ export const EventsPublicEvents200ItemType = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -3712,6 +3804,8 @@ export const EventsPrivateEventsTypesItem = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -3730,6 +3824,8 @@ export const EventsPrivateEvents200ItemType = {
   referredUser: 'referredUser',
   missionCompleted: 'missionCompleted',
   earnedComission: 'earnedComission',
+  creationCommented: 'creationCommented',
+  commentMentioned: 'commentMentioned',
 } as const;
 
 export type EventsPrivateEvents200Item = {
@@ -4052,6 +4148,134 @@ export type DiscountsMyCodes200Item = {
   uniqueUsers: number;
   /** @nullable */
   lastUsedAt: string | null;
+};
+
+export type CommentsCountParams = {
+imageId?: string;
+videoId?: string;
+};
+
+export type CommentsCount200 = {
+  count: number;
+};
+
+export type CommentsListParams = {
+imageId?: string;
+videoId?: string;
+limit?: number;
+before?: string;
+};
+
+export type CommentsList200CommentsItemAuthor = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsList200CommentsItemMentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsList200CommentsItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsList200CommentsItemAuthor;
+  mentions: CommentsList200CommentsItemMentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsList200 = {
+  comments: CommentsList200CommentsItem[];
+};
+
+export type CommentsCreateBody = {
+  imageId?: string;
+  videoId?: string;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  content: string;
+};
+
+export type CommentsCreate200Author = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsCreate200MentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsCreate200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsCreate200Author;
+  mentions: CommentsCreate200MentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsEditBody = {
+  commentId: string;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  content: string;
+};
+
+export type CommentsEdit200Author = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsEdit200MentionsItem = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+};
+
+export type CommentsEdit200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  content: string;
+  userId: string;
+  /** @nullable */
+  imageId: string | null;
+  /** @nullable */
+  videoId: string | null;
+  author: CommentsEdit200Author;
+  mentions: CommentsEdit200MentionsItem[];
+  edited: boolean;
+};
+
+export type CommentsDeleteBody = {
+  commentId: string;
+};
+
+export type CommentsDelete200 = {
+  success: boolean;
 };
 
 export const pkAuthRegisterStart = (
@@ -5536,6 +5760,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getCreationsPurchaseMediaMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const creationsPublishMedia = (
+    creationsPublishMediaBody: MaybeRef<CreationsPublishMediaBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CreationsPublishMedia200>> => {
+    creationsPublishMediaBody = unref(creationsPublishMediaBody);
+    
+    return axios.post(
+      `/creations/publishMedia`,
+      creationsPublishMediaBody,options
+    );
+  }
+
+
+
+export const getCreationsPublishMediaMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPublishMedia>>, TError,{data: CreationsPublishMediaBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof creationsPublishMedia>>, TError,{data: CreationsPublishMediaBody}, TContext> => {
+
+const mutationKey = ['creationsPublishMedia'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creationsPublishMedia>>, {data: CreationsPublishMediaBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  creationsPublishMedia(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreationsPublishMediaMutationResult = NonNullable<Awaited<ReturnType<typeof creationsPublishMedia>>>
+    export type CreationsPublishMediaMutationBody = CreationsPublishMediaBody
+    export type CreationsPublishMediaMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCreationsPublishMedia = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creationsPublishMedia>>, TError,{data: CreationsPublishMediaBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof creationsPublishMedia>>,
+        TError,
+        {data: CreationsPublishMediaBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreationsPublishMediaMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -11954,3 +12234,290 @@ export function useDiscountsMyCodes<TData = Awaited<ReturnType<typeof discountsM
 
   return query;
 }
+
+
+
+
+export const commentsCount = (
+    params?: MaybeRef<CommentsCountParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CommentsCount200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/comments/count`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCommentsCountQueryKey = (params?: MaybeRef<CommentsCountParams>,) => {
+    return ['comments','count', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCommentsCountQueryOptions = <TData = Awaited<ReturnType<typeof commentsCount>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CommentsCountParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commentsCount>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCommentsCountQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof commentsCount>>> = ({ signal }) => commentsCount(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof commentsCount>>, TError, TData> 
+}
+
+export type CommentsCountQueryResult = NonNullable<Awaited<ReturnType<typeof commentsCount>>>
+export type CommentsCountQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCommentsCount<TData = Awaited<ReturnType<typeof commentsCount>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CommentsCountParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commentsCount>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCommentsCountQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const commentsList = (
+    params?: MaybeRef<CommentsListParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CommentsList200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/comments/list`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getCommentsListQueryKey = (params?: MaybeRef<CommentsListParams>,) => {
+    return ['comments','list', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getCommentsListQueryOptions = <TData = Awaited<ReturnType<typeof commentsList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<CommentsListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commentsList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getCommentsListQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof commentsList>>> = ({ signal }) => commentsList(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof commentsList>>, TError, TData> 
+}
+
+export type CommentsListQueryResult = NonNullable<Awaited<ReturnType<typeof commentsList>>>
+export type CommentsListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useCommentsList<TData = Awaited<ReturnType<typeof commentsList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<CommentsListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commentsList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCommentsListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const commentsCreate = (
+    commentsCreateBody: MaybeRef<CommentsCreateBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CommentsCreate200>> => {
+    commentsCreateBody = unref(commentsCreateBody);
+    
+    return axios.post(
+      `/comments/create`,
+      commentsCreateBody,options
+    );
+  }
+
+
+
+export const getCommentsCreateMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsCreate>>, TError,{data: CommentsCreateBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof commentsCreate>>, TError,{data: CommentsCreateBody}, TContext> => {
+
+const mutationKey = ['commentsCreate'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commentsCreate>>, {data: CommentsCreateBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  commentsCreate(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommentsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof commentsCreate>>>
+    export type CommentsCreateMutationBody = CommentsCreateBody
+    export type CommentsCreateMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCommentsCreate = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsCreate>>, TError,{data: CommentsCreateBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof commentsCreate>>,
+        TError,
+        {data: CommentsCreateBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCommentsCreateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const commentsEdit = (
+    commentsEditBody: MaybeRef<CommentsEditBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CommentsEdit200>> => {
+    commentsEditBody = unref(commentsEditBody);
+    
+    return axios.post(
+      `/comments/edit`,
+      commentsEditBody,options
+    );
+  }
+
+
+
+export const getCommentsEditMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsEdit>>, TError,{data: CommentsEditBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof commentsEdit>>, TError,{data: CommentsEditBody}, TContext> => {
+
+const mutationKey = ['commentsEdit'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commentsEdit>>, {data: CommentsEditBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  commentsEdit(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommentsEditMutationResult = NonNullable<Awaited<ReturnType<typeof commentsEdit>>>
+    export type CommentsEditMutationBody = CommentsEditBody
+    export type CommentsEditMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCommentsEdit = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsEdit>>, TError,{data: CommentsEditBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof commentsEdit>>,
+        TError,
+        {data: CommentsEditBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCommentsEditMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const commentsDelete = (
+    commentsDeleteBody: MaybeRef<CommentsDeleteBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<CommentsDelete200>> => {
+    commentsDeleteBody = unref(commentsDeleteBody);
+    
+    return axios.post(
+      `/comments/delete`,
+      commentsDeleteBody,options
+    );
+  }
+
+
+
+export const getCommentsDeleteMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsDelete>>, TError,{data: CommentsDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof commentsDelete>>, TError,{data: CommentsDeleteBody}, TContext> => {
+
+const mutationKey = ['commentsDelete'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commentsDelete>>, {data: CommentsDeleteBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  commentsDelete(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommentsDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof commentsDelete>>>
+    export type CommentsDeleteMutationBody = CommentsDeleteBody
+    export type CommentsDeleteMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useCommentsDelete = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commentsDelete>>, TError,{data: CommentsDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof commentsDelete>>,
+        TError,
+        {data: CommentsDeleteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCommentsDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
