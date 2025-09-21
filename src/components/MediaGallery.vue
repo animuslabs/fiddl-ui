@@ -137,6 +137,13 @@ const videoCreations = useVideoCreations()
 const privacyLoading = ref<Record<string, boolean>>({})
 const deleteLoading = ref<Record<string, boolean>>({})
 
+const privateTaxPercent = computed(() => {
+  const tax = prices.privateTax
+  return typeof tax === "number" && Number.isFinite(tax) ? Math.max(0, tax) : 0
+})
+
+const privateTaxRate = computed(() => privateTaxPercent.value / 100)
+
 /**
  * Popularity polling (use setTimeout loop to avoid overlap; pause when tab hidden)
  * Note: using a timeout loop prevents stacking requests when the network is slow.
@@ -466,10 +473,14 @@ function handleVisibilityClick(item: MediaGalleryMeta) {
   const nextPublic = !currentPublic
   const requestType = (item.requestType || item.type || "image") as "image" | "video"
   const requestId = item.requestId
-  const quantity = item.requestQuantity ?? 1
-  const taxPer = prices.privateTax ?? 0
-  const totalTax = !nextPublic ? taxPer * quantity : 0
-  const message = nextPublic ? "Make this creation public? It will appear in the community feed." : taxPer > 0 ? `Make this creation private? This costs ${totalTax} points (${taxPer} per item).` : "Make this creation private?"
+  const { surcharge, taxPercent } = estimatePrivateTax(requestId, requestType, item)
+  const message = nextPublic
+    ? "Make this creation public? It will appear in the community feed."
+    : taxPercent > 0
+      ? surcharge > 0
+        ? `Make this creation private? This costs ${surcharge} points (${taxPercent}% of the original price).`
+        : `Make this creation private? This adds a ${taxPercent}% surcharge.`
+      : "Make this creation private?"
 
   Dialog.create({
     title: nextPublic ? "Share creation publicly?" : "Make creation private?",
@@ -498,6 +509,34 @@ function handleVisibilityClick(item: MediaGalleryMeta) {
       privacyLoading.value[requestId] = false
     }
   })
+}
+
+function estimatePrivateTax(requestId: string, requestType: "image" | "video", item: MediaGalleryMeta) {
+  const rate = privateTaxRate.value
+  const percent = privateTaxPercent.value
+  if (rate <= 0) return { surcharge: 0, taxPercent: percent }
+
+  const creationStore = requestType === "image" ? imageCreations : videoCreations
+  const creation = creationStore.creations.find((c) => c.id === requestId)
+
+  const quantity = creation?.quantity ?? item.requestQuantity ?? 1
+
+  let baseCost = 0
+
+  if (requestType === "image") {
+    const modelKey = creation?.model as keyof typeof prices.image.model | undefined
+    const modelPrice = (modelKey && prices.image?.model?.[modelKey] != null ? prices.image.model[modelKey] : undefined) ?? 0
+    const surcharge = creation?.model === "custom" ? prices.forge?.customModelCharge ?? 0 : 0
+    baseCost = (modelPrice + surcharge) * quantity
+  } else {
+    const modelKey = creation?.model as keyof typeof prices.video.model | undefined
+    const perSecond = (modelKey && prices.video?.model?.[modelKey] != null ? prices.video.model[modelKey] : undefined) ?? 0
+    const duration = creation?.duration ?? 1
+    baseCost = perSecond * duration * quantity
+  }
+
+  const surcharge = Math.ceil(baseCost * rate)
+  return { surcharge, taxPercent: percent }
 }
 
 function handleDeleteClick(item: MediaGalleryMeta) {

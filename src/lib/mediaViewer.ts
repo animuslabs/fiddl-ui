@@ -18,7 +18,7 @@ const mediaViwer = {
       startIndex,
       allowDelete,
       requestId: options.requestId,
-      initialCommentId: options.initialCommentId ?? null,
+      initialCommentId: options.initialCommentId ?? undefined,
     }
     try {
       const popularity = usePopularityStore()

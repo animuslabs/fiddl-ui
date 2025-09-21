@@ -96,16 +96,24 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     return baseCost
   })
 
-  const privatePremiumPerImage = computed(() => {
+  const privateTaxRate = computed(() => {
     const tax = prices.privateTax
-    return typeof tax === "number" && Number.isFinite(tax) ? tax : 5
+    if (typeof tax === "number" && Number.isFinite(tax)) return Math.max(0, tax) / 100
+    return 0.05
+  })
+
+  const privatePremiumPerImage = computed(() => {
+    const premium = selectedModelPrice.value * privateTaxRate.value
+    return Math.ceil(premium)
   })
 
   const quantity = computed(() => 1)
 
   const publicTotalCost = computed(() => selectedModelPrice.value * quantity.value)
 
-  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumPerImage.value * quantity.value)
+  const privatePremiumTotal = computed(() => Math.ceil(publicTotalCost.value * privateTaxRate.value))
+
+  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumTotal.value)
 
   const totalCost = computed(() => (state.req.public === false ? privateTotalCost.value : publicTotalCost.value))
 
@@ -355,7 +363,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     availableModels: imageModels,
     availableAspectRatios: availableAspectRatiosComputed,
     selectedModelPrice,
+    privateTaxRate,
     privatePremiumPerImage,
+    privatePremiumTotal,
     publicTotalCost,
     privateTotalCost,
     totalCost,

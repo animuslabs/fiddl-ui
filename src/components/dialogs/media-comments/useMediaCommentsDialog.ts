@@ -82,16 +82,13 @@ export function useMediaCommentsDialog(
   const previewMediaUrl = computed(() => props.previewUrl ?? "")
   const showPreview = computed(() => Boolean(previewMediaUrl.value) && ["image", "video"].includes(props.mediaType))
 
-  const dialogCardStyle = computed(() => {
-    if (isMobile.value) return {}
-    const baseWidth = showPreview.value ? "92vw" : "78vw"
-    const maxWidth = showPreview.value ? "1440px" : "960px"
-    const minWidth = showPreview.value ? "960px" : "640px"
-    return {
-      width: baseWidth,
-      maxWidth,
-      minWidth,
-    }
+  const dialogCardStyle = computed<Record<string, string>>(() => {
+    const style: Record<string, string> = {}
+    if (isMobile.value) return style
+    style.width = showPreview.value ? "92vw" : "78vw"
+    style.maxWidth = showPreview.value ? "1440px" : "960px"
+    style.minWidth = showPreview.value ? "960px" : "640px"
+    return style
   })
 
   const commentCountLabel = computed(() => {

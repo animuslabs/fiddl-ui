@@ -115,14 +115,23 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
   const quantity = computed(() => 1)
   const duration = computed(() => Math.max(1, Number(state.req.duration || 5)))
 
-  const privatePremiumPerItem = computed(() => {
+  const privateTaxRate = computed(() => {
     const tax = prices.privateTax
-    return typeof tax === "number" && Number.isFinite(tax) ? tax : 5
+    if (typeof tax === "number" && Number.isFinite(tax)) return Math.max(0, tax) / 100
+    return 0.05
   })
 
   const publicTotalCost = computed(() => selectedModelPrice.value * duration.value * quantity.value)
 
-  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumPerItem.value * quantity.value)
+  const privatePremiumPerItem = computed(() => {
+    const perItemBase = selectedModelPrice.value * duration.value
+    const premium = perItemBase * privateTaxRate.value
+    return Math.ceil(premium)
+  })
+
+  const privatePremiumTotal = computed(() => Math.ceil(publicTotalCost.value * privateTaxRate.value))
+
+  const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumTotal.value)
 
   const totalCost = computed(() => (state.req.public === false ? privateTotalCost.value : publicTotalCost.value))
 
@@ -182,7 +191,9 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
     availableAspectRatios,
     availableDurations,
     selectedModelPrice,
+    privateTaxRate,
     privatePremiumPerItem,
+    privatePremiumTotal,
     publicTotalCost,
     privateTotalCost,
     totalCost,

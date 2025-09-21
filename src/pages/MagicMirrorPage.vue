@@ -285,7 +285,7 @@ import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
 import { prices } from "src/stores/pricesStore"
-import { magicMirrorProTotalPoints, magicMirrorFastTotalPoints } from "src/lib/magic/magicCosts"
+import { magicMirrorProTotalPoints, magicMirrorFastTotalPoints, applyPrivateTax } from "src/lib/magic/magicCosts"
 import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
 
 type Step = "init" | "capture" | "training" | "selectTemplates" | "results"
@@ -307,7 +307,10 @@ const mmRequiredPoints = computed(() => magicMirrorProTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 const missingPoints = computed(() => Math.max(0, mmRequiredPoints.value - availablePoints.value))
 // Magic Mirror Fast (Banana) costs
-const bananaCost = computed(() => prices.image?.model?.["nano-banana"] || 0)
+const bananaCost = computed(() => {
+  const base = prices.image?.model?.["nano-banana"]
+  return applyPrivateTax(typeof base === "number" && Number.isFinite(base) ? base : 0)
+})
 const fastCostFor3 = computed(() => magicMirrorFastTotalPoints())
 const estimatedSavings = computed(() => Math.max(0, mmRequiredPoints.value - fastCostFor3.value))
 

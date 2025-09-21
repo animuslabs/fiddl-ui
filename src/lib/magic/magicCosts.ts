@@ -1,5 +1,21 @@
 import { prices } from "src/stores/pricesStore"
 
+function privateTaxRate(): number {
+  const tax = prices.privateTax
+  if (typeof tax === "number" && Number.isFinite(tax)) return Math.max(0, tax) / 100
+  return 0
+}
+
+export function applyPrivateTax(amount: number): number {
+  const base = typeof amount === "number" && Number.isFinite(amount) ? amount : 0
+  if (base <= 0) return 0
+
+  const rate = privateTaxRate()
+  if (rate <= 0) return base
+
+  return base + Math.ceil(base * rate)
+}
+
 // Helper: price of a single custom image for a given base model
 // Custom image = base model image price + custom model surcharge
 export function customImagePriceForBase(base: "fluxDev" | "fluxPro" | "fluxProUltra"): number {
@@ -19,7 +35,7 @@ export function customImagePriceForBase(base: "fluxDev" | "fluxPro" | "fluxProUl
 export function magicMirrorProTotalPoints(): number {
   const trainingSet = prices.forge?.createTrainingSet || 0
   const trainFluxDev = prices.forge?.trainBaseModel?.fluxDev || 0
-  const customFluxDevImage = customImagePriceForBase("fluxDev")
+  const customFluxDevImage = applyPrivateTax(customImagePriceForBase("fluxDev"))
   return trainingSet + trainFluxDev + customFluxDevImage * 3
 }
 
@@ -28,6 +44,6 @@ export function magicMirrorProTotalPoints(): number {
 export function magicMirrorFastTotalPoints(): number {
   const banana = prices.image?.model?.["nano-banana"] || 0
   const upload = prices.image?.uploadSoloImage || 0
-  return banana * 3 + upload * 4
+  const privateBanana = applyPrivateTax(banana)
+  return privateBanana * 3 + upload * 4
 }
-

@@ -292,10 +292,12 @@ export class MetaPixel {
     const payload = (params || {}) as BaseParams
     const { event_id, ...rest } = payload
     if (this._debug) console.info("[MetaPixel] track", event, { ...rest, event_id })
+    const fbq = window.fbq
+    if (!fbq) return
     if (event_id) {
-      window.fbq && window.fbq("track", event, rest, { eventID: event_id })
+      fbq("track", event, rest, { eventID: event_id })
     } else {
-      window.fbq && window.fbq("track", event, rest)
+      fbq("track", event, rest)
     }
   }
 
@@ -306,10 +308,12 @@ export class MetaPixel {
     if (!this.canTrack()) return
     const { event_id, ...rest } = (payload || {}) as { event_id?: string }
     if (this._debug) console.info("[MetaPixel] trackCustom", name, { ...rest, event_id })
+    const fbq = window.fbq
+    if (!fbq) return
     if (event_id) {
-      window.fbq && window.fbq("trackCustom", name, rest, { eventID: event_id })
+      fbq("trackCustom", name, rest, { eventID: event_id })
     } else {
-      window.fbq && window.fbq("trackCustom", name, rest)
+      fbq("trackCustom", name, rest)
     }
   }
 
@@ -369,7 +373,8 @@ export class MetaPixel {
   /** Core event commonly fired on each route change */
   trackPageView(): void {
     if (!this.canTrack()) return
-    window.fbq && window.fbq("track", "PageView")
+    const fbq = window.fbq
+    if (fbq) fbq("track", "PageView")
   }
 
   /** True if running in browser and pixel is initialized or global fbq exists */
@@ -403,8 +408,11 @@ export class MetaPixel {
     if (!this.isBrowser()) return
     if (window.fbq) return
     const n: FbqFunction = function (...args: any[]) {
-      // eslint-disable-next-line prefer-rest-params
-      n.callMethod ? n.callMethod.apply(n, arguments as unknown as any[]) : n.queue.push(args)
+      if (n.callMethod) {
+        n.callMethod.call(n, ...args)
+      } else {
+        n.queue.push(args)
+      }
     } as unknown as FbqFunction
     n.queue = []
     n.loaded = true

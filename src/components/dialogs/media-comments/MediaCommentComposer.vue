@@ -13,7 +13,7 @@ q-form(@submit.prevent="handleSubmit")
         counter
         :placeholder="placeholder"
         hint="Mentions supported with @username."
-        @update:model-value="emit('update:modelValue', $event)"
+        @update:model-value="onInputUpdate"
         @keydown="onInputKeydown"
       )
         template(#control="{ id, field, modelValue: innerValue, emitValue }")
@@ -35,7 +35,15 @@ q-form(@submit.prevent="handleSubmit")
               @keydown="onTextareaKeydown"
             )
     .col-auto
-      q-btn(color="primary" flat size="md" icon="send" type="submit" :loading="submitting" :disable="submitDisabled")
+      q-btn(
+        color="primary"
+        flat
+        size="md"
+        icon="send"
+        type="submit"
+        :loading="submitting"
+        :disable="submitDisabled"
+      )
 </template>
 
 <script setup lang="ts">
@@ -186,7 +194,6 @@ async function validateMention(handle: string) {
       return
     }
     setMentionStatus(handle, "valid")
-    invalidMentionNotifications.delete(handle)
   } catch (err: any) {
     if (!activeMentions.value.includes(handle)) {
       removeMentionStatus(handle)
@@ -200,6 +207,12 @@ function onTextareaInput(event: Event, emitValue: (value: string) => void) {
   const target = event.target as HTMLTextAreaElement | null
   emitValue(target?.value ?? "")
   emit("update:modelValue", target?.value ?? "")
+}
+
+function onInputUpdate(value: string | number | null) {
+  const normalized =
+    typeof value === "string" ? value : typeof value === "number" ? String(value) : ""
+  emit("update:modelValue", normalized)
 }
 
 function handleSubmit() {
