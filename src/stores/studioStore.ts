@@ -132,7 +132,9 @@ export const useStudioStore = defineStore("studio", {
       const idx = this.items.findIndex((item) => item.id === id)
       if (idx === -1) return
       const items = [...this.items]
-      items[idx] = { ...items[idx], ...updates }
+      const current = items[idx]!
+      const updated = { ...current, ...updates } as StudioItem
+      items[idx] = updated
       this.items = items
       this._pushHistory(description)
     },
@@ -140,14 +142,15 @@ export const useStudioStore = defineStore("studio", {
       const idx = this.items.findIndex((item) => item.id === id)
       if (idx === -1) return
       const items = [...this.items]
-      const current = items[idx]
-      items[idx] = {
+      const current = items[idx]!
+      const updated: StudioItem = {
         ...current,
         transform: {
           ...current.transform,
           ...updates,
         },
       }
+      items[idx] = updated
       this.items = items
       if (options.recordHistory === false) return
       const description = options.description ?? "Updated transform"
@@ -157,14 +160,15 @@ export const useStudioStore = defineStore("studio", {
       const idx = this.items.findIndex((item) => item.id === id)
       if (idx === -1) return
       const items = [...this.items]
-      const current = items[idx]
-      items[idx] = {
+      const current = items[idx]!
+      const updated: StudioItem = {
         ...current,
         edits: {
           ...current.edits,
           ...updates,
         },
       }
+      items[idx] = updated
       this.items = items
       if (options.recordHistory === false) return
       const description = options.description ?? "Updated edits"
@@ -174,10 +178,8 @@ export const useStudioStore = defineStore("studio", {
       const idx = this.items.findIndex((item) => item.id === id)
       if (idx === -1) return
       const items = [...this.items]
-      items[idx] = {
-        ...items[idx],
-        status,
-      }
+      const updated: StudioItem = { ...items[idx]!, status }
+      items[idx] = updated
       this.items = items
     },
     reorderItems(idsInOrder: string[], description = "Reordered items") {

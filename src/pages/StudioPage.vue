@@ -31,7 +31,7 @@ q-page.studio-page
         .studio-page__canvas-wrapper
           StudioCanvas(
             :items="studio.items"
-            :selection-id="studio.selectionId"
+            :selection-id="studio.selectionId || undefined"
             :canvas="studio.canvas"
             :show-grid="studio.canvas.showGrid"
             @select="studio.selectItem"
@@ -41,7 +41,7 @@ q-page.studio-page
           StudioLayerBadge(
             v-if="studio.items.length"
             :items="studio.items"
-            :selection-id="studio.selectionId"
+            :selection-id="studio.selectionId || undefined"
             @select="studio.selectItem"
             @move="handleLayerMove"
           )
@@ -214,9 +214,9 @@ export default defineComponent({
       studio.updateItemTransform(payload.id, payload.transform, options)
     }
 
-    function updateScale(value: number, commit = false) {
+    function updateScale(value: number | null, commit = false) {
       if (!studio.selectionId) return
-      const clamped = Math.min(3, Math.max(0.2, value))
+      const clamped = Math.min(3, Math.max(0.2, (value ?? 0)))
       studio.updateItemTransform(
         studio.selectionId,
         { scale: clamped },
@@ -226,9 +226,9 @@ export default defineComponent({
       )
     }
 
-    function updateRotation(value: number, commit = false) {
+    function updateRotation(value: number | null, commit = false) {
       if (!studio.selectionId) return
-      const normalized = Math.max(-180, Math.min(180, value))
+      const normalized = Math.max(-180, Math.min(180, (value ?? 0)))
       studio.updateItemTransform(
         studio.selectionId,
         { rotation: normalized },
@@ -266,7 +266,7 @@ export default defineComponent({
         $q.notify({ color: 'info', message: 'Flux Kontext is working on your edit…' })
         const eta = job.etaMs ?? 1500
         setTimeout(() => {
-          const src = mockKontextRenders[Math.floor(Math.random() * mockKontextRenders.length)]
+          const src = mockKontextRenders[Math.floor(Math.random() * mockKontextRenders.length)] as string
           studio.appendOutput({
             id: createId(),
             src,
@@ -366,7 +366,9 @@ export default defineComponent({
       if (currentIndex === -1) return
       const swapWith = payload.direction === "up" ? currentIndex + 1 : currentIndex - 1
       if (swapWith < 0 || swapWith >= ids.length) return
-      ;[ids[currentIndex], ids[swapWith]] = [ids[swapWith], ids[currentIndex]]
+      const tmp = ids[currentIndex]
+      ids[currentIndex] = ids[swapWith]!
+      ids[swapWith] = tmp!
       studio.reorderItems(ids, "Reordered layers")
     }
 

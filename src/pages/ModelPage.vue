@@ -151,16 +151,16 @@ watch(
 const allMediaObjects = computed<MediaGalleryMeta[]>(() => {
   if (isVideoModel.value) {
     return videoCreations.allCreations.map((el: any) => {
-      const creation = videoCreations.creations.find((c: any) => c.id === el.creationId)
-      const mediaList = creation && Array.isArray(creation.videos) ? creation.videos : []
+      const creation = videoCreations.creations.find((c: any) => c.id === el.creationId) as any
+      const mediaList = creation && Array.isArray(creation?.videos) ? creation.videos : []
       const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
       return { id: el.id, url: s3Video(el.id, "preview-md"), type: "video" as const, nsfw }
     })
   }
 
   return imageCreations.allCreations.map((el: any) => {
-    const creation = imageCreations.creations.find((c: any) => c.id === el.creationId)
-    const mediaList = creation && Array.isArray(creation.images) ? creation.images : []
+    const creation = imageCreations.creations.find((c: any) => c.id === el.creationId) as any
+    const mediaList = creation && Array.isArray(creation?.images) ? creation.images : []
     const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
     return { id: el.id, url: img(el.id, "md"), type: "image" as const, nsfw }
   })

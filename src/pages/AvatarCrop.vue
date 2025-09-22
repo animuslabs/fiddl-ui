@@ -47,7 +47,7 @@ export default {
   },
   mounted() {
     this.setReadyState("pending")
-    const { query } = this.$route
+    const query = (this.$route && this.$route.query) ? this.$route.query : {}
     if (typeof query.imageSrc === "string" && query.imageSrc) {
       this.setImageSrc(query.imageSrc)
     } else if (typeof query.imageId === "string" && query.imageId) {
@@ -70,10 +70,10 @@ export default {
     onImageLoad(event: Event) {
       const img = event.target
       if (!(img instanceof HTMLImageElement)) return console.error("Invalid image element")
-      const { query } = this.$route
-      this.position.x = this.parseNumber(query.x, 0)
-      this.position.y = this.parseNumber(query.y, 0)
-      this.scale = this.parseNumber(query.scale, 1)
+      const query = (this.$route && this.$route.query) ? this.$route.query : {}
+      this.position.x = this.parseNumber((query as any).x, 0)
+      this.position.y = this.parseNumber((query as any).y, 0)
+      this.scale = this.parseNumber((query as any).scale, 1)
       this.setReadyState("ready")
     },
 

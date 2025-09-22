@@ -112,27 +112,29 @@ export default defineComponent({
       emit("update-edits", { updates: { filter: value }, commit: true })
     }
 
-    function clampValue(value: number) {
-      return Math.max(-100, Math.min(100, value))
+    function clampValue(value: number | null) {
+      const v = value ?? 0
+      return Math.max(-100, Math.min(100, v))
     }
 
-    function updateBrightness(value: number, commit: boolean) {
+    function updateBrightness(value: number | null, commit: boolean) {
       emit("update-edits", {
         updates: { brightness: clampValue(value) },
         commit,
       })
     }
 
-    function updateContrast(value: number, commit: boolean) {
+    function updateContrast(value: number | null, commit: boolean) {
       emit("update-edits", {
         updates: { contrast: clampValue(value) },
         commit,
       })
     }
 
-    function updatePrompt(value: string) {
-      promptDraft.value = value
-      emit("update-edits", { updates: { prompt: value }, commit: false })
+    function updatePrompt(value: string | number | null) {
+      const v = typeof value === "string" ? value : String(value ?? "")
+      promptDraft.value = v
+      emit("update-edits", { updates: { prompt: v }, commit: false })
     }
 
     function commitPrompt() {

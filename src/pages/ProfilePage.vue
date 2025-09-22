@@ -360,7 +360,8 @@ export default defineComponent({
       if (this.mediaTypeFilter === "all") {
         const list: WithDate[] = []
         this.imageCreations.creations.forEach((r: any) => {
-          const mediaList = Array.isArray(r.images) ? r.images : []
+          const images = (r as any)?.images
+          const mediaList = Array.isArray(images) ? images : []
           r.mediaIds.forEach((id: string) => {
             const nsfw = mediaList.find((entry: any) => entry.id === id)?.nsfw
             list.push({
@@ -391,8 +392,9 @@ export default defineComponent({
       }
       if (this.mediaTypeFilter === "image") {
         return this.imageCreations.allCreations.map((el: any) => {
-          const creation = this.imageCreations.creations.find((c: any) => c.id === el.creationId)
-          const mediaList = creation && Array.isArray(creation.images) ? creation.images : []
+          const creation = this.imageCreations.creations.find((c: any) => c.id === el.creationId) as any
+          const imgs = creation?.images
+          const mediaList = creation && Array.isArray(imgs) ? imgs : []
           const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
           return {
             id: el.id,
@@ -404,8 +406,9 @@ export default defineComponent({
         })
       }
       return this.videoCreations.allCreations.map((el: any) => {
-        const creation = this.videoCreations.creations.find((c: any) => c.id === el.creationId)
-        const mediaList = creation && Array.isArray(creation.videos) ? creation.videos : []
+        const creation = this.videoCreations.creations.find((c: any) => c.id === el.creationId) as any
+        const media = creation?.videos
+        const mediaList = creation && Array.isArray(media) ? media : []
         const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
         return {
           id: el.id,
