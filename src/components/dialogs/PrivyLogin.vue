@@ -20,9 +20,6 @@ div.column.items-center.q-gutter-md.q-pa-md
         .centered
           q-icon(name="img:/x-logo.svg" size="24px")
     TelegramConnect(mode="login" round)
-  // Telegram widget mount area (rendered on demand)
-  div.full-width.q-mt-sm
-    div(ref="telegramMount")
   q-separator.full-width.q-mt-lg(color="grey-7")
   .centered
     h5 Tonomy Login
@@ -33,18 +30,12 @@ div.column.items-center.q-gutter-md.q-pa-md
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import { authenticateWithTelegram, getPrivyAppConfig, privy } from "src/lib/privy"
 import { Loading, useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
 import { ExternalUser } from "@tonomy/tonomy-id-sdk"
 import TelegramConnect from "src/components/TelegramConnect.vue"
-import {
-  completeEmailLoginWithCode,
-  requestEmailLoginCode,
-  startOAuthLogin,
-  type OAuthProvider,
-} from "lib/oauth"
+import { completeEmailLoginWithCode, requestEmailLoginCode, startOAuthLogin, type OAuthProvider } from "lib/oauth"
 
 export default defineComponent({
   components: { TelegramConnect },
@@ -55,7 +46,7 @@ export default defineComponent({
     const email = ref("")
     const loading = ref(false)
     const userAuth = useUserAuth()
-    const telegramMount = ref<HTMLElement | null>(null)
+    // No Telegram widget; we use TelegramConnect component (native device login)
 
     const sendEmailCode = async () => {
       if (!email.value || email.value.trim() === "") {
@@ -189,48 +180,6 @@ export default defineComponent({
       }
     }
 
-    const renderTelegramWidget = async () => {
-      // Clean old content
-      if (telegramMount.value) telegramMount.value.innerHTML = ""
-      const cfg = await getPrivyAppConfig()
-      const botName = "fiddlartbot"
-      if (!botName) {
-        quasar.notify({ color: "negative", message: "Telegram login not available" })
-        return
-      }
-
-      // Prefer auth_url flow to avoid CSP issues with onauth callbacks
-      const s = document.createElement("script")
-      s.async = true
-      s.src = "https://telegram.org/js/telegram-widget.js?22"
-      s.setAttribute("data-telegram-login", botName)
-      s.setAttribute("data-size", "large")
-      // Send Telegram auth result to our SPA callback route inside a hidden iframe
-      const rt = window.location.pathname + window.location.search
-      const redirectUri = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(rt)}&provider=telegram`
-      s.setAttribute("data-auth-url", redirectUri)
-      s.setAttribute("data-request-access", "write")
-      telegramMount.value?.appendChild(s)
-      quasar.notify({ color: "info", message: "Click the Telegram button below to continue" })
-    }
-
-    const loginWithTelegram = async () => {
-      loading.value = true
-      try {
-        const rt = window.location.pathname + window.location.search
-        sessionStorage.setItem("returnTo", rt)
-        // Ensure clean Privy session and render widget
-        await privy.auth.logout().catch(() => {})
-        await renderTelegramWidget()
-        // Stop spinner while waiting for widget interaction
-        loading.value = false
-      } catch (error: any) {
-        quasar.notify({ color: "negative", message: "Failed to initiate Telegram login" })
-        console.error(error)
-        loading.value = false
-      }
-    }
-
     return {
       email,
       loading,
@@ -238,8 +187,6 @@ export default defineComponent({
       loginWithOAuth,
       loginWithTonomy,
       loginWithPasskey,
-      loginWithTelegram,
-      telegramMount,
     }
   },
 })

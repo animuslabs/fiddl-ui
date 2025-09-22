@@ -13,6 +13,7 @@ q-page.q-pa-md
   .q-mx-auto.q-mt-md(style="max-width:1200px; width:100%")
     .row.items-center.q-gutter-md.q-mb-md
       q-toggle(v-model="showUnseenOnly" label="Show unseen only")
+      q-toggle(v-model="showOwnActivity" label="Show my activity")
       q-select(
         v-model="selectedTypes"
         label="Types"
@@ -88,6 +89,7 @@ export default defineComponent({
       page: 1 as number,
       pageSize: 20 as number,
       showUnseenOnly: false as boolean,
+      showOwnActivity: false as boolean,
       selectedTypes: [] as EventsPrivateEvents200ItemType[],
       typeOptions: ALL_TYPES.map((t) => ({ label: t, value: t })),
       seenCleanup: null as null | (() => void),
@@ -104,6 +106,7 @@ export default defineComponent({
     filtered(): EventsPrivateEvents200Item[] {
       let arr = this.events
       if (this.showUnseenOnly) arr = arr.filter((e) => !e.seen)
+      if (!this.showOwnActivity) arr = arr.filter((e) => !this.isOwnEvent(e))
       if (this.selectedTypes.length > 0) arr = arr.filter((e) => this.selectedTypes.includes(e.type))
       return arr
     },
@@ -148,6 +151,11 @@ export default defineComponent({
     }
   },
   methods: {
+    isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
+      const uid = this.$userAuth?.userId
+      if (!uid) return false
+      return ev.originUserId === uid
+    },
     onExternalSeen(ids: string[]) {
       if (!Array.isArray(ids) || ids.length === 0) return
       const idSet = new Set(ids)
@@ -194,6 +202,23 @@ export default defineComponent({
           const fullResponse = await eventsPrivateEvents({ ...baseParams })
           incoming = Array.isArray(fullResponse.data) ? fullResponse.data : []
           since = undefined
+        }
+
+        // Mark our own activity as seen immediately so it never counts as unread
+        try {
+          const selfUnseen = incoming.filter((e) => this.isOwnEvent(e) && !e.seen)
+          if (selfUnseen.length > 0) {
+            // Optimistically mark seen locally
+            selfUnseen.forEach((e) => (e.seen = true))
+            const ids = selfUnseen.map((e) => e.id)
+            void Promise.all(
+              selfUnseen.map((e) =>
+                eventsMarkEventSeen({ eventId: e.id }).catch(() => undefined),
+              ),
+            ).then(() => emitNotificationsSeen(ids))
+          }
+        } catch {
+          // ignore
         }
 
         if (since) {

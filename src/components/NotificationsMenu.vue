@@ -210,6 +210,11 @@ export default defineComponent({
     this.stopPolling()
   },
   methods: {
+    isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
+      const uid = this.$userAuth?.userId
+      if (!uid) return false
+      return ev.originUserId === uid
+    },
     onExternalSeen(ids: string[]) {
       if (!Array.isArray(ids) || ids.length === 0) return
       const idSet = new Set(ids)
@@ -313,6 +318,26 @@ export default defineComponent({
           const fullResponse = await eventsPrivateEvents({ ...baseParams })
           incoming = Array.isArray(fullResponse.data) ? fullResponse.data : []
           since = undefined
+        }
+
+        // Auto-hide and mark-as-seen self-activity so it never shows or counts
+        try {
+          const selfUnseen = incoming.filter((e) => this.isOwnEvent(e) && !e.seen)
+          if (selfUnseen.length > 0) {
+            // Optimistically set seen to avoid any flicker in unread count
+            selfUnseen.forEach((e) => (e.seen = true))
+            const ids = selfUnseen.map((e) => e.id)
+            // Fire-and-forget mark seen calls
+            void Promise.all(
+              selfUnseen.map((e) =>
+                eventsMarkEventSeen({ eventId: e.id }).catch(() => undefined),
+              ),
+            ).then(() => emitNotificationsSeen(ids))
+          }
+          // Never show self events in the notifications menu
+          incoming = incoming.filter((e) => !this.isOwnEvent(e))
+        } catch {
+          // ignore
         }
 
         if (since) {

@@ -7,7 +7,7 @@ q-page.full-height.full-width
     .centered.q-gutter-md.q-mt-md
       q-btn(label="Send Link" flat size="xl" icon="email" color="primary" @click="sendLink")
       //- q-btn(label="Pangea Login" flat size="xl" icon="lock" color="primary" @click="pangeaLogin")
-      q-btn(label="Privy Login" flat size="xl" icon="account_circle" color="primary" @click="showPrivyLogin = true")
+      q-btn(label="Sign in Options" flat size="xl" icon="account_circle" color="primary" @click="showPrivyLogin = true")
 
     .centered.q-mt-lg
       div.q-pa-md(style="max-width: 320px; width: 100%;")

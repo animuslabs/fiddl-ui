@@ -70,7 +70,7 @@ q-page.full-height.full-width
             q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
             q-icon(v-else name="close" color="negative" size="sm")
           .q-ma-md(v-if="!$userAuth.userProfile?.emailVerified")
-            q-btn( @click="linkPrivyEmail()" label="Link your email" flat color="positive" icon="link" size="md")
+            q-btn( @click="linkEmail()" label="Verify your email" flat color="positive" icon="link" size="md")
         .centered(v-if="!$userAuth.userProfile?.emailVerified")
           small.text-positive Earn 100 Points when you link your email
         //- h6.q-pt-md Link Telegram
@@ -188,25 +188,9 @@ import type { QTableColumn } from "quasar"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import TelegramConnect from "src/components/TelegramConnect.vue"
 import { jwt } from "src/lib/jwt"
-import {
-  privyLinkCurrentUser,
-  telegramCreateDeepLink,
-  telegramLinkStatus,
-  userSetBio,
-  userSetNotificationConfig,
-  userSetUsername,
-  discountsMyCodes,
-  userGetAffiliatePayoutDetails,
-  userSetAffiliatePayoutDetails,
-  userAffiliatePayoutReceipts,
-  userReferralsSummary,
-  type DiscountsMyCodes200Item,
-  type TelegramCreateDeepLink200,
-  type UserAffiliatePayoutReceipts200Item,
-  type UserReferralsSummary200,
-} from "src/lib/orval"
+import { telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, discountsMyCodes, userGetAffiliatePayoutDetails, userSetAffiliatePayoutDetails, userAffiliatePayoutReceipts, userReferralsSummary, type DiscountsMyCodes200Item, type TelegramCreateDeepLink200, type UserAffiliatePayoutReceipts200Item, type UserReferralsSummary200 } from "src/lib/orval"
 import { usdToString } from "src/lib/discount"
-import { getPrivyAppConfig, handleEmailLogin, verifyEmailCode } from "src/lib/privy"
+import { requestEmailLoginCode, completeEmailLoginWithCode } from "src/lib/oauth"
 import { defineComponent } from "vue"
 
 type DiscountCodeWithPayouts = DiscountsMyCodes200Item & { pendingPayout?: number; totalPayout?: number }
@@ -253,7 +237,6 @@ export default defineComponent({
       // Payout receipts
       affiliateReceiptsLoading: false,
       affiliateReceipts: [] as UserAffiliatePayoutReceipts200Item[],
-      telegramLinkMount: null as HTMLElement | null,
       // Telegram linking state
       tgLinked: false,
       tgStatusChecked: false,
@@ -524,33 +507,7 @@ export default defineComponent({
       }
     },
     // Stars purchase moved to AddPointsPage
-    async renderTelegramLinkWidget() {
-      // Clean old content
-      if (this.telegramLinkMount) this.telegramLinkMount.innerHTML = ""
-      const cfg = await getPrivyAppConfig()
-      console.log("Privy app config:", cfg)
-      const botName = "fiddlartbot"
-      if (!botName) {
-        Notify.create({ message: "Telegram linking not available", color: "negative", icon: "error" })
-        return false
-      }
-      const s = document.createElement("script")
-      s.async = true
-      s.src = "https://telegram.org/js/telegram-widget.js?22"
-      s.setAttribute("data-telegram-login", botName)
-      s.setAttribute("data-size", "large")
-      // Send Telegram auth result to our SPA callback route where we will link the account
-      const redirectUri = `${window.location.origin}/auth/callback?mode=link&provider=telegram`
-      s.setAttribute("data-auth-url", redirectUri)
-      s.setAttribute("data-request-access", "write")
-      this.telegramLinkMount?.appendChild(s)
-      return true
-    },
-    async linkTelegram() {
-      // ensure mount ref
-      if (!this.telegramLinkMount) this.telegramLinkMount = (this.$refs.telegramLinkMount as HTMLElement) || null
-      await this.renderTelegramLinkWidget()
-    },
+    // Telegram linking handled by TelegramConnect component
     onTgLinked(payload: { telegramId?: string | null; telegramName?: string | null }) {
       this.tgLinked = true
       this.tgTelegramId = payload.telegramId || null
@@ -582,41 +539,36 @@ export default defineComponent({
         Notify.create({ message: "Failed to update username", color: "negative", icon: "error" })
       }
     },
-    async linkPrivyEmail() {
+    async linkEmail() {
       Dialog.create({
-        title: "Link with Privy",
+        title: "Verify your email",
         message: "Enter your email to receive a login code",
         prompt: { model: this.$userAuth.userProfile?.email || "", type: "email" },
         cancel: true,
         persistent: true,
       }).onOk(async (email) => {
-        if (!email || String(email).trim() === "") {
+        const e = String(email || "").trim()
+        if (!e) {
           Notify.create({ message: "Please enter a valid email", color: "negative", icon: "error" })
           return
         }
         try {
           Loading.show({ message: "Sending verification code..." })
-          await handleEmailLogin(String(email))
+          await requestEmailLoginCode(e)
           Loading.hide()
           Dialog.create({
             title: "Verification",
-            message: `Enter the code sent to ${String(email)}`,
+            message: `Enter the code sent to ${e}`,
             prompt: { model: "", type: "text" },
             cancel: true,
             persistent: true,
           }).onOk(async (code) => {
             try {
-              Loading.show({ message: "Linking your account..." })
-              const result = await verifyEmailCode(String(email), String(code))
-              if (!result.token) throw new Error("No Privy token")
-              const linkRes = await privyLinkCurrentUser({ accessToken: result.token })
-              const { token: appToken, userId } = linkRes.data
-              jwt.save({ userId, token: appToken })
-              await this.$userAuth.loadUserData(userId)
-              await this.$userAuth.loadUserProfile(userId)
-              await this.$userAuth.loadUpvotesWallet()
+              Loading.show({ message: "Verifying code..." })
+              const result = await completeEmailLoginWithCode(String(code || ""))
+              await this.$userAuth.applyServerSession(result.userId, result.token)
               Loading.hide()
-              Notify.create({ message: "Email linked successfully", color: "positive", icon: "check" })
+              Notify.create({ message: "Email verified", color: "positive", icon: "check" })
             } catch (e: any) {
               Loading.hide()
               catchErr(e)
@@ -625,7 +577,6 @@ export default defineComponent({
         } catch (err: any) {
           Loading.hide()
           catchErr(err)
-          // Notify.create({ message: "Failed to send code: " + err.message, color: "negative", icon: "error" })
         }
       })
     },

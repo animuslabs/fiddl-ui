@@ -29,9 +29,7 @@ import {
   type UpvotesGetWallet200,
 } from "lib/orval"
 // import type { VerifiableCredential } from "@tonomy/tonomy-id-sdk/build/sdk/types/sdk/util"
-import { getAccessToken } from "@privy-io/react-auth"
 import { Dialog } from "quasar"
-import { privy } from "lib/privy"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { tawk } from "lib/tawk"
 import { avatarImg } from "lib/netlifyImg"
@@ -311,7 +309,6 @@ export const useUserAuth = defineStore("userAuth", {
       })
     },
     logout() {
-      privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))
       // Clear our JWT and app state
       const uid = this.userId
       jwt.remove()
