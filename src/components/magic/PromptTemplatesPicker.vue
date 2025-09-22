@@ -15,7 +15,7 @@ div
         :selected="selectedSet.has(t.id)"
         @click="onTileClick(t.id)"
       )
-    div(v-if="showConfirm").centered.q-mt-md.bg-blur.q-pa-md(:style="confirmBarStyle")
+    div.centered.q-mt-md.bg-blur.q-pa-md(v-if="showConfirm" :style="confirmBarStyle")
       div.q-mb-sm
         p Picked {{ selected.length }} / {{ requiredCountComputed }}
       q-btn(

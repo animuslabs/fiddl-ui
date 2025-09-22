@@ -12,13 +12,7 @@
             @active-tab="setActiveCreationsStore"
           )
       .col-grow.q-mr-sm.full-height
-        q-scroll-area.full-width(
-          :style="
-            quasar.screen.gt.sm
-              ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);'
-              : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'
-          "
-        )
+        q-scroll-area.full-width(:style="quasar.screen.gt.sm ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);' : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'")
           .full-width(style="height:15px;").gt-sm
           .full-width(style="height:75px;").lt-md
           .full-width.relative-position
@@ -161,10 +155,7 @@ export default defineComponent({
       })
       const data = sorted.flatMap((req) =>
         req.mediaIds.map((id) => {
-          const base =
-            isImage
-              ? { id, url: img(id, "md"), type: "image" as MediaType }
-              : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
+          const base = isImage ? { id, url: img(id, "md"), type: "image" as MediaType } : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
 
           // Derive a numeric aspect ratio from the request (e.g. "16:9" -> 16/9)
           const raw = req.aspectRatio as string | undefined

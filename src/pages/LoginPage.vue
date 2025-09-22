@@ -214,8 +214,11 @@ export default defineComponent({
 
       umami.track(eventName)
     },
-    onCodeInput(value: string) {
-      this.loginCode = (value || "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase().slice(0, 6)
+    onCodeInput(value: any) {
+      this.loginCode = (value || "")
+        .replace(/[^0-9a-zA-Z]/g, "")
+        .toUpperCase()
+        .slice(0, 6)
     },
   },
 })
