@@ -110,7 +110,7 @@ q-page.full-width
                 q-tooltip(v-if="triggeredVideoIds.includes(media.id)") Animation already triggered
 
   q-dialog(v-model="loginDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Login or Register
@@ -132,7 +132,7 @@ q-page.full-width
           p.text-primary Save your Magic Mirror creations, earn bonus points, and unlock more features by creating an account.
         PrivyLogin
   q-dialog(v-model="insufficientDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:720px; max-width:95vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:720px; max-width:95vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Not enough points for Magic Mirror Pro
@@ -201,7 +201,7 @@ q-page.full-width
         )
 
   q-dialog(v-model="animateDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Animate Image
@@ -213,7 +213,7 @@ q-page.full-width
             v-if="animateDialogImageId"
             :src="img(animateDialogImageId, 'md')"
             fit="contain"
-            style="max-height:60vh; width:100%; background:black;"
+            style="max-height:60vh; max-height:60dvh; width:100%; background:black;"
           )
         .q-mt-sm
           p Animate this image into a short video using the Kling model.
@@ -228,7 +228,7 @@ q-page.full-width
 
   // Quick purchase dialog for insufficient credits on animation
   q-dialog(v-model="quickBuyDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Add Fiddl Points

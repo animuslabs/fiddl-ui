@@ -12,7 +12,13 @@
             @active-tab="setActiveCreationsStore"
           )
       .col-grow.q-mr-sm.full-height
-        q-scroll-area.full-width(:style="quasar.screen.gt.sm?'height:calc(100vh - 60px);':'height:calc(100vh - 110px);'")
+        q-scroll-area.full-width(
+          :style="
+            quasar.screen.gt.sm
+              ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);'
+              : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'
+          "
+        )
           .full-width(style="height:15px;").gt-sm
           .full-width(style="height:75px;").lt-md
           .full-width.relative-position
@@ -60,7 +66,13 @@
 
   q-dialog(v-model="showRequest")
     q-card
-      ImageRequestCard(v-if="selectedRequest" :creation="selectedRequest" @setRequest="showRequest = false" @deleted="showRequest = false" style="max-height:90vh; overflow:auto")
+      ImageRequestCard(
+        v-if="selectedRequest"
+        :creation="selectedRequest"
+        @setRequest="showRequest = false"
+        @deleted="showRequest = false"
+        style="max-height:90vh; max-height:90dvh; overflow:auto"
+      )
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
 
@@ -169,6 +181,9 @@ export default defineComponent({
             }
           }
 
+          const mediaList = isImage ? (req as any).images : (req as any).videos
+          const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === id)?.nsfw : undefined
+
           return {
             ...base,
             requestId: req.id,
@@ -176,6 +191,7 @@ export default defineComponent({
             isPublic: req.public,
             requestQuantity: req.quantity,
             aspectRatio: ar,
+            nsfw,
           }
         }),
       )

@@ -113,6 +113,7 @@ defineExpose({
 .media-comments-dialog {
   width: min(720px, 95vw);
   max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
 }

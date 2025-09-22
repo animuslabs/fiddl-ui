@@ -42,6 +42,7 @@ type MediaGalleryMeta = {
   url: string
   type: "image" | "video"
   aspectRatio?: number
+  nsfw?: boolean
 }
 
 // interval handle scoped to component instance

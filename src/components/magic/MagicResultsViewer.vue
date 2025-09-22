@@ -115,6 +115,7 @@ async function download() {
   inset: 0;
   width: 100%;
   min-height: calc(100vh - 120px);
+  min-height: calc(100dvh - 120px);
   background: #000;
   display: flex;
   flex-direction: column;

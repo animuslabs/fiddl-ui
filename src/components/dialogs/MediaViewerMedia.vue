@@ -20,7 +20,7 @@ div
         ref="mediaElement"
         :src="mediaViewerStore.getCurrentMediaUrl()"
         class="image-darken"
-        :style="{ width: '100%', maxHeight: '75vh', objectFit: 'contain', transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
+        :style="{ width: '100%', maxHeight: viewportHeight(75), objectFit: 'contain', transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
         playsinline
         autoplay
         loop
@@ -58,11 +58,12 @@ div
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from "vue"
+import { ref, computed, nextTick, watch, onBeforeUnmount } from "vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import CreatorInfo from "src/components/CreatorInfo.vue"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { isOwned } from "lib/ownedMediaCache"
+import { viewportHeight } from "src/lib/viewport"
 interface Props {
   downloadMode?: boolean
 }
@@ -76,6 +77,36 @@ const mediaViewerStore = useMediaViewerStore()
 mediaViewerStore.loadMutedPreference()
 const currentHdUrl = computed(() => mediaViewerStore.hdVideoUrl[mediaViewerStore.currentMediaId])
 const mediaElement = ref<HTMLImageElement | HTMLVideoElement | null>(null)
+
+function syncActiveVideoElement() {
+  void nextTick(() => {
+    const el = mediaElement.value
+    if (mediaViewerStore.currentMediaType === "video" && el instanceof HTMLVideoElement) {
+      mediaViewerStore.registerVideoElement(el)
+    } else {
+      mediaViewerStore.registerVideoElement(null)
+    }
+  })
+}
+
+watch(
+  () => mediaViewerStore.currentMediaType,
+  () => {
+    syncActiveVideoElement()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => mediaElement.value,
+  () => {
+    syncActiveVideoElement()
+  },
+)
+
+onBeforeUnmount(() => {
+  mediaViewerStore.registerVideoElement(null)
+})
 watch(currentHdUrl, (url) => {
   if (!url || mediaViewerStore.currentMediaType !== "video") return
   const el = mediaElement.value as HTMLVideoElement | null
@@ -95,7 +126,7 @@ const imageAttrs = computed(() => {
     class: mediaClass.value,
     style: {
       width: "100%",
-      "max-height": "75vh",
+      "max-height": viewportHeight(75),
       "object-fit": "contain",
       transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
     } as Record<string, string>,
@@ -269,6 +300,7 @@ watch(
 
 .video-wrapper {
   max-height: 75vh;
+  max-height: 75dvh;
   height: 100%;
   display: flex;
   align-items: center;
@@ -280,6 +312,7 @@ watch(
   width: auto;
   object-fit: contain;
   max-height: 75vh;
+  max-height: 75dvh;
   max-width: 100vw;
   margin: auto;
   display: block;

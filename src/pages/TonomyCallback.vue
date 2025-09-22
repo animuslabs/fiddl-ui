@@ -40,15 +40,11 @@ export default defineComponent({
         await new Promise((r) => setTimeout(r, 100))
 
         const returnTo = sessionStorage.getItem("returnTo")
-        if (returnTo) {
-          sessionStorage.removeItem("returnTo")
-          void router.replace(returnTo)
-        } else if (userAuth.userProfile?.username) {
-          void router.push({
-            name: "profile",
-            params: { username: userAuth.userProfile.username },
-            query: { tab: "unlocked" },
-          })
+        sessionStorage.removeItem("returnTo")
+        const normalizedReturnTo = returnTo === "/login" ? null : returnTo
+
+        if (normalizedReturnTo) {
+          void router.replace(normalizedReturnTo)
         } else {
           void router.push({ name: "settings" })
         }

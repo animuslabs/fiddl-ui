@@ -9,6 +9,30 @@ q-page.full-height.full-width
       //- q-btn(label="Pangea Login" flat size="xl" icon="lock" color="primary" @click="pangeaLogin")
       q-btn(label="Privy Login" flat size="xl" icon="account_circle" color="primary" @click="showPrivyLogin = true")
 
+    .centered.q-mt-lg
+      div.q-pa-md(style="max-width: 320px; width: 100%;")
+        q-input(
+          :model-value="loginCode"
+          @update:model-value="onCodeInput"
+          label="Have a login code?"
+          outlined
+          counter
+          maxlength="6"
+          :loading="codeLoading"
+          :disable="codeLoading"
+          autocomplete="one-time-code"
+        )
+        q-btn(
+          class="q-mt-md"
+          color="primary"
+          label="Login with Code"
+          :disable="!canSubmitCode"
+          size="lg"
+          rounded
+          icon-right="login"
+          @click="handleCodeLogin"
+        ).full-width
+
     .centered.q-mt-xl
       div.q-ma-md
         q-btn(label="passKey Login (experimental)" flat small color="grey-8" @click="login")
@@ -22,7 +46,15 @@ q-page.full-height.full-width
 
   div(v-else).full-width
     .centered.q-mt-md
-      q-btn(label="login" size="lg" color="primary" @click="handleLoginLink")
+      q-btn(
+        label="Complete login"
+        size="lg"
+        color="primary"
+        :loading="loginLinkInFlight"
+        :disable="loginLinkInFlight"
+        icon-right="login"
+        @click="handleLoginLink()"
+      )
 </template>
 
 <script lang="ts">
@@ -34,7 +66,7 @@ import umami from "lib/umami"
 import SendText from "src/components/dialogs/SendText.vue"
 // import { pangeaLogin } from "lib/pangea"
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
-import { handleEmailLogin, handleOauthLogin } from "src/lib/privy"
+import { extractLoginToken, pickFirstLoginTokenCandidate } from "lib/loginLink"
 
 export default defineComponent({
   components: {
@@ -44,8 +76,19 @@ export default defineComponent({
   data() {
     return {
       loggingIn: false,
+      loginLinkInFlight: false,
       showPrivyLogin: true,
+      loginCode: "",
+      codeLoading: false,
     }
+  },
+  computed: {
+    loginCodeClean(): string {
+      return (this.loginCode || "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase()
+    },
+    canSubmitCode(): boolean {
+      return this.loginCodeClean.length >= 6 && !this.codeLoading
+    },
   },
   watch: {
     "$userAuth.loggedIn": {
@@ -54,36 +97,51 @@ export default defineComponent({
         // reload any user specific stuff here
       },
     },
+    "$route.query"() {
+      if (this.loginLinkInFlight) return
+      const token = this.getLoginLinkTokenFromRoute()
+      if (!token) return
+      this.prepareLoginLinkFlow()
+      void this.handleLoginLink(token)
+    },
   },
   mounted() {
-    // void this.handleLoginLink()
-    const loginLink = this.$route.query?.loginLink
-    if (!loginLink || typeof loginLink !== "string") return
-    else this.loggingIn = true
+    const token = this.getLoginLinkTokenFromRoute()
+    if (!token) return
+    this.prepareLoginLinkFlow()
+    void this.handleLoginLink(token)
   },
   methods: {
-    async handleLoginLink() {
-      const loginLink = this.$route.query?.loginLink
-      if (!loginLink || typeof loginLink !== "string") return
+    prepareLoginLinkFlow() {
+      this.showPrivyLogin = false
+      this.loggingIn = true
+    },
+    getLoginLinkTokenFromRoute(): string | null {
+      const query = this.$route.query || {}
+      return pickFirstLoginTokenCandidate([query.loginLink, query.token, query.payload])
+    },
+    async handleLoginLink(raw?: string | null) {
+      const token = extractLoginToken(raw ?? this.getLoginLinkTokenFromRoute())
+      if (!token) {
+        this.loggingIn = false
+        return
+      }
+      if (this.loginLinkInFlight) return
+
+      this.loginLinkInFlight = true
+      this.loggingIn = true
+      this.showPrivyLogin = false
+
       Loading.show({
         message: "Logging you in...",
       })
       try {
-        await this.$userAuth.linkLogin(loginLink)
+        await this.$userAuth.linkLogin(token)
         Notify.create({
           message: "Logged in with link",
           color: "positive",
         })
-        await this.$userAuth.loadUserData()
-        const redirect = this.$route.query?.redirect as string
-
-        // If no specific redirect and user has username, go to profile with unlocked tab
-        if (!redirect && this.$userAuth.userProfile?.username) {
-          await this.$router.push({ name: "settings" })
-        } else {
-          await this.$router.push({ name: redirect || "account" })
-        }
-        umami.track("linkLogin")
+        await this.finalizeLoginRedirect("linkLogin")
       } catch (e: any) {
         console.error(e)
         Dialog.create({
@@ -93,8 +151,35 @@ export default defineComponent({
           void this.$router.replace({ name: "login" })
         })
         umami.track("linkLoginError", e.message)
+      } finally {
+        Loading.hide()
+        this.loginLinkInFlight = false
+        this.loggingIn = false
+      }
+    },
+    async handleCodeLogin() {
+      if (!this.canSubmitCode) return
+      this.codeLoading = true
+      Loading.show({
+        message: "Verifying code...",
+      })
+      try {
+        await this.$userAuth.loginWithCode(this.loginCode)
+        Notify.create({
+          message: "Logged in with code",
+          color: "positive",
+        })
+        await this.finalizeLoginRedirect("codeLogin")
+        this.loginCode = ""
+      } catch (e: any) {
+        console.error(e)
+        Notify.create({
+          message: e.message || "Invalid login code",
+          color: "negative",
+        })
       }
       Loading.hide()
+      this.codeLoading = false
     },
     login() {
       umami.track("pkLoginStart")
@@ -113,6 +198,24 @@ export default defineComponent({
       Dialog.create({
         component: SendText,
       })
+    },
+    async finalizeLoginRedirect(eventName: string) {
+      await this.$userAuth.loadUserData()
+      await this.$userAuth.loadUserProfile().catch(() => undefined)
+
+      const redirect = this.$route.query?.redirect
+      const redirectRoute = typeof redirect === "string" && redirect.length > 0 ? redirect : null
+
+      if (redirectRoute) {
+        await this.$router.push({ name: redirectRoute })
+      } else {
+        await this.$router.push({ name: "settings" })
+      }
+
+      umami.track(eventName)
+    },
+    onCodeInput(value: string) {
+      this.loginCode = (value || "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase().slice(0, 6)
     },
   },
 })

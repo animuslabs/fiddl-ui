@@ -153,7 +153,7 @@
 
   // Quick purchase dialog when insufficient points
   q-dialog(v-model="quickBuyDialogOpen" :maximized="$q.screen.lt.md")
-    q-card(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; border-radius:0;' : 'width:520px; max-width:100vw;'")
+    q-card(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;' : 'width:520px; max-width:100vw;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Add Fiddl Points
@@ -352,6 +352,7 @@ textarea::-webkit-resizer {
 @media (max-width: 1000px) {
   .form-scroll {
     height: calc(100vh - 150px);
+    height: calc(100dvh - 150px);
   }
 }
 

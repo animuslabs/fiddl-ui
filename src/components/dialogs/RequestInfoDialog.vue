@@ -32,6 +32,7 @@ import type { UnifiedRequest, MediaType } from "lib/types"
 import { getCreationRequest } from "lib/util"
 import { userGetUsername } from "lib/orval"
 import { avatarImg } from "lib/netlifyImg"
+import { viewportHeight } from "src/lib/viewport"
 
 export default defineComponent({
   components: {
@@ -62,7 +63,8 @@ export default defineComponent({
     },
     cardStyle(): Record<string, string> {
       if (this.isScreenLtMd) {
-        return { width: "100vw", maxWidth: "100vw", height: "100vh", maxHeight: "100vh", overflow: "auto" }
+        const dynamicHeight = viewportHeight(100)
+        return { width: "100vw", maxWidth: "100vw", height: dynamicHeight, maxHeight: dynamicHeight, overflow: "auto" }
       }
       return { width: "800px", maxWidth: "95vw" }
     },

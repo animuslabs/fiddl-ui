@@ -29,6 +29,7 @@ export interface MediaGalleryMeta {
   isPublic?: boolean
   requestQuantity?: number
   placeholder?: boolean
+  nsfw?: boolean
 }
 
 const props = withDefaults(
@@ -137,6 +138,11 @@ const videoCreations = useVideoCreations()
 const privacyLoading = ref<Record<string, boolean>>({})
 const deleteLoading = ref<Record<string, boolean>>({})
 
+const NSFW_PREFERENCE_KEY = "fiddl:showNsfwMedia"
+const storedNsfwPref = LocalStorage.getItem<boolean>(NSFW_PREFERENCE_KEY)
+const showNsfwContent = ref(storedNsfwPref === true)
+let nsfwDialogPromise: Promise<boolean> | null = null
+
 const privateTaxPercent = computed(() => {
   const tax = prices.privateTax
   return typeof tax === "number" && Number.isFinite(tax) ? Math.max(0, tax) : 0
@@ -195,6 +201,75 @@ function ownsMediaQuick(id: string, type: MediaType): boolean {
     if (mediaViewerStore.hdImageSrc[id]) return true
   }
   return false
+}
+
+function setStoredNsfwPreference(value: boolean | null) {
+  if (value === null) {
+    LocalStorage.remove(NSFW_PREFERENCE_KEY)
+  } else {
+    LocalStorage.set(NSFW_PREFERENCE_KEY, value)
+  }
+}
+
+function shouldMaskNsfw(media: MediaGalleryMeta | undefined): boolean {
+  if (!media) return false
+  return media.nsfw === true && !showNsfwContent.value
+}
+
+function promptNsfwConsent(): Promise<boolean> {
+  if (nsfwDialogPromise) return nsfwDialogPromise
+
+  const checkboxModel: string[] = []
+
+  nsfwDialogPromise = new Promise((resolve) => {
+    let resolved = false
+    const finish = (proceed: boolean) => {
+      if (resolved) return
+      resolved = true
+      const remember = checkboxModel.includes("remember")
+      if (proceed) {
+        showNsfwContent.value = true
+        if (remember) setStoredNsfwPreference(true)
+        else setStoredNsfwPreference(null)
+      } else if (remember) {
+        setStoredNsfwPreference(false)
+      }
+      nsfwDialogPromise = null
+      resolve(proceed)
+    }
+
+    const dialog = Dialog.create({
+      title: "NSFW Content",
+      message: "Do you want to show NSFW content?",
+      cancel: { label: "Cancel" },
+      ok: { label: "Show" },
+      persistent: true,
+      options: {
+        type: "checkbox",
+        model: checkboxModel,
+        items: [{ label: "Remember my preference", value: "remember" }],
+      },
+    })
+
+    dialog.onOk(() => finish(true))
+    dialog.onCancel(() => finish(false))
+    dialog.onDismiss(() => finish(false))
+  })
+
+  return nsfwDialogPromise
+}
+
+async function handleSelect(media: MediaGalleryMeta, index: number) {
+  if (!media?.id || media.placeholder === true) return
+
+  if (shouldMaskNsfw(media)) {
+    const proceed = await promptNsfwConsent()
+    if (!proceed) return
+  }
+
+  const type = (media.type ?? media.mediaType ?? (isVideoMedia(media) ? "video" : "image")) as "image" | "video"
+  emit("select", { id: media.id, type })
+  emit("selectedIndex", index)
 }
 
 function onFavorite(id: string, type: MediaType) {
@@ -757,23 +832,29 @@ function showVideoOverlay(id: string): boolean {
       .media-wrapper(:style="mediaStyles")
         // Only mount heavy content when visible
         template(v-if="isVisible(m.id)")
-          // Loading overlay for images that are still rendering/propagating
-          div.loading-overlay(v-if="showImageOverlay(m.id)")
-            h4 Loading
-            q-spinner-gears(color="grey-10" size="120px")
-          // Actual image (rendered underneath the overlay)
-          q-img(
-            :src="m.url"
-            :key="imageReloadKey[m.id]"
-            position="top"
-            style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
-            spinner-color="white"
-            :class="props.selectable ? 'cursor-pointer' : ''"
-            :img-attrs="{ 'data-id': m.id }"
-            @load="markImageLoaded(m.id)"
-            @error="markImageErrored(m.id)"
-            @click="emit('select', { id: m.id, type: 'image' }); emit('selectedIndex', index)"
-          )
+          template(v-if="shouldMaskNsfw(m)")
+            div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+              q-icon(name="sym_o_visibility_off" size="36px")
+              span.nsfw-label NSFW Content
+              span.nsfw-helper Tap to confirm viewing
+          template(v-else)
+            // Loading overlay for images that are still rendering/propagating
+            div.loading-overlay(v-if="showImageOverlay(m.id)")
+              h4 Loading
+              q-spinner-gears(color="grey-10" size="120px")
+            // Actual image (rendered underneath the overlay)
+            q-img(
+              :src="m.url"
+              :key="imageReloadKey[m.id]"
+              position="top"
+              style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
+              spinner-color="white"
+              :class="props.selectable ? 'cursor-pointer' : ''"
+              :img-attrs="{ 'data-id': m.id }"
+              @load="markImageLoaded(m.id)"
+              @error="markImageErrored(m.id)"
+              @click="handleSelect(m, index)"
+            )
         template(v-else)
           // Placeholder keeps layout without mounting the image element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
@@ -805,7 +886,7 @@ function showVideoOverlay(id: string): boolean {
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity && isVisible(m.id)")
+        .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
@@ -832,23 +913,29 @@ function showVideoOverlay(id: string): boolean {
       .media-wrapper(:style="mediaStyles")
         // Only mount heavy content when visible
         template(v-if="isVisible(m.id)")
-          div.loading-overlay(v-if="showVideoOverlay(m.id)")
-            h4 Loading
-            q-spinner-gears(color="grey-10" size="120px")
-          div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
-            video(
-              :src="m.url"
-              :key="videoReloadKey[m.id]"
-              :data-id="m.id"
-              loop autoplay muted playsinline
-              @loadstart="markVideoLoadStart(m.id)"
-              @canplay="markVideoLoaded(m.id)"
-              @loadeddata="markVideoLoaded(m.id)"
-              @error="markVideoErrored(m.id)"
-              @click="emit('select', { id: m.id, type: 'video' }); emit('selectedIndex', index)"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
-              :class="videoClass(m)"
-            )
+          template(v-if="shouldMaskNsfw(m)")
+            div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+              q-icon(name="sym_o_visibility_off" size="36px")
+              span.nsfw-label NSFW Content
+              span.nsfw-helper Tap to confirm viewing
+          template(v-else)
+            div.loading-overlay(v-if="showVideoOverlay(m.id)")
+              h4 Loading
+              q-spinner-gears(color="grey-10" size="120px")
+            div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+              video(
+                :src="m.url"
+                :key="videoReloadKey[m.id]"
+                :data-id="m.id"
+                loop autoplay muted playsinline
+                @loadstart="markVideoLoadStart(m.id)"
+                @canplay="markVideoLoaded(m.id)"
+                @loadeddata="markVideoLoaded(m.id)"
+                @error="markVideoErrored(m.id)"
+                @click="handleSelect(m, index)"
+                style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
+                :class="videoClass(m)"
+              )
         template(v-else)
           // Placeholder keeps layout without mounting the video element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
@@ -880,7 +967,7 @@ function showVideoOverlay(id: string): boolean {
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity && isVisible(m.id)")
+        .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row
             q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
             span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
@@ -1075,6 +1162,32 @@ function showVideoOverlay(id: string): boolean {
   font-size: 14px;
   font-weight: 600;
   opacity: 0.95;
+}
+
+.nsfw-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px;
+  background: rgba(10, 10, 10, 0.88);
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  z-index: 3;
+  border-radius: 4px;
+}
+.nsfw-overlay .nsfw-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.nsfw-overlay .nsfw-helper {
+  font-size: 12px;
+  opacity: 0.85;
 }
 /* Upvote "+N" burst */
 .upvote-burst-wrap {

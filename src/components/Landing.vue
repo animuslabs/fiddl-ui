@@ -1,5 +1,5 @@
 <template lang="pug">
-div.parallax.full-width(style="min-height: 100vh; position: relative; background-position: center 53px;" )
+div.parallax.full-width(style="min-height: 100vh; min-height: 100dvh; position: relative; background-position: center 53px;" )
   .full-width(style="height:50px;")
   div
     .centered.q-pt-xl.fadeIn
@@ -24,7 +24,12 @@ div.parallax.full-width(style="min-height: 100vh; position: relative; background
       .centered.relative-position
         .absolute-center
           q-spinner(v-if="showMailSpinner" color="primary" size="150px")
-        iframe(src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7" :class="showMailSpinner?'invisible':''" style="width:600px; max-width:90vw; height:500px; max-height:90vh; border:none;" @load="hideMailSpinner")
+        iframe(
+          src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7"
+          :class="showMailSpinner?'invisible':''"
+          style="width:600px; max-width:90vw; height:500px; max-height:90vh; max-height:90dvh; border:none;"
+          @load="hideMailSpinner"
+        )
       .centered.q-ma-md
         q-btn(label="Close" @click="showMailForm = false" color="accent" icon="close" rounded)
   .full-width(style="height:50px;")

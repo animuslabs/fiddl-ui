@@ -13,6 +13,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import {
   adminLoginAsUser,
   loginLinkLoginWithLink,
+  loginLinkLoginWithCode,
   privyAuthenticate,
   privyLinkCurrentUser,
   promoCreateAccountWithPromo,
@@ -34,6 +35,7 @@ import { privy } from "lib/privy"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { tawk } from "lib/tawk"
 import { avatarImg } from "lib/netlifyImg"
+import { extractLoginToken } from "lib/loginLink"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -125,14 +127,23 @@ export const useUserAuth = defineStore("userAuth", {
       await this.loadUpvotesWallet()
       await this.loadUpvotesWallet()
     },
-    async linkLogin(loginLinkId: string) {
-      const response = await loginLinkLoginWithLink({ linkId: loginLinkId })
+    async linkLogin(loginToken: string) {
+      const token = extractLoginToken(loginToken)
+      if (!token) throw new Error("Invalid login token")
+
+      const response = await loginLinkLoginWithLink({ token })
       const userAuth = response.data
 
-      this.logout()
-      this.setUserId(userAuth.userId)
-      jwt.save({ userId: userAuth.userId, token: userAuth.token })
-      this.loggedIn = true
+      await this.applyServerSession(userAuth.userId, userAuth.token)
+    },
+    async loginWithCode(code: string) {
+      const normalizedCode = code.replace(/[^0-9a-zA-Z]/g, "").toUpperCase()
+      if (!normalizedCode) throw new Error("Invalid code")
+
+      const response = await loginLinkLoginWithCode({ code: normalizedCode })
+      const userAuth = response.data
+
+      await this.applyServerSession(userAuth.userId, userAuth.token)
     },
     // async pangeaLogin(vcString: VerifiableCredential<{ accountName: string }>) {
     //   const userAuth = await api.pangea.loginOrRegister.mutate({ vcString, referredBy: getReferredBy() })
@@ -231,30 +242,15 @@ export const useUserAuth = defineStore("userAuth", {
       const response = await adminLoginAsUser({ id: userId })
       const token = response.data
 
-      this.logout()
-      this.setUserId(userId)
-      jwt.save({ userId, token })
-      this.loggedIn = true
-      await this.loadUserData(userId)
-      await this.loadUpvotesWallet()
-      void this.loadUserProfile().then(() => {
-        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
-      })
+      await this.applyServerSession(userId, token)
     },
 
     async registerWithPromoCode(promoCode: string) {
       const { data } = await promoCreateAccountWithPromo({ id: promoCode, referrerUsername: getReferredBy() })
       const { token, userId } = data
       // this.logout()
-      this.setUserId(userId)
-      jwt.save({ userId, token })
-      this.loggedIn = true
+      await this.applyServerSession(userId, token)
       try { metaPixel.trackCompleteRegistration({ status: true }) } catch {}
-      await this.loadUserData(userId)
-      await this.loadUpvotesWallet()
-      void this.loadUserProfile().then(() => {
-        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
-      })
     },
     async attemptAutoLogin() {
       const savedLogin = jwt.read()
@@ -294,6 +290,25 @@ export const useUserAuth = defineStore("userAuth", {
       } catch {}
       await this.pkLogin(result.registration.user.name)
       console.log(result.registration)
+    },
+    async applyServerSession(userId: string, token: string) {
+      const sameUser = this.loggedIn && this.userId === userId
+      if (this.loggedIn && !sameUser) {
+        this.logout()
+      }
+
+      this.setUserId(userId)
+      jwt.save({ userId, token })
+      this.loggedIn = true
+      await this.loadUserData(userId)
+      await this.loadUpvotesWallet()
+      void this.loadUserProfile().then(() => {
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", {
+          userId: this.userId,
+          points: this.userData?.availablePoints,
+          avatar: avatarImg(this.userId!),
+        })
+      })
     },
     logout() {
       privy.auth.logout().catch((err) => console.error("Failed to logout from Privy:", err))

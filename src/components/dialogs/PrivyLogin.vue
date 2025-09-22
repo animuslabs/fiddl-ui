@@ -33,14 +33,18 @@ div.column.items-center.q-gutter-md.q-pa-md
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import { handleEmailLogin, handleOauthLogin, verifyEmailCode, authenticateWithTelegram, getPrivyAppConfig, privy } from "src/lib/privy"
+import { authenticateWithTelegram, getPrivyAppConfig, privy } from "src/lib/privy"
 import { Loading, useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import { useUserAuth } from "src/stores/userAuth"
-import type { OAuthProviderType } from "@privy-io/js-sdk-core"
 import { ExternalUser } from "@tonomy/tonomy-id-sdk"
-import { throwErr } from "lib/util"
 import TelegramConnect from "src/components/TelegramConnect.vue"
+import {
+  completeEmailLoginWithCode,
+  requestEmailLoginCode,
+  startOAuthLogin,
+  type OAuthProvider,
+} from "lib/oauth"
 
 export default defineComponent({
   components: { TelegramConnect },
@@ -64,8 +68,7 @@ export default defineComponent({
 
       loading.value = true
       try {
-        await handleEmailLogin(email.value)
-        // await privy.auth.email.send
+        await requestEmailLoginCode(email.value)
         quasar.notify({
           color: "positive",
           message: "Check your email for a verification code",
@@ -88,19 +91,27 @@ export default defineComponent({
               Loading.show({
                 message: "Logging you in...",
               })
-              const result = await verifyEmailCode(email.value, code)
-              if (!result.token) throwErr("No token")
-              const userAuth = useUserAuth()
-              await userAuth.privyLogin(result.token)
+              const result = await completeEmailLoginWithCode(String(code))
+              await userAuth.applyServerSession(result.userId, result.token)
 
               // Wait for user profile to load
               await new Promise((resolve) => setTimeout(resolve, 100))
-              // Prefer returning to the page that initiated login
+
+              const currentRoute = router.currentRoute.value
+
               const returnTo = sessionStorage.getItem("returnTo")
-              if (returnTo) {
-                sessionStorage.removeItem("returnTo")
-                if (returnTo === "/login") void router.replace({ name: "settings" })
-                else void router.replace(returnTo)
+              sessionStorage.removeItem("returnTo")
+              const normalizedReturnTo = returnTo === "/login" ? null : returnTo
+
+              if (normalizedReturnTo) {
+                await router.replace(normalizedReturnTo)
+              } else {
+                const redirect = currentRoute.query?.redirect
+                if (typeof redirect === "string" && redirect) {
+                  await router.push({ name: redirect })
+                } else {
+                  await router.push({ name: "settings" })
+                }
               }
               Loading.hide()
               quasar.notify({
@@ -127,12 +138,12 @@ export default defineComponent({
       }
     }
 
-    const loginWithOAuth = async (provider: OAuthProviderType) => {
+    const loginWithOAuth = async (provider: OAuthProvider) => {
       loading.value = true
       try {
-        const rt = window.location.pathname + window.location.search
-        sessionStorage.setItem("returnTo", rt)
-        await handleOauthLogin(provider, rt)
+        const pathname = window.location.pathname
+        const rt = pathname === "/login" ? null : pathname + window.location.search
+        startOAuthLogin(provider, { returnTo: rt })
       } catch (error) {
         quasar.notify({
           color: "negative",

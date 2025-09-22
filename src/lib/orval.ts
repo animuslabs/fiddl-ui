@@ -1656,6 +1656,10 @@ export type UserGet200 = {
   /** @nullable */
   privyId: string | null;
   /** @nullable */
+  googleId: string | null;
+  /** @nullable */
+  twitterId: string | null;
+  /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
 };
 
@@ -2048,10 +2052,23 @@ export type LoginLinkInitLoginLinkBody = {
 };
 
 export type LoginLinkLoginWithLinkBody = {
-  linkId: string;
+  token: string;
 };
 
 export type LoginLinkLoginWithLink200 = {
+  token: string;
+  userId: string;
+};
+
+export type LoginLinkLoginWithCodeBody = {
+  /**
+   * @minLength 4
+   * @maxLength 12
+   */
+  code: string;
+};
+
+export type LoginLinkLoginWithCode200 = {
   token: string;
   userId: string;
 };
@@ -7802,6 +7819,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getLoginLinkLoginWithLinkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const loginLinkLoginWithCode = (
+    loginLinkLoginWithCodeBody: MaybeRef<LoginLinkLoginWithCodeBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<LoginLinkLoginWithCode200>> => {
+    loginLinkLoginWithCodeBody = unref(loginLinkLoginWithCodeBody);
+    
+    return axios.post(
+      `/loginLink/loginWithCode`,
+      loginLinkLoginWithCodeBody,options
+    );
+  }
+
+
+
+export const getLoginLinkLoginWithCodeMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginLinkLoginWithCode>>, TError,{data: LoginLinkLoginWithCodeBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof loginLinkLoginWithCode>>, TError,{data: LoginLinkLoginWithCodeBody}, TContext> => {
+
+const mutationKey = ['loginLinkLoginWithCode'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginLinkLoginWithCode>>, {data: LoginLinkLoginWithCodeBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginLinkLoginWithCode(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginLinkLoginWithCodeMutationResult = NonNullable<Awaited<ReturnType<typeof loginLinkLoginWithCode>>>
+    export type LoginLinkLoginWithCodeMutationBody = LoginLinkLoginWithCodeBody
+    export type LoginLinkLoginWithCodeMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useLoginLinkLoginWithCode = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginLinkLoginWithCode>>, TError,{data: LoginLinkLoginWithCodeBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof loginLinkLoginWithCode>>,
+        TError,
+        {data: LoginLinkLoginWithCodeBody},
+        TContext
+      > => {
+
+      const mutationOptions = getLoginLinkLoginWithCodeMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

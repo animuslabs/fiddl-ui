@@ -20,7 +20,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
               p {{ prices[type].unlock }}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase images")
-      div(v-else style="height:30vh")
+      div(v-else style="height:30vh; height:30dvh")
         .centered
           p.q-ma-md You own this {{ type }}.
         .centered

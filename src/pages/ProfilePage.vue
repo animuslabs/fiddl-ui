@@ -205,7 +205,7 @@ q-page.full-height.full-width
         :creation="selectedRequest"
         @setRequest="showRequest = false"
         @deleted="showRequest = false"
-        style="max-height:90vh; overflow:auto"
+        style="max-height:90vh; max-height:90dvh; overflow:auto"
       )
       .centered.q-ma-md
         q-btn(label="Back" @click="showRequest = false" color="accent" flat)
@@ -322,9 +322,30 @@ export default defineComponent({
     },
     creationsMediaObjects(): MediaGalleryMeta[] {
       if (this.tab !== "creations") return []
-      return this.activeCreationsStore.allCreations.map((el) =>
-        this.currentTab === "image" ? { id: el.id, url: img(el.id, "md"), type: "image" as MediaType, aspectRatio: this.imageAspectMap.get(el.id) } : { id: el.id, url: s3Video(el.id, "preview-sm"), type: "video" as MediaType, aspectRatio: this.videoAspectMap.get(el.id) },
-      )
+      return this.activeCreationsStore.allCreations.map((el) => {
+        const creation = this.activeCreationsStore.creations.find((c: any) => c.id === el.creationId)
+        const isImage = this.currentTab === "image"
+        const mediaList = creation ? (isImage ? (creation as any).images : (creation as any).videos) : undefined
+        const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === el.id)?.nsfw : undefined
+
+        if (isImage) {
+          return {
+            id: el.id,
+            url: img(el.id, "md"),
+            type: "image" as MediaType,
+            aspectRatio: this.imageAspectMap.get(el.id),
+            nsfw,
+          }
+        }
+
+        return {
+          id: el.id,
+          url: s3Video(el.id, "preview-sm"),
+          type: "video" as MediaType,
+          aspectRatio: this.videoAspectMap.get(el.id),
+          nsfw,
+        }
+      })
     },
     filteredCreations(): UnifiedRequest[] {
       if (this.tab !== "creations") return []
@@ -338,24 +359,62 @@ export default defineComponent({
       type WithDate = MediaGalleryMeta & { createdAt?: Date }
       if (this.mediaTypeFilter === "all") {
         const list: WithDate[] = []
-        this.imageCreations.creations.forEach((r) => r.mediaIds.forEach((id) => list.push({ id, url: img(id, "md"), type: "image", createdAt: r.createdAt, aspectRatio: this.aspectRatioToNumber(r.aspectRatio) })))
-        this.videoCreations.creations.forEach((r) => r.mediaIds.forEach((id) => list.push({ id, url: s3Video(id, "preview-sm"), type: "video", createdAt: r.createdAt, aspectRatio: this.aspectRatioToNumber(r.aspectRatio) })))
+        this.imageCreations.creations.forEach((r: any) => {
+          const mediaList = Array.isArray(r.images) ? r.images : []
+          r.mediaIds.forEach((id: string) => {
+            const nsfw = mediaList.find((entry: any) => entry.id === id)?.nsfw
+            list.push({
+              id,
+              url: img(id, "md"),
+              type: "image",
+              createdAt: r.createdAt,
+              aspectRatio: this.aspectRatioToNumber(r.aspectRatio),
+              nsfw,
+            })
+          })
+        })
+        this.videoCreations.creations.forEach((r: any) => {
+          const mediaList = Array.isArray(r.videos) ? r.videos : []
+          r.mediaIds.forEach((id: string) => {
+            const nsfw = mediaList.find((entry: any) => entry.id === id)?.nsfw
+            list.push({
+              id,
+              url: s3Video(id, "preview-sm"),
+              type: "video",
+              createdAt: r.createdAt,
+              aspectRatio: this.aspectRatioToNumber(r.aspectRatio),
+              nsfw,
+            })
+          })
+        })
         return list.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
       }
       if (this.mediaTypeFilter === "image") {
-        return this.imageCreations.allCreations.map((el) => ({
-          id: el.id,
-          url: img(el.id, "md"),
-          type: "image",
-          aspectRatio: this.imageAspectMap.get(el.id),
-        }))
+        return this.imageCreations.allCreations.map((el: any) => {
+          const creation = this.imageCreations.creations.find((c: any) => c.id === el.creationId)
+          const mediaList = creation && Array.isArray(creation.images) ? creation.images : []
+          const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
+          return {
+            id: el.id,
+            url: img(el.id, "md"),
+            type: "image",
+            aspectRatio: this.imageAspectMap.get(el.id),
+            nsfw,
+          }
+        })
       }
-      return this.videoCreations.allCreations.map((el) => ({
-        id: el.id,
-        url: s3Video(el.id, "preview-sm"),
-        type: "video",
-        aspectRatio: this.videoAspectMap.get(el.id),
-      }))
+      return this.videoCreations.allCreations.map((el: any) => {
+        const creation = this.videoCreations.creations.find((c: any) => c.id === el.creationId)
+        const mediaList = creation && Array.isArray(creation.videos) ? creation.videos : []
+        const nsfw = mediaList.find((entry: any) => entry.id === el.id)?.nsfw
+        return {
+          id: el.id,
+          url: s3Video(el.id, "preview-sm"),
+          type: "video",
+          aspectRatio: this.videoAspectMap.get(el.id),
+          nsfw,
+        }
+      })
     },
     favoritesMediaObjects(): MediaGalleryMeta[] {
       return this.tab === "favorites" ? this.favoritesPageItems : []
@@ -669,6 +728,7 @@ export default defineComponent({
       const mediaObjects: MediaGalleryMeta[] = this.currentMediaObjects.map((el: any) => ({
         id: el.id,
         type: el.type || el.mediaType,
+        nsfw: el.nsfw,
       }))
       void mediaViwer.show(mediaObjects, mediaIndex)
     },

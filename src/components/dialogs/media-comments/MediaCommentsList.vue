@@ -34,6 +34,7 @@ import {
   type CommentViewModel,
 } from "./commentUtils"
 import MediaCommentItem from "./MediaCommentItem.vue"
+import { viewportHeight } from "src/lib/viewport"
 
 interface Props {
   comments: CommentViewModel[]
@@ -59,7 +60,7 @@ const emit = defineEmits<{
 }>()
 
 const scrollAreaRef = ref<InstanceType<typeof QScrollArea> | null>(null)
-const DESKTOP_SCROLL_HEIGHT = "55vh"
+const DESKTOP_SCROLL_HEIGHT = viewportHeight(55)
 
 const scrollAreaStyle = computed(() => {
   if (props.isMobile) {

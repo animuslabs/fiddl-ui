@@ -106,12 +106,17 @@ async function loadCreation(options: LoadOptions = {}) {
 
 function openViewer(request: UnifiedRequest, targetMediaId: string, initialCommentId: string | null) {
   if (!request.mediaIds.length) return
-  const mediaObjects: MediaGalleryMeta[] = request.mediaIds.map((id) => ({
-    id,
-    type: request.type,
-    requestId: request.id,
-    requestType: request.type,
-  }))
+  const mediaList = request.type === "image" ? (request as any).images : (request as any).videos
+  const mediaObjects: MediaGalleryMeta[] = request.mediaIds.map((id) => {
+    const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === id)?.nsfw : undefined
+    return {
+      id,
+      type: request.type,
+      requestId: request.id,
+      requestType: request.type,
+      nsfw,
+    }
+  })
   const startIndex = Math.max(request.mediaIds.findIndex((id) => id === targetMediaId), 0)
   const key = `${request.id}:${targetMediaId}:${initialCommentId ?? ""}`
   if (viewerKey.value === key) return

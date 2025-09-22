@@ -109,14 +109,17 @@ q-page.full-height.full-width.admin-page
             q-input(v-model="dcEdit.code" label="Code" dense outlined disable)
             q-input(v-model.number="dcEdit.discountPct" type="number" dense outlined label="Discount %" :min="0" :max="95" :step="1" suffix="%")
             q-input(v-model.number="dcEdit.maximumUses" type="number" dense outlined label="Max Uses" :min="1")
-              q-select(
-                v-model="dcEdit.linkedUserId"
-                :options="dcUserOptionsEdit"
-                label="Linked Account (optional)"
-                dense outlined clearable use-input fill-input input-debounce="300"
-                emit-value map-options option-label="label" option-value="value"
-                @filter="filterDcUserEdit"
-              )
+            q-select(
+              v-model="dcEdit.linkedUserId"
+              :options="dcUserOptionsEdit"
+              label="Linked Account (optional)"
+              dense outlined clearable use-input fill-input input-debounce="300"
+              emit-value map-options option-label="label" option-value="value"
+              @filter="filterDcUserEdit"
+            )
+        q-card-actions(align="right")
+          q-btn(flat label="Cancel" v-close-popup)
+          q-btn(color="primary" label="Save" :loading="dcSaving" @click="saveEditDiscount")
     // Affiliate Payouts tab
     div(v-if="tab == 'affiliate-payouts'" class="q-pa-sm")
       .row.items-center.q-gutter-sm.q-mb-sm
@@ -143,9 +146,6 @@ q-page.full-height.full-width.admin-page
         template(#body-cell-actions="props")
           q-td(:props="props")
             q-btn(size="sm" color="primary" :disable="(props.row.pending||0) <= 0" label="Payout" @click="confirmAffiliatePayout(props.row.userId, props.row.pending)")
-        q-card-actions(align="right")
-          q-btn(flat label="Cancel" v-close-popup)
-          q-btn(color="primary" label="Save" :loading="dcSaving" @click="saveEditDiscount")
     div(v-if="tab == 'users'").q-pa-sm
       .row.items-center.q-gutter-sm.q-mb-sm
         q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
@@ -395,7 +395,7 @@ q-page.full-height.full-width.admin-page
 // Fullscreen QR dialog
 q-dialog(v-model="qrDialogOpen" maximized)
   q-card.q-dialog-plugin.qr-dialog-card
-    .centered.full-width.q-pa-lg(style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;")
+    .centered.full-width.q-pa-lg(style="min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; justify-content:center; align-items:center;")
       h5.text-white.q-mb-md {{ qrTitle }}
       q-spinner(color="primary" size="120px" v-if="qrLoading || !qrDataUrl")
       q-img(
@@ -411,8 +411,8 @@ q-dialog(v-model="qrDialogOpen" maximized)
 // Fullscreen Image Preview dialog
 q-dialog(v-model="imgPreviewOpen" maximized)
   q-card.q-dialog-plugin.qr-dialog-card
-    .centered.full-width.q-pa-lg(style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000;")
-      img(v-if="imgPreviewSrc" :src="imgPreviewSrc" style="max-width:95vw; max-height:90vh; object-fit:contain; display:block;")
+    .centered.full-width.q-pa-lg(style="min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000;")
+      img(v-if="imgPreviewSrc" :src="imgPreviewSrc" style="max-width:95vw; max-height:90vh; max-height:90dvh; object-fit:contain; display:block;")
       .row.justify-center.q-gutter-sm.q-mt-lg
         q-btn(color="grey-7" icon="close" label="Close" @click="imgPreviewOpen = false" flat rounded)
 </template>

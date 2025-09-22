@@ -73,7 +73,7 @@ q-page.full-width
 
   // Login dialog (shown when capture requires auth)
   q-dialog(v-model="loginDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Login to use Magic Mirror Fast
@@ -127,7 +127,7 @@ q-page.full-width
   // Templates dialog
   q-dialog(v-model="dialogOpen" :maximized="!isDesktop")
     // While we wait for gender/description, show a quick loading state
-    q-card(v-if="describing || !genderForTemplates" :style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(v-if="describing || !genderForTemplates" :style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Preparing Looks
@@ -155,7 +155,7 @@ q-page.full-width
 
   // Animate dialog
   q-dialog(v-model="animateDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Animate Image
@@ -167,7 +167,7 @@ q-page.full-width
             v-if="animateDialogImageId"
             :src="img(animateDialogImageId, 'md')"
             fit="contain"
-            style="max-height:60vh; width:100%; background:black;"
+            style="max-height:60vh; max-height:60dvh; width:100%; background:black;"
           )
         .q-mt-sm
           p Animate this image into a short video using the Kling model.
@@ -182,7 +182,7 @@ q-page.full-width
 
   // Quick purchase dialog for insufficient credits on animation
   q-dialog(v-model="quickBuyDialogOpen" :maximized="!isDesktop")
-    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; border-radius:0;'")
+    q-card(:style="isDesktop ? 'width:520px; max-width:100vw;' : 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;'")
       q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
         .row.items-center.justify-between
           h6.q-mt-none.q-mb-none Add Fiddl Points
@@ -859,6 +859,7 @@ function maybeStartSignupNudge() {
     width: 100vw;
     max-width: 100vw;
     height: 100vh;
+    height: 100dvh;
     padding: 12px;
     box-sizing: border-box;
   }

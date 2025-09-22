@@ -199,7 +199,11 @@ export default defineComponent({
       if (!root) return
       const images = this.creation.mediaIds
       // await mediaViwer.show(images, startIndex, this.creation.type, this.creation.id)
-      const mediaObjects: MediaGalleryMeta[] = this.creation.mediaIds.map((el) => ({ id: el, type: this.creation?.type }))
+      const mediaList = this.creation?.type === "image" ? (this.creation as any).images : (this.creation as any).videos
+      const mediaObjects: MediaGalleryMeta[] = this.creation.mediaIds.map((el) => {
+        const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === el)?.nsfw : undefined
+        return { id: el, type: this.creation?.type, nsfw }
+      })
       await mediaViwer.show(mediaObjects, startIndex)
       console.log("gallery closed,trigger reload event")
       this.$emit("reload")

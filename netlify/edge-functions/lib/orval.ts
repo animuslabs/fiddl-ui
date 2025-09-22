@@ -1627,6 +1627,10 @@ export type UserGet200 = {
   /** @nullable */
   privyId: string | null;
   /** @nullable */
+  googleId: string | null;
+  /** @nullable */
+  twitterId: string | null;
+  /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
 };
 
@@ -2019,10 +2023,23 @@ export type LoginLinkInitLoginLinkBody = {
 };
 
 export type LoginLinkLoginWithLinkBody = {
-  linkId: string;
+  token: string;
 };
 
 export type LoginLinkLoginWithLink200 = {
+  token: string;
+  userId: string;
+};
+
+export type LoginLinkLoginWithCodeBody = {
+  /**
+   * @minLength 4
+   * @maxLength 12
+   */
+  code: string;
+};
+
+export type LoginLinkLoginWithCode200 = {
   token: string;
   userId: string;
 };
@@ -5769,6 +5786,28 @@ export const loginLinkLoginWithLink = async (loginLinkLoginWithLinkBody: LoginLi
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       loginLinkLoginWithLinkBody,)
+  }
+);}
+
+
+
+export const getLoginLinkLoginWithCodeUrl = () => {
+
+
+  
+
+  return `/loginLink/loginWithCode`
+}
+
+export const loginLinkLoginWithCode = async (loginLinkLoginWithCodeBody: LoginLinkLoginWithCodeBody, options?: RequestInit): Promise<LoginLinkLoginWithCode200> => {
+  
+  return fetcher<LoginLinkLoginWithCode200>(getLoginLinkLoginWithCodeUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginLinkLoginWithCodeBody,)
   }
 );}
 

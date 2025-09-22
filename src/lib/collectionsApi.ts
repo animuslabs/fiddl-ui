@@ -21,6 +21,7 @@ export type GalleryItem = {
   id: string
   url: string
   type: MediaType
+  nsfw?: boolean
 }
 
 export async function getCollectionId(ownerId: string, collectionName = "likes"): Promise<string | null> {
@@ -61,10 +62,12 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
       const rawType = (row.mediaType ?? row.type ?? "").toString().toLowerCase()
       const t: MediaType = rawType === "video" ? "video" : "image"
       const mid = row.mediaId || row.id || row.imageId || row.videoId
+      const nsfw = row.nsfw === true || row.media?.nsfw === true
       return {
         id: String(mid),
         url: t === "video" ? s3Video(String(mid), "preview-sm") : img(String(mid), "md"),
         type: t,
+        nsfw,
       }
     })
   }
@@ -81,7 +84,7 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
       promptIncludes: search || undefined,
     })
     const list = Array.isArray(data) ? data : []
-    const mapped = list.map((x: any) => ({ id: x.id, url: img(x.id, "md"), type: "image" as const }))
+    const mapped = list.map((x: any) => ({ id: x.id, url: img(x.id, "md"), type: "image" as const, nsfw: x.nsfw === true }))
     items.push(...mapped)
   }
   // Videos
@@ -94,7 +97,7 @@ export async function fetchCollectionMedia(params: CollectionMediaFilter): Promi
       promptIncludes: search || undefined,
     })
     const list = Array.isArray(data) ? data : []
-    const mapped = list.map((x: any) => ({ id: x.id, url: s3Video(x.id, "preview-sm"), type: "video" as const }))
+    const mapped = list.map((x: any) => ({ id: x.id, url: s3Video(x.id, "preview-sm"), type: "video" as const, nsfw: x.nsfw === true }))
     items.push(...mapped)
   }
 

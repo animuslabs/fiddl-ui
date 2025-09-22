@@ -45,9 +45,12 @@ export default defineComponent({
           Loading.hide()
           this.galleryAutoOpened = true
           const mediaObjects: MediaGalleryMeta[] = this.creation.mediaIds.map((el) => {
+            const mediaList = this.creation?.type === "image" ? (this.creation as any).images : (this.creation as any).videos
+            const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === el)?.nsfw : undefined
             return {
               id: el,
               type: this.creation?.type,
+              nsfw,
             }
           })
           await mediaViwer.show(mediaObjects, parseInt(index))

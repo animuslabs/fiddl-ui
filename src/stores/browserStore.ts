@@ -38,7 +38,7 @@ interface BrowseRow {
   id: string
   createdAt: string // ISO string
   aspectRatio: string
-  media: { id: string }[] | null
+  media: { id: string; nsfw?: boolean }[] | null
 }
 type MediaTypeFilter = MediaType | "all"
 
@@ -163,14 +163,14 @@ export const useBrowserStore = defineStore("browserStore", {
       const MAX_ITEMS = 1500 // soft cap to prevent unbounded memory growth
       for (const row of rows) {
         // Normalize media to a proper array
-        let medias: { id: string }[] = []
+        let medias: { id: string; nsfw?: boolean }[] = []
 
         if (Array.isArray(row.media)) {
           medias = row.media
         } else if (typeof row.media === "string") {
           try {
             const parsed = JSON.parse(row.media) as unknown
-            if (Array.isArray(parsed)) medias = parsed as { id: string }[]
+            if (Array.isArray(parsed)) medias = parsed as { id: string; nsfw?: boolean }[]
           } catch {
             /* ignore parse errors */
           }
@@ -189,6 +189,7 @@ export const useBrowserStore = defineStore("browserStore", {
             type: t,
             aspectRatio: aspectRatioToNumber(row.aspectRatio),
             createdAt: new Date(row.createdAt),
+            nsfw: m.nsfw === true,
           }
 
           if (prepend) {

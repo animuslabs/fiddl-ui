@@ -70,7 +70,7 @@ export default {
         })
         const result = response?.data
         Dialog.create({
-          message: result,
+          message: `${result}. Check your email for a login code if you prefer typing it in.`,
           color: "primary",
         }).onDismiss(() => {
           this.$router.push({ name: "index" })

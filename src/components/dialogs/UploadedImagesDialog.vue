@@ -298,6 +298,7 @@ function acceptSelection() {
   width: 100vw;
   max-width: 100vw;
   height: 100vh;
+  height: 100dvh;
   border-radius: 0;
 }
 @media (min-width: 1024px) {

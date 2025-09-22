@@ -49,6 +49,7 @@ import { useRouter } from "vue-router"
 import { prices } from "src/stores/pricesStore"
 import { magicMirrorFastTotalPoints, magicMirrorProTotalPoints } from "src/lib/magic/magicCosts"
 import { useQuasar } from "quasar"
+import { viewportHeight } from "src/lib/viewport"
 
 export default defineComponent({
   name: "MagicMirrorDialog",
@@ -60,6 +61,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const router = useRouter()
     const $q = useQuasar()
+    const dynamicHeight = viewportHeight(100)
     const proxyModel = computed({
       get: () => props.modelValue,
       set: (v: boolean) => emit("update:modelValue", v),
@@ -72,8 +74,8 @@ export default defineComponent({
         ? {
             width: "100vw",
             maxWidth: "100vw",
-            height: "100vh",
-            maxHeight: "100vh",
+            height: dynamicHeight,
+            maxHeight: dynamicHeight,
             borderRadius: 0,
             overflow: "auto",
           }

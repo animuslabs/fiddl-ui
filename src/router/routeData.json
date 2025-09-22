@@ -30,6 +30,11 @@
     "ForgeHomePage"
   ],
   [
+    "studio",
+    "/studio",
+    "StudioPage"
+  ],
+  [
     "browse",
     "/browse",
     "BrowsePage"
@@ -88,6 +93,11 @@
     "authCallback",
     "/auth/callback",
     "AuthCallback"
+  ],
+  [
+    "oauthProviderCallback",
+    "/auth/callback/:provider",
+    "OAuthProviderCallback"
   ],
   [
     "tonomyCallback",

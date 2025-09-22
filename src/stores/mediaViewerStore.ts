@@ -60,6 +60,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     moreOptionsMenu: false,
     downloadMode: false,
     isPersistent: false,
+    activeVideoElement: null as HTMLVideoElement | null,
   }),
 
   getters: {
@@ -171,6 +172,24 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.muted = muted
       // Persist mute preference in localStorage
       LocalStorage.setItem("videoMuted", muted)
+    },
+
+    registerVideoElement(element: HTMLVideoElement | null) {
+      this.activeVideoElement = element
+    },
+
+    pauseActiveVideo() {
+      const video = this.activeVideoElement
+      if (!video) return
+      if (!video.paused) {
+        video.pause()
+      }
+    },
+
+    playActiveVideo() {
+      const video = this.activeVideoElement
+      if (!video) return
+      void video.play().catch(() => {})
     },
 
     // Load muted preference from localStorage

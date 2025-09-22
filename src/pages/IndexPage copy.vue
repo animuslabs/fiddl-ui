@@ -36,7 +36,10 @@ q-page.full-width.full-height
 q-dialog(v-model="showMailForm" maximized)
   q-card
     .centered
-      iframe(src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7" style="width:600px; max-width:90vw; height:500px; max-height:90vh; border:none;")
+      iframe(
+        src="https://cdn.forms-content-1.sg-form.com/3ee3dc6b-ac50-11ef-bf6d-86ce176a3cb7"
+        style="width:600px; max-width:90vw; height:500px; max-height:90vh; max-height:90dvh; border:none;"
+      )
     .centered
       q-btn(label="Close" @click="showMailForm = false" color="accent" flat)
 

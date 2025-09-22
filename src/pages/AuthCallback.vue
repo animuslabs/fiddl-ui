@@ -78,11 +78,22 @@ export default defineComponent({
           position: "top",
         })
 
-        // Redirect back if returnTo provided; else fallback to profile/account
+        // Redirect back if returnTo provided; else land on settings
         // Wait a bit for user profile to load
         await new Promise((resolve) => setTimeout(resolve, 100))
 
-        const returnTo = (route.query.returnTo as string) || sessionStorage.getItem("returnTo") || null
+        const rawReturnTo = (route.query.returnTo as string) || sessionStorage.getItem("returnTo") || null
+        // Treat any returnTo that resolves to the /login pathname (with or without query) as null
+        const shouldIgnoreReturnTo = (() => {
+          if (!rawReturnTo) return false
+          try {
+            const u = new URL(rawReturnTo, window.location.origin)
+            return u.pathname === "/login"
+          } catch {
+            return rawReturnTo === "/login"
+          }
+        })()
+        const returnTo = shouldIgnoreReturnTo ? null : rawReturnTo
         const navigateTo = async (pathName: string) => {
           if (window.top && window.top !== window) {
             // If we're in an iframe (Telegram auth_url flow), navigate the parent
@@ -95,13 +106,9 @@ export default defineComponent({
         }
         if (returnTo && typeof returnTo === "string") {
           sessionStorage.removeItem("returnTo")
-          if (returnTo === "/login") await navigateTo("/settings")
-          else await navigateTo(returnTo)
+          await navigateTo(returnTo)
           console.log("Redirecting to:", returnTo)
-        } else if (userAuth.userProfile?.username) {
-          await navigateTo(`/profile/${userAuth.userProfile.username}?tab=unlocked`)
         } else {
-          // Fallback to account route if username not available
           await navigateTo("/settings")
         }
       } catch (err: any) {

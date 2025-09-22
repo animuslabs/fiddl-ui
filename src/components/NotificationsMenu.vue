@@ -95,6 +95,7 @@ import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
 import { decodeHtmlEntities } from "../lib/util"
+import { viewportHeight } from "src/lib/viewport"
 
 export default defineComponent({
   name: "NotificationsMenu",
@@ -128,11 +129,13 @@ export default defineComponent({
       return "top right"
     },
     menuContentStyle(): Record<string, string> {
+      const fullHeight = viewportHeight(100)
+      const ninetyHeight = viewportHeight(90)
       return {
         width: this.menuWidth,
         maxWidth: "100vw",
-        height: this.isMobile ? "100dvh" : "auto",
-        maxHeight: this.isMobile ? "100dvh" : "90vh",
+        height: this.isMobile ? fullHeight : "auto",
+        maxHeight: this.isMobile ? fullHeight : ninetyHeight,
         overflow: "hidden",
       }
     },
@@ -148,7 +151,7 @@ export default defineComponent({
       }
     },
     menuScrollHeight(): string {
-      return this.isMobile ? "70vh" : "360px"
+      return this.isMobile ? viewportHeight(70) : "360px"
     },
     menuScrollStyle(): Record<string, string> {
       if (this.isMobile) {
@@ -536,7 +539,9 @@ export default defineComponent({
   inset: 0 !important
   width: 100vw !important
   max-width: 100vw !important
+  height: 100vh !important
   height: 100dvh !important
+  max-height: 100vh !important
   max-height: 100dvh !important
   border-radius: 0 !important
   padding: 0 !important
@@ -551,8 +556,10 @@ export default defineComponent({
 
 .notif-dialog-card
   width: 100vw
+  height: 100vh
   height: 100dvh
   max-width: 100vw
+  max-height: 100vh
   max-height: 100dvh
   border-radius: 0
   display: flex

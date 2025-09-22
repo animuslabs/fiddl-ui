@@ -109,6 +109,7 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { catchErr } from "lib/util"
 import { useUserAuth } from "src/stores/userAuth"
+import { viewportHeight } from "src/lib/viewport"
 
 const emit = defineEmits<{
   (e: "captured", blobs: Blob[]): void
@@ -165,6 +166,7 @@ function triggerFlashAndSound() {
 }
 
 const quasar = useQuasar()
+const viewportHeightValue = viewportHeight()
 
 const userAuth = useUserAuth()
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
@@ -195,7 +197,7 @@ const videoStyle = computed((): Record<string, string> => {
       top: "0",
       left: "0",
       width: "100%",
-      height: "100vh",
+      height: viewportHeightValue,
       maxHeight: "900px",
       borderRadius: "0",
       objectFit: "cover",

@@ -255,7 +255,8 @@ function showRequestInfoDialog() {
 function showCommentsDialog(targetCommentId?: string | null) {
   if (!mediaViewerStore.currentMediaId) return
   const previewUrl = mediaViewerStore.getCurrentMediaUrl()
-  Dialog.create({
+  mediaViewerStore.pauseActiveVideo()
+  const dialog = Dialog.create({
     component: MediaCommentsDialog,
     componentProps: {
       mediaId: mediaViewerStore.currentMediaId,
@@ -263,6 +264,9 @@ function showCommentsDialog(targetCommentId?: string | null) {
       previewUrl,
       targetCommentId: targetCommentId ?? null,
     },
+  })
+  dialog.onDismiss(() => {
+    mediaViewerStore.playActiveVideo()
   })
 }
 
