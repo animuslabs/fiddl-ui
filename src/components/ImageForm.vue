@@ -37,7 +37,7 @@
       q-separator(color="grey-9" spaced="20px" inset)
       .centered.settings-grid
         .row.q-col-gutter-md.full-width.items-start
-          .col-12.col-md-3
+          .col-md-3
             p.setting-label Aspect Ratio
             q-select(
               v-if="!isNanoBanana"
@@ -62,7 +62,8 @@
               .column.col-shrink
                 q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
                 q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
-          div.relative-position.col-12.col-md-6.full-width
+          // Model select moved up to share the row with Aspect Ratio
+          div.relative-position.col-grow
             p.setting-label Model
             // Keep selector on its own row
             q-select.relative-position.text-capitalize(
@@ -70,22 +71,41 @@
               :options="createStore.availableModels"
               style="font-size:20px; min-width:140px; max-width:220px;"
               :disable="createStore.anyLoading"
+              :display-value="modelDisplayValue || undefined"
+              @update:model-value="onModelSelected"
               dense
             )
               .badge-sm.text-white {{ createStore.selectedModelPrice }}
             // Custom model name shown below selector
-            .custom-model-card.row.items-center.no-wrap.q-mt-sm(v-if="req.model === 'custom'")
-              q-icon(name="category" size="16px" class="q-mr-sm")
-              div.custom-model-name {{ req.customModelName || 'Pick a custom model' }}
-              q-space
-              q-btn(flat round dense icon="list" no-caps label="Change" @click="showModelPicker = true")
-              q-tooltip(v-if="req.customModelName") {{ req.customModelName }}
-            // Model pickers: public vs private
-            .row.q-mt-md.no-wrap
-              .col-auto
-                q-btn.q-mr-sm(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Public Models")
-              .col-6
-                q-btn(@click="showModelPicker = true" no-caps outline color="primary" icon="category" label="Private Models")
+      .row.q-mx-md
+        .custom-model-card.row.items-center.no-wrap.q-mt-sm.full-width(v-if="req.model === 'custom'")
+          q-icon(name="category" size="16px" class="q-mr-sm")
+          div.custom-model-name {{ req.customModelName || 'Pick a custom model' }}
+          q-space
+          q-btn(flat round dense icon="list" no-caps label="Change" @click="showModelPicker = true")
+          q-tooltip(v-if="req.customModelName") {{ req.customModelName }}
+      .row.q-col-gutter-md.full-width.items-start.q-pt-sm
+        .col-12
+          // Model pickers: public vs private
+          .row.q-mt-xs.q-gutter-sm
+            .col-auto
+              q-btn.q-mr-sm(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Public Models")
+            .col-auto
+              q-btn(@click="showModelPicker = true" no-caps outline color="primary" icon="category" label="Private Models")
+            .col-auto
+              q-btn(no-caps outline color="primary" icon="library_add_check" label="Multi-select Models" @click="openManualMultiSelect")
+          // Randomizer toggle and config
+          //- .row.items-center.q-mt-sm.no-wrap
+            q-toggle.q-mr-sm(
+              v-model="createStore.state.randomizer.enabled"
+              color="primary"
+              label="Random models"
+              @update:model-value="createStore.saveRandomizer()"
+            )
+            q-btn(flat dense no-caps icon="tune" label="Configure" @click="randomizerDialogOpen = true")
+            q-tooltip(v-if="createStore.state.randomizer.enabled")
+              div Picks {{ createStore.state.randomizer.picksCount }} random models per creation.
+              div Aspect ratio forced to 16:9, 9:16, or 1:1.
 
       .row.items-start.wrap.q-col-gutter-md
 
@@ -112,8 +132,8 @@
     .full-width(style="height:30px;").gt-sm
     CreateActionBar(
       v-if="$userAuth.userData"
-      :publicCost="createStore.publicTotalCost"
-      :privateCost="createStore.privateTotalCost"
+      :publicCost="publicCostToShow"
+      :privateCost="privateCostToShow"
       :disabled="createDisabled"
       :loadingCreate="loading.create"
       :currentPublic="req.public"
@@ -163,7 +183,11 @@
         .q-mb-sm
           p You need {{ missingPoints }} more points to create these images. Purchase a points package below. Your balance updates automatically after payment.
         QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
-  </template>
+
+  // Model randomizer config
+  q-dialog(v-model="randomizerDialogOpen" :maximized="$q.screen.lt.md")
+    ModelRandomizerDialog(@close="randomizerDialogOpen = false")
+</template>
 
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue"
@@ -177,8 +201,9 @@ import { useUserAuth } from "src/stores/userAuth"
 import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.vue"
 import UploadedImagesDialog from "src/components/dialogs/UploadedImagesDialog.vue"
 import { s3Img } from "lib/netlifyImg"
-import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
+import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
+import ModelRandomizerDialog from "components/dialogs/ModelRandomizerDialog.vue"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -199,11 +224,12 @@ const templatesDialogOpen = ref(false)
 const showImagesDialog = ref(false)
 const quickBuyDialogOpen = ref(false)
 const actionCooldown = ref(false)
+const randomizerDialogOpen = ref(false)
 
 async function startCreateKeyboard() {
   const started = await startCreateImage()
   if (started) {
-    const cost = (req.public ?? true) ? createStore.publicTotalCost : createStore.privateTotalCost
+    const cost = (req.public ?? true) ? publicCostToShow.value : privateCostToShow.value
     $q.notify({ color: "positive", message: `Starting image creation ${req.public ? "(Public)" : "(Private)"} · ${cost} points` })
     actionCooldown.value = true
     setTimeout(() => (actionCooldown.value = false), 2000)
@@ -224,16 +250,39 @@ function openTemplates() {
   templatesDialogOpen.value = true
 }
 
+function openManualMultiSelect() {
+  // Ensure randomizer is enabled, but do not force mode change if random is already active
+  createStore.state.randomizer.enabled = true
+  if (createStore.state.randomizer.mode !== "random") {
+    createStore.state.randomizer.mode = "manual" as any
+  }
+  createStore.saveRandomizer()
+  randomizerDialogOpen.value = true
+}
+
 function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string }) {
   req.prompt = payload.prompt || ""
   // If you want to wire negativePrompt later to req.negativePrompt, do so here
   templatesDialogOpen.value = false
 }
 
+function onModelSelected() {
+  // User explicitly chose a single model; exit random/multi mode
+  if (createStore.state.randomizer.enabled) {
+    createStore.state.randomizer.enabled = false
+    createStore.saveRandomizer()
+    // Restore dynamic model filtering to current model
+    creationsStore.dynamicModel = true
+    creationsStore.filter.model = req.model as any
+    creationsStore.filter.customModelId = req.model === "custom" ? req.customModelId : undefined
+    void creationsStore.searchCreations(userAuth.userId)
+  }
+}
+
 async function startCreateImage(isPublic: boolean = req.public ?? true) {
   if (createDisabled.value) return false
   req.public = isPublic
-  const targetCost = isPublic ? createStore.publicTotalCost : createStore.privateTotalCost
+  const targetCost = isPublic ? publicCostToShow.value : privateCostToShow.value
   const available = userAuth.userData?.availablePoints || 0
   if (targetCost > available) {
     quickBuyDialogOpen.value = true
@@ -243,6 +292,13 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
     $q.notify({ type: "warning", message: "Please select a custom model before creating." })
     showModelPicker.value = true
     return false
+  }
+  // When creating in random/multi mode, switch creations filter to show all
+  if (createStore.state.randomizer.enabled) {
+    creationsStore.dynamicModel = false
+    creationsStore.filter.model = undefined as any
+    if (creationsStore.filter?.customModelId) creationsStore.filter.customModelId = undefined
+    void creationsStore.searchCreations(userAuth.userId)
   }
   void createStore.createImage().then(() => emit("created"))
   return true
@@ -254,6 +310,13 @@ function setCustomModel(model: CustomModel) {
   req.customModelId = model.id
   req.customModelName = model.name
   createStore.state.customModel = model
+  // Selecting a custom model should exit random/multi mode
+  if (createStore.state.randomizer.enabled) {
+    createStore.state.randomizer.enabled = false
+    createStore.saveRandomizer()
+  }
+  // Ensure creations view filters to this custom model
+  creationsStore.dynamicModel = true
   void creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
@@ -306,9 +369,44 @@ watch(
   { immediate: true },
 )
 
+// Keep creations filter synced with random/multi toggle, including on page reload
+watch(
+  () => createStore.state.randomizer.enabled,
+  (enabled) => {
+    if (enabled) {
+      creationsStore.dynamicModel = false
+      creationsStore.filter.model = undefined as any
+      creationsStore.filter.customModelId = undefined
+    } else {
+      creationsStore.dynamicModel = true
+      creationsStore.filter.model = req.model as any
+      creationsStore.filter.customModelId = req.model === "custom" ? req.customModelId : undefined
+    }
+    creationsStore.searchCreations(userAuth.userId)
+  },
+  { immediate: true },
+)
+
 const missingPoints = computed(() => {
   const available = userAuth.userData?.availablePoints || 0
-  return Math.max(0, createStore.totalCost - available)
+  const total = req.public ? publicCostToShow.value : privateCostToShow.value
+  return Math.max(0, total - available)
+})
+
+// Cost shown respects randomizer settings
+const publicCostToShow = computed(() => (createStore.state.randomizer.enabled ? createStore.publicTotalCostMulti : createStore.publicTotalCost))
+const privateCostToShow = computed(() => (createStore.state.randomizer.enabled ? createStore.privateTotalCostMulti : createStore.privateTotalCost))
+
+// Display label for model when randomizer is enabled
+const modelDisplayValue = computed<string | null>(() => {
+  const rnd = createStore.state.randomizer
+  if (!rnd.enabled) return null
+  if (rnd.mode === "random") {
+    const n = Math.max(1, Number(rnd.picksCount) || 1)
+    return `Random (${n})`
+  }
+  const count = (rnd.manualSelection || []).length
+  return `Multiple (${count})`
 })
 
 function onQuickBuyComplete() {

@@ -2,7 +2,8 @@
 .centered.relative-position(:class="{'is-mobile': isMobile}" )
   //- div(style="overflow:hidden;")
     h1.create-title.text-grey-5(aria-hidden="true" v-if="!isMobile") Create
-  .centered.q-mb-md.q-mt-sm
+  q-separator(color="grey-8").full-width
+  .centered.q-mb-md.q-mt-xs
     h5 Create
   .toolbar.centered.full-width
     .relative-position

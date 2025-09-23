@@ -45,10 +45,23 @@
                 :thumb-size-desktop="90"
                 :cols-mobile="3"
                 :thumb-size-mobile="60"
+                :disable-nsfw-mask="true"
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
               )
-              MediaGallery.q-pl-md.q-pr-md( v-else-if="gridMode == 'grid'" @selected-index="showDetails" selectable  :cols-desktop="5" :thumb-size-desktop="190" :rowHeightRatio="1" layout="grid" :mediaObjects="allMediaObjects" :show-visibility-toggle="true" :show-delete-button="true")
+              MediaGallery.q-pl-md.q-pr-md(
+                v-else-if="gridMode == 'grid'"
+                @selected-index="showDetails"
+                selectable
+                :cols-desktop="5"
+                :thumb-size-desktop="190"
+                :rowHeightRatio="1"
+                layout="grid"
+                :mediaObjects="allMediaObjects"
+                :disable-nsfw-mask="true"
+                :show-visibility-toggle="true"
+                :show-delete-button="true"
+              )
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")

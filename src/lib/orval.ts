@@ -137,7 +137,7 @@ export type PkAuthLoginFinishBody = {
 export type CreateImageBodyModel = typeof CreateImageBodyModel[keyof typeof CreateImageBodyModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyModel = {
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
@@ -160,7 +160,7 @@ export const CreateImageBodyModel = {
 export type CreateImageBodyAspectRatio = typeof CreateImageBodyAspectRatio[keyof typeof CreateImageBodyAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImageBodyAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -200,7 +200,7 @@ export type CreateImage200 = {
 export type CreateVideoBodyModel = typeof CreateVideoBodyModel[keyof typeof CreateVideoBodyModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyModel = {
   'veo-2': 'veo-2',
   'veo-3': 'veo-3',
@@ -212,7 +212,7 @@ export const CreateVideoBodyModel = {
 export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideoBodyAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -246,7 +246,7 @@ export type CreateVideoBody = {
 export type CreateVideo200VideosItemStatus = typeof CreateVideo200VideosItemStatus[keyof typeof CreateVideo200VideosItemStatus];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateVideo200VideosItemStatus = {
   processing: 'processing',
   previewRendering: 'previewRendering',
@@ -301,7 +301,7 @@ export type CreateVideo200 = {
 export type CreateRandomPromptBodyType = typeof CreateRandomPromptBodyType[keyof typeof CreateRandomPromptBodyType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateRandomPromptBodyType = {
   image: 'image',
   video: 'video',
@@ -315,7 +315,7 @@ export type CreateRandomPromptBody = {
 export type CreateImprovePromptBodyType = typeof CreateImprovePromptBodyType[keyof typeof CreateImprovePromptBodyType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateImprovePromptBodyType = {
   image: 'image',
   video: 'video',
@@ -329,7 +329,7 @@ export type CreateImprovePromptBody = {
 export type CreateUploadImageBodyFileType = typeof CreateUploadImageBodyFileType[keyof typeof CreateUploadImageBodyFileType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateUploadImageBodyFileType = {
   'image/jpeg': 'image/jpeg',
   'image/png': 'image/png',
@@ -356,7 +356,7 @@ export type CreateUploadImage200 = {
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
@@ -379,7 +379,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -413,7 +413,7 @@ export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
   'veo-2': 'veo-2',
   'veo-3': 'veo-3',
@@ -425,7 +425,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -476,7 +476,7 @@ batchId: string;
 export type CreateBatchStatus200Status = typeof CreateBatchStatus200Status[keyof typeof CreateBatchStatus200Status];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateBatchStatus200Status = {
   waiting: 'waiting',
   running: 'running',
@@ -487,7 +487,7 @@ export const CreateBatchStatus200Status = {
 export type CreateBatchStatus200JobsItemType = typeof CreateBatchStatus200JobsItemType[keyof typeof CreateBatchStatus200JobsItemType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateBatchStatus200JobsItemType = {
   image: 'image',
   video: 'video',
@@ -496,7 +496,7 @@ export const CreateBatchStatus200JobsItemType = {
 export type CreateBatchStatus200JobsItemStatus = typeof CreateBatchStatus200JobsItemStatus[keyof typeof CreateBatchStatus200JobsItemStatus];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateBatchStatus200JobsItemStatus = {
   queued: 'queued',
   waitingForModel: 'waitingForModel',
@@ -596,13 +596,13 @@ promptIncludes?: string;
 export type CreationsUserImagePurchasesOrder = typeof CreationsUserImagePurchasesOrder[keyof typeof CreationsUserImagePurchasesOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'veo-3': 'veo-3',
   'seedance-pro': 'seedance-pro',
@@ -628,7 +628,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserImagePurchasesAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -666,13 +666,13 @@ promptIncludes?: string;
 export type CreationsUserVideoPurchasesOrder = typeof CreationsUserVideoPurchasesOrder[keyof typeof CreationsUserVideoPurchasesOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'veo-3': 'veo-3',
   'seedance-pro': 'seedance-pro',
@@ -698,7 +698,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsUserVideoPurchasesAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -736,13 +736,13 @@ promptIncludes?: string;
 export type CreationsCreateImageRequestsOrder = typeof CreationsCreateImageRequestsOrder[keyof typeof CreationsCreateImageRequestsOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'veo-3': 'veo-3',
   'seedance-pro': 'seedance-pro',
@@ -768,7 +768,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateImageRequestsAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -823,13 +823,13 @@ promptIncludes?: string;
 export type CreationsCreateVideoRequestsOrder = typeof CreationsCreateVideoRequestsOrder[keyof typeof CreationsCreateVideoRequestsOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'veo-3': 'veo-3',
   'seedance-pro': 'seedance-pro',
@@ -855,7 +855,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsCreateVideoRequestsAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -910,13 +910,13 @@ promptIncludes?: string;
 export type CreationsGetMediaRequestsOrder = typeof CreationsGetMediaRequestsOrder[keyof typeof CreationsGetMediaRequestsOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsGetMediaRequestsOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'veo-3': 'veo-3',
   'seedance-pro': 'seedance-pro',
@@ -942,7 +942,7 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
 export type CreationsGetMediaRequestsAspectRatio = typeof CreationsGetMediaRequestsAspectRatio[keyof typeof CreationsGetMediaRequestsAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsGetMediaRequestsAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -965,7 +965,7 @@ export type CreationsGetMediaRequests200ItemAnyOfImagesItem = {
 export type CreationsGetMediaRequests200ItemAnyOfMediaType = typeof CreationsGetMediaRequests200ItemAnyOfMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsGetMediaRequests200ItemAnyOfMediaType = {
   image: 'image',
 } as const;
@@ -998,7 +998,7 @@ export type CreationsGetMediaRequests200ItemAnyOfFourVideosItem = {
 export type CreationsGetMediaRequests200ItemAnyOfFourMediaType = typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType[keyof typeof CreationsGetMediaRequests200ItemAnyOfFourMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsGetMediaRequests200ItemAnyOfFourMediaType = {
   video: 'video',
 } as const;
@@ -1100,7 +1100,7 @@ mediaType?: CreationsBrowseCreateRequestsMediaType;
 export type CreationsBrowseCreateRequestsOrder = typeof CreationsBrowseCreateRequestsOrder[keyof typeof CreationsBrowseCreateRequestsOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -1109,7 +1109,7 @@ export const CreationsBrowseCreateRequestsOrder = {
 export type CreationsBrowseCreateRequestsModel = typeof CreationsBrowseCreateRequestsModel[keyof typeof CreationsBrowseCreateRequestsModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsModel = {
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
@@ -1132,7 +1132,7 @@ export const CreationsBrowseCreateRequestsModel = {
 export type CreationsBrowseCreateRequestsAspectRatio = typeof CreationsBrowseCreateRequestsAspectRatio[keyof typeof CreationsBrowseCreateRequestsAspectRatio];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsAspectRatio = {
   '16:9': '16:9',
   '1:1': '1:1',
@@ -1150,7 +1150,7 @@ export const CreationsBrowseCreateRequestsAspectRatio = {
 export type CreationsBrowseCreateRequestsSortMethod = typeof CreationsBrowseCreateRequestsSortMethod[keyof typeof CreationsBrowseCreateRequestsSortMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsSortMethod = {
   latest: 'latest',
   shuffle: 'shuffle',
@@ -1160,7 +1160,7 @@ export const CreationsBrowseCreateRequestsSortMethod = {
 export type CreationsBrowseCreateRequestsMediaType = typeof CreationsBrowseCreateRequestsMediaType[keyof typeof CreationsBrowseCreateRequestsMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsBrowseCreateRequestsMediaType = {
   image: 'image',
   video: 'video',
@@ -1256,7 +1256,7 @@ imageId: string;
 export type CreationsDescribeUploadedImage200SubjectGender = typeof CreationsDescribeUploadedImage200SubjectGender[keyof typeof CreationsDescribeUploadedImage200SubjectGender] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsDescribeUploadedImage200SubjectGender = {
   male: 'male',
   female: 'female',
@@ -1269,7 +1269,7 @@ export const CreationsDescribeUploadedImage200SubjectGender = {
 export type CreationsDescribeUploadedImage200SubjectCategory = typeof CreationsDescribeUploadedImage200SubjectCategory[keyof typeof CreationsDescribeUploadedImage200SubjectCategory] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreationsDescribeUploadedImage200SubjectCategory = {
   human: 'human',
   animal: 'animal',
@@ -1386,7 +1386,7 @@ export type PointsPrices200 = {
 export type PointsInitBuyPackageBodyMethod = typeof PointsInitBuyPackageBodyMethod[keyof typeof PointsInitBuyPackageBodyMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackageBodyMethod = {
   payPal: 'payPal',
   stripe: 'stripe',
@@ -1417,7 +1417,7 @@ export type PointsInitBuyPackage200AnyOf = {
 export type PointsInitBuyPackage200AnyOfThreeChainName = typeof PointsInitBuyPackage200AnyOfThreeChainName[keyof typeof PointsInitBuyPackage200AnyOfThreeChainName];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeChainName = {
   telosNative: 'telosNative',
   telosEVM: 'telosEVM',
@@ -1426,7 +1426,7 @@ export const PointsInitBuyPackage200AnyOfThreeChainName = {
 export type PointsInitBuyPackage200AnyOfThreeTokenType = typeof PointsInitBuyPackage200AnyOfThreeTokenType[keyof typeof PointsInitBuyPackage200AnyOfThreeTokenType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsInitBuyPackage200AnyOfThreeTokenType = {
   TLOS: 'TLOS',
 } as const;
@@ -1465,7 +1465,7 @@ export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitB
 export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsFinishBuyPackageBodyMethod = {
   payPal: 'payPal',
   stripe: 'stripe',
@@ -1516,7 +1516,7 @@ export type PointsGetOrders200PayPalOrdersItem = {
 export type PointsGetOrders200CryptoOrdersItemChainName = typeof PointsGetOrders200CryptoOrdersItemChainName[keyof typeof PointsGetOrders200CryptoOrdersItemChainName];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrders200CryptoOrdersItemChainName = {
   telosNative: 'telosNative',
   telosEVM: 'telosEVM',
@@ -1553,7 +1553,7 @@ method: PointsGetOrderMethod;
 export type PointsGetOrderMethod = typeof PointsGetOrderMethod[keyof typeof PointsGetOrderMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrderMethod = {
   payPal: 'payPal',
   stripe: 'stripe',
@@ -1582,7 +1582,7 @@ export type PointsGetOrder200AnyOf = {
 export type PointsGetOrder200AnyOfTwoChainName = typeof PointsGetOrder200AnyOfTwoChainName[keyof typeof PointsGetOrder200AnyOfTwoChainName];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoChainName = {
   telosNative: 'telosNative',
   telosEVM: 'telosEVM',
@@ -1591,7 +1591,7 @@ export const PointsGetOrder200AnyOfTwoChainName = {
 export type PointsGetOrder200AnyOfTwoTokenType = typeof PointsGetOrder200AnyOfTwoTokenType[keyof typeof PointsGetOrder200AnyOfTwoTokenType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PointsGetOrder200AnyOfTwoTokenType = {
   TLOS: 'TLOS',
 } as const;
@@ -1845,7 +1845,7 @@ endDateTime?: string;
 export type UserPointsHistoryOrder = typeof UserPointsHistoryOrder[keyof typeof UserPointsHistoryOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistoryOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -1854,7 +1854,7 @@ export const UserPointsHistoryOrder = {
 export type UserPointsHistory200ItemType = typeof UserPointsHistory200ItemType[keyof typeof UserPointsHistory200ItemType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPointsHistory200ItemType = {
   purchase: 'purchase',
   refund: 'refund',
@@ -1902,7 +1902,7 @@ privyId: string;
 export type UserGetNotificationConfig200EmailFrequency = typeof UserGetNotificationConfig200EmailFrequency[keyof typeof UserGetNotificationConfig200EmailFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200EmailFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1913,7 +1913,7 @@ export const UserGetNotificationConfig200EmailFrequency = {
 export type UserGetNotificationConfig200PhoneFrequency = typeof UserGetNotificationConfig200PhoneFrequency[keyof typeof UserGetNotificationConfig200PhoneFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200PhoneFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1924,7 +1924,7 @@ export const UserGetNotificationConfig200PhoneFrequency = {
 export type UserGetNotificationConfig200TelegramFrequency = typeof UserGetNotificationConfig200TelegramFrequency[keyof typeof UserGetNotificationConfig200TelegramFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserGetNotificationConfig200TelegramFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1945,7 +1945,7 @@ export type UserGetNotificationConfig200 = {
 export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyEmailFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1956,7 +1956,7 @@ export const UserSetNotificationConfigBodyEmailFrequency = {
 export type UserSetNotificationConfigBodyPhoneFrequency = typeof UserSetNotificationConfigBodyPhoneFrequency[keyof typeof UserSetNotificationConfigBodyPhoneFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfigBodyPhoneFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1974,7 +1974,7 @@ export type UserSetNotificationConfigBody = {
 export type UserSetNotificationConfig200EmailFrequency = typeof UserSetNotificationConfig200EmailFrequency[keyof typeof UserSetNotificationConfig200EmailFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200EmailFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1985,7 +1985,7 @@ export const UserSetNotificationConfig200EmailFrequency = {
 export type UserSetNotificationConfig200PhoneFrequency = typeof UserSetNotificationConfig200PhoneFrequency[keyof typeof UserSetNotificationConfig200PhoneFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200PhoneFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -1996,7 +1996,7 @@ export const UserSetNotificationConfig200PhoneFrequency = {
 export type UserSetNotificationConfig200TelegramFrequency = typeof UserSetNotificationConfig200TelegramFrequency[keyof typeof UserSetNotificationConfig200TelegramFrequency];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserSetNotificationConfig200TelegramFrequency = {
   instant: 'instant',
   daily: 'daily',
@@ -2187,7 +2187,7 @@ promptIncludes?: string;
 export type CollectionsGetCollectionImagesOrder = typeof CollectionsGetCollectionImagesOrder[keyof typeof CollectionsGetCollectionImagesOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionImagesOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -2225,7 +2225,7 @@ promptIncludes?: string;
 export type CollectionsGetCollectionVideosOrder = typeof CollectionsGetCollectionVideosOrder[keyof typeof CollectionsGetCollectionVideosOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionVideosOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -2234,7 +2234,7 @@ export const CollectionsGetCollectionVideosOrder = {
 export type CollectionsGetCollectionVideos200ItemStatus = typeof CollectionsGetCollectionVideos200ItemStatus[keyof typeof CollectionsGetCollectionVideos200ItemStatus];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionVideos200ItemStatus = {
   processing: 'processing',
   previewRendering: 'previewRendering',
@@ -2282,7 +2282,7 @@ mediaType?: CollectionsGetCollectionMediaMediaType;
 export type CollectionsGetCollectionMediaOrder = typeof CollectionsGetCollectionMediaOrder[keyof typeof CollectionsGetCollectionMediaOrder];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionMediaOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -2291,7 +2291,7 @@ export const CollectionsGetCollectionMediaOrder = {
 export type CollectionsGetCollectionMediaMediaType = typeof CollectionsGetCollectionMediaMediaType[keyof typeof CollectionsGetCollectionMediaMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionMediaMediaType = {
   image: 'image',
   video: 'video',
@@ -2301,7 +2301,7 @@ export const CollectionsGetCollectionMediaMediaType = {
 export type CollectionsGetCollectionMedia200ItemsItemMediaType = typeof CollectionsGetCollectionMedia200ItemsItemMediaType[keyof typeof CollectionsGetCollectionMedia200ItemsItemMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CollectionsGetCollectionMedia200ItemsItemMediaType = {
   image: 'image',
   video: 'video',
@@ -2400,7 +2400,7 @@ trainingSetId?: string;
 export type ModelsGetUserModels200ItemStatus = typeof ModelsGetUserModels200ItemStatus[keyof typeof ModelsGetUserModels200ItemStatus];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemStatus = {
   training: 'training',
   trained: 'trained',
@@ -2411,7 +2411,7 @@ export const ModelsGetUserModels200ItemStatus = {
 export type ModelsGetUserModels200ItemModelType = typeof ModelsGetUserModels200ItemModelType[keyof typeof ModelsGetUserModels200ItemModelType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
@@ -2426,7 +2426,7 @@ export const ModelsGetUserModels200ItemModelType = {
 export type ModelsGetUserModels200ItemFineTuneType = typeof ModelsGetUserModels200ItemFineTuneType[keyof typeof ModelsGetUserModels200ItemFineTuneType] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemFineTuneType = {
   lora: 'lora',
   full: 'full',
@@ -2435,7 +2435,7 @@ export const ModelsGetUserModels200ItemFineTuneType = {
 export type ModelsGetUserModels200ItemMode = typeof ModelsGetUserModels200ItemMode[keyof typeof ModelsGetUserModels200ItemMode];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemMode = {
   subject: 'subject',
   style: 'style',
@@ -2446,7 +2446,7 @@ export const ModelsGetUserModels200ItemMode = {
 export type ModelsGetUserModels200ItemModelTagsItem = typeof ModelsGetUserModels200ItemModelTagsItem[keyof typeof ModelsGetUserModels200ItemModelTagsItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetUserModels200ItemModelTagsItem = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2509,7 +2509,7 @@ export type ModelsGetUserModels200Item = {
 export type ModelsCreateModelBodyBaseModel = typeof ModelsCreateModelBodyBaseModel[keyof typeof ModelsCreateModelBodyBaseModel];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyBaseModel = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
@@ -2521,7 +2521,7 @@ export const ModelsCreateModelBodyBaseModel = {
 export type ModelsCreateModelBodyModelMode = typeof ModelsCreateModelBodyModelMode[keyof typeof ModelsCreateModelBodyModelMode];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyModelMode = {
   subject: 'subject',
   style: 'style',
@@ -2532,7 +2532,7 @@ export const ModelsCreateModelBodyModelMode = {
 export type ModelsCreateModelBodyFineTuneType = typeof ModelsCreateModelBodyFineTuneType[keyof typeof ModelsCreateModelBodyFineTuneType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsCreateModelBodyFineTuneType = {
   lora: 'lora',
   full: 'full',
@@ -2554,7 +2554,7 @@ id: string;
 export type ModelsGetTrainingStatus200Status = typeof ModelsGetTrainingStatus200Status[keyof typeof ModelsGetTrainingStatus200Status];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetTrainingStatus200Status = {
   processing: 'processing',
   trained: 'trained',
@@ -2587,7 +2587,7 @@ id: string;
 export type ModelsGetCustomModel200Status = typeof ModelsGetCustomModel200Status[keyof typeof ModelsGetCustomModel200Status];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Status = {
   training: 'training',
   trained: 'trained',
@@ -2598,7 +2598,7 @@ export const ModelsGetCustomModel200Status = {
 export type ModelsGetCustomModel200ModelType = typeof ModelsGetCustomModel200ModelType[keyof typeof ModelsGetCustomModel200ModelType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
@@ -2613,7 +2613,7 @@ export const ModelsGetCustomModel200ModelType = {
 export type ModelsGetCustomModel200FineTuneType = typeof ModelsGetCustomModel200FineTuneType[keyof typeof ModelsGetCustomModel200FineTuneType] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200FineTuneType = {
   lora: 'lora',
   full: 'full',
@@ -2622,7 +2622,7 @@ export const ModelsGetCustomModel200FineTuneType = {
 export type ModelsGetCustomModel200Mode = typeof ModelsGetCustomModel200Mode[keyof typeof ModelsGetCustomModel200Mode];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200Mode = {
   subject: 'subject',
   style: 'style',
@@ -2633,7 +2633,7 @@ export const ModelsGetCustomModel200Mode = {
 export type ModelsGetCustomModel200ModelTagsItem = typeof ModelsGetCustomModel200ModelTagsItem[keyof typeof ModelsGetCustomModel200ModelTagsItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetCustomModel200ModelTagsItem = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2692,7 +2692,7 @@ creatorId?: string;
 export type ModelsGetPublicModelsTag = typeof ModelsGetPublicModelsTag[keyof typeof ModelsGetPublicModelsTag];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModelsTag = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2718,7 +2718,7 @@ export const ModelsGetPublicModelsTag = {
 export type ModelsGetPublicModels200ItemStatus = typeof ModelsGetPublicModels200ItemStatus[keyof typeof ModelsGetPublicModels200ItemStatus];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemStatus = {
   training: 'training',
   trained: 'trained',
@@ -2729,7 +2729,7 @@ export const ModelsGetPublicModels200ItemStatus = {
 export type ModelsGetPublicModels200ItemModelType = typeof ModelsGetPublicModels200ItemModelType[keyof typeof ModelsGetPublicModels200ItemModelType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelType = {
   faceClone: 'faceClone',
   faceForge: 'faceForge',
@@ -2744,7 +2744,7 @@ export const ModelsGetPublicModels200ItemModelType = {
 export type ModelsGetPublicModels200ItemFineTuneType = typeof ModelsGetPublicModels200ItemFineTuneType[keyof typeof ModelsGetPublicModels200ItemFineTuneType] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemFineTuneType = {
   lora: 'lora',
   full: 'full',
@@ -2753,7 +2753,7 @@ export const ModelsGetPublicModels200ItemFineTuneType = {
 export type ModelsGetPublicModels200ItemMode = typeof ModelsGetPublicModels200ItemMode[keyof typeof ModelsGetPublicModels200ItemMode];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemMode = {
   subject: 'subject',
   style: 'style',
@@ -2764,7 +2764,7 @@ export const ModelsGetPublicModels200ItemMode = {
 export type ModelsGetPublicModels200ItemModelTagsItem = typeof ModelsGetPublicModels200ItemModelTagsItem[keyof typeof ModelsGetPublicModels200ItemModelTagsItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetPublicModels200ItemModelTagsItem = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2822,7 +2822,7 @@ page?: number;
 export type ModelsGetBaseModels200ItemModelTagsItem = typeof ModelsGetBaseModels200ItemModelTagsItem[keyof typeof ModelsGetBaseModels200ItemModelTagsItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetBaseModels200ItemModelTagsItem = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2874,7 +2874,7 @@ export type ModelsGetModelByName200CustomModelCreator = {
 export type ModelsGetModelByName200ModelModelTagsItem = typeof ModelsGetModelByName200ModelModelTagsItem[keyof typeof ModelsGetModelByName200ModelModelTagsItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelsGetModelByName200ModelModelTagsItem = {
   Realistic: 'Realistic',
   Creative: 'Creative',
@@ -2961,7 +2961,7 @@ sortDir?: AdminListUsersSortDir;
 export type AdminListUsersSortBy = typeof AdminListUsersSortBy[keyof typeof AdminListUsersSortBy];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListUsersSortBy = {
   lastActiveAt: 'lastActiveAt',
   spentPoints: 'spentPoints',
@@ -2973,7 +2973,7 @@ export const AdminListUsersSortBy = {
 export type AdminListUsersSortDir = typeof AdminListUsersSortDir[keyof typeof AdminListUsersSortDir];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListUsersSortDir = {
   asc: 'asc',
   desc: 'desc',
@@ -3056,7 +3056,7 @@ status?: string;
 export type AdminListPaymentsMethod = typeof AdminListPaymentsMethod[keyof typeof AdminListPaymentsMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListPaymentsMethod = {
   payPal: 'payPal',
   crypto: 'crypto',
@@ -3066,7 +3066,7 @@ export const AdminListPaymentsMethod = {
 export type AdminListPayments200ItemsItemMethod = typeof AdminListPayments200ItemsItemMethod[keyof typeof AdminListPayments200ItemsItemMethod];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListPayments200ItemsItemMethod = {
   payPal: 'payPal',
   crypto: 'crypto',
@@ -3164,7 +3164,7 @@ export type AdminListMissionClaims200ItemsItemUser = {
 export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfType = {
   points: 'points',
 } as const;
@@ -3179,7 +3179,7 @@ export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOf = {
 export type AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType[keyof typeof AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminListMissionClaims200ItemsItemMissionRewardsItemOneOfThreeType = {
   badge: 'badge',
 } as const;
@@ -3262,6 +3262,8 @@ export type AdminDiscountCodesList200Item = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminDiscountCodeCreateBody = {
@@ -3288,6 +3290,8 @@ export type AdminDiscountCodeCreate200 = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminDiscountCodeUpdateBody = {
@@ -3314,6 +3318,8 @@ export type AdminDiscountCodeUpdate200 = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminAffiliatePayoutUserBody = {
@@ -3392,7 +3398,7 @@ pageSize?: number;
 export type PromptTemplatesListKind = typeof PromptTemplatesListKind[keyof typeof PromptTemplatesListKind];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PromptTemplatesListKind = {
   subject: 'subject',
   setting: 'setting',
@@ -3403,7 +3409,7 @@ export const PromptTemplatesListKind = {
 export type PromptTemplatesList200ItemKind = typeof PromptTemplatesList200ItemKind[keyof typeof PromptTemplatesList200ItemKind];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PromptTemplatesList200ItemKind = {
   subject: 'subject',
   setting: 'setting',
@@ -3475,7 +3481,7 @@ userId: string;
 export type TrainingSetsGetUserSets200ItemSubjectGender = typeof TrainingSetsGetUserSets200ItemSubjectGender[keyof typeof TrainingSetsGetUserSets200ItemSubjectGender] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsGetUserSets200ItemSubjectGender = {
   male: 'male',
   female: 'female',
@@ -3488,7 +3494,7 @@ export const TrainingSetsGetUserSets200ItemSubjectGender = {
 export type TrainingSetsGetUserSets200ItemSubjectCategory = typeof TrainingSetsGetUserSets200ItemSubjectCategory[keyof typeof TrainingSetsGetUserSets200ItemSubjectCategory] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsGetUserSets200ItemSubjectCategory = {
   human: 'human',
   animal: 'animal',
@@ -3532,7 +3538,7 @@ trainingSetId: string;
 export type TrainingSetsGetSet200SubjectGender = typeof TrainingSetsGetSet200SubjectGender[keyof typeof TrainingSetsGetSet200SubjectGender] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsGetSet200SubjectGender = {
   male: 'male',
   female: 'female',
@@ -3545,7 +3551,7 @@ export const TrainingSetsGetSet200SubjectGender = {
 export type TrainingSetsGetSet200SubjectCategory = typeof TrainingSetsGetSet200SubjectCategory[keyof typeof TrainingSetsGetSet200SubjectCategory] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsGetSet200SubjectCategory = {
   human: 'human',
   animal: 'animal',
@@ -3601,7 +3607,7 @@ trainingSetId: string;
 export type TrainingSetsDescribeSet200SubjectGender = typeof TrainingSetsDescribeSet200SubjectGender[keyof typeof TrainingSetsDescribeSet200SubjectGender] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsDescribeSet200SubjectGender = {
   male: 'male',
   female: 'female',
@@ -3614,7 +3620,7 @@ export const TrainingSetsDescribeSet200SubjectGender = {
 export type TrainingSetsDescribeSet200SubjectCategory = typeof TrainingSetsDescribeSet200SubjectCategory[keyof typeof TrainingSetsDescribeSet200SubjectCategory] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TrainingSetsDescribeSet200SubjectCategory = {
   human: 'human',
   animal: 'animal',
@@ -3706,7 +3712,7 @@ export type UpvotesGetHiddenList200 = {
 export type PopularityBatchBodyItemsItemMediaType = typeof PopularityBatchBodyItemsItemMediaType[keyof typeof PopularityBatchBodyItemsItemMediaType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PopularityBatchBodyItemsItemMediaType = {
   image: 'image',
   video: 'video',
@@ -3750,7 +3756,7 @@ types?: EventsPublicEventsTypesItem[];
 export type EventsPublicEventsTypesItem = typeof EventsPublicEventsTypesItem[keyof typeof EventsPublicEventsTypesItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EventsPublicEventsTypesItem = {
   likedImage: 'likedImage',
   likedVideo: 'likedVideo',
@@ -3770,7 +3776,7 @@ export const EventsPublicEventsTypesItem = {
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EventsPublicEvents200ItemType = {
   likedImage: 'likedImage',
   likedVideo: 'likedVideo',
@@ -3808,7 +3814,7 @@ types?: EventsPrivateEventsTypesItem[];
 export type EventsPrivateEventsTypesItem = typeof EventsPrivateEventsTypesItem[keyof typeof EventsPrivateEventsTypesItem];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EventsPrivateEventsTypesItem = {
   likedImage: 'likedImage',
   likedVideo: 'likedVideo',
@@ -3828,7 +3834,7 @@ export const EventsPrivateEventsTypesItem = {
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EventsPrivateEvents200ItemType = {
   likedImage: 'likedImage',
   likedVideo: 'likedVideo',
@@ -3863,7 +3869,7 @@ export type EventsMarkEventSeenBody = {
 export type MissionsList200ItemRewardsItemOneOfType = typeof MissionsList200ItemRewardsItemOneOfType[keyof typeof MissionsList200ItemRewardsItemOneOfType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MissionsList200ItemRewardsItemOneOfType = {
   points: 'points',
 } as const;
@@ -3881,7 +3887,7 @@ export type MissionsList200ItemRewardsItemOneOf = {
 export type MissionsList200ItemRewardsItemOneOfThreeType = typeof MissionsList200ItemRewardsItemOneOfThreeType[keyof typeof MissionsList200ItemRewardsItemOneOfThreeType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MissionsList200ItemRewardsItemOneOfThreeType = {
   badge: 'badge',
 } as const;
@@ -3933,7 +3939,7 @@ export type MissionsClaimBody = {
 export type MissionsClaim200RewardsAwardedItemOneOfType = typeof MissionsClaim200RewardsAwardedItemOneOfType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MissionsClaim200RewardsAwardedItemOneOfType = {
   points: 'points',
 } as const;
@@ -3951,7 +3957,7 @@ export type MissionsClaim200RewardsAwardedItemOneOf = {
 export type MissionsClaim200RewardsAwardedItemOneOfThreeType = typeof MissionsClaim200RewardsAwardedItemOneOfThreeType[keyof typeof MissionsClaim200RewardsAwardedItemOneOfThreeType];
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MissionsClaim200RewardsAwardedItemOneOfThreeType = {
   badge: 'badge',
 } as const;
@@ -4127,7 +4133,7 @@ packageId: number;
 export type DiscountsValidate200Reason = typeof DiscountsValidate200Reason[keyof typeof DiscountsValidate200Reason] | null;
 
 
- 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DiscountsValidate200Reason = {
   not_found: 'not_found',
   exhausted: 'exhausted',
@@ -4158,8 +4164,12 @@ export type DiscountsMyCodes200Item = {
   createdAt: string;
   used: number;
   maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
   active: boolean;
   remainingUses: number;
   uniqueUsers: number;

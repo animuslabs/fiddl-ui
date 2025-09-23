@@ -3233,6 +3233,8 @@ export type AdminDiscountCodesList200Item = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminDiscountCodeCreateBody = {
@@ -3259,6 +3261,8 @@ export type AdminDiscountCodeCreate200 = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminDiscountCodeUpdateBody = {
@@ -3285,6 +3289,8 @@ export type AdminDiscountCodeUpdate200 = {
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
 };
 
 export type AdminAffiliatePayoutUserBody = {
@@ -4129,8 +4135,12 @@ export type DiscountsMyCodes200Item = {
   createdAt: string;
   used: number;
   maximumUses: number;
+  /** @nullable */
+  linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
+  affiliatePaid: number;
+  affiliatePayoutPending: number;
   active: boolean;
   remainingUses: number;
   uniqueUsers: number;

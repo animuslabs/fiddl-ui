@@ -29,6 +29,16 @@ export type CreateImageRequestWithCustomModel = CreateImageRequest & {
   uploadedStartImageIds?: string[]
 }
 
+// Types used by both initState and the store
+type RandomizerState = {
+  enabled: boolean
+  mode: "random" | "manual"
+  picksCount: number
+  maxBudget: number
+  excludeExpensive: boolean
+  manualSelection: ImageModel[]
+}
+
 const availableAspectRatios = Object.freeze(aspectRatios)
 
 function initState() {
@@ -52,6 +62,18 @@ function initState() {
     customModel: null as CustomModel | null,
     // Pending placeholder image IDs to render loading tiles in galleries
     pendingPlaceholders: [] as string[],
+    // Model randomizer state (persisted separately)
+    randomizer: ((): RandomizerState => {
+      const saved = LocalStorage.getItem("modelRandomizer") as Partial<RandomizerState> | null
+      return {
+        enabled: saved?.enabled ?? true,
+        mode: saved?.mode ?? "random",
+        picksCount: saved?.picksCount ?? 3, // default to 3 images
+        maxBudget: saved?.maxBudget ?? 30, // default to 30 points budget
+        excludeExpensive: saved?.excludeExpensive ?? true,
+        manualSelection: saved?.manualSelection ?? [],
+      }
+    })(),
   }
 }
 
@@ -116,6 +138,99 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const privateTotalCost = computed(() => publicTotalCost.value + privatePremiumTotal.value)
 
   const totalCost = computed(() => (state.req.public === false ? privateTotalCost.value : publicTotalCost.value))
+
+  // --- Randomizer helpers ---
+
+  const COMMON_SAFE_RATIOS: AspectRatio[] = ["16:9", "9:16", "1:1"]
+
+  function saveRandomizer() {
+    LocalStorage.set("modelRandomizer", toObject(state.randomizer))
+  }
+
+  function priceForModel(model: ImageModel): number {
+    // Map custom model price via selected type (handled in selectedModelPrice for single)
+    const p = prices.image.model[model as keyof typeof prices.image.model]
+    return typeof p === "number" ? p : 10
+  }
+
+  function isExpensive(model: ImageModel): boolean {
+    const p = priceForModel(model)
+    return p >= 18 // heuristic: >= 18 points considered expensive by default
+  }
+
+  function candidateModels(): ImageModel[] {
+    // Exclude "custom" from random picks since it requires customModelId
+    // Keep only models we actually support on image creation forms
+    const base: ImageModel[] = imageModels.filter((m) => m !== "custom")
+    let list = state.randomizer.excludeExpensive ? base.filter((m) => !isExpensive(m)) : base
+    // Safety: never return empty; if all filtered out, fall back to base
+    if (list.length === 0) list = base
+    return list
+  }
+
+  function pickRandom<T>(arr: T[], count: number): T[] {
+    const copy = [...arr]
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      //@ts-ignore
+      ;[copy[i], copy[j]] = [copy[j], copy[i]]
+    }
+    return copy.slice(0, Math.max(0, Math.min(count, copy.length)))
+  }
+
+  function pickModelsForBudget(models: ImageModel[], maxBudget: number, maxCount: number): ImageModel[] {
+    // Try a few random shuffles to find a good subset under budget
+    const tries = 12
+    let best: { models: ImageModel[]; cost: number } = { models: [], cost: 0 }
+    for (let t = 0; t < tries; t++) {
+      const shuffled = pickRandom(models, models.length)
+      const picked: ImageModel[] = []
+      let cost = 0
+      for (const m of shuffled) {
+        const c = priceForModel(m)
+        if (picked.length < maxCount && cost + c <= maxBudget) {
+          picked.push(m)
+          cost += c
+        }
+      }
+      if (picked.length > best.models.length || (picked.length === best.models.length && cost > best.cost)) {
+        best = { models: picked, cost }
+      }
+      if (best.models.length >= maxCount) break
+    }
+    if (best.models.length === 0) {
+      // If even the cheapest single model exceeds budget, pick the cheapest one
+      const cheapest = [...models].sort((a, b) => priceForModel(a) - priceForModel(b))[0]
+      if (cheapest) return [cheapest]
+    }
+    return best.models
+  }
+
+  function resolveMultiModels(): ImageModel[] {
+    if (!state.randomizer.enabled) return [state.req.model]
+    if (state.randomizer.mode === "manual") {
+      const manual = state.randomizer.manualSelection.filter((m) => m !== "custom") as ImageModel[]
+      // In manual mode, use exactly the selected models (picks/budget do not apply)
+      return manual.length > 0 ? manual : [state.req.model]
+    }
+    // Random mode
+    const candidates = candidateModels()
+    return pickModelsForBudget(candidates, state.randomizer.maxBudget, state.randomizer.picksCount)
+  }
+
+  const publicTotalCostMulti = computed(() => {
+    if (!state.randomizer.enabled) return publicTotalCost.value
+    const models = resolveMultiModels()
+    const sum = models.reduce((acc, m) => acc + priceForModel(m), 0)
+    return sum
+  })
+
+  const privateTotalCostMulti = computed(() => {
+    if (!state.randomizer.enabled) return privateTotalCost.value
+    const base = publicTotalCostMulti.value
+    const premium = Math.ceil(base * privateTaxRate.value)
+    return base + premium
+  })
 
   const anyLoading = computed(() => Object.values(state.loading).some(Boolean))
 
@@ -191,22 +306,27 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       return
     }
 
-    // Build batch request payload (images variant)
-    const requestPayload = {
+    // Decide models for this creation
+    const modelsForThisRun = resolveMultiModels()
+    // Enforce common safe aspect ratios when mixing models
+    let aspect: AspectRatio | undefined = state.req.aspectRatio as AspectRatio | undefined
+    if (!aspect || !COMMON_SAFE_RATIOS.includes(aspect)) aspect = "1:1"
+    // Build batch request payloads (image variant, one per model)
+    const requests = modelsForThisRun.map((m) => ({
       prompt: state.req.prompt,
       negativePrompt: undefined as string | undefined,
       quantity: 1,
       seed: state.req.seed,
-      model: state.req.model,
+      model: m,
       public: state.req.public,
-      aspectRatio: state.req.aspectRatio,
-      customModelId: state.req.customModelId,
+      aspectRatio: m === "nano-banana" ? (undefined as any) : (aspect as any),
+      customModelId: m === "custom" ? state.req.customModelId : undefined,
       uploadedStartImageIds: state.req.uploadedStartImageIds,
-    }
+    }))
 
     let batchId: string | null = null
     try {
-      const res = await createQueueAsyncBatch({ requests: [requestPayload] })
+      const res = await createQueueAsyncBatch({ requests })
       batchId = res.data?.batchId || null
     } catch (err) {
       catchErr(err)
@@ -216,7 +336,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     }
 
     // Immediately add placeholder tiles so users see progress while the batch runs
-    const qty = 1
+    const qty = Math.max(1, requests.length)
     const stamp = Date.now()
     const placeholders = Array.from({ length: qty }, (_, i) => `pending-${stamp}-${Math.random().toString(36).slice(2, 8)}-${i}`)
     // Add to the front so placeholders appear first in galleries
@@ -369,6 +489,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     publicTotalCost,
     privateTotalCost,
     totalCost,
+    // multi-model costs for UI when randomizer is enabled
+    publicTotalCostMulti,
+    privateTotalCostMulti,
     anyLoading,
     loadCustomModel,
     setReq,
@@ -379,5 +502,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     randomizePrompt,
     createImage,
     reset,
+    saveRandomizer,
+    priceForModel,
   }
 })

@@ -146,6 +146,30 @@ q-page.full-height.full-width.admin-page
         template(#body-cell-actions="props")
           q-td(:props="props")
             q-btn(size="sm" color="primary" :disable="(props.row.pending||0) <= 0" label="Payout" @click="confirmAffiliatePayout(props.row.userId, props.row.pending)")
+      .row.items-center.q-gutter-sm.q-mt-md
+        h6.q-my-none Recent Payout Receipts
+        q-space
+        q-btn(icon="refresh" flat @click="refetchAffiliateReceipts" :loading="apLoading")
+      q-table(
+        :rows="apReceipts"
+        :columns="apColumns"
+        row-key="id"
+        flat bordered dense
+        :rows-per-page-options="[10,25,50,100,0]"
+        :loading="apLoading"
+        :no-data-label="'No payout receipts'"
+      )
+        template(#body-cell-payoutDate="props")
+          q-td(:props="props") {{ props.row.payoutDate ? new Date(props.row.payoutDate).toLocaleString() : '' }}
+        template(#body-cell-user="props")
+          q-td(:props="props")
+            template(v-if="profileLinkByUserId(props.row.userId)")
+              a.admin-link(:href="profileLinkByUserId(props.row.userId)" target="_blank" rel="noopener" @click.stop)
+                | {{ userLabelById[props.row.userId] || props.row.userId }}
+            template(v-else)
+              span {{ userLabelById[props.row.userId] || props.row.userId }}
+        template(#body-cell-amount="props")
+          q-td(:props="props") ${{ (props.row.amount || 0).toFixed(2) }}
     div(v-if="tab == 'users'").q-pa-sm
       .row.items-center.q-gutter-sm.q-mb-sm
         q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
@@ -439,6 +463,7 @@ import {
   adminDiscountCodeUpdate,
   adminDiscountCodeDelete,
   adminAffiliatePayoutUser,
+  adminAffiliatePayoutReceipts,
   type AdminListUsersSortBy,
   type AdminListUsersSortDir,
 } from "src/lib/orval"
@@ -1037,7 +1062,13 @@ export default defineComponent({
         if (initial) dcLoading.value = true
         else dcFetching.value = true
         const res = await adminDiscountCodesList()
-        dcRows.value = Array.isArray(res?.data) ? res.data : []
+        const raw = Array.isArray(res?.data) ? res.data : []
+        // Normalize fields for UI: keep legacy names used by the table template
+        dcRows.value = raw.map((r: any) => ({
+          ...r,
+          pendingPayout: Number(r?.affiliatePayoutPending || 0),
+          totalPayout: Number(r?.affiliatePaid || 0),
+        }))
         const ids = Array.from(new Set(dcRows.value.map((r: any) => r?.linkedUserId).filter((v: any) => typeof v === "string" && v))) as string[]
         await Promise.all(
           ids.map(async (id) => {
@@ -1116,11 +1147,54 @@ export default defineComponent({
           await adminAffiliatePayoutUser({ userId })
           Notify.create({ type: 'positive', message: 'Payout executed' })
           await refetchDiscounts()
+          await refetchAffiliateReceipts()
         } catch (e) {
           catchErr(e)
         }
       })
     }
+
+    // Admin payout receipts (review)
+    const apReceipts = ref<any[]>([])
+    const apLoading = ref(false)
+    const apColumns: QTableColumn<any>[] = [
+      { name: 'payoutDate', label: 'Date', field: 'payoutDate', sortable: true },
+      { name: 'user', label: 'User', field: 'user', sortable: false },
+      { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+    ]
+
+    async function ensureUserLabels(ids: string[]) {
+      const unique = Array.from(new Set(ids.filter(Boolean))) as string[]
+      await Promise.all(
+        unique.map(async (id) => {
+          if (!id || userLabelById.value[id]) return
+          try {
+            const resp = await adminListUsers({ search: id, limit: 1, offset: 0 })
+            const user = resp?.data?.users?.[0]
+            if (user) {
+              userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
+              if (user.profile?.username) userUsernameById.value[id] = user.profile.username
+            }
+          } catch {}
+        }),
+      )
+    }
+
+    async function fetchAffiliateReceipts() {
+      try {
+        apLoading.value = true
+        const res = await adminAffiliatePayoutReceipts({ limit: 100, offset: 0 })
+        apReceipts.value = Array.isArray(res?.data) ? res.data : []
+        const ids = apReceipts.value.map((r: any) => r.userId).filter((v: any) => typeof v === 'string' && v)
+        await ensureUserLabels(ids as string[])
+      } catch (e) {
+        apReceipts.value = []
+      } finally {
+        apLoading.value = false
+      }
+    }
+
+    const refetchAffiliateReceipts = () => fetchAffiliateReceipts()
 
     const dcEditOpen = ref(false)
     const dcEdit = ref({ code: "", discountPct: 0, maximumUses: 1, linkedUserId: "" as string | null | undefined })
@@ -1390,6 +1464,12 @@ export default defineComponent({
       pendingPayoutRows,
       pendingPayoutColumns,
       confirmAffiliatePayout,
+
+      // affiliate receipts (admin review)
+      apReceipts,
+      apLoading,
+      apColumns,
+      refetchAffiliateReceipts,
     }
   },
   data() {
@@ -1554,6 +1634,7 @@ export default defineComponent({
           void this.refetchDiscounts()
         } else if (this.tab == "affiliate-payouts") {
           void this.refetchDiscounts()
+          void this.refetchAffiliateReceipts()
         }
       } catch (error) {
         catchErr(error)

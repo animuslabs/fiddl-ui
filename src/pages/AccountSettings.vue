@@ -319,7 +319,7 @@ export default defineComponent({
         this.loadingMyCodes = true
         const res = await discountsMyCodes()
         const list = Array.isArray(res?.data) ? res.data : []
-        // Enrich with payout fields from backend if present
+        // Enrich with payout fields from backend (affiliatePayoutPending / affiliatePaid)
         this.myCodes = list.map((it) => {
           const raw = it as unknown as Record<string, unknown>
           const toNum = (v: unknown) => {
@@ -328,8 +328,9 @@ export default defineComponent({
           }
           return {
             ...it,
-            pendingPayout: toNum(raw.pendingPayout),
-            totalPayout: toNum(raw.totalPayout),
+            // Keep legacy keys used by the UI, derived from new API fields
+            pendingPayout: toNum(raw.affiliatePayoutPending ?? (raw as any).pendingPayout),
+            totalPayout: toNum(raw.affiliatePaid ?? (raw as any).totalPayout),
           }
         })
         // If user has affiliate codes, load payout details

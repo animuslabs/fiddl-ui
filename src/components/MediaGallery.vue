@@ -50,6 +50,8 @@ const props = withDefaults(
     showPopularity?: boolean
     showVisibilityToggle?: boolean
     showDeleteButton?: boolean
+    // When true, do not gate or mask NSFW items
+    disableNsfwMask?: boolean
   }>(),
   {
     layout: "grid",
@@ -66,6 +68,7 @@ const props = withDefaults(
     showPopularity: false,
     showVisibilityToggle: false,
     showDeleteButton: false,
+    disableNsfwMask: false,
   },
 )
 
@@ -213,6 +216,8 @@ function setStoredNsfwPreference(value: boolean | null) {
 
 function shouldMaskNsfw(media: MediaGalleryMeta | undefined): boolean {
   if (!media) return false
+  // Allow callers (e.g., Create page) to bypass masking entirely
+  if (props.disableNsfwMask === true) return false
   return media.nsfw === true && !showNsfwContent.value
 }
 
