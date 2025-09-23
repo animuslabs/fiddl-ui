@@ -47,7 +47,7 @@
               :disable="createStore.anyLoading"
               dense
             )
-            q-badge.q-mt-xs(v-else color="grey-7" label="Aspect ratio fixed by model")
+            q-badge.q-mt-xs(v-else color="grey-7" label="N/A")
           .col-12.col-md-3(v-if="req.seed != undefined")
             p.setting-label Seed
             .row.items-start.no-wrap.q-gutter-sm
