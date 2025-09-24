@@ -194,7 +194,13 @@ export default defineComponent({
     isTMA(): boolean {
       try {
         if (typeof window === "undefined") return false
-        return Boolean((window as any)?.__TMA__?.enabled || (window as any)?.Telegram?.WebApp)
+        // Only rely on our explicit TMA flag/class set by boot/tma.ts.
+        // The Telegram WebApp SDK may define window.Telegram.WebApp even outside Telegram,
+        // so checking its mere presence can cause false positives on mobile browsers.
+        return Boolean(
+          (window as any)?.__TMA__?.enabled ||
+            document.documentElement.classList.contains("tma-mode")
+        )
       } catch {
         return false
       }

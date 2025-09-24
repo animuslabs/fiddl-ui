@@ -89,6 +89,9 @@ export function useCreateOrchestrator() {
     if (tab === "image") imgCreate.setReq(req as Partial<CreateImageRequest>)
     else vidCreate.setReq(req as Partial<CreateVideoRequest>)
 
+    // If already on the Create page on mobile, ensure the create card opens
+    if ($q.screen.lt.md) ctx.state.createMode = true
+
     Dialog.create({
       title: "Image Parameters Applied",
       message: "The prompt, model, and seed of the image have been added to the create panel. Make small changes to the prompt or seed to get similar images.",
@@ -105,6 +108,9 @@ export function useCreateOrchestrator() {
     const decoded = JSON.parse(decodeURIComponent(encodedRequestData))
     if (activeTab.value === "image") imgCreate.setReq(decoded as Partial<CreateImageRequest>)
     else vidCreate.setReq(decoded as Partial<CreateVideoRequest>)
+
+    // Ensure the create card opens on mobile when applying params in-place
+    if ($q.screen.lt.md) ctx.state.createMode = true
 
     Dialog.create({
       title: "Image Parameters Applied",
@@ -165,7 +171,9 @@ export function useCreateOrchestrator() {
 
     // Create mode from query or responsive default
     const requestedCreateMode = parseBool(route.query.createMode)
-    if (requestedCreateMode !== undefined) ctx.state.createMode = requestedCreateMode
+    const suppressCreateModal = typeof route.query.noCreateModal !== "undefined"
+    if (suppressCreateModal) ctx.state.createMode = false
+    else if (requestedCreateMode !== undefined) ctx.state.createMode = requestedCreateMode
     else ctx.state.createMode = $q.screen.lt.md
 
     // Persist/restore grid mode handled by store; nothing to do here

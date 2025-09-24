@@ -67,12 +67,17 @@
             p.setting-label Model
             // Keep selector on its own row
             q-select.relative-position.text-capitalize(
+              ref="modelSelectRef"
               v-model="req.model"
-              :options="createStore.availableModels"
+              :options="[]"
               style="font-size:20px; min-width:140px; max-width:220px;"
               :disable="createStore.anyLoading"
-              :display-value="modelDisplayValue || undefined"
+              :display-value="modelDisplayText"
               @update:model-value="onModelSelected"
+              readonly
+              @mousedown.prevent.stop="openModelSelectDialog"
+              @keydown.enter.prevent="openModelSelectDialog"
+              @keydown.space.prevent="openModelSelectDialog"
               dense
             )
               .badge-sm.text-white {{ createStore.selectedModelPrice }}
@@ -186,6 +191,10 @@
   // Model randomizer config
   q-dialog(v-model="randomizerDialogOpen" :maximized="$q.screen.lt.md")
     ModelRandomizerDialog(@close="randomizerDialogOpen = false")
+
+  // Base model select dialog
+  q-dialog(v-model="baseModelDialogOpen" :maximized="$q.screen.lt.md")
+    ModelSelectDialog(@close="baseModelDialogOpen = false" @select="onModelSelectedFromDialog")
 </template>
 
 <script lang="ts" setup>
@@ -203,6 +212,8 @@ import { s3Img } from "lib/netlifyImg"
 import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
 import ModelRandomizerDialog from "components/dialogs/ModelRandomizerDialog.vue"
+import ModelSelectDialog from "components/dialogs/ModelSelectDialog.vue"
+import * as modelsStore from "stores/modelsStore"
 import tma from "src/lib/tmaAnalytics"
 
 const emit = defineEmits(["created", "back"])
@@ -225,6 +236,8 @@ const showImagesDialog = ref(false)
 const quickBuyDialogOpen = ref(false)
 const actionCooldown = ref(false)
 const randomizerDialogOpen = ref(false)
+const baseModelDialogOpen = ref(false)
+const modelSelectRef = ref<any>(null)
 
 async function startCreateKeyboard() {
   const started = await startCreateImage()
@@ -279,6 +292,28 @@ function onModelSelected() {
   }
 }
 
+function onModelSelectedFromDialog(slug: string) {
+  req.model = slug as any
+  baseModelDialogOpen.value = false
+  onModelSelected()
+}
+
+function openModelSelectDialog() {
+  // Avoid immediate re-opening loops by blurring the faux input
+  try { modelSelectRef.value?.blur?.() } catch {}
+  baseModelDialogOpen.value = true
+}
+
+const modelDisplayText = computed(() => {
+  // If random/multi mode, show special label
+  if (modelDisplayValue.value) return modelDisplayValue.value
+  // Custom model: show its name if present
+  if (req.model === 'custom') return req.customModelName || 'Custom model'
+  // Base model: map slug to friendly name (fallback to slug)
+  const m = (modelsStore.models.base || []).find((x) => x.slug === (req.model as any))
+  return m?.name || (req.model as string)
+})
+
 async function startCreateImage(isPublic: boolean = req.public ?? true) {
   if (createDisabled.value) return false
   req.public = isPublic
@@ -332,10 +367,11 @@ function setCustomModel(model: CustomModel) {
     createStore.saveRandomizer()
   }
   // Ensure creations view filters to this custom model
+  // Important: set filter.model/customModelId BEFORE loading, so the query includes the custom model
   creationsStore.dynamicModel = true
-  void creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
+  void creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   // this.activeCreationsStore.searchCreations(this.$userAuth.userId)
 
   // creationsStore.searchCreations()

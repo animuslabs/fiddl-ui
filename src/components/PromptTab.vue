@@ -290,6 +290,16 @@ export default defineComponent({
     "$q.screen.lt.md"(val) {
       if (!this.suppressCreateModal) this.createMode = val
     },
+    // Keep createMode in sync with shared Create Context so other flows can open it
+    "createContext.state.createMode": {
+      handler(val: boolean) {
+        if (this.createMode !== val) this.createMode = val
+      },
+      immediate: false,
+    },
+    createMode(val: boolean) {
+      if (this.createContext.state.createMode !== val) this.createContext.state.createMode = val
+    },
     "activeCreationsStore.dynamicModel": {
       handler(val: boolean) {
         console.log("activeCreationsStore.dynamicModel toggled", val)

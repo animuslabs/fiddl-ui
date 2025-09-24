@@ -19,9 +19,7 @@ function isTmaMode() {
     if (typeof window === "undefined") return false
     // Prefer explicit flag from boot/tma
     if ((window as any)?.__TMA__?.enabled) return true
-    // Fallback heuristic: Telegram WebApp present or query param
-    const hasWebApp = Boolean((window as any)?.Telegram?.WebApp)
-    if (hasWebApp) return true
+    // Do not rely on presence of Telegram.WebApp alone; it may exist outside Telegram.
     const qp = new URLSearchParams(window.location.search)
     return qp.has("tma") || qp.has("tgWebApp") || qp.get("mode") === "tma"
   } catch {

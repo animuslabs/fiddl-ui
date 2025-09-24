@@ -5,12 +5,16 @@ declare namespace NodeJS {
     VUE_ROUTER_BASE: string | undefined
     VITE_API_URL: string
     VITE_PRIVY_APP_ID: string
+    VITE_TELEMETREE_API_KEY?: string
+    VITE_TELEMETREE_PROJECT_ID?: string
   }
 }
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_PRIVY_APP_ID: string
+  readonly VITE_TELEMETREE_API_KEY?: string
+  readonly VITE_TELEMETREE_PROJECT_ID?: string
 }
 
 interface ImportMeta {

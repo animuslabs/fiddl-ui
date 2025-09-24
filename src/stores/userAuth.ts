@@ -5,6 +5,7 @@ import { type NotificationConfig, type PointsTransfer, type UserData, type UserP
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
+import telemetree from "lib/telemetree"
 import { metaPixel } from "lib/metaPixel"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageSecretCache } from "lib/imageCdn"
@@ -82,6 +83,22 @@ export const useUserAuth = defineStore("userAuth", {
 
         if (this.userProfile) {
           umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
+          try {
+            telemetree.identify({
+              userId: this.userId!,
+              username: this.userProfile.username || undefined,
+              email: this.userProfile.email || undefined,
+              phone: this.userProfile.phone || undefined,
+              telegramId: this.userProfile.telegramId || undefined,
+              createdAt: this.userProfile.createdAt,
+              // flags
+              emailVerified: this.userProfile.emailVerified,
+              phoneVerified: this.userProfile.phoneVerified,
+              twitter: this.userProfile.twitter || undefined,
+              instagram: this.userProfile.instagram || undefined,
+              telegramName: this.userProfile.telegramName || undefined,
+            })
+          } catch {}
           try {
             metaPixel.setAdvancedMatching({
               em: this.userProfile?.email || undefined,
@@ -319,6 +336,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.userProfile = null
       this.upvotesWallet = null
       umami.identify({ userId: "logged-out" })
+      try { telemetree.identify({ userId: "logged-out" }) } catch {}
       clearImageSecretCache()
       if (uid) clearAvatarVersion(uid)
       // useCreateImageStore().$reset()

@@ -43,10 +43,13 @@ function isTmaEnv(): boolean {
     if (typeof window === "undefined") return false
     const qp = new URLSearchParams(window.location.search)
     const forced = qp.has("tma") || qp.has("tgWebApp") || qp.get("mode") === "tma"
-    // Real Telegram Mini App environment
-    const hasWebApp = Boolean((window as any)?.Telegram?.WebApp)
-    const result = hasWebApp || forced
-    D.log("Env check", { forced, hasWebApp, result, ua: navigator.userAgent })
+
+    const tg = (window as any)?.Telegram?.WebApp
+    // Only treat as TMA when real Telegram window data is present.
+    // The SDK may define Telegram.WebApp even outside Telegram; require non-empty initData.
+    const hasInitData = typeof tg?.initData === "string" && tg.initData.length > 0
+    const result = Boolean(forced || hasInitData)
+    D.log("Env check", { forced, hasInitData, result })
     return result
   } catch {
     return false

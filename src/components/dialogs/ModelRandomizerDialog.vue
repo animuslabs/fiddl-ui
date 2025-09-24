@@ -30,21 +30,25 @@ q-card(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; he
       .row.items-center.q-mb-sm
         h6.q-mt-none.q-mb-none Pick Models
         q-space
+        // Manual mode helpers
+        q-btn(flat dense icon="select_all" label="Select All" @click="selectAllManual()")
+        q-btn(flat dense color="secondary" icon="clear_all" label="Clear" @click="clearManual()")
         q-btn(flat dense icon="refresh" label="Reload" @click="reload()")
       div(v-if="loading")
         .centered.q-pa-md
           q-spinner-dots(color="primary" size="24px")
       .model-grid(v-else)
-        .model-item(v-for="m in displayModels" :key="m.slug" :class="{ selected: isSelectedSlug(m.slug) }" @click="toggleSlug(m.slug)")
-          .row.no-wrap.items-start
-            q-checkbox(:model-value="isSelectedSlug(m.slug)" @update:model-value="onCheckSlug(m.slug, $event)" color="primary")
-            .col
-              .row.items-center.no-wrap
-                h6.q-mt-none.q-mb-none.text-bold {{ m.name }}
-                q-chip.q-ml-sm(dense color="grey-9" text-color="white") {{ priceOfSlug(m.slug) }}
-              .text-caption.text-grey-5 {{ shortDesc(m.description) }}
-              .row.q-gutter-xs.q-mt-xs
-                q-chip(v-for="t in (m.modelTags||[])" :key="t" dense color="grey-9" text-color="white") {{ t }}
+        SimpleModelCard(
+          v-for="m in displayModels"
+          :key="m.slug"
+          :model="m"
+          :selected="isSelectedSlug(m.slug)"
+          :price="priceOfSlug(m.slug)"
+          showCheckbox
+          :checked="isSelectedSlug(m.slug)"
+          @update:checked="onCheckSlug(m.slug, $event)"
+          @click="toggleSlug(m.slug)"
+        )
 
   q-separator
   // Sticky actions at bottom
@@ -124,6 +128,8 @@ async function reload() {
 
 onMounted(() => {
   void reload()
+  // If we land in manual mode with nothing picked, preselect 3 models
+  if (local.mode === "manual") ensureDefaultManualSelection()
 })
 
 // No checkbox map needed when deriving selection from store
@@ -164,14 +170,53 @@ const privateRate = computed(() => {
 const estimatedPublic = computed(() => (store.state.randomizer.enabled ? store.publicTotalCostMulti : store.publicTotalCost))
 const estimatedPrivate = computed(() => (store.state.randomizer.enabled ? store.privateTotalCostMulti : store.privateTotalCost))
 
+// Ensure at least some defaults are chosen when entering manual mode
+function ensureDefaultManualSelection() {
+  const list = store.state.randomizer.manualSelection || []
+  if (list.length > 0) return
+  // Prefer models visible in this dialog; fall back to all available
+  const candidates = (displayModels.value?.length
+    ? displayModels.value.map((m) => m.slug)
+    : (store.availableModels || []).filter((m: string) => m !== "custom")) as string[]
+  // Sort by ascending price so defaults are affordable
+  const sorted = [...candidates].sort((a, b) => priceOfSlug(a) - priceOfSlug(b))
+  const pick = sorted.slice(0, 3) as ImageModel[]
+  store.state.randomizer.manualSelection = pick
+}
+
+// React when switching modes inside the dialog
+watch(
+  () => local.mode,
+  (mode) => {
+    if (mode === "manual") ensureDefaultManualSelection()
+  },
+)
+
+function selectAllManual() {
+  const all = (displayModels.value || []).map((m) => m.slug) as ImageModel[]
+  store.state.randomizer.manualSelection = all
+}
+
+function clearManual() {
+  store.state.randomizer.manualSelection = [] as any
+}
+
 function save() {
+  // In manual mode, require at least one model
+  if (local.mode === "manual") {
+    const count = (store.state.randomizer.manualSelection || []).length
+    if (count < 1) {
+      $q.notify({ type: "negative", message: "Select at least one model before saving" })
+      return
+    }
+  }
   store.saveRandomizer()
   $q.notify({ color: "positive", message: "Randomizer settings saved" })
-  // Close dialog after saving
   emit("close")
 }
 
 // no scrollAreaStyle needed when card handles overflow
+import SimpleModelCard from "src/components/SimpleModelCard.vue"
 </script>
 
 <style scoped>
@@ -187,14 +232,5 @@ function save() {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 10px;
 }
-.model-item {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 10px;
-  cursor: pointer;
-}
-.model-item.selected {
-  border-color: var(--q-primary);
-  background: rgba(255, 255, 255, 0.04);
-}
+
 </style>

@@ -8,11 +8,8 @@ type Json = string | number | boolean | null | Json[] | { [k: string]: Json }
 function inTma(): boolean {
   try {
     if (typeof window === "undefined") return false
-    // Flag set by src/boot/tma.ts
-    if ((window as any).__TMA__?.enabled) return true
-    // Native Telegram WebApp detection
-    if ((window as any)?.Telegram?.WebApp) return true
-    return false
+    // Only rely on the explicit flag set by src/boot/tma.ts
+    return Boolean((window as any).__TMA__?.enabled)
   } catch {
     return false
   }
@@ -69,4 +66,3 @@ export const tmaAnalytics = {
 }
 
 export default tmaAnalytics
-

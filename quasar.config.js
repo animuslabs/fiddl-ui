@@ -27,7 +27,8 @@ export default configure(function (/* ctx */) {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     // Put TMA boot first to initialize analytics as early as possible
-    boot: ["tma", "boot", "componentDefaults", "vueQuery"],
+    // Initialize Telemetree early as well (after TMA)
+    boot: ["tma", "telemetree", "boot", "componentDefaults", "vueQuery"],
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.sass"],
 

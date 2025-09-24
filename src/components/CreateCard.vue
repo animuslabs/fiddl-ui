@@ -83,9 +83,11 @@ async function setCustomModel(model: CustomModel) {
   showModelPicker.value = false
   createStore.state.req.customModelId = model.id
   createStore.state.req.customModelName = model.name
-  await creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
+  // Ensure the filter reflects the custom model BEFORE loading so the query includes it
+  creationsStore.dynamicModel = true
   creationsStore.filter.model = "custom"
   creationsStore.filter.customModelId = model.id
+  await creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
   // LocalStorage.set("req", createStore.state.req)
 }
 
