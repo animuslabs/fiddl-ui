@@ -122,6 +122,7 @@ import UploadedImagesDialog from "components/dialogs/UploadedImagesDialog.vue"
 import CreateActionBar from "components/CreateActionBar.vue"
 import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
 import { useUserAuth } from "src/stores/userAuth"
+import tma from "src/lib/tmaAnalytics"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -165,7 +166,17 @@ async function startCreate(isPublic: boolean = req.value.public ?? true) {
     quickBuyDialogOpen.value = true
     return false
   }
-  void vidStore.createVideoRequest().then(() => emit("created"))
+  try {
+    tma.createStart("video", { model: req.value.model, public: !!req.value.public, cost: targetCost })
+  } catch {}
+  void vidStore
+    .createVideoRequest()
+    .then(() => {
+      try {
+        tma.createSuccess("video", { model: req.value.model, public: !!req.value.public })
+      } catch {}
+      emit("created")
+    })
   return true
 }
 function onDialogAccept(ids: string[]) {

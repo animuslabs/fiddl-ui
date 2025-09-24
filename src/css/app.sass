@@ -198,6 +198,18 @@ input[type="number"]
   .q-item__label
     font-size: 18px
 
+// Telegram Mini App mode tweaks
+.tma-mode
+  // Hide heavy chrome to maximize viewport inside Telegram
+  .q-header, .q-footer
+    display: none !important
+  // Allow pages to use full height
+  body &, .q-page-container
+    min-height: 100vh
+  // Optional: use Telegram background color if provided
+  background-color: var(--tma-bg, #121212)
+
+
 // Improve readability of badges/chips globally
 .q-badge, .q-chip
   font-size: 14px

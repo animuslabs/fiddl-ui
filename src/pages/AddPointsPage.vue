@@ -252,6 +252,7 @@ import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
 import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
+import tma from "src/lib/tmaAnalytics"
 
 interface PointsPackageRender extends PointsPackagesAvailable200Item {
   bgColor: string
@@ -444,6 +445,20 @@ export default defineComponent({
   async mounted() {
     if (typeof window !== "undefined") window.addEventListener("resize", this.updateIsMobile)
     this.updateIsMobile()
+    // If running inside Telegram Mini App, default to Stars
+    try {
+      const isTma =
+        typeof window !== "undefined" &&
+        (
+          // Set by boot/tma.ts
+          (window as any).__TMA__?.enabled === true ||
+          // CSS flag also added by boot/tma.ts
+          document.documentElement.classList.contains("tma-mode") ||
+          // Fallback to direct WebApp detection
+          !!(window as any)?.Telegram?.WebApp
+        )
+      if (isTma) this.buyMode = "telegram"
+    } catch {}
     const packagesResponse = await pointsPackagesAvailable()
     if (packagesResponse?.data) {
       this.packages = packagesResponse.data.map((el: any) => {
@@ -584,6 +599,7 @@ export default defineComponent({
     },
     async buyWithStars(packageId: number) {
       try {
+        try { tma.purchaseIntent("stars", { packageId }) } catch {}
         const { data } = await telegramCreateBuyDeepLink({ packageId })
         if (data.deepLink) window.open(data.deepLink, "_blank")
       } catch (e) {
@@ -705,6 +721,7 @@ export default defineComponent({
                 contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
                 content_name: `Fiddl Points ${this.selectedPkg.points}`,
               })
+              try { tma.purchaseIntent("paypal", { points: this.selectedPkg.points, usd: Number(this.finalUsd) }) } catch {}
             }
           } catch {}
           return res.data.id

@@ -141,6 +141,12 @@ q-page.full-height.full-width.admin-page
                 | {{ userLabelById[props.row.userId] || props.row.userId }}
             template(v-else)
               span {{ userLabelById[props.row.userId] || props.row.userId }}
+        template(#body-cell-payout="props")
+          q-td(:props="props")
+            template(v-if="payoutDetailsByUserId[props.row.userId]?.paypalEmail")
+              span {{ payoutDetailsByUserId[props.row.userId].paypalEmail }}
+            template(v-else)
+              span Not linked
         template(#body-cell-pending="props")
           q-td(:props="props") ${{ (props.row.pending || 0).toFixed(2) }}
         template(#body-cell-actions="props")
@@ -464,6 +470,7 @@ import {
   adminDiscountCodeDelete,
   adminAffiliatePayoutUser,
   adminAffiliatePayoutReceipts,
+  adminAffiliatePayoutDetailsForUser,
   type AdminListUsersSortBy,
   type AdminListUsersSortDir,
 } from "src/lib/orval"
@@ -1035,6 +1042,7 @@ export default defineComponent({
     const dcFetching = ref(false)
     const userLabelById = ref<Record<string, string>>({})
     const userUsernameById = ref<Record<string, string>>({})
+    const payoutDetailsByUserId = ref<Record<string, { paypalEmail: string | null; totalPaid: number }>>({})
     const profileLinkByUserId = (userId?: string | null) => {
       if (!userId) return ""
       return profileLinkForUsername(userUsernameById.value[userId])
@@ -1078,6 +1086,13 @@ export default defineComponent({
               if (user) {
                 userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
                 if (user.profile?.username) userUsernameById.value[id] = user.profile.username
+              }
+            } catch {}
+            try {
+              const pd = await adminAffiliatePayoutDetailsForUser({ userId: id })
+              const data = pd?.data
+              if (data && data.userId) {
+                payoutDetailsByUserId.value[id] = { paypalEmail: data.paypalEmail ?? null, totalPaid: Number(data.totalPaid || 0) }
               }
             } catch {}
           }),
@@ -1132,6 +1147,7 @@ export default defineComponent({
     })
     const pendingPayoutColumns: QTableColumn<any>[] = [
       { name: 'user', label: 'User', field: 'user', sortable: true },
+      { name: 'payout', label: 'Payout', field: 'userId', sortable: false },
       { name: 'pending', label: 'Pending', field: 'pending', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
       { name: 'actions', label: 'Actions', field: 'userId', sortable: false },
     ]
@@ -1447,6 +1463,7 @@ export default defineComponent({
       dcFetching,
       dcColumns,
       userLabelById,
+      payoutDetailsByUserId,
       dcForm,
       dcCreating,
       createDiscountCode,

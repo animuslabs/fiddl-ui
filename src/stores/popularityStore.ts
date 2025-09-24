@@ -4,6 +4,7 @@ import { Dialog } from "quasar"
 import LikeMedia from "src/components/dialogs/LikeMedia.vue"
 import { popularityBatch, type PopularityBatchBody, type PopularityBatch200Item, collectionsLikeMedia, collectionsUnlikeMedia, upvotesUpvote, upvotesDownvote, upvotesUnhide } from "lib/orval"
 import { useUserAuth } from "stores/userAuth"
+import tma from "src/lib/tmaAnalytics"
 
 export interface PopularityEntry {
   id: string
@@ -261,9 +262,11 @@ export const usePopularityStore = defineStore("popularityStore", {
           if (e.isFavoritedByMe) {
             const res = await collectionsLikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
             if (!res?.data) throw new Error("LIKE_REJECTED")
+            try { tma.like(id, type) } catch {}
           } else {
             const res = await collectionsUnlikeMedia({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
             if (!res?.data) throw new Error("UNLIKE_REJECTED")
+            try { tma.unlike(id, type) } catch {}
           }
           // Ensure UI reflects server truth immediately after success
           void this.refreshBatchByItems([{ id, mediaType: type }])
@@ -356,6 +359,7 @@ export const usePopularityStore = defineStore("popularityStore", {
 
       try {
         await upvotesUpvote({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
+        try { tma.upvote(id, type) } catch {}
         // Refresh wallet after successful spend (non-blocking safety)
         try {
           const userAuth = useUserAuth()

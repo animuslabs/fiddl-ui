@@ -2100,6 +2100,47 @@ export type StatsPayments200 = {
   paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
 };
 
+export type StatsHistoryParams = {
+from?: string;
+to?: string;
+limit?: number;
+};
+
+export type StatsHistory200SnapshotsItem = {
+  bucketStart: string;
+  usersSpentPointsGt0: number;
+  usersSpentOver100: number;
+  usersSpentOver1000: number;
+  usersSpentOver10000: number;
+  usersSpentOver20000: number;
+  usersPurchasedImage: number;
+  usersCreatedImage: number;
+  usersEmailVerified: number;
+  usersPhoneVerified: number;
+  usersInstagramVerified: number;
+  usersTwitterVerified: number;
+  usersSetUsername: number;
+  imagesTotalCreated: number;
+  imagesTotalUpscaled: number;
+  imageRequestsTotal: number;
+  /** @nullable */
+  imageRequestsAvgQuantity: number | null;
+  imagesPurchased: number;
+  purchasesTotal: number;
+  imagesPrivate: number;
+  imagesInAtLeastOneCollection: number;
+  imagesCreationFailed: number;
+  collectionsCreated: number;
+  collectionsWithImages: number;
+  paymentsIncompletePayPalOrders: number;
+  paymentsCompletePayPalOrders: number;
+  paymentsTotalPaid: number;
+};
+
+export type StatsHistory200 = {
+  snapshots: StatsHistory200SnapshotsItem[];
+};
+
 export type CollectionsMediaInUsersCollectionParams = {
 imageId?: string;
 videoId?: string;
@@ -3293,6 +3334,17 @@ export type AdminDiscountCodeUpdate200 = {
   affiliatePayoutPending: number;
 };
 
+export type AdminAffiliatePayoutDetailsForUserParams = {
+userId: string;
+};
+
+export type AdminAffiliatePayoutDetailsForUser200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
 export type AdminAffiliatePayoutUserBody = {
   userId: string;
 };
@@ -4047,6 +4099,15 @@ export type TelegramCreateBuyDeepLink200 = {
   deepLink: string;
   id: string;
   expiresIn: number;
+};
+
+export type TelegramWebAppLoginBody = {
+  initData: string;
+};
+
+export type TelegramWebAppLogin200 = {
+  token: string;
+  userId: string;
 };
 
 /**
@@ -5907,6 +5968,34 @@ export const statsPayments = async ( options?: RequestInit): Promise<StatsPaymen
 
 
 
+export const getStatsHistoryUrl = (params?: StatsHistoryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/stats/history?${stringifiedParams}` : `/stats/history`
+}
+
+export const statsHistory = async (params?: StatsHistoryParams, options?: RequestInit): Promise<StatsHistory200> => {
+  
+  return fetcher<StatsHistory200>(getStatsHistoryUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getCollectionsMediaInUsersCollectionUrl = (params: CollectionsMediaInUsersCollectionParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -6728,6 +6817,34 @@ export const adminDiscountCodeUpdate = async (adminDiscountCodeUpdateBody: Admin
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       adminDiscountCodeUpdateBody,)
+  }
+);}
+
+
+
+export const getAdminAffiliatePayoutDetailsForUserUrl = (params: AdminAffiliatePayoutDetailsForUserParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/affiliatePayoutDetailsForUser?${stringifiedParams}` : `/admin/affiliatePayoutDetailsForUser`
+}
+
+export const adminAffiliatePayoutDetailsForUser = async (params: AdminAffiliatePayoutDetailsForUserParams, options?: RequestInit): Promise<AdminAffiliatePayoutDetailsForUser200> => {
+  
+  return fetcher<AdminAffiliatePayoutDetailsForUser200>(getAdminAffiliatePayoutDetailsForUserUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
 
@@ -7578,6 +7695,28 @@ export const telegramCreateBuyDeepLink = async (telegramCreateBuyDeepLinkBody: T
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramCreateBuyDeepLinkBody,)
+  }
+);}
+
+
+
+export const getTelegramWebAppLoginUrl = () => {
+
+
+  
+
+  return `/telegram/webAppLogin`
+}
+
+export const telegramWebAppLogin = async (telegramWebAppLoginBody: TelegramWebAppLoginBody, options?: RequestInit): Promise<TelegramWebAppLogin200> => {
+  
+  return fetcher<TelegramWebAppLogin200>(getTelegramWebAppLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramWebAppLoginBody,)
   }
 );}
 

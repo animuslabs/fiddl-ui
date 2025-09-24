@@ -204,6 +204,7 @@ import { s3Img } from "lib/netlifyImg"
 import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
 import ModelRandomizerDialog from "components/dialogs/ModelRandomizerDialog.vue"
+import tma from "src/lib/tmaAnalytics"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -300,7 +301,25 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
     if (creationsStore.filter?.customModelId) creationsStore.filter.customModelId = undefined
     void creationsStore.searchCreations(userAuth.userId)
   }
-  void createStore.createImage().then(() => emit("created"))
+  // TMA analytics: creation start
+  try {
+    tma.createStart("image", {
+      model: req.model,
+      public: !!req.public,
+      cost: targetCost,
+      randomizer: createStore.state.randomizer?.enabled || false,
+      picks: createStore.state.randomizer?.picksCount || null,
+    })
+  } catch {}
+
+  void createStore
+    .createImage()
+    .then(() => {
+      try {
+        tma.createSuccess("image", { model: req.model, public: !!req.public })
+      } catch {}
+      emit("created")
+    })
   return true
 }
 const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))

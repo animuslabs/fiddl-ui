@@ -64,6 +64,7 @@ import { copyToClipboard, LocalStorage, Notify } from "quasar"
 let interval: ReturnType<typeof setInterval> | null = null
 import ms from "ms"
 import { metaPixel } from "lib/metaPixel"
+import tma from "src/lib/tmaAnalytics"
 export default defineComponent({
   name: "CryptoPayment",
   props: {
@@ -141,6 +142,7 @@ export default defineComponent({
                 contents: [{ id: `points_${this.purchasePoints || 0}`, quantity: 1, item_price: Number(this.purchaseUsd) }],
                 content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package"
               })
+              try { tma.purchaseSuccess("crypto", { usd: Number(this.purchaseUsd), points: this.purchasePoints ?? null }) } catch {}
             }
           } catch {}
           this.$emit("paymentComplete")
@@ -191,6 +193,7 @@ export default defineComponent({
             contents: [{ id: this.purchasePoints != null ? `points_${this.purchasePoints}` : "points_pkg", quantity: 1, item_price: this.purchaseUsd != null ? Number(this.purchaseUsd) : undefined }],
             content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package (crypto)"
           } as any)
+          try { tma.purchaseIntent("crypto", { method, usd: this.purchaseUsd ?? null, points: this.purchasePoints ?? null }) } catch {}
         } catch {}
       } catch (error) {
         console.error("Failed to initialize package purchase:", error)

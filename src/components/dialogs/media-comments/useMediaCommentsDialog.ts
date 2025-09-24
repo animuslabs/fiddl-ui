@@ -3,6 +3,7 @@ import { Dialog, useQuasar } from "quasar"
 import { useRouter } from "vue-router"
 import type { CommentsCreateBody, CommentsList200CommentsItem } from "src/lib/orval"
 import { commentsCreate, commentsDelete, commentsEdit, commentsList } from "src/lib/orval"
+import tma from "src/lib/tmaAnalytics"
 import { catchErr } from "src/lib/util"
 import { useUserAuth } from "src/stores/userAuth"
 import {
@@ -185,6 +186,7 @@ export function useMediaCommentsDialog(
       const { data } = await commentsCreate(payload)
       const created = normalizeComment(data)
       comments.value = [created, ...comments.value]
+      try { tma.comment(props.mediaId, props.mediaType, content.length) } catch {}
       newComment.value = ""
       focusCommentId.value = created.id
       emit("ok", created)

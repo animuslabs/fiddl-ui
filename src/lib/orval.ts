@@ -2129,6 +2129,47 @@ export type StatsPayments200 = {
   paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
 };
 
+export type StatsHistoryParams = {
+from?: string;
+to?: string;
+limit?: number;
+};
+
+export type StatsHistory200SnapshotsItem = {
+  bucketStart: string;
+  usersSpentPointsGt0: number;
+  usersSpentOver100: number;
+  usersSpentOver1000: number;
+  usersSpentOver10000: number;
+  usersSpentOver20000: number;
+  usersPurchasedImage: number;
+  usersCreatedImage: number;
+  usersEmailVerified: number;
+  usersPhoneVerified: number;
+  usersInstagramVerified: number;
+  usersTwitterVerified: number;
+  usersSetUsername: number;
+  imagesTotalCreated: number;
+  imagesTotalUpscaled: number;
+  imageRequestsTotal: number;
+  /** @nullable */
+  imageRequestsAvgQuantity: number | null;
+  imagesPurchased: number;
+  purchasesTotal: number;
+  imagesPrivate: number;
+  imagesInAtLeastOneCollection: number;
+  imagesCreationFailed: number;
+  collectionsCreated: number;
+  collectionsWithImages: number;
+  paymentsIncompletePayPalOrders: number;
+  paymentsCompletePayPalOrders: number;
+  paymentsTotalPaid: number;
+};
+
+export type StatsHistory200 = {
+  snapshots: StatsHistory200SnapshotsItem[];
+};
+
 export type CollectionsMediaInUsersCollectionParams = {
 imageId?: string;
 videoId?: string;
@@ -3322,6 +3363,17 @@ export type AdminDiscountCodeUpdate200 = {
   affiliatePayoutPending: number;
 };
 
+export type AdminAffiliatePayoutDetailsForUserParams = {
+userId: string;
+};
+
+export type AdminAffiliatePayoutDetailsForUser200 = {
+  userId: string;
+  /** @nullable */
+  paypalEmail: string | null;
+  totalPaid: number;
+};
+
 export type AdminAffiliatePayoutUserBody = {
   userId: string;
 };
@@ -4076,6 +4128,15 @@ export type TelegramCreateBuyDeepLink200 = {
   deepLink: string;
   id: string;
   expiresIn: number;
+};
+
+export type TelegramWebAppLoginBody = {
+  initData: string;
+};
+
+export type TelegramWebAppLogin200 = {
+  token: string;
+  userId: string;
 };
 
 /**
@@ -8113,6 +8174,64 @@ export function useStatsPayments<TData = Awaited<ReturnType<typeof statsPayments
 
 
 
+export const statsHistory = (
+    params?: MaybeRef<StatsHistoryParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<StatsHistory200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/stats/history`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getStatsHistoryQueryKey = (params?: MaybeRef<StatsHistoryParams>,) => {
+    return ['stats','history', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getStatsHistoryQueryOptions = <TData = Awaited<ReturnType<typeof statsHistory>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<StatsHistoryParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsHistory>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getStatsHistoryQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof statsHistory>>> = ({ signal }) => statsHistory(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof statsHistory>>, TError, TData> 
+}
+
+export type StatsHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof statsHistory>>>
+export type StatsHistoryQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useStatsHistory<TData = Awaited<ReturnType<typeof statsHistory>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<StatsHistoryParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsHistory>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStatsHistoryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const collectionsMediaInUsersCollection = (
     params: MaybeRef<CollectionsMediaInUsersCollectionParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<boolean>> => {
@@ -9995,6 +10114,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const adminAffiliatePayoutDetailsForUser = (
+    params: MaybeRef<AdminAffiliatePayoutDetailsForUserParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminAffiliatePayoutDetailsForUser200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/affiliatePayoutDetailsForUser`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminAffiliatePayoutDetailsForUserQueryKey = (params: MaybeRef<AdminAffiliatePayoutDetailsForUserParams>,) => {
+    return ['admin','affiliatePayoutDetailsForUser', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminAffiliatePayoutDetailsForUserQueryOptions = <TData = Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<AdminAffiliatePayoutDetailsForUserParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminAffiliatePayoutDetailsForUserQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>> = ({ signal }) => adminAffiliatePayoutDetailsForUser(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>, TError, TData> 
+}
+
+export type AdminAffiliatePayoutDetailsForUserQueryResult = NonNullable<Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>>
+export type AdminAffiliatePayoutDetailsForUserQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminAffiliatePayoutDetailsForUser<TData = Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<AdminAffiliatePayoutDetailsForUserParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAffiliatePayoutDetailsForUser>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminAffiliatePayoutDetailsForUserQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const adminAffiliatePayoutUser = (
     adminAffiliatePayoutUserBody: MaybeRef<AdminAffiliatePayoutUserBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AdminAffiliatePayoutUser200>> => {
@@ -11979,6 +12156,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getTelegramCreateBuyDeepLinkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramWebAppLogin = (
+    telegramWebAppLoginBody: MaybeRef<TelegramWebAppLoginBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramWebAppLogin200>> => {
+    telegramWebAppLoginBody = unref(telegramWebAppLoginBody);
+    
+    return axios.post(
+      `/telegram/webAppLogin`,
+      telegramWebAppLoginBody,options
+    );
+  }
+
+
+
+export const getTelegramWebAppLoginMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramWebAppLogin>>, TError,{data: TelegramWebAppLoginBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramWebAppLogin>>, TError,{data: TelegramWebAppLoginBody}, TContext> => {
+
+const mutationKey = ['telegramWebAppLogin'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramWebAppLogin>>, {data: TelegramWebAppLoginBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramWebAppLogin(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramWebAppLoginMutationResult = NonNullable<Awaited<ReturnType<typeof telegramWebAppLogin>>>
+    export type TelegramWebAppLoginMutationBody = TelegramWebAppLoginBody
+    export type TelegramWebAppLoginMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramWebAppLogin = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramWebAppLogin>>, TError,{data: TelegramWebAppLoginBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramWebAppLogin>>,
+        TError,
+        {data: TelegramWebAppLoginBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramWebAppLoginMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
