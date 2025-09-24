@@ -11,36 +11,79 @@ q-page.full-height.full-width.admin-page
       q-tab(name="discount-codes" label="Discount Codes")
       q-tab(name="affiliate-payouts" label="Affiliate Payouts")
       q-tab(name="stats" label="Stats")
-    div(v-if="tab == 'promo-codes'")
-      .centered.q-mb-md
-        q-card.q-pa-md
-          .centered
-            h4 Create Promo Code
-          .q-ma-md
-            q-input(v-model.number="promoPoints" type="number" label="Points" input-style="font-size:16px;" inputmode="numeric")
-          .centered
-            q-btn(label="Create + Copy Claim Link" @click="createPromoCode('claim')" icon="add")
-            q-btn(label="Create + Copy MagicMirror Link" class="q-ml-sm" @click="createPromoCode('mm')" icon="add")
-      .centered.q-gutter-md
-        q-card.q-pa-md(style="max-width:400px; overflow: auto;")
-          .centered
-            h4 Unclaimed Promo Codes
-          q-list
-            q-item(v-for="code in unclaimedPromoCodes" :key="code.id")
-              pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto; overflow-wrap:anywhere; word-break:break-word;") {{ code }}
-              .row.q-gutter-xs.q-mt-xs
-                q-btn(size="sm" label="copy claim" @click="copyCode(code.id)" icon="content_copy" flat)
-                q-btn(size="sm" label="copy MM Pro" @click="copyMagicMirror(code.id)" icon="content_copy" flat)
-                q-btn(size="sm" label="copy MM Fast" @click="copyMagicMirrorFast(code.id)" icon="content_copy" flat)
-                q-btn(size="sm" label="claim QR" @click="showClaimQr(code.id)" icon="qr_code" color="primary" flat)
-                q-btn(size="sm" label="MM Pro QR" @click="showMmQr(code.id)" icon="qr_code" color="accent" flat)
-                q-btn(size="sm" label="MM Fast QR" @click="showMmFastQr(code.id)" icon="qr_code" color="accent" flat)
-        q-card.q-pa-md
-          .centered
-            h4 Claimed Promo Codes
-          q-list
-            q-item(v-for="code in claimedPromoCodes" :key="code.id")
-                          pre(style="font-size:10px; white-space:pre-wrap; max-width:90vw; overflow:auto; overflow-wrap:anywhere; word-break:break-word;") {{ code }}
+    div(v-if="tab == 'promo-codes'" class="q-pa-sm")
+      // Create + stats
+      q-card.q-pa-md.q-mb-md
+        .row.items-center.q-col-gutter-sm
+          .col-12.col-sm-3
+            q-input(v-model.number="promoPoints" type="number" dense outlined label="Points per code" input-style="font-size:16px;" inputmode="numeric")
+          .col-auto
+            q-btn(color="primary" icon="add" label="Create + Copy Claim" @click="createPromoCode('claim')")
+          .col-auto
+            q-btn(color="accent" icon="add" label="Create + Copy Magic Mirror" @click="createPromoCode('mm')")
+          q-space
+          .col-auto
+            .row.items-center.q-gutter-xs
+              q-chip(color="primary" text-color="white" dense) Total: {{ promoStats.total }}
+              q-chip(color="positive" text-color="white" dense) Unclaimed: {{ promoStats.unclaimed }}
+              q-chip(color="grey-7" text-color="white" dense) Claimed: {{ promoStats.claimed }}
+              q-chip(color="secondary" text-color="white" dense) Unclaimed Pts: {{ promoStats.unclaimedPoints.toLocaleString() }}
+
+      // Filters
+      .row.items-center.q-gutter-sm.q-mb-sm
+        q-btn-toggle(
+          v-model="promoFilterStatus"
+          :options="promoStatusOptions"
+          size="sm"
+          dense
+          unelevated
+        )
+        q-input(v-model="promoSearch" debounce="300" dense outlined clearable placeholder="Search (short id or user)" style="min-width:260px")
+        q-space
+        q-btn(icon="refresh" flat @click="loadPromoCodes" :loading="promoLoading")
+
+      // Table
+      q-table(
+        :rows="promoFilteredRows"
+        :columns="promoColumns"
+        row-key="id"
+        :loading="promoLoading"
+        flat bordered dense
+        :rows-per-page-options="[10,25,50,100,0]"
+        :no-data-label="'No promo codes found'"
+      )
+        template(#body-cell-actions="props")
+          q-td(:props="props")
+            .row.items-center.q-gutter-xs
+              q-btn(size="sm" icon="content_copy" flat :title="'Copy claim link'" @click="copyCode(props.row.id)")
+              q-btn(size="sm" icon="qr_code" color="primary" flat :title="'Show claim QR'" @click="showClaimQr(props.row.id)")
+              q-btn(size="sm" icon="extension" flat :title="'Copy Magic Mirror link'" @click="copyMagicMirror(props.row.id)")
+              q-btn(size="sm" icon="bolt" flat :title="'Copy Magic Mirror Fast link'" @click="copyMagicMirrorFast(props.row.id)")
+              q-btn(size="sm" icon="delete" color="negative" flat :title="'Delete code'" :disable="!!props.row.claimedAt" @click="confirmDeletePromo(props.row)")
+        template(#body-cell-code="props")
+          q-td(:props="props")
+            .row.items-center.q-gutter-xs
+              q-chip(size="sm" color="dark" text-color="white" dense) {{ shortId(props.row.id) }}
+              a.admin-link(:href="claimLink(props.row.id)" target="_blank" rel="noopener" @click.stop) Open
+        template(#body-cell-points="props")
+          q-td(:props="props") {{ (props.row.points || 0).toLocaleString() }}
+        template(#body-cell-status="props")
+          q-td(:props="props")
+            q-chip(v-if="props.row.claimedAt" color="grey-7" text-color="white" dense) CLAIMED
+            q-chip(v-else color="positive" text-color="white" dense) AVAILABLE
+        template(#body-cell-claimedBy="props")
+          q-td(:props="props")
+            template(v-if="props.row.claimedByUserId && profileLinkByUserId(props.row.claimedByUserId)")
+              a.admin-link(:href="profileLinkByUserId(props.row.claimedByUserId)" target="_blank" rel="noopener" @click.stop)
+                | {{ labelById(props.row.claimedByUserId) }}
+            template(v-else-if="props.row.claimedByUserId")
+              span {{ labelById(props.row.claimedByUserId) }}
+            template(v-else)
+              span -
+        template(#body-cell-createdAt="props")
+          q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
+        template(#body-cell-claimedAt="props")
+          q-td(:props="props") {{ props.row.claimedAt ? new Date(props.row.claimedAt).toLocaleString() : '' }}
 
     // Discount Codes tab
     div(v-if="tab == 'discount-codes'" class="q-pa-sm")
@@ -464,6 +507,7 @@ import { useRouter, type RouteLocationRaw } from "vue-router"
 import {
   promoCreatePromoCode,
   promoGetPromoCodes,
+  promoDeletePromoCode,
   useAdminListUsers,
   useAdminBanUser,
   useAdminListPayments,
@@ -1477,6 +1521,7 @@ export default defineComponent({
       dcFetching,
       dcColumns,
       userLabelById,
+      userUsernameById,
       payoutDetailsByUserId,
       dcForm,
       dcCreating,
@@ -1508,6 +1553,24 @@ export default defineComponent({
       promoPoints: 100 as string | number | null,
       claimedPromoCodes: [] as PromoCode[],
       unclaimedPromoCodes: [] as PromoCode[],
+      allPromoCodes: [] as PromoCode[],
+      promoLoading: false as boolean,
+      promoSearch: '' as string,
+      promoFilterStatus: 'all' as 'all' | 'unclaimed' | 'claimed',
+      promoStatusOptions: [
+        { label: 'All', value: 'all', icon: 'all_inclusive' },
+        { label: 'Unclaimed', value: 'unclaimed', icon: 'check_circle' },
+        { label: 'Claimed', value: 'claimed', icon: 'done_all' },
+      ] as { label: string; value: 'all' | 'unclaimed' | 'claimed'; icon: string }[],
+      promoColumns: [
+        { name: 'actions', label: 'Actions', field: 'id', align: 'left', sortable: false },
+        { name: 'code', label: 'Code', field: 'id', sortable: false },
+        { name: 'points', label: 'Points', field: 'points', align: 'right', sortable: true },
+        { name: 'status', label: 'Status', field: 'claimedAt', sortable: true },
+        { name: 'claimedBy', label: 'Claimed By', field: 'claimedByUserId', sortable: false },
+        { name: 'createdAt', label: 'Created', field: 'createdAt', sortable: true },
+        { name: 'claimedAt', label: 'Claimed', field: 'claimedAt', sortable: true },
+      ] as QTableColumn<any>[],
       tab: "promo-codes",
       avatarImg,
       qrDialogOpen: false as boolean,
@@ -1518,6 +1581,39 @@ export default defineComponent({
       imgPreviewOpen: false as boolean,
       imgPreviewSrc: "" as string,
     }
+  },
+  computed: {
+    promoFilteredRows(): any[] {
+      try {
+        const q = (this.promoSearch || '').trim().toLowerCase()
+        const status = this.promoFilterStatus
+        const rows = Array.isArray(this.allPromoCodes) ? this.allPromoCodes : []
+        return rows.filter((r: any) => {
+          if (status === 'unclaimed' && r.claimedAt) return false
+          if (status === 'claimed' && !r.claimedAt) return false
+          if (!q) return true
+          const sid = this.shortId(String(r.id)).toLowerCase()
+          const userLbl = String(this.labelById(r.claimedByUserId) || '').toLowerCase()
+          return sid.includes(q) || userLbl.includes(q)
+        })
+      } catch {
+        return []
+      }
+    },
+    promoStats(): { total: number; claimed: number; unclaimed: number; unclaimedPoints: number } {
+      const rows = Array.isArray(this.allPromoCodes) ? this.allPromoCodes : []
+      let claimed = 0
+      let unclaimed = 0
+      let unclaimedPoints = 0
+      for (const r of rows) {
+        if (r.claimedAt) claimed++
+        else {
+          unclaimed++
+          unclaimedPoints += Number(r.points || 0)
+        }
+      }
+      return { total: rows.length, claimed, unclaimed, unclaimedPoints }
+    },
   },
   watch: {
     "$userAuth.loggedIn": {
@@ -1549,6 +1645,74 @@ export default defineComponent({
   mounted() {},
 
   methods: {
+    // --- Promo Codes helpers ---
+    shortId(id: string) {
+      try {
+        return longIdToShort(id)
+      } catch {
+        return id
+      }
+    },
+    claimLink(id: string) {
+      try {
+        return `${window.location.origin}/claim/${this.shortId(id)}`
+      } catch {
+        return ""
+      }
+    },
+    async loadPromoCodes() {
+      try {
+        this.promoLoading = true
+        const response = await promoGetPromoCodes()
+        const allPromoCodes = response?.data || []
+        this.allPromoCodes = allPromoCodes
+        // Keep legacy arrays for any external usage
+        this.claimedPromoCodes = allPromoCodes
+          .filter((code: any) => code.claimedAt)
+          .sort((a: any, b: any) => new Date(a.claimedAt as string).getTime() - new Date(b.claimedAt as string).getTime())
+          .reverse()
+        this.unclaimedPromoCodes = allPromoCodes
+          .filter((code: any) => !code.claimedAt)
+          .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .reverse()
+        // Ensure user labels for claimed codes
+        const ids = Array.from(new Set(allPromoCodes.map((c: any) => c.claimedByUserId).filter((v: any) => typeof v === 'string' && v))) as string[]
+        await Promise.all(
+          ids.map(async (id) => {
+            try {
+              if (this.userLabelById[id]) return
+              const resp = await adminListUsers({ search: id, limit: 1, offset: 0 })
+              const user = resp?.data?.users?.[0]
+              if (user) {
+                this.userLabelById[id] = this.userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
+                if (user.profile?.username) this.userUsernameById[id] = user.profile.username
+              }
+            } catch {}
+          }),
+        )
+      } catch (error) {
+        catchErr(error)
+      } finally {
+        this.promoLoading = false
+      }
+    },
+    confirmDeletePromo(row: any) {
+      if (!row || !row.id) return
+      Dialog.create({
+        title: 'Delete promo code',
+        message: `Delete promo code ${this.shortId(row.id)}?`,
+        cancel: true,
+        ok: { label: 'Delete', color: 'negative' },
+      }).onOk(async () => {
+        try {
+          await promoDeletePromoCode({ id: String(row.id) })
+          Notify.create({ type: 'positive', message: 'Promo code deleted' })
+          await this.loadPromoCodes()
+        } catch (error) {
+          catchErr(error)
+        }
+      })
+    },
     normalizeAdminTab(slug?: string): string {
       const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
@@ -1633,7 +1797,7 @@ export default defineComponent({
         const urlToCopy = kind === "mm" ? mmUrl : claimUrl
         void copyToClipboard(urlToCopy)
         void this.openQr(urlToCopy, kind === "mm" ? "Magic Mirror" : "Claim Promo")
-        void this.load()
+        await this.loadPromoCodes()
         Notify.create({
           message: kind === "mm" ? `Promo created (${this.promoPoints} points). Magic Mirror link copied` : `Promo created (${this.promoPoints} points). Claim link copied`,
           type: "success",
@@ -1647,17 +1811,7 @@ export default defineComponent({
     async load() {
       try {
         if (this.tab == "promo-codes") {
-          const response = await promoGetPromoCodes()
-          const allPromoCodes = response?.data || []
-
-          this.claimedPromoCodes = allPromoCodes
-            .filter((code) => code.claimedAt)
-            .sort((a, b) => new Date(a.claimedAt as string).getTime() - new Date(b.claimedAt as string).getTime())
-            .reverse()
-          this.unclaimedPromoCodes = allPromoCodes
-            .filter((code) => !code.claimedAt)
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-            .reverse()
+          await this.loadPromoCodes()
         } else if (this.tab == "users") {
           // Users list handled by vue-query in setup()
         } else if (this.tab == "uploaded-images") {

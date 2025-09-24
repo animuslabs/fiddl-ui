@@ -374,6 +374,9 @@ const mediaStyles = computed(() => {
 })
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
+// Offscreen unloading is disabled for small galleries to avoid Safari popping
+const UNLOAD_THRESHOLD = 200
+const unloadingEnabled = computed(() => (galleryItems.value?.length || 0) > UNLOAD_THRESHOLD)
 
 // Sticky placeholder support to keep loading tiles visible even if upstream removes them too early
 const stickyPendingMap = ref<Record<string, MediaGalleryMeta & { addedAt: number }>>({})
@@ -386,6 +389,18 @@ const filteredGalleryItems = computed(() => {
   // console.log(list)
   return galleryItems.value
 })
+
+// Cache per-item layout spans so size stays stable across load/unload
+// This prevents grid jumpiness when media mounts/unmounts or updates its ratio
+const layoutSpans = ref<Record<string, { colSpan?: number; rowSpan: number }>>({})
+
+// Reset cached spans when layout-affecting inputs change
+watch(
+  () => [cols.value, props.rowHeightRatio, props.layout, thumbSize.value, props.centerAlign],
+  () => {
+    layoutSpans.value = {}
+  },
+)
 
 watch(
   () => props.mediaObjects,
@@ -655,22 +670,27 @@ function handleDeleteClick(item: MediaGalleryMeta) {
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
   if (props.layout !== "mosaic") return {}
-  const aspect = m.aspectRatio ?? 1
-  const isPlaceholder = m.placeholder === true || (typeof m.id === "string" && m.id.startsWith("pending-"))
-  const videoPending = m.type === "video" && showVideoOverlay(m.id)
-  const treatAsPlaceholder = isPlaceholder || videoPending
-  const layoutAspect = treatAsPlaceholder ? Math.max(aspect, 1.6) : aspect
-  const baseSpan = layoutAspect > 1.5 && cols.value > 1 ? 2 : undefined
-  const colSpan = treatAsPlaceholder && cols.value > 1 ? Math.min(2, cols.value) : baseSpan
 
-  // When an item spans multiple columns, also increase its vertical span proportionally
-  // so wide media aren’t visually cropped. We scale rows by the number of columns taken.
-  const colFactor = colSpan ?? 1
-  const rows = Math.max(1, Math.ceil((colFactor / layoutAspect) * props.rowHeightRatio))
+  const cached = layoutSpans.value[m.id]
+  if (cached) {
+    return {
+      gridRowEnd: `span ${cached.rowSpan}`,
+      gridColumnEnd: cached.colSpan ? `span ${cached.colSpan}` : undefined,
+    }
+  }
+
+  // Compute once per id and cache to avoid reflow as media loads/unloads
+  const aspect = m.aspectRatio ?? 1
+  const baseColSpan = aspect > 1.5 && cols.value > 1 ? Math.min(2, cols.value) : undefined
+  const colFactor = baseColSpan ?? 1
+  const rowSpan = Math.max(1, Math.ceil((colFactor / Math.max(0.01, aspect)) * props.rowHeightRatio))
+
+  const entry = { colSpan: baseColSpan, rowSpan }
+  layoutSpans.value[m.id] = entry
 
   return {
-    gridRowEnd: `span ${rows}`,
-    gridColumnEnd: colSpan ? `span ${colSpan}` : undefined,
+    gridRowEnd: `span ${entry.rowSpan}`,
+    gridColumnEnd: entry.colSpan ? `span ${entry.colSpan}` : undefined,
   }
 }
 
@@ -764,15 +784,15 @@ onMounted(() => {
     // Retry videos that aren't ready yet
     for (const id of Object.keys(videoLoading.value)) {
       if (videoLoading.value[id]) {
-        // Only nudge reload for visible videos
-        if (visibleMap.value[id]) videoReloadKey.value[id] = Date.now()
+        // Only nudge reload for visible videos (or all when unloading disabled)
+        if (isVisible(id)) videoReloadKey.value[id] = Date.now()
       }
     }
     // Retry images only when the loading UI is enabled
     if (props.showLoading) {
       for (const id of Object.keys(imageLoading.value)) {
         if (imageLoading.value[id]) {
-          if (visibleMap.value[id]) imageReloadKey.value[id] = Date.now()
+          if (isVisible(id)) imageReloadKey.value[id] = Date.now()
         }
       }
     }
@@ -797,6 +817,8 @@ function videoClass(media: MediaGalleryMeta) {
 }
 
 function isVisible(id: string): boolean {
+  // Disable offscreen unloading for small galleries
+  if (!unloadingEnabled.value) return true
   return !!visibleMap.value[id]
 }
 
