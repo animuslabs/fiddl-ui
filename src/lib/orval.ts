@@ -4132,6 +4132,17 @@ export type TelegramCreateBuyDeepLink200 = {
   expiresIn: number;
 };
 
+export type TelegramCreateStarsInvoiceBody = {
+  packageId: number;
+};
+
+export type TelegramCreateStarsInvoice200 = {
+  invoiceLink: string;
+  payload: string;
+  stars: number;
+  points: number;
+};
+
 export type TelegramWebAppLoginBody = {
   initData: string;
 };
@@ -12158,6 +12169,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getTelegramCreateBuyDeepLinkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramCreateStarsInvoice = (
+    telegramCreateStarsInvoiceBody: MaybeRef<TelegramCreateStarsInvoiceBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramCreateStarsInvoice200>> => {
+    telegramCreateStarsInvoiceBody = unref(telegramCreateStarsInvoiceBody);
+    
+    return axios.post(
+      `/telegram/createStarsInvoice`,
+      telegramCreateStarsInvoiceBody,options
+    );
+  }
+
+
+
+export const getTelegramCreateStarsInvoiceMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateStarsInvoice>>, TError,{data: TelegramCreateStarsInvoiceBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramCreateStarsInvoice>>, TError,{data: TelegramCreateStarsInvoiceBody}, TContext> => {
+
+const mutationKey = ['telegramCreateStarsInvoice'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramCreateStarsInvoice>>, {data: TelegramCreateStarsInvoiceBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramCreateStarsInvoice(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramCreateStarsInvoiceMutationResult = NonNullable<Awaited<ReturnType<typeof telegramCreateStarsInvoice>>>
+    export type TelegramCreateStarsInvoiceMutationBody = TelegramCreateStarsInvoiceBody
+    export type TelegramCreateStarsInvoiceMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramCreateStarsInvoice = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramCreateStarsInvoice>>, TError,{data: TelegramCreateStarsInvoiceBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramCreateStarsInvoice>>,
+        TError,
+        {data: TelegramCreateStarsInvoiceBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramCreateStarsInvoiceMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

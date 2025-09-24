@@ -4103,6 +4103,17 @@ export type TelegramCreateBuyDeepLink200 = {
   expiresIn: number;
 };
 
+export type TelegramCreateStarsInvoiceBody = {
+  packageId: number;
+};
+
+export type TelegramCreateStarsInvoice200 = {
+  invoiceLink: string;
+  payload: string;
+  stars: number;
+  points: number;
+};
+
 export type TelegramWebAppLoginBody = {
   initData: string;
 };
@@ -7697,6 +7708,28 @@ export const telegramCreateBuyDeepLink = async (telegramCreateBuyDeepLinkBody: T
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramCreateBuyDeepLinkBody,)
+  }
+);}
+
+
+
+export const getTelegramCreateStarsInvoiceUrl = () => {
+
+
+  
+
+  return `/telegram/createStarsInvoice`
+}
+
+export const telegramCreateStarsInvoice = async (telegramCreateStarsInvoiceBody: TelegramCreateStarsInvoiceBody, options?: RequestInit): Promise<TelegramCreateStarsInvoice200> => {
+  
+  return fetcher<TelegramCreateStarsInvoice200>(getTelegramCreateStarsInvoiceUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramCreateStarsInvoiceBody,)
   }
 );}
 

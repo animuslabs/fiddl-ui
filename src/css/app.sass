@@ -200,9 +200,7 @@ input[type="number"]
 
 // Telegram Mini App mode tweaks
 .tma-mode
-  // Hide heavy chrome to maximize viewport inside Telegram
-  .q-header, .q-footer
-    display: none !important
+  // Treat TMA like mobile; keep app chrome visible
   // Allow pages to use full height
   body &, .q-page-container
     min-height: 100vh

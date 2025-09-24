@@ -52,8 +52,8 @@ q-page.full-height.full-width
               q-linear-progress(:value="countdownPct" color="primary" track-color="grey-4")
               small Expires in {{ countdownText }}
           div(v-else)
-            div(v-if="tgPackages.length > 0" class="packages-grid")
-              q-card.q-pa-md.pkg-card.cursor-pointer(v-for="pkg in tgPackages" :key="pkg.id" @click="buyWithStars(pkg.id)")
+            div(v-if="tgPackages.length > 0" class="packages-grid" :class="{ 'tg-buying-disabled': tgBuying }")
+              q-card.q-pa-md.pkg-card.cursor-pointer(v-for="pkg in tgPackages" :key="pkg.id" @click="!tgBuying && buyWithStars(pkg.id)")
                 .row.items-center.justify-between
                   h4.q-my-none +{{ pkg.points.toLocaleString() }}
                   div.text-subtitle1 {{ pkg.stars }} ⭐
@@ -215,6 +215,10 @@ q-page.full-height.full-width
 .scroll-anchor
   scroll-margin-top: 72px
 
+.tg-buying-disabled
+  pointer-events: none
+  opacity: .6
+
 // Discount input tweaks
 .discount-row
   flex-wrap: wrap
@@ -239,7 +243,7 @@ q-page.full-height.full-width
 <script lang="ts">
 import { defineComponent } from "vue"
 import { pointsPackagesAvailable, pointsInitBuyPackage, pointsFinishBuyPackage, userGet } from "src/lib/orval"
-import { telegramPackages as tgPackagesApi, telegramLinkStatus, telegramCreateDeepLink, telegramCreateBuyDeepLink, type TelegramPackages200Item, type TelegramCreateDeepLink200 } from "src/lib/orval"
+import { telegramPackages as tgPackagesApi, telegramLinkStatus, telegramCreateDeepLink, telegramCreateBuyDeepLink, telegramCreateStarsInvoice, type TelegramPackages200Item, type TelegramCreateDeepLink200, type TelegramCreateStarsInvoice200 } from "src/lib/orval"
 import { useUserAuth } from "stores/userAuth"
 import { loadPayPal } from "lib/payPal"
 import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
@@ -253,6 +257,7 @@ import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
 import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
 import tma from "src/lib/tmaAnalytics"
+// axios not required for Stars in TMA (using orval helper)
 
 interface PointsPackageRender extends PointsPackagesAvailable200Item {
   bgColor: string
@@ -294,6 +299,8 @@ export default defineComponent({
       countdownTimer: null as any,
       tgPollTimer: null as any,
       tgPackages: [] as TelegramPackages200Item[],
+      // Stars purchase state
+      tgBuying: false,
       // Discount code UI state
       discountInput: "" as string,
       discountChecking: false as boolean,
@@ -600,15 +607,60 @@ export default defineComponent({
     async buyWithStars(packageId: number) {
       try {
         try { tma.purchaseIntent("stars", { packageId }) } catch {}
+
+        const tg = (window as any)?.Telegram?.WebApp
+        const inTma = !!(tma.enabled() && tg && typeof tg.openInvoice === "function")
+
+        if (inTma) {
+          // New native Mini App flow: open invoice inside the WebApp
+          this.tgBuying = true
+          try {
+            const res = await telegramCreateStarsInvoice({ packageId })
+            const invoiceLink: string | undefined = res?.data?.invoiceLink
+            if (!invoiceLink) throw new Error("No invoice link returned")
+
+            // Set up close handler for redundancy; callback also fires
+            const onInvoiceClosed = (e: any) => {
+              try { tg?.offEvent?.("invoiceClosed", onInvoiceClosed) } catch {}
+              this.tgBuying = false
+              const status = e?.status || e
+              if (status === "paid") this.onStarsPaid(packageId)
+            }
+            try { tg?.onEvent?.("invoiceClosed", onInvoiceClosed) } catch {}
+
+            tg.openInvoice(invoiceLink, (status: string) => {
+              if (status === "paid") this.onStarsPaid(packageId)
+            })
+            return
+          } catch (e) {
+            // Fallback to existing deep link flow if anything fails
+            console.warn("Falling back to deep link Stars flow", e)
+            this.tgBuying = false
+          }
+        }
+
+        // Legacy flow: open deep link to bot (works in normal web app mode)
         const { data } = await telegramCreateBuyDeepLink({ packageId })
         if (data.deepLink) {
-          const tg = (window as any)?.Telegram?.WebApp
-          if (tma.enabled() && tg?.openTelegramLink) tg.openTelegramLink(data.deepLink)
+          if (tg?.openTelegramLink) tg.openTelegramLink(data.deepLink)
           else window.open(data.deepLink, "_blank")
         }
       } catch (e) {
         catchErr(e)
       }
+    },
+    async onStarsPaid(packageId: number) {
+      try { tma.purchaseSuccess("stars", { packageId }) } catch {}
+      // Refresh balances; webhook may take a moment, so refetch twice
+      void this.userAuth.loadUserData()
+      setTimeout(() => void this.userAuth.loadUserData(), 1500)
+      setTimeout(() => void this.userAuth.loadUserData(), 4000)
+      Dialog.create({
+        title: "Success",
+        message: "Stars payment received. Points will appear shortly.",
+        ok: true,
+        color: "positive",
+      })
     },
     updateIsMobile() {
       this.isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : this.isMobile
