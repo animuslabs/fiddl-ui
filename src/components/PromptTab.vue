@@ -74,6 +74,7 @@
     icon="add"
     aria-label="Create"
     @click="createMode = true"
+    label="Create"
   )
     q-tooltip(anchor="center left" self="center right") Create
   q-btn.fab-mm(
@@ -83,6 +84,7 @@
     icon="auto_awesome"
     aria-label="Magic Mirror"
     @click="showMMChoice = true"
+    label="Magic Mirror"
   )
     q-tooltip(anchor="center left" self="center right") Magic Mirror
 
