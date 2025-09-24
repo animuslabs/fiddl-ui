@@ -14,7 +14,6 @@
       .col-grow.q-mr-sm.full-height
         q-scroll-area.full-width(:style="quasar.screen.gt.sm ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);' : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'")
           .full-width(style="height:15px;").gt-sm
-          .full-width(style="height:75px;").lt-md
           .full-width.relative-position
             .full-width(style="height:55px;")
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px;")
@@ -24,10 +23,6 @@
                   q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
                   q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
-                .centered.q-mt-md(v-if="quasar.screen.lt.md")
-                  q-btn(label="create" size="md" color="primary" rounded  @click="createMode = true")
-                  .col-grow
-                  q-btn(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
 
             .centered
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
@@ -70,6 +65,26 @@
               @click="activeCreationsStore.loadCreations($userAuth.userId)"
               :disable="activeCreationsStore.creations.length < 1"
             )
+
+  // Floating Action Buttons (mobile only) visible when viewing creations list
+  q-btn.fab-create(
+    v-if="quasar.screen.lt.md && !createMode"
+    fab
+    color="primary"
+    icon="add"
+    aria-label="Create"
+    @click="createMode = true"
+  )
+    q-tooltip(anchor="center left" self="center right") Create
+  q-btn.fab-mm(
+    v-if="quasar.screen.lt.md && !createMode"
+    fab-mini
+    color="primary"
+    icon="auto_awesome"
+    aria-label="Magic Mirror"
+    @click="showMMChoice = true"
+  )
+    q-tooltip(anchor="center left" self="center right") Magic Mirror
 
   q-dialog(v-model="showRequest")
     q-card

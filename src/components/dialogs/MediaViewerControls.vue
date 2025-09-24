@@ -26,15 +26,7 @@
                 q-icon(name="content_copy" size="20px").q-mr-md
                 div Copy Link
 
-  // Dedicated Telegram share button (visible in TMA only)
-  q-btn(
-    v-if="isTma"
-    icon="fa-brands fa-telegram"
-    flat
-    round
-    color="primary"
-    @click.stop="shareToTelegram()"
-  )
+  // Telegram share button removed per request
 
   q-btn(
     icon="sym_o_info"
@@ -181,14 +173,7 @@ const moreMenuOpen = ref(true)
 const popularity = usePopularityStore()
 const pendingCommentId = ref<string | null>(props.initialCommentId)
 const autoOpenedInitialComment = ref(false)
-const isTma = computed(() => {
-  try {
-    if (typeof window === "undefined") return false
-    return Boolean((window as any)?.__TMA__?.enabled || (window as any)?.Telegram?.WebApp)
-  } catch {
-    return false
-  }
-})
+// Removed isTma since Telegram button was removed
 
 // Optional privacy knowledge propagated via mediaObjects entries
 // const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
@@ -259,46 +244,7 @@ async function share() {
   }
 }
 
-async function shareToTelegram() {
-  try {
-    const tg = (window as any)?.Telegram?.WebApp
-
-    // Build canonical media URL (same as copy link flow)
-    let params: any = { requestShortId: "", type: mediaViewerStore.currentMediaType, index: 0 }
-    let query: any = {}
-    let localRequestId = mediaViewerStore.loadedRequestId
-
-    if (!localRequestId) {
-      const { data } = await creationsGetCreationData(mediaViewerStore.getMediaParams())
-      localRequestId = data.requestId
-    }
-
-    params.requestShortId = longIdToShort(localRequestId as string)
-    params.type = mediaViewerStore.currentMediaType
-    const requestData = await getCreationRequest(localRequestId as string, mediaViewerStore.currentMediaType)
-    const mediaIndex = requestData.mediaIds.findIndex((el: string) => el === mediaViewerStore.currentMediaId) || 0
-    params.index = mediaIndex
-
-    let hasUsername = !!(userAuth.loggedIn && userAuth.userProfile?.username)
-    if (!hasUsername && userAuth.loggedIn) await userAuth.loadUserProfile()
-    hasUsername = !!userAuth.userProfile?.username
-    if (hasUsername) query.referredBy = userAuth.userProfile?.username
-
-    const url = router.resolve({ name: "mediaRequest", params, query }).href
-    const fullUrl = window.location.origin + url
-
-    const text = "Check out this creation on Fiddl.art"
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(fullUrl)}&text=${encodeURIComponent(text)}`
-
-    if (tg && typeof tg.openTelegramLink === "function") {
-      tg.openTelegramLink(shareUrl)
-    } else {
-      window.open(shareUrl, "_blank")
-    }
-  } catch (err: any) {
-    catchErr(err)
-  }
-}
+// shareToTelegram removed
 
 function showRequestInfoDialog() {
   if (!mediaViewerStore.loadedRequestId || mediaViewerStore.loadedRequestId.length === 0) return

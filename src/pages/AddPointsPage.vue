@@ -457,12 +457,12 @@ export default defineComponent({
       const isTma =
         typeof window !== "undefined" &&
         (
-          // Set by boot/tma.ts
+          // Primary: flag/class set only when we truly detected TMA in boot/tma.ts
           (window as any).__TMA__?.enabled === true ||
-          // CSS flag also added by boot/tma.ts
           document.documentElement.classList.contains("tma-mode") ||
-          // Fallback to direct WebApp detection
-          !!(window as any)?.Telegram?.WebApp
+          // Strict fallback: Telegram SDK present AND has non-empty initData
+          // (the SDK alone is loaded on the website too and must not flip this)
+          (((window as any)?.Telegram?.WebApp?.initData || "").length > 0)
         )
       if (isTma) this.buyMode = "telegram"
     } catch {}

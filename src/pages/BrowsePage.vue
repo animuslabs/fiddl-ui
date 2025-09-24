@@ -1,9 +1,10 @@
 <template lang="pug">
 q-page.full-height.full-width.relative-position
   .centered.relative-position
-    SearchBar(@setViewMode="viewMode = $event" fixed)
+    // The search bar is fixed; we add a spacer below based on its runtime height
+    SearchBar(ref="searchBarRef" @setViewMode="viewMode = $event" fixed)
   .q-ma-md
-    .full-width(style="height:40px;")
+    .full-width(:style="{ height: searchBarHeight + 'px' }")
       .centered
         q-linear-progress(
           indeterminate
@@ -28,7 +29,7 @@ q-page.full-height.full-width.relative-position
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onUnmounted } from "vue"
+import { defineComponent, ref, onMounted, onUnmounted, nextTick } from "vue"
 import { useBrowserStore } from "stores/browserStore"
 import { throttle, useQuasar } from "quasar"
 import SearchBar from "src/components/BrowserSearchBar.vue"
@@ -53,6 +54,8 @@ export default defineComponent({
     const $q = useQuasar()
     const browserStore = useBrowserStore()
     const viewMode = ref<"grid" | "mosaic">("mosaic")
+    const searchBarRef = ref<any>(null)
+    const searchBarHeight = ref(56)
 
     const onScroll = throttle(() => void browserStore.loadCreations(), 1000)
     const onScrollUp = throttle(() => void browserStore.loadRecentCreations(), 1000)
@@ -73,6 +76,22 @@ export default defineComponent({
     }
 
     let interval: ReturnType<typeof setInterval> | null = null
+
+    function measureSearchBar() {
+      try {
+        const el = (searchBarRef.value && (searchBarRef.value.$el as HTMLElement)) || document.querySelector('.search-bar') as HTMLElement | null
+        const h = el?.getBoundingClientRect().height || 56
+        // Cap to a sensible range
+        searchBarHeight.value = Math.max(40, Math.min(120, Math.round(h)))
+      } catch {
+        searchBarHeight.value = 56
+      }
+    }
+
+    onMounted(() => {
+      nextTick(() => measureSearchBar())
+      window.addEventListener('resize', measureSearchBar)
+    })
     void (async () => {
       await browserStore.loadCreations()
       await browserStore.loadRecentCreations()
@@ -81,6 +100,7 @@ export default defineComponent({
 
     onUnmounted(() => {
       if (interval) clearInterval(interval)
+      window.removeEventListener('resize', measureSearchBar)
     })
 
     return {
@@ -89,6 +109,8 @@ export default defineComponent({
       handleScroll,
       handleSelect,
       viewMode,
+      searchBarRef,
+      searchBarHeight,
     }
   },
 })

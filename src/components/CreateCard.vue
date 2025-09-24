@@ -10,7 +10,7 @@
           v-model="store.activeTab"
           swipeable
           animated
-          :style="quasar.screen.lt.md ? 'height:calc(90vh - env(safe-area-inset-bottom)); height:calc(90dvh - env(safe-area-inset-bottom));' : ''"
+          :style="quasar.screen.lt.md ? 'height:calc(95vh - env(safe-area-inset-bottom)); height:calc(95dvh - env(safe-area-inset-bottom));' : ''"
         )
           q-tab-panel(name="image")
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")

@@ -92,6 +92,17 @@ function prepareTmaShell() {
       })
       try { tg.ready?.() } catch {}
       try { tg.expand?.() } catch {}
+      // Keep a CSS custom property updated with the Telegram visible viewport height
+      try {
+        const applyHeightVar = () => {
+          const h = (tg as any)?.viewportStableHeight || (tg as any)?.viewportHeight
+          if (typeof h === "number" && h > 0) {
+            document.documentElement.style.setProperty("--tg-viewport-height", `${Math.round(h)}px`)
+          }
+        }
+        applyHeightVar()
+        tg.onEvent?.("viewportChanged", applyHeightVar)
+      } catch {}
       // Optional: adapt to Telegram theme
       try {
         const bg = tg.themeParams?.bg_color

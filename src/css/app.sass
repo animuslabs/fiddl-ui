@@ -199,12 +199,24 @@ input[type="number"]
     font-size: 18px
 
 // Telegram Mini App mode tweaks
-.tma-mode
-  // Treat TMA like mobile; keep app chrome visible
-  // Allow pages to use full height
-  body &, .q-page-container
-    min-height: 100vh
-  // Optional: use Telegram background color if provided
+// Note: the boot/tma.ts sets html.tma-mode when we positively detect TMA
+html.tma-mode
+  // Use the real Telegram visible viewport height if available
+  min-height: var(--tg-viewport-height, 100dvh)
+  height: var(--tg-viewport-height, 100dvh)
+
+  body
+    min-height: var(--tg-viewport-height, 100dvh)
+    height: auto
+
+  .q-layout, .q-page-container, .q-page
+    min-height: var(--tg-viewport-height, 100dvh)
+
+  .q-page
+    // Respect bottom safe-area on iOS Telegram
+    padding-bottom: env(safe-area-inset-bottom, 0px)
+
+  // Optional: use Telegram background color if provided (set in tma.ts)
   background-color: var(--tma-bg, #121212)
 
 
@@ -315,6 +327,21 @@ a:visited
   pointer-events: none
   filter: grayscale(100%)
   user-select: none
+
+// Floating Action Button positions (mobile create/magic mirror)
+.fab-create
+  position: fixed
+  right: 16px
+  // Lift above mobile footer nav
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px)
+  z-index: 2100
+
+.fab-mm
+  position: fixed
+  right: 16px
+  // Stack above the Create FAB
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 164px)
+  z-index: 2100
 
 @font-face
   font-family: 'Lobster'

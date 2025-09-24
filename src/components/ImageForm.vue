@@ -119,7 +119,7 @@
                 q-avatar(size="32px")
                   q-img(:src="s3Img('uploads/' + id)" style="width:32px; height:32px; object-fit:cover;")
                 //- span.q-ml-sm {{ shortId(id) }}
-            .row.items-center.q-gutter-sm
+            .row.items-center.q-gutter-sm.q-mb-md
               q-btn(flat color="primary" icon="add" :label="selectedImageIds.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
               q-badge(v-if="selectedImageIds.length" color="grey-7") {{ selectedImageIds.length }}/{{ maxMulti }}
               q-btn(v-if="selectedImageIds.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
@@ -142,8 +142,7 @@
       :onCreate="startCreateImage"
       caption="Public creations appear in the community feed."
       kind="image"
-      @back="$emit('back')"
-    )
+      @back="$emit('back')")
   q-dialog(v-model="showModelPicker")
     q-card
       .q-ma-md
@@ -312,14 +311,12 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
     })
   } catch {}
 
-  void createStore
-    .createImage()
-    .then(() => {
-      try {
-        tma.createSuccess("image", { model: req.model, public: !!req.public })
-      } catch {}
-      emit("created")
-    })
+  void createStore.createImage().then(() => {
+    try {
+      tma.createSuccess("image", { model: req.model, public: !!req.public })
+    } catch {}
+    emit("created")
+  })
   return true
 }
 const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))
