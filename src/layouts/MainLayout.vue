@@ -4,7 +4,7 @@ q-layout(view="lHh Lpr lFf" )
     q-toolbar.bg-grey-10
       .row.no-wrap.items-center
         q-tabs
-          q-route-tab(href="https://fiddl.art" no-caps exact).text-white
+          q-route-tab(href="https://fiddl.art" :target="isTMA ? '_blank' : undefined" :rel="isTMA ? 'noopener' : undefined" no-caps exact).text-white
             .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
               q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
@@ -87,7 +87,7 @@ q-layout(view="lHh Lpr lFf" )
                 .row.items-center
                   q-icon(name="photo_library" size="20px").q-mr-md
                   div My Account
-            q-item(clickable @click="$userAuth.logout()" v-close-popup)
+            q-item(clickable @click="$userAuth.logout()" v-close-popup v-if="!isTMA")
               q-item-section
                 .row.items-center
                   q-icon(name="logout" size="20px").q-mr-md
@@ -191,6 +191,14 @@ export default defineComponent({
     }
   },
   computed: {
+    isTMA(): boolean {
+      try {
+        if (typeof window === "undefined") return false
+        return Boolean((window as any)?.__TMA__?.enabled || (window as any)?.Telegram?.WebApp)
+      } catch {
+        return false
+      }
+    },
     isMobile(): boolean {
       if (typeof window === "undefined") return false
       return window.matchMedia("(max-width: 1023px)").matches

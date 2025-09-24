@@ -14,7 +14,24 @@ function isClientReady() {
   return typeof window !== "undefined" && !!window.Tawk_API
 }
 
+function isTmaMode() {
+  try {
+    if (typeof window === "undefined") return false
+    // Prefer explicit flag from boot/tma
+    if ((window as any)?.__TMA__?.enabled) return true
+    // Fallback heuristic: Telegram WebApp present or query param
+    const hasWebApp = Boolean((window as any)?.Telegram?.WebApp)
+    if (hasWebApp) return true
+    const qp = new URLSearchParams(window.location.search)
+    return qp.has("tma") || qp.has("tgWebApp") || qp.get("mode") === "tma"
+  } catch {
+    return false
+  }
+}
+
 function injectScript(timeoutMs = 15000): Promise<void> {
+  // Do not load Tawk inside Telegram Mini App
+  if (isTmaMode()) return Promise.resolve()
   if (isClientReady()) return Promise.resolve()
   if (loadPromise) return loadPromise
 
@@ -141,6 +158,7 @@ export const tawk = {
   },
 
   async setVisitorInfo(name: string, email: string, extraAttributes?: Record<string, any>) {
+    if (isTmaMode()) return
     this.unloadScript()
     window.Tawk_API = window.Tawk_API || {}
     window.Tawk_API.visitor = { name, email }
