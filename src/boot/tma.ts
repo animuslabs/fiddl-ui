@@ -215,6 +215,12 @@ export default boot(async ({ router }) => {
   } catch {}
   prepareTmaShell()
   await initAnalyticsIfPossible()
+  // In TMA mode, ensure no prior login is restored or kept around
+  try {
+    if (isTmaEnv()) {
+      jwt.remove()
+    }
+  } catch {}
 
   // Bridge Telegram Mini App deep-start tokens to our existing /tg-login flow
   try {

@@ -548,7 +548,9 @@ export default defineComponent({
   methods: {
     async initFromRoute() {
       if (this.$route.name === "account") {
-        if (!this.userAuth.loggedIn) await this.userAuth.attemptAutoLogin()
+        // Avoid restoring login in Telegram Mini App mode
+        const inTMA = typeof window !== "undefined" && ((window as any).__TMA__?.enabled || document.documentElement.classList.contains("tma-mode"))
+        if (!this.userAuth.loggedIn && !inTMA) await this.userAuth.attemptAutoLogin()
         if (this.userAuth.loggedIn && !this.userAuth.userProfile) await this.userAuth.loadUserProfile()
         if (this.userAuth.loggedIn && this.userAuth.userProfile?.username) {
           void this.$router.replace({ name: "profile", params: { username: this.userAuth.userProfile.username }, query: { tab: "unlocked" } })

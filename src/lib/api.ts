@@ -36,10 +36,7 @@ const jwtData = jwt.read()
 if (jwtData) authToken.value = jwtData.token
 
 export async function uploadTrainingImages(modelid: string, form: FormData, onProgress: (progress: number) => void) {
-  const headers = {
-    Authorization: `Bearer ${jwt.read()?.token}`,
-    modelid,
-  }
+  const headers = { modelid }
 
   try {
     const response = await ax.post(`${apiUrl}/uploadTrainingImages`, form, {

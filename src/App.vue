@@ -97,7 +97,11 @@ export default defineComponent({
 
   async mounted() {
     void usePricesStore().reloadPrices().catch(console.error)
-    await this.$userAuth.attemptAutoLogin()
+    // In Telegram Mini App mode, do not restore a previous login
+    const inTMA = typeof window !== "undefined" && ((window as any).__TMA__?.enabled || document.documentElement.classList.contains("tma-mode"))
+    if (!inTMA) {
+      await this.$userAuth.attemptAutoLogin()
+    }
     await handleClaimCode(this.$userAuth.loggedIn)
 
     // Watch for claimable missions and notify once per session

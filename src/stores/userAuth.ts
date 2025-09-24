@@ -268,6 +268,16 @@ export const useUserAuth = defineStore("userAuth", {
       try { metaPixel.trackCompleteRegistration({ status: true }) } catch {}
     },
     async attemptAutoLogin() {
+      // In Telegram Mini App mode, always require a fresh login via TMA flow
+      try {
+        if (typeof window !== "undefined") {
+          const inTMA = Boolean((window as any).__TMA__?.enabled || document.documentElement.classList.contains("tma-mode"))
+          if (inTMA) {
+            void tawk.init()
+            return false
+          }
+        }
+      } catch {}
       const savedLogin = jwt.read()
       if (!savedLogin) {
         void tawk.init()

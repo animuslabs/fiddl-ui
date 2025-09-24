@@ -1,5 +1,6 @@
 const TOKEN_STORAGE_KEY = "jwtToken"
-import { LocalStorage } from "quasar"
+import { LocalStorage, SessionStorage } from "quasar"
+import axios from "axios"
 
 type SavedJwt = { userId: string; token: string }
 
@@ -38,13 +39,43 @@ function getExpiryMs(token: string): number | null {
 
 export const jwt = {
   read(): SavedJwt | null {
+    try {
+      // In Telegram Mini App mode we avoid restoring any saved login
+      if (typeof window !== "undefined") {
+        const inTMA = Boolean((window as any)?.__TMA__?.enabled || document?.documentElement?.classList?.contains("tma-mode"))
+        if (inTMA) return null
+      }
+    } catch {}
     return LocalStorage.getItem<SavedJwt>(TOKEN_STORAGE_KEY)
   },
   save(data: SavedJwt) {
+    // Always set axios Authorization header for the active session
+    try {
+      axios.defaults.headers.common = axios.defaults.headers.common || {}
+      axios.defaults.headers.common.Authorization = `Bearer ${data.token}`
+    } catch {}
+
+    try {
+      // In Telegram Mini App mode, do not persist the JWT
+      if (typeof window !== "undefined") {
+        const inTMA = Boolean((window as any)?.__TMA__?.enabled || document?.documentElement?.classList?.contains("tma-mode"))
+        if (inTMA) return
+      }
+    } catch {}
+
     LocalStorage.set(TOKEN_STORAGE_KEY, data)
   },
   remove() {
+    try {
+      // Clear axios Authorization header when logging out
+      if (axios?.defaults?.headers?.common) {
+        delete (axios.defaults.headers.common as any).Authorization
+      }
+    } catch {}
     LocalStorage.remove(TOKEN_STORAGE_KEY)
+    try {
+      SessionStorage.remove(TOKEN_STORAGE_KEY)
+    } catch {}
   },
   // Returns true if token exists and is past its `exp` claim
   isExpired(): boolean {
