@@ -6,6 +6,38 @@ import axios from "axios"
 // Lazy import to avoid pulling analytics in non‑TMA sessions unnecessarily
 let telegramAnalytics: any
 
+// Debug helpers
+function isDebugEnabled(): boolean {
+  try {
+    if (typeof window === "undefined") return false
+    const qp = new URLSearchParams(window.location.search)
+    if (qp.has("tma-debug") || qp.get("debug") === "tma") return true
+    const ls = window.localStorage?.getItem("TMA_DEBUG")
+    if (ls === "1" || ls === "true") return true
+    const env = (import.meta as any).env?.VITE_TMA_DEBUG
+    return env === "1" || env === "true"
+  } catch {
+    return false
+  }
+}
+
+const D = {
+  log: (...a: any[]) => {
+    if (!isDebugEnabled()) return
+    try {
+      // eslint-disable-next-line no-console
+      console.log("[TMA]", ...a)
+    } catch {}
+  },
+  warn: (...a: any[]) => {
+    if (!isDebugEnabled()) return
+    try {
+      // eslint-disable-next-line no-console
+      console.warn("[TMA]", ...a)
+    } catch {}
+  },
+}
+
 function isTmaEnv(): boolean {
   try {
     if (typeof window === "undefined") return false
@@ -13,7 +45,9 @@ function isTmaEnv(): boolean {
     const forced = qp.has("tma") || qp.has("tgWebApp") || qp.get("mode") === "tma"
     // Real Telegram Mini App environment
     const hasWebApp = Boolean((window as any)?.Telegram?.WebApp)
-    return hasWebApp || forced
+    const result = hasWebApp || forced
+    D.log("Env check", { forced, hasWebApp, result, ua: navigator.userAgent })
+    return result
   } catch {
     return false
   }
@@ -29,7 +63,7 @@ async function initAnalyticsIfPossible() {
     const token = (import.meta as any).env?.VITE_TMA_ANALYTICS_TOKEN
     const appName = (import.meta as any).env?.VITE_TMA_ANALYTICS_APP || "fiddl"
     if (!token) {
-      console.warn("TMA analytics token missing (VITE_TMA_ANALYTICS_TOKEN)")
+      D.warn("Analytics token missing (VITE_TMA_ANALYTICS_TOKEN)")
       return
     }
 
@@ -37,10 +71,11 @@ async function initAnalyticsIfPossible() {
       // dynamic import keeps bundle lean for non‑TMA sessions
       telegramAnalytics = (await import("@telegram-apps/analytics")).default
     }
+    D.log("Init analytics", { appName })
     telegramAnalytics.init({ token, appName })
     w.__tmaAnalyticsInit = true
   } catch (e) {
-    console.warn("Failed to init TMA analytics", e)
+    D.warn("Failed to init TMA analytics", e)
   }
 }
 
@@ -49,6 +84,12 @@ function prepareTmaShell() {
     if (!isTmaEnv()) return
     const tg = (window as any)?.Telegram?.WebApp
     if (tg) {
+      D.log("WebApp present", {
+        version: tg.version,
+        platform: tg.platform,
+        colorScheme: tg.colorScheme,
+        themeParams: tg.themeParams,
+      })
       try { tg.ready?.() } catch {}
       try { tg.expand?.() } catch {}
       // Optional: adapt to Telegram theme
@@ -56,25 +97,50 @@ function prepareTmaShell() {
         const bg = tg.themeParams?.bg_color
         if (bg) document.documentElement.style.setProperty("--tma-bg", `#${bg}`)
       } catch {}
+    } else {
+      D.warn("Telegram.WebApp not found. If testing in Telegram, ensure SDK loaded.")
     }
     // Add a CSS flag for quick UI tweaks in Mini App mode
     document.documentElement.classList.add("tma-mode")
     ;(window as any).__TMA__ = { enabled: true }
+    ;(window as any).__TMA_DEBUG__ = { enabled: isDebugEnabled() }
   } catch {}
 }
 
 async function loginViaWebAppIfPossible() {
   try {
-    if (!isTmaEnv()) return false
+    if (!isTmaEnv()) {
+      D.log("Skip WebApp login: not in TMA env")
+      return false
+    }
+    // Small retry to give Telegram time to inject interface on some platforms
+    let tries = 0
+    while (!(window as any)?.Telegram?.WebApp && tries < 20) {
+      await new Promise((r) => setTimeout(r, 100))
+      tries++
+    }
+    if (!(window as any)?.Telegram?.WebApp) {
+      D.warn("Telegram.WebApp still undefined after wait")
+    }
     // Already logged in
-    if (jwt.read()) return true
+    if (jwt.read()) {
+      D.log("Skip WebApp login: JWT already present")
+      return true
+    }
     // Only skip if we already succeeded this session
-    if (sessionStorage.getItem("tmaWebAppLoginDone")) return true
+    if (sessionStorage.getItem("tmaWebAppLoginDone")) {
+      D.log("Skip WebApp login: already completed this session")
+      return true
+    }
     // Give Telegram a brief moment to populate initData on slower clients
     await new Promise((r) => setTimeout(r, 60))
     const tg = (window as any)?.Telegram?.WebApp
     const initData: string | undefined = tg?.initData
-    if (!initData || initData.length < 16) return false
+    if (!initData || initData.length < 16) {
+      D.warn("WebApp.initData missing or too short", { hasTg: !!tg, initDataLen: initData?.length || 0 })
+      return false
+    }
+    D.log("Have initData", { len: initData.length, platform: tg?.platform, version: tg?.version })
 
     // Build API base (avoid coupling with other boot order)
     let apiBase = (import.meta as any).env?.VITE_API_URL || "https://api.fiddl.art"
@@ -82,6 +148,7 @@ async function loginViaWebAppIfPossible() {
       apiBase = (apiBase.startsWith("localhost") ? "http://" : "https://") + apiBase
     }
     const url = apiBase.replace(/\/$/, "") + "/api/telegram/webAppLogin"
+    D.log("POST webAppLogin", { url, base: apiBase })
 
     const res = await fetch(url, {
       method: "POST",
@@ -95,17 +162,28 @@ async function loginViaWebAppIfPossible() {
       }),
       credentials: "omit",
     })
-    if (!res.ok) return false
+    if (!res.ok) {
+      D.warn("webAppLogin failed", { status: res.status, statusText: res.statusText })
+      return false
+    }
     const data = await res.json().catch(() => null)
+    D.log("webAppLogin response", {
+      keys: data ? Object.keys(data) : null,
+    })
     const userId: string | undefined = data?.userId || data?.user_id || data?.uid
     const token: string | undefined = data?.token || data?.jwt
-    if (!userId || !token) return false
+    if (!userId || !token) {
+      D.warn("webAppLogin missing fields", { userId: !!userId, token: !!token })
+      return false
+    }
 
     const auth = useUserAuth()
     await auth.applyServerSession(userId, token)
     sessionStorage.setItem("tmaWebAppLoginDone", "1")
+    D.log("Applied server session via webAppLogin", { userId })
     return true
-  } catch {
+  } catch (e) {
+    D.warn("Exception during webAppLogin", e)
     return false
   }
 }
@@ -142,6 +220,11 @@ export default boot(async ({ router }) => {
         // Minimal JWT shape check (base64url.base64url.base64url)
         if (/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(maybe)) token = maybe
       }
+      D.log("Deep-start token probe", {
+        hasQueryToken: !!qpToken,
+        hasStartParam: !!sp,
+        tokenDetected: !!token,
+      })
       if (token) {
         sessionStorage.setItem("tmaStartHandled", "1")
         await router.replace({ path: "/tg-login", query: { t: token } })
@@ -150,6 +233,7 @@ export default boot(async ({ router }) => {
     }
 
     // If no token present, attempt WebApp initData validator based login
-    await loginViaWebAppIfPossible()
+    const ok = await loginViaWebAppIfPossible()
+    if (!ok) D.warn("WebApp initData login did not complete")
   } catch {}
 })

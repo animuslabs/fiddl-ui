@@ -1631,6 +1631,8 @@ export type UserGet200 = {
   /** @nullable */
   twitterId: string | null;
   /** @nullable */
+  tonId: string | null;
+  /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
 };
 

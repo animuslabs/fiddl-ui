@@ -10,6 +10,7 @@ q-page.full-height.full-width.admin-page
       q-tab(name="uploaded-images" label="Uploaded Images")
       q-tab(name="discount-codes" label="Discount Codes")
       q-tab(name="affiliate-payouts" label="Affiliate Payouts")
+      q-tab(name="stats" label="Stats")
     div(v-if="tab == 'promo-codes'")
       .centered.q-mb-md
         q-card.q-pa-md
@@ -82,9 +83,9 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props")
             template(v-if="props.row.linkedUserId && profileLinkByUserId(props.row.linkedUserId)")
               a.admin-link(:href="profileLinkByUserId(props.row.linkedUserId)" target="_blank" rel="noopener" @click.stop)
-                | {{ userLabelById[props.row.linkedUserId] || props.row.linkedUserId }}
+                | {{ labelById(props.row.linkedUserId) }}
             template(v-else-if="props.row.linkedUserId")
-              span {{ userLabelById[props.row.linkedUserId] || props.row.linkedUserId }}
+              span {{ labelById(props.row.linkedUserId) }}
             template(v-else)
               span
         template(#body-cell-pendingPayout="props")
@@ -138,13 +139,13 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props")
             template(v-if="profileLinkByUserId(props.row.userId)")
               a.admin-link(:href="profileLinkByUserId(props.row.userId)" target="_blank" rel="noopener" @click.stop)
-                | {{ userLabelById[props.row.userId] || props.row.userId }}
+                | {{ labelById(props.row.userId) }}
             template(v-else)
-              span {{ userLabelById[props.row.userId] || props.row.userId }}
+              span {{ labelById(props.row.userId) }}
         template(#body-cell-payout="props")
           q-td(:props="props")
             template(v-if="payoutDetailsByUserId[props.row.userId]?.paypalEmail")
-              span {{ payoutDetailsByUserId[props.row.userId].paypalEmail }}
+              span {{ payoutDetailsByUserId[props.row.userId]?.paypalEmail || '' }}
             template(v-else)
               span Not linked
         template(#body-cell-pending="props")
@@ -171,9 +172,9 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props")
             template(v-if="profileLinkByUserId(props.row.userId)")
               a.admin-link(:href="profileLinkByUserId(props.row.userId)" target="_blank" rel="noopener" @click.stop)
-                | {{ userLabelById[props.row.userId] || props.row.userId }}
+                | {{ labelById(props.row.userId) }}
             template(v-else)
-              span {{ userLabelById[props.row.userId] || props.row.userId }}
+              span {{ labelById(props.row.userId) }}
         template(#body-cell-amount="props")
           q-td(:props="props") ${{ (props.row.amount || 0).toFixed(2) }}
     div(v-if="tab == 'users'").q-pa-sm
@@ -411,6 +412,10 @@ q-page.full-height.full-width.admin-page
         size="lg"
       )
 
+  // Stats tab
+  div(v-if="tab == 'stats'").q-pa-sm
+    AdminStats
+
   // Show a spinner while user data is loading to avoid false "not admin" flash
   .centered.q-gutter-lg.q-ma-md(v-if="$userAuth.loggedIn && !$userAuth.userData")
     q-spinner(size="40px" color="primary")
@@ -480,8 +485,10 @@ import axios from "axios"
 type TablePagination = { sortBy: string; descending: boolean; page: number; rowsPerPage: number }
 type OnRequestProps = { pagination: TablePagination }
 
+import AdminStats from "components/admin/AdminStats.vue"
+
 export default defineComponent({
-  components: {},
+  components: { AdminStats },
 
   setup() {
     const router = useRouter()
@@ -700,6 +707,12 @@ export default defineComponent({
       for (const r of paymentsRows.value) if (r?.status) vals.add(String(r.status))
       return Array.from(vals).sort()
     })
+
+    const labelById = (id?: string | null) => {
+      const key = typeof id === 'string' ? id : ''
+      if (!key) return ''
+      return userLabelById.value[key] || key
+    }
 
     const statusColor = (status: string) => {
       if (!status) return "grey-6"
@@ -1423,6 +1436,7 @@ export default defineComponent({
       refetchPayments,
       onPaymentsRequest,
       statusColor,
+      labelById,
       userDisplay,
       paymentDiscountInfo,
       formatDiscountPercent,
@@ -1536,7 +1550,7 @@ export default defineComponent({
 
   methods: {
     normalizeAdminTab(slug?: string): string {
-      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "discount-codes", "affiliate-payouts"]) as Set<string>
+      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
       return allowed.has(slug) ? slug : "promo-codes"
     },
@@ -1605,6 +1619,8 @@ export default defineComponent({
       void copyToClipboard(this.qrLink)
       Notify.create({ message: "Link copied", color: "positive", icon: "check" })
     },
+    
+    
     async createPromoCode(kind: "claim" | "mm" = "claim") {
       try {
         const response = await promoCreatePromoCode({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
