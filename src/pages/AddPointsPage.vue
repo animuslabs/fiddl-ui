@@ -601,7 +601,11 @@ export default defineComponent({
       try {
         try { tma.purchaseIntent("stars", { packageId }) } catch {}
         const { data } = await telegramCreateBuyDeepLink({ packageId })
-        if (data.deepLink) window.open(data.deepLink, "_blank")
+        if (data.deepLink) {
+          const tg = (window as any)?.Telegram?.WebApp
+          if (tma.enabled() && tg?.openTelegramLink) tg.openTelegramLink(data.deepLink)
+          else window.open(data.deepLink, "_blank")
+        }
       } catch (e) {
         catchErr(e)
       }

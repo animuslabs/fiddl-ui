@@ -66,9 +66,12 @@ function prepareTmaShell() {
 async function loginViaWebAppIfPossible() {
   try {
     if (!isTmaEnv()) return false
-    // Already logged in or tried
+    // Already logged in
     if (jwt.read()) return true
-    if (sessionStorage.getItem("tmaWebAppLoginTried")) return false
+    // Only skip if we already succeeded this session
+    if (sessionStorage.getItem("tmaWebAppLoginDone")) return true
+    // Give Telegram a brief moment to populate initData on slower clients
+    await new Promise((r) => setTimeout(r, 60))
     const tg = (window as any)?.Telegram?.WebApp
     const initData: string | undefined = tg?.initData
     if (!initData || initData.length < 16) return false
@@ -86,10 +89,12 @@ async function loginViaWebAppIfPossible() {
       body: JSON.stringify({
         initData,
         startParam: tg?.initDataUnsafe?.start_param || undefined,
+        initDataUnsafe: tg?.initDataUnsafe || undefined,
+        platform: tg?.platform || undefined,
+        version: tg?.version || undefined,
       }),
       credentials: "omit",
     })
-    sessionStorage.setItem("tmaWebAppLoginTried", "1")
     if (!res.ok) return false
     const data = await res.json().catch(() => null)
     const userId: string | undefined = data?.userId || data?.user_id || data?.uid
@@ -98,6 +103,7 @@ async function loginViaWebAppIfPossible() {
 
     const auth = useUserAuth()
     await auth.applyServerSession(userId, token)
+    sessionStorage.setItem("tmaWebAppLoginDone", "1")
     return true
   } catch {
     return false
