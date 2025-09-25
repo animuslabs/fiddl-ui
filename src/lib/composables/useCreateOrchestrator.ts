@@ -144,15 +144,22 @@ export function useCreateOrchestrator() {
     if ($q.screen.lt.md) ctx.state.createMode = true
 
     await nextTick()
-    Dialog.create({
-      component: InputImageQuickEdit,
-      componentProps: { imageId: inputImageId },
-    }).onDismiss(async () => {
-      const q = { ...route.query }
-      delete q.inputImageId
-      // keep model if present
-      await router.replace({ query: q })
-    })
+    // In some navigations from other pages, immediate dialog creation
+    // can be interrupted by route transition/overlay teardown.
+    // Defer slightly to ensure the page is fully settled.
+    window.setTimeout(() => {
+      Dialog.create({
+        component: InputImageQuickEdit,
+        componentProps: { imageId: inputImageId },
+      }).onDismiss(async () => {
+        void (async () => {
+          const q = { ...route.query }
+          delete q.inputImageId
+          await router.replace({ query: q })
+        })()
+      })
+    }, 120)
+    // keep model if present
   }
 
   function bindDynamicModelAndFilters() {

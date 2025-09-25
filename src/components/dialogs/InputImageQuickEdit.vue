@@ -88,4 +88,8 @@ async function startCreate(isPublic: boolean) {
   align-items: center;
   justify-content: center;
 }
+.actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>
