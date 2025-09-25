@@ -4243,6 +4243,12 @@ export type TelegramConfirmDeviceLogin200 = {
   userId: string;
 };
 
+export type TelegramUnlinkBody = { [key: string]: unknown };
+
+export type TelegramUnlink200 = {
+  ok: boolean;
+};
+
 export type DiscountsValidateParams = {
 code: string;
 packageId: number;
@@ -12668,6 +12674,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getTelegramConfirmDeviceLoginMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const telegramUnlink = (
+    telegramUnlinkBody?: MaybeRef<TelegramUnlinkBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramUnlink200>> => {
+    telegramUnlinkBody = unref(telegramUnlinkBody);
+    
+    return axios.post(
+      `/telegram/unlink`,
+      telegramUnlinkBody,options
+    );
+  }
+
+
+
+export const getTelegramUnlinkMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramUnlink>>, TError,{data: TelegramUnlinkBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof telegramUnlink>>, TError,{data: TelegramUnlinkBody}, TContext> => {
+
+const mutationKey = ['telegramUnlink'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramUnlink>>, {data: TelegramUnlinkBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  telegramUnlink(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramUnlinkMutationResult = NonNullable<Awaited<ReturnType<typeof telegramUnlink>>>
+    export type TelegramUnlinkMutationBody = TelegramUnlinkBody
+    export type TelegramUnlinkMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTelegramUnlink = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramUnlink>>, TError,{data: TelegramUnlinkBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof telegramUnlink>>,
+        TError,
+        {data: TelegramUnlinkBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTelegramUnlinkMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

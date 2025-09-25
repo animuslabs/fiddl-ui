@@ -484,7 +484,7 @@ async function buildItems(src: MediaGalleryMeta[]) {
     const type: "image" | "video" = derived === "video" ? "video" : "image"
     const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
     const fallbackAspect = type === "video" ? 16 / 9 : 1
-    const aspectRatio = props.layout === "grid" ? 1 : isPlaceholder ? 1.6 : item.aspectRatio ?? fallbackAspect
+    const aspectRatio = props.layout === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
     return { ...item, type, aspectRatio }
   })
 
@@ -678,7 +678,7 @@ function estimatePrivateTax(requestId: string, requestType: "image" | "video", i
   if (requestType === "image") {
     const modelKey = creation?.model as keyof typeof prices.image.model | undefined
     const modelPrice = (modelKey && prices.image?.model?.[modelKey] != null ? prices.image.model[modelKey] : undefined) ?? 0
-    const surcharge = creation?.model === "custom" ? prices.forge?.customModelCharge ?? 0 : 0
+    const surcharge = creation?.model === "custom" ? (prices.forge?.customModelCharge ?? 0) : 0
     baseCost = (modelPrice + surcharge) * quantity
   } else {
     const modelKey = creation?.model as keyof typeof prices.video.model | undefined
@@ -1178,7 +1178,7 @@ function showVideoOverlay(id: string): boolean {
   position: absolute;
   top: 6px;
   right: 6px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   z-index: 4;
   filter: opacity(0.5);
@@ -1192,7 +1192,7 @@ function showVideoOverlay(id: string): boolean {
   position: absolute;
   top: 6px;
   left: 6px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   z-index: 4;
   filter: opacity(0.5);
@@ -1206,10 +1206,10 @@ function showVideoOverlay(id: string): boolean {
   position: absolute;
   top: 6px;
   right: 44px; /* sit just left of visibility toggle */
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   z-index: 4;
-  filter: opacity(0.5);
+  filter: opacity(0.9);
 }
 .input-chip .q-spinner {
   color: white;

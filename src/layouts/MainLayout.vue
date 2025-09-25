@@ -92,6 +92,11 @@ q-layout(view="lHh Lpr lFf" )
                 .row.items-center
                   q-icon(name="logout" size="20px").q-mr-md
                   div  Logout
+            q-item(clickable v-if="isTMA" @click="confirmUnlink" v-close-popup)
+              q-item-section
+                .row.items-center
+                  q-icon(name="link_off" size="20px").q-mr-md
+                  div Unlink Telegram
 
   q-dialog(v-model="showUpvoteInfo")
     q-card(style="min-width:320px;max-width:520px")
@@ -175,6 +180,7 @@ import reloadAvatar from "lib/reloadAvatar"
 import { useCreateImageStore } from "stores/createImageStore"
 import NotificationsMenu from "src/components/NotificationsMenu.vue"
 import { useMissionsStore } from "stores/missionsStore"
+import { telegramUnlink } from "lib/orval"
 
 export default defineComponent({
   components: { NotificationsMenu },
@@ -226,6 +232,28 @@ export default defineComponent({
     },
   },
   methods: {
+    confirmUnlink() {
+      Dialog.create({
+        title: "Unlink Telegram?",
+        message:
+          "unlink this fiddl account from your telegram account? You will lose access to this fiddl account, to link to another account, use the /settings page on the web to link your telegram account",
+        cancel: { flat: true, label: "Cancel" },
+        ok: { flat: true, color: "negative", label: "Unlink" },
+      }).onOk(async () => {
+        try {
+          await telegramUnlink()
+        } catch (e) {
+          console.error("unlink failed", e)
+        } finally {
+          try {
+            // Close the Telegram Mini App
+            const w: any = window as any
+            if (w?.Telegram?.WebApp?.close) w.Telegram.WebApp.close()
+            else window.close()
+          } catch {}
+        }
+      })
+    },
     async navToUserProfile() {
       if (!this.$userAuth.userProfile) await this.$userAuth.loadUserProfile()
       void this.$router.push({ name: "profile", params: { username: this.$userAuth.userProfile?.username } })

@@ -4214,6 +4214,12 @@ export type TelegramConfirmDeviceLogin200 = {
   userId: string;
 };
 
+export type TelegramUnlinkBody = { [key: string]: unknown };
+
+export type TelegramUnlink200 = {
+  ok: boolean;
+};
+
 export type DiscountsValidateParams = {
 code: string;
 packageId: number;
@@ -7942,6 +7948,28 @@ export const telegramConfirmDeviceLogin = async (telegramConfirmDeviceLoginBody:
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramConfirmDeviceLoginBody,)
+  }
+);}
+
+
+
+export const getTelegramUnlinkUrl = () => {
+
+
+  
+
+  return `/telegram/unlink`
+}
+
+export const telegramUnlink = async (telegramUnlinkBody?: TelegramUnlinkBody, options?: RequestInit): Promise<TelegramUnlink200> => {
+  
+  return fetcher<TelegramUnlink200>(getTelegramUnlinkUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramUnlinkBody,)
   }
 );}
 

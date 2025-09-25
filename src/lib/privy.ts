@@ -119,6 +119,9 @@ export async function linkWithTelegram(authPayload: { id: number; first_name: st
   })
 }
 
+// Unlink Telegram from the current authenticated user
+ 
+
 // Helper to fetch app config (for reading telegram bot name, etc.)
 export async function getPrivyAppConfig() {
   try {
