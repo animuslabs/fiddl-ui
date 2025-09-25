@@ -3259,6 +3259,43 @@ export type AdminListMissionClaims200 = {
   items: AdminListMissionClaims200ItemsItem[];
 };
 
+export type AdminListTrainingSetThumbnailsParams = {
+limit?: number;
+offset?: number;
+account?: string;
+startDateTime?: string;
+endDateTime?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListTrainingSetThumbnails200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListTrainingSetThumbnails200ItemsItem = {
+  thumbnailId: string;
+  trainingSetId: string;
+  createdAt: string;
+  url: string;
+  /** @nullable */
+  user: AdminListTrainingSetThumbnails200ItemsItemUser;
+};
+
+export type AdminListTrainingSetThumbnails200 = {
+  total: number;
+  items: AdminListTrainingSetThumbnails200ItemsItem[];
+};
+
 export type AdminListUploadedImagesParams = {
 limit?: number;
 offset?: number;
@@ -4150,6 +4187,14 @@ export type TelegramWebAppLoginBody = {
 export type TelegramWebAppLogin200 = {
   token: string;
   userId: string;
+};
+
+export type TelegramCheckWebAppLinkParams = {
+initData: string;
+};
+
+export type TelegramCheckWebAppLink200 = {
+  linked: boolean;
 };
 
 /**
@@ -9901,6 +9946,64 @@ export function useAdminListMissionClaims<TData = Awaited<ReturnType<typeof admi
 
 
 
+export const adminListTrainingSetThumbnails = (
+    params?: MaybeRef<AdminListTrainingSetThumbnailsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminListTrainingSetThumbnails200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/listTrainingSetThumbnails`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminListTrainingSetThumbnailsQueryKey = (params?: MaybeRef<AdminListTrainingSetThumbnailsParams>,) => {
+    return ['admin','listTrainingSetThumbnails', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminListTrainingSetThumbnailsQueryOptions = <TData = Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminListTrainingSetThumbnailsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminListTrainingSetThumbnailsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>> = ({ signal }) => adminListTrainingSetThumbnails(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>, TError, TData> 
+}
+
+export type AdminListTrainingSetThumbnailsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>>
+export type AdminListTrainingSetThumbnailsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminListTrainingSetThumbnails<TData = Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminListTrainingSetThumbnailsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListTrainingSetThumbnails>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListTrainingSetThumbnailsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const adminListUploadedImages = (
     params?: MaybeRef<AdminListUploadedImagesParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AdminListUploadedImages200>> => {
@@ -12285,6 +12388,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const telegramCheckWebAppLink = (
+    params: MaybeRef<TelegramCheckWebAppLinkParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TelegramCheckWebAppLink200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/telegram/checkWebAppLink`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getTelegramCheckWebAppLinkQueryKey = (params: MaybeRef<TelegramCheckWebAppLinkParams>,) => {
+    return ['telegram','checkWebAppLink', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getTelegramCheckWebAppLinkQueryOptions = <TData = Awaited<ReturnType<typeof telegramCheckWebAppLink>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<TelegramCheckWebAppLinkParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramCheckWebAppLink>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getTelegramCheckWebAppLinkQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof telegramCheckWebAppLink>>> = ({ signal }) => telegramCheckWebAppLink(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof telegramCheckWebAppLink>>, TError, TData> 
+}
+
+export type TelegramCheckWebAppLinkQueryResult = NonNullable<Awaited<ReturnType<typeof telegramCheckWebAppLink>>>
+export type TelegramCheckWebAppLinkQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useTelegramCheckWebAppLink<TData = Awaited<ReturnType<typeof telegramCheckWebAppLink>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<TelegramCheckWebAppLinkParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof telegramCheckWebAppLink>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTelegramCheckWebAppLinkQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const telegramLinkStatus = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TelegramLinkStatus200>> => {

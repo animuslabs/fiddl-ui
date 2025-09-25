@@ -20,7 +20,7 @@
                 .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   q-separator(vertical)
-                  q-btn-toggle(v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
+                  q-btn-toggle(v-if="showModelFilter" v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
                   q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
 
@@ -260,6 +260,12 @@ export default defineComponent({
         { label: "All", value: false },
         { label: modelName, value: true },
       ]
+    },
+    showModelFilter() {
+      // Only show the model filter when in single-model mode.
+      // For images, hide if randomizer is enabled (multi or random modes).
+      if (this.currentTab === "image") return !this.createImageStore.state.randomizer.enabled
+      return true
     },
   },
   watch: {

@@ -3230,6 +3230,43 @@ export type AdminListMissionClaims200 = {
   items: AdminListMissionClaims200ItemsItem[];
 };
 
+export type AdminListTrainingSetThumbnailsParams = {
+limit?: number;
+offset?: number;
+account?: string;
+startDateTime?: string;
+endDateTime?: string;
+};
+
+/**
+ * @nullable
+ */
+export type AdminListTrainingSetThumbnails200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListTrainingSetThumbnails200ItemsItem = {
+  thumbnailId: string;
+  trainingSetId: string;
+  createdAt: string;
+  url: string;
+  /** @nullable */
+  user: AdminListTrainingSetThumbnails200ItemsItemUser;
+};
+
+export type AdminListTrainingSetThumbnails200 = {
+  total: number;
+  items: AdminListTrainingSetThumbnails200ItemsItem[];
+};
+
 export type AdminListUploadedImagesParams = {
 limit?: number;
 offset?: number;
@@ -4121,6 +4158,14 @@ export type TelegramWebAppLoginBody = {
 export type TelegramWebAppLogin200 = {
   token: string;
   userId: string;
+};
+
+export type TelegramCheckWebAppLinkParams = {
+initData: string;
+};
+
+export type TelegramCheckWebAppLink200 = {
+  linked: boolean;
 };
 
 /**
@@ -6742,6 +6787,34 @@ export const adminListMissionClaims = async (params?: AdminListMissionClaimsPara
 
 
 
+export const getAdminListTrainingSetThumbnailsUrl = (params?: AdminListTrainingSetThumbnailsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listTrainingSetThumbnails?${stringifiedParams}` : `/admin/listTrainingSetThumbnails`
+}
+
+export const adminListTrainingSetThumbnails = async (params?: AdminListTrainingSetThumbnailsParams, options?: RequestInit): Promise<AdminListTrainingSetThumbnails200> => {
+  
+  return fetcher<AdminListTrainingSetThumbnails200>(getAdminListTrainingSetThumbnailsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getAdminListUploadedImagesUrl = (params?: AdminListUploadedImagesParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -7752,6 +7825,34 @@ export const telegramWebAppLogin = async (telegramWebAppLoginBody: TelegramWebAp
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       telegramWebAppLoginBody,)
+  }
+);}
+
+
+
+export const getTelegramCheckWebAppLinkUrl = (params: TelegramCheckWebAppLinkParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/telegram/checkWebAppLink?${stringifiedParams}` : `/telegram/checkWebAppLink`
+}
+
+export const telegramCheckWebAppLink = async (params: TelegramCheckWebAppLinkParams, options?: RequestInit): Promise<TelegramCheckWebAppLink200> => {
+  
+  return fetcher<TelegramCheckWebAppLink200>(getTelegramCheckWebAppLinkUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
 

@@ -83,7 +83,7 @@
               .badge-sm.text-white {{ createStore.selectedModelPrice }}
             // Custom model name shown below selector
       .row.q-mx-md
-        .custom-model-card.row.items-center.no-wrap.q-mt-sm.full-width(v-if="req.model === 'custom'")
+        .custom-model-card.row.items-center.no-wrap.q-mt-sm.full-width(v-if="req.model === 'custom' && !createStore.state.randomizer.enabled")
           q-icon(name="category" size="16px" class="q-mr-sm")
           div.custom-model-name {{ req.customModelName || 'Pick a custom model' }}
           q-space

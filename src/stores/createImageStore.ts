@@ -308,9 +308,13 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
 
     // Decide models for this creation
     const modelsForThisRun = resolveMultiModels()
-    // Enforce common safe aspect ratios when mixing models
+    // Use requested aspect ratio by default; only coerce when mixing models
     let aspect: AspectRatio | undefined = state.req.aspectRatio as AspectRatio | undefined
-    if (!aspect || !COMMON_SAFE_RATIOS.includes(aspect)) aspect = "1:1"
+    const mixingModels = modelsForThisRun.length > 1
+    if (mixingModels) {
+      // When generating across multiple models, restrict to common safe ratios
+      if (!aspect || !COMMON_SAFE_RATIOS.includes(aspect)) aspect = "1:1"
+    }
     // Build batch request payloads (image variant, one per model)
     const requests = modelsForThisRun.map((m) => ({
       prompt: state.req.prompt,
@@ -460,6 +464,12 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     () => {
       console.log("model watch triggered")
       const opts = availableAspectRatiosComputed.value || []
+      // If model is not custom, clear any lingering custom model metadata
+      if (state.req.model !== "custom") {
+        state.customModel = null
+        state.req.customModelId = undefined
+        state.req.customModelName = undefined
+      }
       // If aspect ratio is empty and the model supports selection, default to 16:9 (or first option)
       if (!state.req.aspectRatio) {
         // Keep undefined for models where UI disables selection (handled in the form)

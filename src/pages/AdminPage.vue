@@ -8,6 +8,7 @@ q-page.full-height.full-width.admin-page
       q-tab(name="users" label="Users")
       q-tab(name="payments" label="Payments")
       q-tab(name="uploaded-images" label="Uploaded Images")
+      q-tab(name="training-images" label="Training Set Images")
       q-tab(name="discount-codes" label="Discount Codes")
       q-tab(name="affiliate-payouts" label="Affiliate Payouts")
       q-tab(name="stats" label="Stats")
@@ -448,6 +449,117 @@ q-page.full-height.full-width.admin-page
         v-model="uploadsPagination.page"
         @update:model-value="onBottomPageChange"
         :max="Math.max(1, Math.ceil(uploadsTotal / uploadsPagination.rowsPerPage))"
+        max-pages="8"
+        boundary-links
+        direction-links
+        color="primary"
+        size="lg"
+      )
+
+  // Training Set Images tab
+  div(v-if="tab == 'training-images'").q-pa-sm
+    .row.items-center.q-gutter-sm.q-mb-sm
+      q-btn-toggle(v-model="tsetsView" :options="uploadsViewOptions" dense unelevated size="sm")
+      q-input(v-model="tsetsAccount" debounce="400" placeholder="Filter by account (username/email/id)" dense outlined clearable style="min-width:260px")
+      q-input(v-model="tsetsStart" type="datetime-local" label="Start" dense outlined clearable style="min-width:220px")
+      q-input(v-model="tsetsEnd" type="datetime-local" label="End" dense outlined clearable style="min-width:220px")
+      q-select(v-model="tsetsPagination.rowsPerPage" :options="[10,25,50,100]" label="Rows" dense outlined style="width:100px")
+      q-space
+      q-btn(v-if="tsetsAccount" icon="block" color="negative" flat :label="tsetsSingleUser ? `Ban ${userDisplay(tsetsSingleUser)}` : 'Ban account'" @click="banTopUserTsets")
+      q-btn(v-if="tsetsProfileLink" icon="open_in_new" color="primary" flat :label="tsetsProfileLabel || 'Open profile'" :href="tsetsProfileLink" target="_blank" rel="noopener")
+      q-btn(icon="refresh" flat @click="refetchTsets" :loading="tsetsFetching")
+    // Top page navigation (centered, large)
+    .row.justify-center.q-mb-sm(ref="tsetsTopPager")
+      q-pagination(
+        v-if="tsetsPagination.rowsPerPage !== 0 && tsetsTotal > 0"
+        v-model="tsetsPagination.page"
+        :max="Math.max(1, Math.ceil(tsetsTotal / tsetsPagination.rowsPerPage))"
+        max-pages="8"
+        boundary-links
+        direction-links
+        color="primary"
+        size="lg"
+      )
+    q-table(v-if="tsetsView === 'table'"
+      :rows="tsetsRows"
+      :columns="tsetsColumns"
+      row-key="thumbnailId"
+      :loading="tsetsLoading || tsetsFetching"
+      v-model:pagination="tsetsPagination"
+      :rows-number="tsetsTotal"
+      @request="onTsetsRequest"
+      binary-state-sort
+      flat
+      bordered
+      dense
+      :hide-bottom="true"
+      :rows-per-page-options="[10,25,50,100,0]"
+      :no-data-label="'No training set images found'"
+    )
+      template(#body-cell-preview="props")
+        q-td(:props="props")
+          q-img(:src="props.row.url" style="width:60px; height:60px; object-fit:cover; border-radius:4px; cursor:pointer;" @click="openThumbPreview(props.row.url)")
+      template(#body-cell-user="props")
+        q-td(:props="props")
+          span.admin-link(@click="filterTsetsByUser(props.row.user)") {{ userDisplay(props.row.user) }}
+          q-btn(
+            v-if="profileLinkForUser(props.row.user)"
+            size="sm"
+            flat
+            round
+            dense
+            icon="open_in_new"
+            class="q-ml-xs"
+            :href="profileLinkForUser(props.row.user)"
+            target="_blank"
+            rel="noopener"
+            @click.stop
+            title="Open profile in new tab"
+          )
+      template(#body-cell-createdAt="props")
+        q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
+      template(#body-cell-actions="props")
+        q-td(:props="props")
+          .row.items-center.q-gutter-xs
+            q-btn(size="sm" icon="open_in_new" flat :href="$router.resolve({ name: 'trainingSet', params: { trainingSetId: props.row.trainingSetId } }).href" target="_blank" rel="noopener" title="Open training set")
+            q-btn(size="sm" icon="block" color="negative" flat @click="banUploaderTsets(props.row)")
+            q-btn(size="sm" icon="person_search" flat v-if="!tsetsAccount" @click="lookupUploaderTsets(props.row)")
+    // Grid view for training images
+    div(v-else)
+      div(v-if="tsetsLoading && !tsetsRows.length" class="row justify-center q-my-md")
+        q-spinner(size="32px" color="primary")
+      .row.q-col-gutter-sm
+        .col-6.col-sm-4.col-md-3.col-lg-2(v-for="row in tsetsRows" :key="row.thumbnailId")
+          q-card(flat bordered)
+            div(style="position:relative;")
+              q-img(:src="row.url" style="width:100%; height:0; padding-bottom:100%; object-fit:cover; cursor:pointer;" @click="openThumbPreview(row.url)")
+              .row.items-center.q-gutter-xs(style="position:absolute; top:6px; right:6px;")
+                q-btn(size="sm" round dense color="negative" icon="block" @click="banUploaderTsets(row)")
+            q-card-section(class="q-pa-sm")
+              div(style="font-size:12px;" class="ellipsis row items-center no-wrap")
+                span.admin-link(@click="filterTsetsByUser(row.user)") {{ userDisplay(row.user) }}
+                q-btn(
+                  v-if="profileLinkForUser(row.user)"
+                  size="sm"
+                  flat
+                  round
+                  dense
+                  icon="open_in_new"
+                  class="q-ml-xs"
+                  :href="profileLinkForUser(row.user)"
+                  target="_blank"
+                  rel="noopener"
+                  @click.stop
+                  title="Open profile in new tab"
+                )
+              div(style="font-size:11px; color:#777") {{ row.createdAt ? new Date(row.createdAt).toLocaleString() : '' }}
+    // Bottom page navigation (centered, large)
+    .row.justify-center.q-mt-sm
+      q-pagination(
+        v-if="tsetsPagination.rowsPerPage !== 0 && tsetsTotal > 0"
+        v-model="tsetsPagination.page"
+        @update:model-value="onBottomPageChangeTsets"
+        :max="Math.max(1, Math.ceil(tsetsTotal / tsetsPagination.rowsPerPage))"
         max-pages="8"
         boundary-links
         direction-links
@@ -1093,6 +1205,217 @@ export default defineComponent({
       confirmBan(fallbackRow as any)
     }
 
+    // Training Set Images state and actions
+    const tsetsAccount = ref("")
+    const tsetsView = ref<"table" | "grid">("grid")
+    const tsetsTopPager = ref<HTMLElement | null>(null)
+    const tsetsStart = ref<string | null>(null)
+    const tsetsEnd = ref<string | null>(null)
+    const tsetsPagination = ref({
+      sortBy: "createdAt",
+      descending: true,
+      page: 1,
+      rowsPerPage: 25,
+    })
+    const tsetsLoading = ref(false)
+    const tsetsFetching = ref(false)
+    const tsetsRows = ref<any[]>([])
+    const tsetsTotal = ref(0)
+
+    const tsetsLimit = computed(() => {
+      const rpp = tsetsPagination.value.rowsPerPage
+      return rpp === 0 ? 1000 : rpp
+    })
+    const tsetsOffset = computed(() => {
+      const rpp = tsetsPagination.value.rowsPerPage
+      const page = tsetsPagination.value.page
+      if (rpp === 0) return 0
+      return (page - 1) * rpp
+    })
+
+    const tsetsColumns: QTableColumn<any>[] = [
+      { name: "actions", label: "Actions", field: "trainingSetId", align: "left", sortable: false },
+      { name: "preview", label: "Preview", field: "url", align: "left", sortable: false },
+      { name: "user", label: "User", field: (row: any) => row.user || {}, sortable: true },
+      { name: "trainingSetId", label: "Training Set ID", field: "trainingSetId", sortable: false },
+      { name: "createdAt", label: "Created", field: "createdAt", sortable: true },
+    ]
+
+    async function fetchTsets(initial = false) {
+      try {
+        if (initial) tsetsLoading.value = true
+        else tsetsFetching.value = true
+        const params: any = {
+          limit: tsetsLimit.value,
+          offset: tsetsOffset.value,
+          order: tsetsPagination.value.descending ? "desc" : "asc",
+        }
+        if (tsetsAccount.value?.trim()) params.account = tsetsAccount.value.trim()
+        if (tsetsStart.value) params.startDateTime = new Date(tsetsStart.value).toISOString()
+        if (tsetsEnd.value) params.endDateTime = new Date(tsetsEnd.value).toISOString()
+
+        let data: any
+        try {
+          const mod: any = await import("src/lib/orval")
+          if (typeof mod.adminListTrainingSetThumbnails === "function") {
+            const res = await mod.adminListTrainingSetThumbnails(params)
+            data = res?.data
+          } else {
+            const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
+            data = res.data
+          }
+        } catch {
+          const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
+          data = res.data
+        }
+
+        const items = Array.isArray(data?.items) ? data.items : []
+        tsetsRows.value = items.map((it: any) => ({
+          thumbnailId: it.thumbnailId || it.id || it._id,
+          trainingSetId: it.trainingSetId,
+          createdAt: it.createdAt || it.created_at || null,
+          url: it.url,
+          user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+        }))
+        tsetsTotal.value = Number(data?.total || tsetsRows.value.length || 0)
+      } finally {
+        tsetsLoading.value = false
+        tsetsFetching.value = false
+      }
+    }
+
+    const refetchTsets = () => fetchTsets(false)
+    const tsetsSilent = ref(false)
+    const onTsetsRequest = (props: OnRequestProps) => {
+      tsetsSilent.value = true
+      tsetsPagination.value = props.pagination
+      void refetchTsets()
+      tsetsSilent.value = false
+    }
+    watch([tsetsAccount, tsetsStart, tsetsEnd], () => {
+      tsetsPagination.value.page = 1
+      void refetchTsets()
+    })
+    watch(
+      () => [tsetsPagination.value.page, tsetsPagination.value.rowsPerPage],
+      () => {
+        if (tsetsSilent.value) return
+        void refetchTsets()
+      },
+    )
+    watch(
+      () => tsetsPagination.value.rowsPerPage,
+      () => {
+        tsetsPagination.value.page = 1
+      },
+    )
+
+    const tsetsAccountIdentifier = (user: any) => {
+      if (!user) return ""
+      return (
+        user?.username ||
+        user?.profile?.username ||
+        user?.email ||
+        user?.profile?.email ||
+        user?.telegramName ||
+        user?.telegramId ||
+        user?.id ||
+        ""
+      )
+    }
+
+    const filterTsetsByUser = (user: any) => {
+      const identifier = tsetsAccountIdentifier(user)
+      if (!identifier) return
+      tsetsAccount.value = identifier
+      if (tsetsPagination.value.page !== 1) tsetsPagination.value.page = 1
+    }
+
+    function scrollTopPagerIntoViewTsets() {
+      try {
+        const el = tsetsTopPager.value
+        if (!el || typeof window === "undefined") return
+        const rect = el.getBoundingClientRect()
+        const top = window.pageYOffset + rect.top - 8
+        window.scrollTo({ top, behavior: "smooth" })
+      } catch {}
+    }
+
+    function onBottomPageChangeTsets() {
+      scrollTopPagerIntoViewTsets()
+    }
+
+    const tsetsSingleUser = computed(() => {
+      const ids = new Set<string>()
+      for (const r of tsetsRows.value) if (r?.user?.id) ids.add(String(r.user.id))
+      if (ids.size !== 1) return null
+      const onlyId = Array.from(ids)[0]!
+      const sample = tsetsRows.value.find((r) => r?.user?.id === onlyId)
+      return sample?.user || { id: onlyId }
+    })
+
+    const tsetsProfileLink = computed(() => {
+      const user = tsetsSingleUser.value
+      if (!user) return ""
+      return profileLinkForUser(user)
+    })
+
+    const tsetsProfileLabel = computed(() => {
+      const user = tsetsSingleUser.value
+      if (!user) return ""
+      const username = user?.username || user?.profile?.username || user?.userName
+      if (username) return `Open @${username}`
+      return "Open profile"
+    })
+
+    async function banTopUserTsets() {
+      const search = tsetsAccount.value?.trim() || (tsetsSingleUser.value?.id as string | undefined)
+      if (!search) return
+      try {
+        const res = await adminListUsers({ search, limit: 1, offset: 0 })
+        const row = res?.data?.users?.[0]
+        if (row) return confirmBan(row)
+      } catch {}
+      const fallbackRow = tsetsSingleUser.value ? { id: tsetsSingleUser.value.id, profile: { username: tsetsSingleUser.value.username }, banned: false } : { id: search, profile: { username: search }, banned: false }
+      confirmBan(fallbackRow as any)
+    }
+
+    async function lookupUploaderTsets(row: any) {
+      try {
+        const uid = row?.user?.id
+        if (!uid) return
+        const res = await adminListUsers({ search: uid, limit: 1, offset: 0 })
+        const user = res?.data?.users?.[0]
+        if (!user) return
+        Dialog.create({
+          title: "Uploader",
+          message: `User: ${userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })}`,
+          cancel: true,
+          ok: { label: "Ban", color: "negative" },
+          options: { type: "checkbox", model: [], items: [] },
+        }).onOk(() => confirmBan(user))
+      } catch (error) {
+        catchErr(error)
+      }
+    }
+
+    async function banUploaderTsets(row: any) {
+      try {
+        const uid = row?.user?.id
+        if (!uid) return
+        try {
+          const res = await adminListUsers({ search: uid, limit: 1, offset: 0 })
+          const user = res?.data?.users?.[0]
+          if (user) return confirmBan(user)
+        } catch {}
+        const fallbackRow = { id: uid, profile: { username: userDisplay(row.user) }, banned: false }
+        confirmBan(fallbackRow as any)
+      } catch (error) {
+        catchErr(error)
+      }
+    }
+
+
     // Discount Codes state and actions
     const dcRows = ref<any[]>([])
     const dcLoading = ref(false)
@@ -1515,6 +1838,29 @@ export default defineComponent({
       uploadsProfileLink,
       uploadsProfileLabel,
 
+      // training set images
+      tsetsAccount,
+      tsetsView,
+      tsetsTopPager,
+      tsetsStart,
+      tsetsEnd,
+      tsetsPagination,
+      tsetsRows,
+      tsetsTotal,
+      tsetsLoading,
+      tsetsFetching,
+      tsetsColumns,
+      refetchTsets,
+      onTsetsRequest,
+      filterTsetsByUser,
+      onBottomPageChangeTsets,
+      tsetsSingleUser,
+      tsetsProfileLink,
+      tsetsProfileLabel,
+      banTopUserTsets,
+      lookupUploaderTsets,
+      banUploaderTsets,
+
       // discount codes
       dcRows,
       dcLoading,
@@ -1714,7 +2060,7 @@ export default defineComponent({
       })
     },
     normalizeAdminTab(slug?: string): string {
-      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
+      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
       return allowed.has(slug) ? slug : "promo-codes"
     },
@@ -1728,6 +2074,15 @@ export default defineComponent({
     openImagePreview(imageId: string) {
       try {
         this.imgPreviewSrc = s3Img("uploads/" + imageId)
+        this.imgPreviewOpen = true
+      } catch {
+        this.imgPreviewSrc = ""
+        this.imgPreviewOpen = false
+      }
+    },
+    openThumbPreview(url: string) {
+      try {
+        this.imgPreviewSrc = url
         this.imgPreviewOpen = true
       } catch {
         this.imgPreviewSrc = ""
@@ -1817,6 +2172,9 @@ export default defineComponent({
         } else if (this.tab == "uploaded-images") {
           // Trigger initial fetch for uploads
           void this.refetchUploads()
+        } else if (this.tab == "training-images") {
+          // Trigger initial fetch for training set images
+          void this.refetchTsets()
         } else if (this.tab == "discount-codes") {
           void this.refetchDiscounts()
         } else if (this.tab == "affiliate-payouts") {
