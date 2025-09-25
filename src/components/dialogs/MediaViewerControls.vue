@@ -1,11 +1,12 @@
 <template lang="pug">
-.centered.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
+.centered.media-viewer-controls.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
   div.relative-position
     q-btn(
       icon="share"
       round
       flat
       color="grey-5"
+      :dense="$q.screen.lt.md"
       @click.stop="shareMenuOpen = true"
     )
       q-menu(
@@ -34,6 +35,7 @@
     round
     @click.stop="showRequestInfoDialog()"
     color="grey-5"
+    :dense="$q.screen.lt.md"
     v-if="mediaViewerStore.loadedRequestId"
   )
 
@@ -42,6 +44,7 @@
     flat
     round
     color="grey-5"
+    :dense="$q.screen.lt.md"
     @click.stop="showCommentsDialog()"
   )
   span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.commentsCount") {{ popularity.get(mediaViewerStore.currentMediaId)?.commentsCount ?? 0 }}
@@ -53,7 +56,7 @@
       @click.stop="showDownloadWindow()"
       round
       :class="mediaViewerStore.downloadClass"
-    )
+      :dense="$q.screen.lt.md"    )
       q-tooltip
         p(v-if="mediaViewerStore.userOwnsMedia") Download full resolution original and upscaled versions
         p(v-else).text-capitalize Download {{ mediaViewerStore.currentMediaType }}
@@ -64,6 +67,7 @@
     round
     @click.stop="editMedia()"
     :color="mediaViewerStore.editBtnColor"
+    :dense="$q.screen.lt.md"
   )
 
   q-btn(
@@ -72,6 +76,7 @@
     round
     @click.stop="toggleFavorite()"
     :color="popularity.get(mediaViewerStore.currentMediaId)?.isFavoritedByMe ? 'red-5' : 'grey-5'"
+    :dense="$q.screen.lt.md"
   )
   span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.favorites") {{ popularity.get(mediaViewerStore.currentMediaId)?.favorites ?? 0 }}
   q-btn(
@@ -80,6 +85,7 @@
     :icon="popularity.get(mediaViewerStore.currentMediaId)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
     v-if="currentIsPublic !== false"
     @click.stop="onUpvote()"
+    :dense="$q.screen.lt.md"
   )
   span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.upvotes") {{ popularity.get(mediaViewerStore.currentMediaId)?.upvotes ?? 0 }}
 
@@ -89,6 +95,7 @@
       round
       flat
       color="grey-5"
+      :dense="$q.screen.lt.md"
       @click.stop="moreMenuOpen = true"
     )
       q-menu(
@@ -126,12 +133,13 @@
       @click.stop="$emit('close')"
       round
       color="grey-5"
+      :dense="$q.screen.lt.md"
     )
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from "vue"
-import { Dialog } from "quasar"
+import { Dialog, useQuasar } from "quasar"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useImageCreations } from "src/stores/imageCreationsStore"
@@ -166,6 +174,7 @@ const emit = defineEmits<{
 }>()
 
 const mediaViewerStore = useMediaViewerStore()
+const $q = useQuasar()
 const userAuth = useUserAuth()
 const router = useRouter()
 const shareMenuOpen = ref(true)
@@ -456,3 +465,17 @@ function deleteMedia() {
   })
 }
 </script>
+
+<style>
+/* Keep controls compact on small screens */
+.media-viewer-controls {
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .media-viewer-controls .count {
+    display: none;
+  }
+}
+</style>

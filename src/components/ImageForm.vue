@@ -36,7 +36,7 @@
 
       q-separator(color="grey-9" spaced="20px" inset)
       .centered.settings-grid
-        .row.q-col-gutter-md.full-width.items-start
+        .row.q-col-gutter-md.full-width.items-start.no-wrap
           .col-md-3
             p.setting-label Aspect Ratio
             q-select(
@@ -115,24 +115,21 @@
       .row.items-start.wrap.q-col-gutter-md
 
         // Reference / input images section
-        div.relative-position.col-12.col-md-6.q-mt-md(v-if="supportsInputImages")
+        div.relative-position.col-12.q-mt-md(v-if="supportsInputImages")
           p.setting-label.q-ml-md {{ supportsMulti ? 'Input Images' : 'Input Image' }}
           // Thumbnails
           div(v-if="supportsMulti")
-            .row.q-gutter-sm.q-mb-sm
-              q-chip(v-for="id in selectedImageIds" :key="id" removable @remove="removeImage(id)" color="grey-9" text-color="white")
-                q-avatar(size="32px")
-                  q-img(:src="s3Img('uploads/' + id)" style="width:32px; height:32px; object-fit:cover;")
-                //- span.q-ml-sm {{ shortId(id) }}
+            .row.full-width.q-mt-sm
+              StartImageThumbs.q-mb-sm(:items="selectedStartImages" :size="$q.screen.lt.md ? 56 : 64" :gap="8" @remove="removeImage")
             .row.items-center.q-gutter-sm.q-mb-md
-              q-btn(flat color="primary" icon="add" :label="selectedImageIds.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
-              q-badge(v-if="selectedImageIds.length" color="grey-7") {{ selectedImageIds.length }}/{{ maxMulti }}
-              q-btn(v-if="selectedImageIds.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+              q-btn(flat color="primary" icon="add" :label="selectedStartImages.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
+              q-badge(v-if="selectedStartImages.length" color="grey-7") {{ selectedStartImages.length }}/{{ maxMulti }}
+              q-btn(v-if="selectedStartImages.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
           div(v-else)
-            q-img.q-mb-sm.q-mt-xs(v-if="selectedImageIds[0]" :src="s3Img('uploads/' + selectedImageIds[0])" style="max-height:160px; min-width:100px;")
+            q-img.q-mb-sm.q-mt-xs(v-if="firstSelectedImage" :src="thumbUrl(firstSelectedImage)" fit="contain" :img-style="{ objectFit: 'contain' }" style="max-height:200px; min-width:120px;")
             .row.items-center.q-gutter-sm
-              q-btn(flat color="primary" icon="photo_library" :label="selectedImageIds[0] ? 'Change image' : 'Choose image'" @click="openImagesDialog")
-              q-btn(v-if="selectedImageIds[0]" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+              q-btn(flat color="primary" icon="photo_library" :label="firstSelectedImage ? 'Change image' : 'Choose image'" @click="openImagesDialog")
+              q-btn(v-if="firstSelectedImage" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
 
     .full-width(style="height:30px;").gt-sm
     CreateActionBar(
@@ -171,7 +168,7 @@
     :max="maxMulti"
     :thumbSizeMobile="95"
     context="image"
-    :preselectedIds="selectedImageIds"
+    :preselectedIds="preselectedUploadedIds"
     @accept="onImagesAccepted"
   )
 
@@ -209,12 +206,14 @@ import { useUserAuth } from "src/stores/userAuth"
 import PromptTemplatesDialog from "src/components/dialogs/PromptTemplatesDialog.vue"
 import UploadedImagesDialog from "src/components/dialogs/UploadedImagesDialog.vue"
 import { s3Img } from "lib/netlifyImg"
+import { compressedUrl } from "lib/imageCdn"
 import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
 import ModelRandomizerDialog from "components/dialogs/ModelRandomizerDialog.vue"
 import ModelSelectDialog from "components/dialogs/ModelSelectDialog.vue"
 import * as modelsStore from "stores/modelsStore"
 import tma from "src/lib/tmaAnalytics"
+import StartImageThumbs from "components/StartImageThumbs.vue"
 
 const emit = defineEmits(["created", "back"])
 const props = defineProps<{ showBackBtn?: boolean }>()
@@ -254,10 +253,26 @@ const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(req
 const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "photon", "custom"].includes(req.model))
 const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)
 const maxMulti = 10
-const selectedImageIds = computed<string[]>({
-  get: () => req.uploadedStartImageIds || [],
-  set: (val) => (req.uploadedStartImageIds = val),
+
+type StartImageItem = { id: string; source: "uploaded" | "existing" }
+
+const selectedStartImages = computed<StartImageItem[]>(() => {
+  const items: StartImageItem[] = []
+  const existing = req.startImageIds || []
+  for (const id of existing) items.push({ id, source: "existing" })
+  const uploaded = req.uploadedStartImageIds || []
+  for (const id of uploaded) items.push({ id, source: "uploaded" })
+  return items
 })
+
+const firstSelectedImage = computed<StartImageItem | null>(() => selectedStartImages.value[0] || null)
+
+const preselectedUploadedIds = computed<string[]>(() => req.uploadedStartImageIds || [])
+
+function thumbUrl(item: StartImageItem): string {
+  if (item.source === "uploaded") return s3Img("uploads/" + item.id)
+  return compressedUrl(item.id, "md")
+}
 
 function openTemplates() {
   templatesDialogOpen.value = true
@@ -300,7 +315,9 @@ function onModelSelectedFromDialog(slug: string) {
 
 function openModelSelectDialog() {
   // Avoid immediate re-opening loops by blurring the faux input
-  try { modelSelectRef.value?.blur?.() } catch {}
+  try {
+    modelSelectRef.value?.blur?.()
+  } catch {}
   baseModelDialogOpen.value = true
 }
 
@@ -308,7 +325,7 @@ const modelDisplayText = computed(() => {
   // If random/multi mode, show special label
   if (modelDisplayValue.value) return modelDisplayValue.value
   // Custom model: show its name if present
-  if (req.model === 'custom') return req.customModelName || 'Custom model'
+  if (req.model === "custom") return req.customModelName || "Custom model"
   // Base model: map slug to friendly name (fallback to slug)
   const m = (modelsStore.models.base || []).find((x) => x.slug === (req.model as any))
   return m?.name || (req.model as string)
@@ -382,25 +399,39 @@ function openImagesDialog() {
 }
 
 function onImagesAccepted(ids: string[]) {
+  const currentExisting = req.startImageIds || []
+  const currentUploaded = req.uploadedStartImageIds || []
+  const existingSet = new Set(currentExisting)
+  const uploadedSet = new Set(currentUploaded)
   if (supportsMulti.value) {
-    // Enforce max and uniqueness
-    const merged = [...(req.uploadedStartImageIds || [])]
+    const mergedUploaded = [...currentUploaded]
+    const totalCount = () => currentExisting.length + mergedUploaded.length
     for (const id of ids) {
-      if (merged.length >= maxMulti) break
-      if (!merged.includes(id)) merged.push(id)
+      if (totalCount() >= maxMulti) break
+      if (!existingSet.has(id) && !uploadedSet.has(id)) {
+        mergedUploaded.push(id)
+        uploadedSet.add(id)
+      }
     }
-    req.uploadedStartImageIds = merged
+    req.uploadedStartImageIds = mergedUploaded
   } else if (supportsSingle.value) {
+    // Replace unified selection with the newly picked upload
+    req.startImageIds = []
     req.uploadedStartImageIds = ids[0] ? [ids[0]] : []
   }
 }
 
 function clearImages() {
   req.uploadedStartImageIds = []
+  req.startImageIds = []
 }
 
-function removeImage(id: string) {
-  req.uploadedStartImageIds = (req.uploadedStartImageIds || []).filter((x) => x !== id)
+function removeImage(item: StartImageItem) {
+  if (item.source === "uploaded") {
+    req.uploadedStartImageIds = (req.uploadedStartImageIds || []).filter((x) => x !== item.id)
+  } else {
+    req.startImageIds = (req.startImageIds || []).filter((x) => x !== item.id)
+  }
 }
 
 function shortId(id: string) {
@@ -414,9 +445,38 @@ watch(
     if (model === "nano-banana") req.aspectRatio = undefined as any
 
     // Adjust selected images when model changes
-    if (!supportsInputImages.value) req.uploadedStartImageIds = []
-    else if (supportsSingle.value && (req.uploadedStartImageIds?.length || 0) > 1) req.uploadedStartImageIds = [req.uploadedStartImageIds![0]!]
-    else if (supportsMulti.value && (req.uploadedStartImageIds?.length || 0) > maxMulti) req.uploadedStartImageIds = req.uploadedStartImageIds!.slice(0, maxMulti)
+    const totalCount = (req.startImageIds?.length || 0) + (req.uploadedStartImageIds?.length || 0)
+    if (!supportsInputImages.value) {
+      req.startImageIds = []
+      req.uploadedStartImageIds = []
+    } else if (supportsSingle.value) {
+      if (totalCount > 1) {
+        // Prefer keeping the first existing image if any, otherwise the first uploaded
+        const keepExisting = (req.startImageIds || [])[0]
+        const keepUploaded = (req.uploadedStartImageIds || [])[0]
+        if (keepExisting) {
+          req.startImageIds = [keepExisting]
+          req.uploadedStartImageIds = []
+        } else if (keepUploaded) {
+          req.startImageIds = []
+          req.uploadedStartImageIds = [keepUploaded]
+        } else {
+          req.startImageIds = []
+          req.uploadedStartImageIds = []
+        }
+      }
+    } else if (supportsMulti.value) {
+      if (totalCount > maxMulti) {
+        // Trim extras preferring existing first
+        const existing = req.startImageIds || []
+        const uploaded = req.uploadedStartImageIds || []
+        const trimmedExisting = existing.slice(0, Math.min(existing.length, maxMulti))
+        const remaining = Math.max(0, maxMulti - trimmedExisting.length)
+        const trimmedUploaded = uploaded.slice(0, remaining)
+        req.startImageIds = trimmedExisting
+        req.uploadedStartImageIds = trimmedUploaded
+      }
+    }
   },
   { immediate: true },
 )

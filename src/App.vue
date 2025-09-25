@@ -76,6 +76,13 @@ export default defineComponent({
         if (referredBy) LocalStorage.set("referredBy", referredBy)
       },
     },
+    // If user navigates away from magic mirror pages, re-check to show notification
+    "$route.name": {
+      handler() {
+        // Only attempt if user is logged in; respects session one-time key
+        if (this.$userAuth?.loggedIn) this.maybeNotifyClaimables()
+      },
+    },
     "$userAuth.loggedIn": {
       immediate: true,
       handler(val: boolean) {

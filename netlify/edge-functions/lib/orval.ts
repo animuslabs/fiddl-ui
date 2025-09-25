@@ -160,6 +160,7 @@ export type CreateImageBody = {
   aspectRatio?: CreateImageBodyAspectRatio;
   customModelId?: string;
   uploadedStartImageIds?: string[];
+  startImageIds?: string[];
 };
 
 export type CreateImage200 = {
@@ -379,6 +380,7 @@ export type CreateQueueAsyncBatchBodyRequestsItemAnyOf = {
   aspectRatio?: CreateQueueAsyncBatchBodyRequestsItemAnyOfAspectRatio;
   customModelId?: string;
   uploadedStartImageIds?: string[];
+  startImageIds?: string[];
 };
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel];

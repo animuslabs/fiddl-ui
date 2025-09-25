@@ -1,6 +1,6 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" )
-  q-card.q-dialog-plugin(style="width:500px; max-width:90vw;")
+  q-card.q-dialog-plugin(:style="$q.screen.lt.md ? 'width:92vw; max-width:92vw;' : 'width:500px; max-width:90vw;'")
     div.q-pt-md(style="background-color: rgba(0,0,0,.5);  ")
       .centered
         h4.text-capitalize Edit {{ type }}
@@ -18,20 +18,54 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
               p {{prices[type].unlock}}
         .centered(v-if="!$userAuth.loggedIn").q-mt-lg
           q-btn(color="primary" @click="goToLogin()" label="Login to purchase media")
-      div(v-else style="height:30vh; height:30dvh")
+      div(v-else style="min-height:28vh; min-height:28dvh")
         .centered
           p.q-ma-md You own this {{ type }}.
         .centered
           p How would you like use this creation?
-        .centered
-          div.q-pt-lg
-            .row.q-mb-md
-              q-btn.q-mr-md(:label="`Prompt`" @click="startEditing('prompt')" color="primary" icon="edit" outline stack)
-              .col-grow
-              q-btn(:label="`All`" @click="startEditing('all')" color="primary" icon="edit_note" outline stack)
-            .centered(v-if="type=='image'")
-              q-btn(:label="`Create Video`" @click="startEditing('video')" color="primary" icon="video_settings" stack size="lg")
-              q-btn.q-ml-md(:label="`Use as input image`" @click="addAsInput()" color="primary" icon="add_photo_alternate" stack size="lg")
+        .q-pt-lg
+          // Primary edit options
+          .row.q-mb-md.q-gutter-sm.justify-center
+            q-btn(
+              :label="`Prompt`"
+              @click="startEditing('prompt')"
+              color="primary"
+              icon="edit"
+              outline
+              :dense="$q.screen.lt.md"
+              :size="$q.screen.lt.md ? 'sm' : 'md'"
+              :stack="!$q.screen.lt.md"
+            )
+            q-btn(
+              :label="`All`"
+              @click="startEditing('all')"
+              color="primary"
+              icon="edit_note"
+              outline
+              :dense="$q.screen.lt.md"
+              :size="$q.screen.lt.md ? 'sm' : 'md'"
+              :stack="!$q.screen.lt.md"
+            )
+          // Image-only actions
+          .row.q-gutter-sm.justify-center(v-if="type=='image'")
+            q-btn(
+              :label="`Create Video`"
+              @click="startEditing('video')"
+              color="primary"
+              icon="video_settings"
+              :dense="$q.screen.lt.md"
+              :size="$q.screen.lt.md ? 'md' : 'lg'"
+              :stack="!$q.screen.lt.md"
+            )
+            q-btn(
+              :label="`Use as input image`"
+              @click="addAsInput()"
+              color="primary"
+              icon="add_photo_alternate"
+              :dense="$q.screen.lt.md"
+              :size="$q.screen.lt.md ? 'md' : 'lg'"
+              :stack="!$q.screen.lt.md"
+            )
               //- h4.q-ma-md Start Editing
 
       .centered.q-pt-md.q-pb-md
@@ -41,7 +75,7 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
 
 <script lang="ts">
 import { catchErr, downloadFile, purchaseMedia } from "lib/util"
-import { QDialog, Notify, Dialog, SessionStorage, Loading } from "quasar"
+import { QDialog, Notify, Dialog, SessionStorage } from "quasar"
 import { defineComponent, PropType } from "vue"
 // no direct image download calls here anymore
 import { CreateEditType, MediaType } from "lib/types"
@@ -50,9 +84,8 @@ import { prices } from "stores/pricesStore"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { markOwned, clearOwned } from "lib/ownedMediaCache"
 import { match } from "ts-pattern"
-import { hdUrl } from "lib/imageCdn"
-import { createUploadImage } from "lib/orval"
-import { uploadToPresignedPost } from "lib/api"
+import { useCreateImageStore } from "src/stores/createImageStore"
+import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
 
 export default defineComponent({
   props: dialogProps,
@@ -96,22 +129,22 @@ export default defineComponent({
     async addAsInput() {
       try {
         if (this.type !== "image") return
-        Loading.show({ message: "Preparing input image..." })
-        // Use the HD image (requires ownership)
-        const url = await hdUrl(this.currentMediaId)
-        const resp = await fetch(url)
-        if (!resp.ok) throw new Error("Failed to fetch image")
-        const blob = await resp.blob()
-        // Ensure we upload as webp
-        const file = new File([blob], "input.webp", { type: "image/webp" })
-        const { data } = await createUploadImage({ fileType: "image/webp" })
-        await uploadToPresignedPost({ file, presignedPost: data.uploadUrl })
-        // Navigate to create page with the uploaded image id as input
-        void this.$router.push({ name: "create", params: { activeTab: "image" }, query: { inputImageId: data.imageId, model: 'nano-banana' } })
+        const imgCreate = useCreateImageStore()
+        const currentStart = imgCreate.state.req.startImageIds || []
+        const currentUploaded = imgCreate.state.req.uploadedStartImageIds || []
+        const startSet = new Set(currentStart)
+        const uploadedSet = new Set(currentUploaded)
+        if (!startSet.has(this.currentMediaId) && !uploadedSet.has(this.currentMediaId)) startSet.add(this.currentMediaId)
+
+        imgCreate.setReq({
+          startImageIds: Array.from(startSet),
+          uploadedStartImageIds: Array.from(uploadedSet),
+          model: "nano-banana",
+        } as any)
+        Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId: this.currentMediaId } })
+        this.hide()
       } catch (err) {
         catchErr(err)
-      } finally {
-        Loading.hide()
       }
     },
     show() {

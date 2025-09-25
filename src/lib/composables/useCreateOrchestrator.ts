@@ -135,7 +135,8 @@ export function useCreateOrchestrator() {
 
     // Apply input image and optionally model to image create store
     const req: Partial<CreateImageRequestWithCustomModel> = {
-      uploadedStartImageIds: [inputImageId],
+      startImageIds: [inputImageId],
+      uploadedStartImageIds: [],
     }
     if (modelParam) (req as any).model = modelParam
     imgCreate.setReq(req)

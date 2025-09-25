@@ -220,6 +220,19 @@ html.tma-mode
   background-color: var(--tma-bg, #121212)
 
 
+// Global guards to avoid accidental horizontal overflow, especially on mobile/TMA
+html, body
+  max-width: 100vw
+  overflow-x: hidden
+
+.q-layout, .q-page-container, .q-page
+  max-width: 100vw
+  overflow-x: clip
+
+// Flex children should be allowed to shrink to avoid flex-induced overflow
+.centered > *
+  min-width: 0
+
 // Improve readability of badges/chips globally
 .q-badge, .q-chip
   font-size: 14px
@@ -296,12 +309,15 @@ a:hover
 a:visited
   color: #6a5acd
 .search-bar
-  width: 100vw
+  // Avoid 100vw to prevent horizontal overflow on mobile/Telegram webview
+  width: 100%
   backdrop-filter: blur(20px)
   background-color: rgba(0, 0, 0, 0.25)
   position: fixed
   z-index: 100
   height: auto
+  left: 0
+  right: 0
 .blur-bg
   backdrop-filter: blur(20px)
   background-color: rgba(0, 0,0, 0.25)

@@ -4,9 +4,7 @@ import { useQuasar, LocalStorage } from "quasar"
 import { Dialog } from "quasar"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
-import { hdUrl } from "lib/imageCdn"
-import { createUploadImage } from "lib/orval"
-import { uploadToPresignedPost } from "lib/api"
+// no need to pre-upload input image; we operate by id now
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
 import mediaViwer, { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
@@ -359,20 +357,17 @@ async function addAsInput(imageId: string) {
       return
     }
     addInputLoading.value[imageId] = true
-    // Fetch HD image (requires ownership) and upload as input
-    const url = await hdUrl(imageId)
-    const resp = await fetch(url)
-    if (!resp.ok) throw new Error("Failed to fetch HD image")
-    const blob = await resp.blob()
-    const file = new File([blob], "input.webp", { type: "image/webp" })
-    const { data } = await createUploadImage({ fileType: "image/webp" })
-    await uploadToPresignedPost({ file, presignedPost: data.uploadUrl })
-
-    // Apply to create image store and default model
+    // New flow: do not upload; use existing image id directly
     const imgCreate = useCreateImageStore()
-    imgCreate.setReq({ uploadedStartImageIds: [data.imageId], model: "nano-banana" } as any)
+    // Merge new id into existing arrays (uniquely)
+    const currentStart = imgCreate.state.req.startImageIds || []
+    const currentUploaded = imgCreate.state.req.uploadedStartImageIds || []
+    const startSet = new Set(currentStart)
+    const uploadedSet = new Set(currentUploaded)
+    if (!startSet.has(imageId) && !uploadedSet.has(imageId)) startSet.add(imageId)
 
-    Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId: data.imageId } })
+    imgCreate.setReq({ startImageIds: Array.from(startSet), uploadedStartImageIds: Array.from(uploadedSet), model: "nano-banana" } as any)
+    Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId } })
   } catch (e) {
     console.error(e)
   } finally {
@@ -386,6 +381,10 @@ const wrapperStyles = computed(() => {
     display: "grid",
     gap: gapValue.value,
     width: "100%",
+    maxWidth: "100%",
+    minWidth: "0",
+    overflowX: "clip",
+    boxSizing: "border-box",
   }
 
   if (isMosaic && props.centerAlign) {
@@ -1107,6 +1106,7 @@ function showVideoOverlay(id: string): boolean {
 
 .media-cell {
   position: relative;
+  min-width: 0;
 }
 
 .media-wrapper {
@@ -1117,6 +1117,8 @@ function showVideoOverlay(id: string): boolean {
   transition:
     transform 120ms ease,
     box-shadow 120ms ease;
+  /* Ensure absolutely-positioned overlays never push outside tiles */
+  overflow: hidden;
 }
 
 .loading-overlay {
@@ -1223,7 +1225,7 @@ function showVideoOverlay(id: string): boolean {
   bottom: 5px;
   left: 50%;
   background: rgba(0, 0, 0, 0.15);
-  transform: translate(-50%, 0);
+  transform: translateX(-50%);
 
   color: white;
   border-radius: 12px;
@@ -1347,5 +1349,22 @@ function showVideoOverlay(id: string): boolean {
 .burst-leave-to {
   opacity: 0;
   transform: translate(-50%, -10px) scale(0.98);
+}
+
+/* Mobile compaction for popularity controls to avoid overflow on small tiles */
+@media (max-width: 600px) {
+  .popularity-overlay {
+    padding: 2px 4px;
+    gap: 4px;
+    row-gap: 2px;
+    max-width: calc(100% - 8px);
+  }
+  .popularity-overlay .count {
+    display: none;
+  }
+  .popularity-overlay .q-btn {
+    min-width: 0;
+    padding: 0;
+  }
 }
 </style>

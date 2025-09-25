@@ -27,6 +27,8 @@ export type CreateImageRequestWithCustomModel = CreateImageRequest & {
   customModelId?: string
   // Allow optional input images list for supported models
   uploadedStartImageIds?: string[]
+  // New: allow mixing existing creation image IDs
+  startImageIds?: string[]
 }
 
 // Types used by both initState and the store
@@ -326,6 +328,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       aspectRatio: m === "nano-banana" ? (undefined as any) : (aspect as any),
       customModelId: m === "custom" ? state.req.customModelId : undefined,
       uploadedStartImageIds: state.req.uploadedStartImageIds,
+      startImageIds: state.req.startImageIds,
     }))
 
     let batchId: string | null = null
