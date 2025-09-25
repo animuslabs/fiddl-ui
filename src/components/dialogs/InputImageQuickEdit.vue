@@ -1,17 +1,41 @@
 <template lang="pug">
-q-card.q-dialog-plugin(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw;' : 'width:560px; max-width:95vw;'")
-  q-card-section
-    h5.q-mt-none.q-mb-none How would you like to edit this image?
-  q-separator(color="grey-9")
-  q-card-section
-    .centered.q-my-sm
-      q-img(:src="s3Img('uploads/' + props.imageId)" style="max-height:220px; max-width:100%; border-radius:8px; object-fit:contain;")
-  q-card-section
-    q-input(v-model="notes" type="textarea" autogrow filled color="primary" :counter="160" :maxlength="160" placeholder="e.g., make it brighter, remove the background, add a sunset sky")
-  q-separator(color="grey-9")
-  q-card-actions(align="right")
-    q-btn(flat label="Advanced" color="secondary" @click="onAdvanced")
-    q-btn(unelevated label="Continue" color="primary" :disable="notesTrimmed.length === 0" @click="onApply")
+q-dialog(ref="dialogRef" @hide="onDialogHide")
+  q-card.q-dialog-plugin(:style="$q.screen.lt.md ? 'width:100vw; max-width:100vw;' : 'width:560px; max-width:95vw;'")
+    q-card-section
+      h5.q-mt-none.q-mb-none How would you like to edit this image?
+    q-separator(color="grey-9")
+    q-card-section
+      .centered.q-my-sm
+        q-img(
+          :src="s3Img('uploads/' + props.imageId)"
+          fit="contain"
+          :img-style="{ objectFit: 'contain' }"
+          style="max-height:280px; width:100%; border-radius:8px;"
+        )
+    q-card-section
+      q-input(v-model="notes" type="textarea" autogrow filled color="primary" :counter="160" :maxlength="160" placeholder="e.g., make it brighter, remove the background, add a sunset sky")
+    q-separator(color="grey-9")
+    q-card-actions(align="right" class="actions")
+      // Create actions on the left
+      q-btn(
+        unelevated
+        color="primary"
+        :loading="creating"
+        :disable="creating"
+        label="Create Public"
+        @click="startCreate(true)"
+      )
+      q-btn(
+        flat
+        color="secondary"
+        :loading="creating"
+        :disable="creating"
+        label="Create Private"
+        @click="startCreate(false)"
+      )
+      q-space
+      q-btn(flat label="Advanced" color="secondary" @click="onAdvanced")
+      q-btn(unelevated label="Continue" color="primary" :disable="notesTrimmed.length === 0" @click="onApply")
 </template>
 
 <script lang="ts" setup>
@@ -26,6 +50,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 
 const notes = ref("")
 const notesTrimmed = computed(() => notes.value.trim())
+const creating = ref(false)
 
 function onAdvanced() {
   onDialogCancel()
@@ -38,6 +63,22 @@ function onApply() {
     store.setReq({ prompt: text })
   }
   onDialogOK()
+}
+
+async function startCreate(isPublic: boolean) {
+  const store = useCreateImageStore()
+  // Apply note as prompt if provided
+  const text = notesTrimmed.value
+  if (text.length > 0) store.setReq({ prompt: text })
+  // Set public/private and start creation
+  creating.value = true
+  try {
+    store.state.req.public = isPublic
+    await Promise.resolve(store.createImage())
+  } finally {
+    creating.value = false
+    onDialogOK()
+  }
 }
 </script>
 
