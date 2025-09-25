@@ -2,6 +2,11 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { Dialog } from "quasar"
+import { useCreateImageStore } from "src/stores/createImageStore"
+import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
+import { hdUrl } from "lib/imageCdn"
+import { createUploadImage } from "lib/orval"
+import { uploadToPresignedPost } from "lib/api"
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
 import mediaViwer, { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
@@ -10,6 +15,7 @@ import { useUserAuth } from "src/stores/userAuth"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { isOwned } from "lib/ownedMediaCache"
 import LikeMedia from "src/components/dialogs/LikeMedia.vue"
+import UnlockForInput from "src/components/dialogs/UnlockForInput.vue"
 import type { MediaType } from "lib/types"
 import { creationsSetRequestPrivacy, creationsDeleteRequest, creationsDeleteMedia } from "lib/orval"
 import { prices } from "stores/pricesStore"
@@ -52,6 +58,8 @@ const props = withDefaults(
     showDeleteButton?: boolean
     // When true, do not gate or mask NSFW items
     disableNsfwMask?: boolean
+    // Show overlay button to use an image as input in Create page
+    showUseAsInput?: boolean
   }>(),
   {
     layout: "grid",
@@ -69,6 +77,7 @@ const props = withDefaults(
     showVisibilityToggle: false,
     showDeleteButton: false,
     disableNsfwMask: false,
+    showUseAsInput: false,
   },
 )
 
@@ -140,6 +149,7 @@ const imageCreations = useImageCreations()
 const videoCreations = useVideoCreations()
 const privacyLoading = ref<Record<string, boolean>>({})
 const deleteLoading = ref<Record<string, boolean>>({})
+const addInputLoading = ref<Record<string, boolean>>({})
 
 const NSFW_PREFERENCE_KEY = "fiddl:showNsfwMedia"
 const storedNsfwPref = LocalStorage.getItem<boolean>(NSFW_PREFERENCE_KEY)
@@ -320,6 +330,54 @@ function openCommentsFromOverlay(media: MediaGalleryMeta) {
   const startIndex = targetIndex >= 0 ? targetIndex : 0
   const allowDelete = !!props.showDeleteButton
   void mediaViwer.show(items, startIndex, allowDelete, { initialCommentId: COMMENT_DIALOG_SENTINEL })
+}
+
+async function addAsInput(imageId: string) {
+  try {
+    if (!imageId) return
+    // Require login similar to favorite flow
+    if (!userAuth.loggedIn) {
+      Dialog.create({
+        title: "Login required",
+        message: "You need to login to use an image as input.",
+        cancel: true,
+        persistent: true,
+      }).onOk(() => {
+        void router.push({ name: "login" })
+      })
+      return
+    }
+    // Require unlock/ownership; show tailored unlock-to-edit dialog
+    if (!ownsMediaQuick(imageId, "image")) {
+      Dialog.create({
+        component: UnlockForInput,
+        componentProps: { type: "image", currentMediaId: imageId },
+      }).onOk(() => {
+        // After unlock, retry adding as input
+        void addAsInput(imageId)
+      })
+      return
+    }
+    addInputLoading.value[imageId] = true
+    // Fetch HD image (requires ownership) and upload as input
+    const url = await hdUrl(imageId)
+    const resp = await fetch(url)
+    if (!resp.ok) throw new Error("Failed to fetch HD image")
+    const blob = await resp.blob()
+    const file = new File([blob], "input.webp", { type: "image/webp" })
+    const { data } = await createUploadImage({ fileType: "image/webp" })
+    await uploadToPresignedPost({ file, presignedPost: data.uploadUrl })
+
+    // Apply to create image store and default model
+    const imgCreate = useCreateImageStore()
+    imgCreate.setReq({ uploadedStartImageIds: [data.imageId], model: "nano-banana" } as any)
+
+    Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId: data.imageId } })
+  } catch (e) {
+    console.error(e)
+  } finally {
+    addInputLoading.value[imageId] = false
+  }
 }
 
 const wrapperStyles = computed(() => {
@@ -909,6 +967,18 @@ function showVideoOverlay(id: string): boolean {
           :disable="privacyLoading[m.requestId || ''] === true"
         )
           q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+        q-btn.input-chip(
+          v-if="props.showUseAsInput && isVisible(m.id) && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
+          dense
+          flat
+          round
+          padding="0"
+          color="grey-5"
+          icon="add_photo_alternate"
+          @click.stop="addAsInput(m.id)"
+          :loading="!!addInputLoading[m.id]"
+          :disable="addInputLoading[m.id] === true"
+        )
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
@@ -1127,6 +1197,19 @@ function showVideoOverlay(id: string): boolean {
 }
 
 .delete-chip .q-spinner {
+  color: white;
+}
+
+.input-chip {
+  position: absolute;
+  top: 6px;
+  right: 44px; /* sit just left of visibility toggle */
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  z-index: 4;
+  filter: opacity(0.5);
+}
+.input-chip .q-spinner {
   color: white;
 }
 

@@ -19,6 +19,7 @@ q-page.full-height.full-width.relative-position
         :rowHeightRatio="1.2"
         :show-loading="false"
         gap="8px"
+        :show-use-as-input="true"
         @select="handleSelect"
         :cols-desktop="8"
         :thumb-size-desktop="90"

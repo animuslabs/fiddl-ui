@@ -43,11 +43,8 @@
                 :disable-nsfw-mask="true"
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
+                :show-use-as-input="true"
               )
-                template(#actions="{ media }")
-                  // Show only for image items and when not placeholder
-                  .actions-slot(v-if="currentTab==='image' && !media.placeholder")
-                    q-btn(flat dense round icon="add_photo_alternate" color="white" :loading="addInputLoading[media.id] === true" :disable="addInputLoading[media.id] === true" @click.stop="useAsInput(media.id)")
               MediaGallery.q-pl-md.q-pr-md(
                 v-else-if="gridMode == 'grid'"
                 @selected-index="showDetails"
@@ -60,10 +57,8 @@
                 :disable-nsfw-mask="true"
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
+                :show-use-as-input="true"
               )
-                template(#actions="{ media }")
-                  .actions-slot(v-if="currentTab==='image' && !media.placeholder")
-                    q-btn(flat dense round icon="add_photo_alternate" color="white" :loading="addInputLoading[media.id] === true" :disable="addInputLoading[media.id] === true" @click.stop="useAsInput(media.id)")
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
           .centered.q-ma-md(v-if="activeCreationsStore.creations.length > 9")
@@ -143,11 +138,7 @@ import type { MediaType, UnifiedRequest } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
 import { useCreateContextStore } from "src/stores/createContextStore"
 import MagicMirrorDialog from "src/components/MagicMirrorDialog.vue"
-import { Dialog } from "quasar"
-import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
-import { hdUrl } from "lib/imageCdn"
-import { createUploadImage } from "lib/orval"
-import { uploadToPresignedPost } from "lib/api"
+// Overlay Add-as-input handled inside MediaGallery when showUseAsInput is true
 export default defineComponent({
   name: "PromptTab",
   components: {
@@ -184,7 +175,6 @@ export default defineComponent({
       createContext: useCreateContextStore(),
       suppressCreateModal: false,
       showMMChoice: false,
-      addInputLoading: {} as Record<string, boolean>,
     }
   },
   computed: {
@@ -410,32 +400,7 @@ export default defineComponent({
       console.log(latestCreation)
       // if (this.gridMode) this.showDetails(latestCreation.id)
     },
-    async useAsInput(imageId: string) {
-      try {
-        if (this.currentTab !== 'image') return
-        if (!imageId || typeof imageId !== 'string' || imageId.startsWith('pending-')) return
-        this.addInputLoading[imageId] = true
-        // Fetch HD image and upload as a new input image
-        const url = await hdUrl(imageId)
-        const resp = await fetch(url)
-        if (!resp.ok) throw new Error('Failed to fetch HD image')
-        const blob = await resp.blob()
-        const file = new File([blob], 'input.webp', { type: 'image/webp' })
-        const { data } = await createUploadImage({ fileType: 'image/webp' })
-        await uploadToPresignedPost({ file, presignedPost: data.uploadUrl })
-
-        // Apply to create store and default to nano-banana
-        this.createImageStore.setReq({ uploadedStartImageIds: [data.imageId], model: 'nano-banana' } as any)
-
-        // Open quick edit dialog directly
-        Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId: data.imageId } })
-      } catch (e) {
-        console.error(e)
-        this.$q.notify({ type: 'negative', message: 'Unable to add image as input' })
-      } finally {
-        this.addInputLoading[imageId] = false
-      }
-    },
+    // no-op: useAsInput handled internally by MediaGallery now when showUseAsInput is true
   },
 })
 </script>

@@ -125,6 +125,7 @@ q-page.full-height.full-width
           :mediaObjects="currentMediaObjects"
           show-popularity
           :show-delete-button="userAuth.userId === userId && tab === 'creations'"
+          :show-use-as-input="true"
         )
 
       template(v-else-if="tab === 'favorites' || tab === 'purchased' || tab === 'unlocked'")
