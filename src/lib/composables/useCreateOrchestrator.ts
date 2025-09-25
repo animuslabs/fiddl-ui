@@ -1,8 +1,9 @@
 // lib/composables/useCreateOrchestrator.ts
-import { computed, onMounted, watch } from "vue"
+import { computed, onMounted, watch, nextTick } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { Dialog, useQuasar } from "quasar"
 import { useCreateImageStore, type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
+import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
@@ -129,7 +130,8 @@ export function useCreateOrchestrator() {
     ctx.setActiveTab(tab)
 
     // Optional model preselection via query
-    const modelParam = typeof route.query.model === "string" ? (route.query.model as string) : undefined
+    // Optional model preselection via query; default to nano-banana for input-image flow
+    const modelParam = typeof route.query.model === "string" ? (route.query.model as string) : 'nano-banana'
 
     // Apply input image and optionally model to image create store
     const req: Partial<CreateImageRequestWithCustomModel> = {
@@ -141,12 +143,14 @@ export function useCreateOrchestrator() {
     // If already on the Create page on mobile, ensure the create card opens
     if ($q.screen.lt.md) ctx.state.createMode = true
 
+    await nextTick()
     Dialog.create({
-      title: "Input Image Added",
-      message: "This image has been added as an input. You can now adjust the prompt, pick settings, and create.",
+      component: InputImageQuickEdit,
+      componentProps: { imageId: inputImageId },
     }).onDismiss(async () => {
       const q = { ...route.query }
       delete q.inputImageId
+      // keep model if present
       await router.replace({ query: q })
     })
   }
