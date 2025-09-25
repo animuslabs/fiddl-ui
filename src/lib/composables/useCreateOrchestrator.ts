@@ -2,7 +2,7 @@
 import { computed, onMounted, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { Dialog, useQuasar } from "quasar"
-import { useCreateImageStore } from "src/stores/createImageStore"
+import { useCreateImageStore, type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
@@ -122,6 +122,35 @@ export function useCreateOrchestrator() {
     })
   }
 
+  async function applyInputImageFromMediaId(inputImageId: string) {
+    // Force image tab context
+    const tab: MediaType = "image"
+    createCardStore.activeTab = tab
+    ctx.setActiveTab(tab)
+
+    // Optional model preselection via query
+    const modelParam = typeof route.query.model === "string" ? (route.query.model as string) : undefined
+
+    // Apply input image and optionally model to image create store
+    const req: Partial<CreateImageRequestWithCustomModel> = {
+      uploadedStartImageIds: [inputImageId],
+    }
+    if (modelParam) (req as any).model = modelParam
+    imgCreate.setReq(req)
+
+    // If already on the Create page on mobile, ensure the create card opens
+    if ($q.screen.lt.md) ctx.state.createMode = true
+
+    Dialog.create({
+      title: "Input Image Added",
+      message: "This image has been added as an input. You can now adjust the prompt, pick settings, and create.",
+    }).onDismiss(async () => {
+      const q = { ...route.query }
+      delete q.inputImageId
+      await router.replace({ query: q })
+    })
+  }
+
   function bindDynamicModelAndFilters() {
     const dyn = parseBool(route.query.dynamicModel)
     const currentTab = activeTab.value
@@ -187,11 +216,14 @@ export function useCreateOrchestrator() {
     applyUIContext()
 
     const mediaId = typeof route.query.mediaId === "string" ? route.query.mediaId : undefined
+    const inputImageId = typeof route.query.inputImageId === "string" ? route.query.inputImageId : undefined
     const mediaType = (route.query.type as MediaType | undefined) || undefined
     const editType = (route.query.editType as EditType | undefined) || undefined
     const encodedRequestData = typeof route.query.requestData === "string" ? route.query.requestData : undefined
 
-    if (mediaId) {
+    if (inputImageId) {
+      await applyInputImageFromMediaId(inputImageId)
+    } else if (mediaId) {
       await applyRequestFromMediaId(mediaId, mediaType, editType)
     } else if (encodedRequestData) {
       await applyRequestFromEncoded(encodedRequestData)
