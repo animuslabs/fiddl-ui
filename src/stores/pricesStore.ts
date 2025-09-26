@@ -25,6 +25,7 @@ export const prices = reactive<PointsPrices200>({
       custom: 10,
       seedream3: 10,
       seedream4: 15,
+      seedream4k: 22,
       "nano-banana": 15,
     },
   },

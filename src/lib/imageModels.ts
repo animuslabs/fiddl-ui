@@ -16,6 +16,7 @@ export const imageModels = [
   "gpt-image-1",
   "seedream3",
   "seedream4",
+  "seedream4k",
   "nano-banana",
 ] as const
 export type ImageModel = (typeof imageModels)[number]

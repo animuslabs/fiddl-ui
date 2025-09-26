@@ -156,6 +156,7 @@ export const CreateImageBodyModel = {
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -378,6 +379,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -631,6 +633,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
@@ -703,6 +706,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
@@ -775,6 +779,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
@@ -864,6 +869,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
@@ -953,6 +959,7 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsGetMediaRequestsAspectRatio = typeof CreationsGetMediaRequestsAspectRatio[keyof typeof CreationsGetMediaRequestsAspectRatio];
@@ -1144,6 +1151,7 @@ export const CreationsBrowseCreateRequestsModel = {
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
   seedream4: 'seedream4',
+  seedream4k: 'seedream4k',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -1336,6 +1344,7 @@ export type PointsPrices200ImageModel = {
   'gpt-image-1': number;
   seedream3: number;
   seedream4: number;
+  seedream4k: number;
   'nano-banana': number;
 };
 

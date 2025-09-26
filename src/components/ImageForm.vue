@@ -279,7 +279,7 @@ async function startCreateKeyboard() {
 // Disable aspect ratio selection only when a single model is selected and it's Nano Banana.
 // In multi-model mode we allow picking a ratio and apply per-model fallbacks.
 const isAspectControlDisabled = computed(() => req.model === "nano-banana" && !createStore.state.randomizer.enabled)
-const supportsMulti = computed(() => ["seedream4", "nano-banana", "gpt-image-1"].includes(req.model))
+const supportsMulti = computed(() => ["seedream4", "seedream4k", "nano-banana", "gpt-image-1"].includes(req.model))
 const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "photon", "custom"].includes(req.model))
 const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)
 const maxMulti = 10

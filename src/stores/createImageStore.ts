@@ -184,7 +184,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
           modelName = "flux-dev"
       }
     }
-    let baseCost = prices.image.model[modelName] || 10
+    let baseCost = prices.image.model[modelName as keyof typeof prices.image.model] ?? 10
     if (state.req.model == "custom") baseCost += prices.forge.customModelCharge
     return baseCost
   })
