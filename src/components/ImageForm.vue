@@ -277,8 +277,8 @@ async function startCreateKeyboard() {
 }
 
 const isNanoBanana = computed(() => req.model === "nano-banana")
-const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(req.model))
-const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "photon", "custom"].includes(req.model))
+const supportsMulti = computed(() => ["seedream4", "nano-banana", "gpt-image-1"].includes(req.model))
+const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "photon", "custom"].includes(req.model))
 const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)
 const maxMulti = 10
 
@@ -441,9 +441,9 @@ function onImagesAccepted(ids: string[]) {
     req.startImageIds = []
     req.uploadedStartImageIds = ids[0] ? [ids[0]] : []
   }
-  // Ensure the image-creation model supports input images by switching to nano-banana
-  // This avoids cases where a previously selected model doesn't accept input images
-  if (ids && ids.length > 0) {
+  // If current model doesn't accept input images, switch to a compatible one.
+  // Keep the current model if it already supports input images (single or multi).
+  if (ids && ids.length > 0 && !supportsInputImages.value) {
     req.model = "nano-banana" as any
   }
 }

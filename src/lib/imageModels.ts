@@ -6,6 +6,7 @@ export const imageModels = [
   "flux-pro-ultra",
   "flux-dev",
   "flux-pro",
+  "flux-kontext",
   "custom",
   "imagen4", //
   "imagen4-ultra", //
@@ -14,6 +15,7 @@ export const imageModels = [
   "recraft3-svg",
   "gpt-image-1",
   "seedream3",
+  "seedream4",
   "nano-banana",
 ] as const
 export type ImageModel = (typeof imageModels)[number]

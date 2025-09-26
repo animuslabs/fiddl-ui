@@ -146,6 +146,7 @@ export const CreateImageBodyModel = {
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -154,6 +155,7 @@ export const CreateImageBodyModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -366,6 +368,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -374,6 +377,7 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -617,6 +621,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -625,6 +630,7 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserImagePurchasesAspectRatio = typeof CreationsUserImagePurchasesAspectRatio[keyof typeof CreationsUserImagePurchasesAspectRatio];
@@ -687,6 +693,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -695,6 +702,7 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsUserVideoPurchasesAspectRatio = typeof CreationsUserVideoPurchasesAspectRatio[keyof typeof CreationsUserVideoPurchasesAspectRatio];
@@ -757,6 +765,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -765,6 +774,7 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateImageRequestsAspectRatio = typeof CreationsCreateImageRequestsAspectRatio[keyof typeof CreationsCreateImageRequestsAspectRatio];
@@ -844,6 +854,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -852,6 +863,7 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsCreateVideoRequestsAspectRatio = typeof CreationsCreateVideoRequestsAspectRatio[keyof typeof CreationsCreateVideoRequestsAspectRatio];
@@ -931,6 +943,7 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -939,6 +952,7 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const
 export type CreationsGetMediaRequestsAspectRatio = typeof CreationsGetMediaRequestsAspectRatio[keyof typeof CreationsGetMediaRequestsAspectRatio];
@@ -1120,6 +1134,7 @@ export const CreationsBrowseCreateRequestsModel = {
   'flux-pro-ultra': 'flux-pro-ultra',
   'flux-dev': 'flux-dev',
   'flux-pro': 'flux-pro',
+  'flux-kontext': 'flux-kontext',
   custom: 'custom',
   imagen4: 'imagen4',
   'imagen4-ultra': 'imagen4-ultra',
@@ -1128,6 +1143,7 @@ export const CreationsBrowseCreateRequestsModel = {
   'recraft3-svg': 'recraft3-svg',
   'gpt-image-1': 'gpt-image-1',
   seedream3: 'seedream3',
+  seedream4: 'seedream4',
   'nano-banana': 'nano-banana',
 } as const;
 
@@ -1310,6 +1326,7 @@ export type PointsPrices200ImageModel = {
   'flux-pro-ultra': number;
   'flux-dev': number;
   'flux-pro': number;
+  'flux-kontext': number;
   custom: number;
   imagen4: number;
   'imagen4-ultra': number;
@@ -1318,6 +1335,7 @@ export type PointsPrices200ImageModel = {
   'recraft3-svg': number;
   'gpt-image-1': number;
   seedream3: number;
+  seedream4: number;
   'nano-banana': number;
 };
 
@@ -1462,7 +1480,25 @@ export type PointsInitBuyPackage200AnyOfThree = {
   discountCode: string | null;
 };
 
-export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree;
+export type PointsInitBuyPackage200AnyOfSixMethod = typeof PointsInitBuyPackage200AnyOfSixMethod[keyof typeof PointsInitBuyPackage200AnyOfSixMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PointsInitBuyPackage200AnyOfSixMethod = {
+  applePay: 'applePay',
+  googlePay: 'googlePay',
+} as const;
+
+export type PointsInitBuyPackage200AnyOfSix = {
+  paymentIntentId: string;
+  clientSecret: string;
+  amountUsd: number;
+  currency: string;
+  status: string;
+  method: PointsInitBuyPackage200AnyOfSixMethod;
+};
+
+export type PointsInitBuyPackage200 = PointsInitBuyPackage200AnyOf | PointsInitBuyPackage200AnyOfThree | PointsInitBuyPackage200AnyOfSix;
 
 export type PointsFinishBuyPackageBodyMethod = typeof PointsFinishBuyPackageBodyMethod[keyof typeof PointsFinishBuyPackageBodyMethod];
 
@@ -3172,6 +3208,8 @@ export type AdminListPayments200ItemsItem = {
   createdAt: string;
   /** @nullable */
   updatedAt: string | null;
+  /** @nullable */
+  discountCode?: string | null;
   /** @nullable */
   package?: AdminListPayments200ItemsItemPackage;
   details?: AdminListPayments200ItemsItemDetails;

@@ -93,12 +93,10 @@ type StartImageItem = { id: string; source: "uploaded" | "existing" }
 
 // Which models are available for quick selection and their capabilities
 const quickModels = [
+  { slug: "seedream4", label: "Seedream 4", multi: true },
   { slug: "nano-banana", label: "Nano Banana", multi: true },
+  { slug: "flux-kontext", label: "Flux Kontext", multi: false },
   { slug: "gpt-image-1", label: "GPT-Image", multi: true },
-  { slug: "flux-dev", label: "Flux Dev", multi: false },
-  { slug: "flux-pro", label: "Flux Pro", multi: false },
-  { slug: "flux-pro-ultra", label: "Flux Ultra", multi: false },
-  { slug: "photon", label: "Photon", multi: false },
 ]
 const quickModelSlugs = new Set(quickModels.map((m) => m.slug))
 const quickOptions = computed(() =>
@@ -115,7 +113,7 @@ const selectedModel = computed<string>({
     store.state.req.model = v as any
   },
 })
-const supportsMulti = computed(() => ["nano-banana", "gpt-image-1"].includes(selectedModel.value))
+const supportsMulti = computed(() => ["seedream4", "nano-banana", "gpt-image-1"].includes(selectedModel.value))
 
 const otherItems = computed<StartImageItem[]>(() => {
   const items: StartImageItem[] = []

@@ -150,7 +150,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const availableAspectRatiosComputed = computed(() => {
     const model = state.req.model
     if (model.includes("dall") || model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
-    if (["flux-dev", "flux-pro", "flux-pro-ultra", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
+    if (["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
     if (model.includes("imagen")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
     if (model.includes("recraft")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
     if (model.includes("photon")) return ["1:1", "3:4", "4:3", "9:16", "16:9", "9:21", "21:9"]
