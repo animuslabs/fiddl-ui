@@ -147,15 +147,23 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const userAuth = useUserAuth()
   const router = useRouter()
 
-  const availableAspectRatiosComputed = computed(() => {
-    const model = state.req.model
+  // Map each model to the aspect ratios it supports for selection
+  function supportedRatios(model: ImageModel): AspectRatio[] {
     if (model.includes("dall") || model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
     if (["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
     if (model.includes("imagen")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
     if (model.includes("recraft")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
     if (model.includes("photon")) return ["1:1", "3:4", "4:3", "9:16", "16:9", "9:21", "21:9"]
     if (model.includes("seedream")) return ["1:1", "3:4", "4:3", "16:9", "9:16", "2:3", "3:2", "21:9"]
-    return availableAspectRatios
+    if (model === "nano-banana") return [] // aspect not applicable; server ignores
+    return availableAspectRatios as unknown as AspectRatio[]
+  }
+
+  const availableAspectRatiosComputed = computed(() => {
+    // In multi-model mode (randomizer enabled), allow choosing from the major set.
+    if (state.randomizer?.enabled) return availableAspectRatios as unknown as AspectRatio[]
+    // Single-model mode: respect the selected model's capabilities
+    return supportedRatios(state.req.model)
   })
 
   const selectedModelPrice = computed(() => {
@@ -205,6 +213,40 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   // --- Randomizer helpers ---
 
   const COMMON_SAFE_RATIOS: AspectRatio[] = ["16:9", "9:16", "1:1"]
+
+  // Helpers for mapping a requested aspect ratio to the closest supported ratio per model
+  function ratioToNumber(r: AspectRatio): number {
+    const parts = String(r).split(":")
+    const wRaw = Number(parts[0])
+    const hRaw = Number(parts[1])
+    const W = Number.isFinite(wRaw) && wRaw > 0 ? wRaw : 1
+    const H = Number.isFinite(hRaw) && hRaw > 0 ? hRaw : 1
+    return W / H
+  }
+
+  function closestSupportedRatio(target: AspectRatio, options: AspectRatio[]): AspectRatio {
+    if (options.length === 0) return target
+    const t = ratioToNumber(target)
+    let best = options[0] as AspectRatio
+    let bestDiff = Math.abs(ratioToNumber(best) - t)
+    for (let i = 1; i < options.length; i++) {
+      const diff = Math.abs(ratioToNumber(options[i] as AspectRatio) - t)
+      if (diff < bestDiff) {
+        best = options[i] as AspectRatio
+        bestDiff = diff
+      }
+    }
+    return best
+  }
+
+  function finalizeAspectForModel(model: ImageModel, desired?: AspectRatio): AspectRatio | undefined {
+    if (!desired) return undefined
+    // Models which ignore aspect selection
+    if (model === "nano-banana") return undefined
+    const options = supportedRatios(model)
+    if (options.includes(desired)) return desired
+    return closestSupportedRatio(desired, options)
+  }
 
   function saveRandomizer() {
     LocalStorage.set("modelRandomizer", toObject(state.randomizer))
@@ -398,13 +440,8 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
 
     // Decide models for this creation
     const modelsForThisRun = resolveMultiModels()
-    // Use requested aspect ratio by default; only coerce when mixing models
+    // Use requested aspect ratio and coerce per-model as needed
     let aspect: AspectRatio | undefined = state.req.aspectRatio as AspectRatio | undefined
-    const mixingModels = modelsForThisRun.length > 1
-    if (mixingModels) {
-      // When generating across multiple models, restrict to common safe ratios
-      if (!aspect || !COMMON_SAFE_RATIOS.includes(aspect)) aspect = "1:1"
-    }
     // Build batch request payloads (image variant, one per model)
     const requests = modelsForThisRun.map((m) => ({
       prompt: state.req.prompt,
@@ -413,7 +450,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       seed: state.req.seed,
       model: m,
       public: state.req.public,
-      aspectRatio: m === "nano-banana" ? (undefined as any) : (aspect as any),
+      aspectRatio: finalizeAspectForModel(m, aspect) as any,
       customModelId: m === "custom" ? state.req.customModelId : undefined,
       uploadedStartImageIds: state.req.uploadedStartImageIds,
       startImageIds: state.req.startImageIds,
@@ -429,7 +466,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
           seed: state.req.seed,
           model: "custom" as ImageModel,
           public: state.req.public,
-          aspectRatio: aspect as any,
+          aspectRatio: finalizeAspectForModel("custom" as ImageModel, aspect) as any,
           customModelId: id,
           uploadedStartImageIds: state.req.uploadedStartImageIds,
           startImageIds: state.req.startImageIds,
@@ -592,6 +629,32 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       }
     },
     { deep: true },
+  )
+
+  // Keep aspect ratio sensible when toggling multi-model mode
+  watch(
+    () => state.randomizer.enabled,
+    (enabled) => {
+      const opts = availableAspectRatiosComputed.value || []
+      if (enabled) {
+        // In multi-mode ensure we have a valid selection from the major set
+        if (!state.req.aspectRatio || !opts.includes(state.req.aspectRatio as any)) {
+          ;(state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : (opts[0] as any))
+        }
+      } else {
+        // Back to single-model: coerce to the selected model's supported set
+        const single = supportedRatios(state.req.model)
+        if (state.req.model !== "nano-banana") {
+          if (!state.req.aspectRatio || !single.includes(state.req.aspectRatio as any)) {
+            ;(state.req.aspectRatio as any) = (single.includes("16:9") ? "16:9" : (single[0] as any))
+          }
+        } else {
+          // For Nano Banana keep aspect undefined
+          ;(state.req.aspectRatio as any) = undefined as any
+        }
+      }
+    },
+    { immediate: false },
   )
 
   watch(

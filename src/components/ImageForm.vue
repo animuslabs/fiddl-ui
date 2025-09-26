@@ -40,7 +40,7 @@
           .col-md-3
             p.setting-label Aspect Ratio
             q-select(
-              v-if="!isNanoBanana"
+              v-if="!isAspectControlDisabled"
               v-model="createStore.state.req.aspectRatio"
               :options="createStore.availableAspectRatios"
               style="font-size:20px;"
@@ -121,7 +121,7 @@
                         | Exclude expensive
               // Hide single-model cost when multi-select/randomizer is enabled
               .badge-sm.text-white(v-if="!createStore.state.randomizer.enabled") {{ createStore.selectedModelPrice }}
-              div
+              div(v-if="createStore.state.randomizer.enabled")
                 h4 {{ selectedChipLabels.length }}
       .row.q-mx-md
         //- Legacy custom-model card removed; chips in the selector show selections
@@ -276,7 +276,9 @@ async function startCreateKeyboard() {
   }
 }
 
-const isNanoBanana = computed(() => req.model === "nano-banana")
+// Disable aspect ratio selection only when a single model is selected and it's Nano Banana.
+// In multi-model mode we allow picking a ratio and apply per-model fallbacks.
+const isAspectControlDisabled = computed(() => req.model === "nano-banana" && !createStore.state.randomizer.enabled)
 const supportsMulti = computed(() => ["seedream4", "nano-banana", "gpt-image-1"].includes(req.model))
 const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "photon", "custom"].includes(req.model))
 const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)

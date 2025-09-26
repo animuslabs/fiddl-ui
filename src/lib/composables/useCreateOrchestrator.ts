@@ -264,11 +264,24 @@ export function useCreateOrchestrator() {
 
       if (modelParam) {
         if (activeTab.value === "image") {
+          // Apply the requested model to the image create store
           imgCreate.setReq({
             model: modelParam as any,
             customModelId: customModelIdParam,
             customModelName: customModelNameParam,
           } as Partial<CreateImageRequest>)
+
+          // If user was in multi/randomizer mode, switch to single-model mode explicitly
+          if (imgCreate.state.randomizer?.enabled) {
+            imgCreate.state.randomizer.enabled = false
+            // Persist immediately so UI reflects single-mode on arrival
+            if (typeof imgCreate.saveRandomizer === "function") imgCreate.saveRandomizer()
+          }
+
+          // Align creations filter with the explicitly selected model
+          imgCreations.dynamicModel = true
+          imgCreations.filter.model = modelParam as any
+          imgCreations.filter.customModelId = modelParam === "custom" ? customModelIdParam : undefined
         } else {
           vidCreate.setReq({
             model: modelParam as any,
@@ -277,7 +290,8 @@ export function useCreateOrchestrator() {
       }
     }
 
-    // Bind filters AFTER request is applied
+    // Bind filters AFTER request is applied. This respects explicit dynamicModel= query
+    // and otherwise uses the current dynamicModel setting we may have just adjusted above.
     bindDynamicModelAndFilters()
 
     // Kick initial load (or refresh) for the active tab

@@ -24,7 +24,8 @@ const Router = createRouter({
 // Track the most recent navigation target so we can reload to it on chunk failures
 let __pendingNavPath: string | null = null
 Router.beforeEach((to) => {
-  if (import.meta.env.CLIENT) {
+  // Use SSR flag: client when not SSR
+  if (!import.meta.env.SSR) {
     __pendingNavPath = to.fullPath
   }
   return true
@@ -49,7 +50,8 @@ function isStaleChunkError(err: unknown): boolean {
 }
 
 function forceReloadToTarget(routerTargetFallback?: string) {
-  if (!import.meta.env.CLIENT) return
+  // Only act on client; in Vite, use !SSR instead of CLIENT
+  if (import.meta.env.SSR) return
   const current = window.location.pathname + window.location.search + window.location.hash
   const target = __pendingNavPath || routerTargetFallback || current
   // Simple loop guard: only auto-reload once per 10s
@@ -77,7 +79,7 @@ Router.onError((err) => {
   console.error("[router] navigation error", err)
 })
 Router.afterEach((to) => {
-  if (import.meta.env.CLIENT) {
+  if (!import.meta.env.SSR) {
     const canonicalLink = document.getElementById("canonical-link")
     const baseUrl = window.location.origin
     if (canonicalLink) canonicalLink.setAttribute("href", `${baseUrl}${to.path}`)
@@ -87,7 +89,7 @@ Router.afterEach((to) => {
 // Track Meta Pixel page views on SPA navigations (skip initial load)
 let hasTrackedInitialPageView = false
 Router.afterEach(() => {
-  if (import.meta.env.CLIENT) {
+  if (!import.meta.env.SSR) {
     if (hasTrackedInitialPageView) {
       const fbq = (window as any).fbq
       if (typeof fbq === "function") fbq("track", "PageView")
@@ -98,7 +100,7 @@ Router.afterEach(() => {
 })
 
 // Preload other route chunks when idle after initial load
-if (import.meta.env.CLIENT) {
+if (!import.meta.env.SSR) {
   setupRoutePrefetch(Router, {
     // Skip heavy/rare pages by default; adjust as needed
     excludeNames: ["magicMirror", "magicMirrorBanana"],
