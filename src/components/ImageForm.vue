@@ -80,26 +80,42 @@
               @keydown.space.prevent="openModelSelectDialog"
               dense
             )
+              template(#selected)
+                // Custom selected content: single name or scrollable chips for multi/random
+                template(v-if="!createStore.state.randomizer.enabled")
+                  span {{ modelDisplayText }}
+                template(v-else-if="createStore.state.randomizer.mode === 'manual'")
+                  .row.items-start.no-wrap
+                    .chip-box
+                      q-chip(
+                        v-for="chip in selectedChipLabels"
+                        :key="chip.key"
+                        dense
+                        color="grey-9"
+                        text-color="white"
+                        @click.stop
+                        @mousedown.stop
+                      )
+                        span {{ chip.label }}
+                        q-icon(name="close" size="12px" class="q-ml-xs cursor-pointer" @click.stop.prevent="removeSelectedChip(chip)")
+                    q-badge(v-if="selectedChipLabels.length" color="grey-8" class="q-ml-sm self-start") {{ selectedChipLabels.length }}
+                template(v-else)
+                  .row.items-start.no-wrap
+                    .chip-box
+                      q-chip(dense color="grey-9" text-color="white" @click.stop @mousedown.stop)
+                        | Random ({{ createStore.state.randomizer.picksCount }})
+                      q-chip(dense color="grey-9" text-color="white" @click.stop @mousedown.stop)
+                        | Budget {{ createStore.state.randomizer.maxBudget }}
+                      q-chip(v-if="createStore.state.randomizer.excludeExpensive" dense color="grey-9" text-color="white" @click.stop @mousedown.stop)
+                        | Exclude expensive
               // Hide single-model cost when multi-select/randomizer is enabled
               .badge-sm.text-white(v-if="!createStore.state.randomizer.enabled") {{ createStore.selectedModelPrice }}
             // Custom model name shown below selector
       .row.q-mx-md
-        .custom-model-card.row.items-center.no-wrap.q-mt-sm.full-width(v-if="req.model === 'custom' && !createStore.state.randomizer.enabled")
-          q-icon(name="category" size="16px" class="q-mr-sm")
-          div.custom-model-name {{ req.customModelName || 'Pick a custom model' }}
-          q-space
-          q-btn(flat round dense icon="list" no-caps label="Change" @click="showModelPicker = true")
-          q-tooltip(v-if="req.customModelName") {{ req.customModelName }}
+        //- Legacy custom-model card removed; chips in the selector show selections
       .row.q-col-gutter-md.full-width.items-start.q-pt-sm
         .col-12
-          // Model pickers: public vs private
-          .row.q-mt-xs.q-gutter-sm
-            .col-auto
-              q-btn.q-mr-sm(@click="$router.push({ name: 'models' ,params:{filterTag:'Image'}})" no-caps outline color="primary" icon="list" label="Public Models")
-            .col-auto
-              q-btn(@click="showModelPicker = true" no-caps outline color="primary" icon="category" label="Private Models")
-            .col-auto
-              q-btn(no-caps outline color="primary" icon="library_add_check" label="Multi-select Models" @click="openManualMultiSelect")
+          // Model selection is unified in the selector above; legacy buttons removed
           // Randomizer toggle and config
           //- .row.items-center.q-mt-sm.no-wrap
             q-toggle.q-mr-sm(
@@ -146,15 +162,7 @@
       caption="Public creations appear in the community feed."
       kind="image"
       @back="$emit('back')")
-  q-dialog(v-model="showModelPicker")
-    q-card
-      .q-ma-md
-        .row
-          h5.q-mb-sm Select a custom model
-          .col-grow
-          q-btn(icon="add" label="create new model" flat color="primary" @click="$router.push({name:'forge', params:{mode:'create'}})")
-        q-separator(color="primary").q-mb-lg
-        CustomModelsList(@modelClicked="setCustomModel" trainedOnly)
+  //- Legacy custom models dialog removed (unified picker handles this)
 
   q-dialog(v-model="templatesDialogOpen" :maximized="$q.screen.lt.md")
     PromptTemplatesDialog(
@@ -186,21 +194,16 @@
           p You need {{ missingPoints }} more points to create these images. Purchase a points package below. Your balance updates automatically after payment.
         QuickBuyPointsDialog(@paymentComplete="onQuickBuyComplete")
 
-  // Model randomizer config
-  q-dialog(v-model="randomizerDialogOpen" :maximized="$q.screen.lt.md")
-    ModelRandomizerDialog(@close="randomizerDialogOpen = false")
-
-  // Base model select dialog
-  q-dialog(v-model="baseModelDialogOpen" :maximized="$q.screen.lt.md")
-    ModelSelectDialog(@close="baseModelDialogOpen = false" @select="onModelSelectedFromDialog")
+  // Unified model picker
+  q-dialog(v-model="unifiedDialogOpen" :maximized="$q.screen.lt.md")
+    UnifiedModelSelectDialog(@close="unifiedDialogOpen = false")
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from "vue"
+import { ref, computed, watch, onMounted } from "vue"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
-import CustomModelsList from "./CustomModelsList.vue"
-import { type CustomModel } from "lib/api"
+// import CustomModelsList from "./CustomModelsList.vue" // legacy
 import { useQuasar } from "quasar"
 import { prices } from "stores/pricesStore"
 import { useUserAuth } from "src/stores/userAuth"
@@ -210,8 +213,7 @@ import { s3Img } from "lib/netlifyImg"
 import { compressedUrl } from "lib/imageCdn"
 import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
-import ModelRandomizerDialog from "components/dialogs/ModelRandomizerDialog.vue"
-import ModelSelectDialog from "components/dialogs/ModelSelectDialog.vue"
+import UnifiedModelSelectDialog from "components/dialogs/UnifiedModelSelectDialog.vue"
 import * as modelsStore from "stores/modelsStore"
 import tma from "src/lib/tmaAnalytics"
 import StartImageThumbs from "components/StartImageThumbs.vue"
@@ -228,20 +230,29 @@ const req = createStore.state.req
 const loading = createStore.state.loading
 
 const invalidManualMulti = computed(() => {
-  const rnd = createStore.state.randomizer
-  return !!(rnd?.enabled && rnd.mode === "manual" && (!rnd.manualSelection || rnd.manualSelection.length === 0))
+  const rnd: any = createStore.state.randomizer
+  const baseCount = (rnd?.manualSelection || []).length
+  const customCount = (rnd?.manualCustomIds || []).length
+  return !!(rnd?.enabled && rnd.mode === "manual" && baseCount + customCount === 0)
 })
-const createDisabled = computed(() => createStore.anyLoading || (req.prompt?.length || 0) < 5 || invalidManualMulti.value)
+// Keep create buttons enabled even when multi-select has no picks; we'll block on click with a message.
+const createDisabled = computed(() => createStore.anyLoading || (req.prompt?.length || 0) < 5)
 const showBackBtnComputed = computed(() => props.showBackBtn ?? $q.screen.lt.md)
 
-const showModelPicker = ref(false)
+// const showModelPicker = ref(false) // legacy
 const templatesDialogOpen = ref(false)
 const showImagesDialog = ref(false)
 const quickBuyDialogOpen = ref(false)
 const actionCooldown = ref(false)
-const randomizerDialogOpen = ref(false)
-const baseModelDialogOpen = ref(false)
+const unifiedDialogOpen = ref(false)
 const modelSelectRef = ref<any>(null)
+
+// Preload models so the select dialog opens instantly
+onMounted(() => {
+  if (!modelsStore.models.base.length && !modelsStore.loading.base) {
+    void modelsStore.loadAllModels()
+  }
+})
 
 async function startCreateKeyboard() {
   const started = await startCreateImage()
@@ -283,15 +294,7 @@ function openTemplates() {
   templatesDialogOpen.value = true
 }
 
-function openManualMultiSelect() {
-  // Ensure randomizer is enabled, but do not force mode change if random is already active
-  createStore.state.randomizer.enabled = true
-  if (createStore.state.randomizer.mode !== "random") {
-    createStore.state.randomizer.mode = "manual" as any
-  }
-  createStore.saveRandomizer()
-  randomizerDialogOpen.value = true
-}
+// Multi-select is handled inside UnifiedModelSelectDialog
 
 function applyResolvedPrompt(payload: { prompt: string; negativePrompt?: string }) {
   req.prompt = payload.prompt || ""
@@ -314,7 +317,7 @@ function onModelSelected() {
 
 function onModelSelectedFromDialog(slug: string) {
   req.model = slug as any
-  baseModelDialogOpen.value = false
+  unifiedDialogOpen.value = false
   onModelSelected()
 }
 
@@ -323,7 +326,7 @@ function openModelSelectDialog() {
   try {
     modelSelectRef.value?.blur?.()
   } catch {}
-  baseModelDialogOpen.value = true
+  unifiedDialogOpen.value = true
 }
 
 const modelDisplayText = computed(() => {
@@ -340,11 +343,13 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
   if (createDisabled.value) return false
   req.public = isPublic
   // Guard: manual multi-select enabled but no models picked
-  const rnd = createStore.state.randomizer
-  if (rnd?.enabled && rnd.mode === "manual" && (!rnd.manualSelection || rnd.manualSelection.length === 0)) {
+  const rnd: any = createStore.state.randomizer
+  const baseCount = (rnd?.manualSelection || []).length
+  const customCount = (rnd?.manualCustomIds || []).length
+  if (rnd?.enabled && rnd.mode === "manual" && baseCount + customCount === 0) {
     $q.notify({ type: "negative", message: "Pick at least one model in Multi-select mode." })
-    // Open the randomizer dialog to prompt selection
-    randomizerDialogOpen.value = true
+    // Open unified picker to prompt selection
+    unifiedDialogOpen.value = true
     return false
   }
   const targetCost = isPublic ? publicCostToShow.value : privateCostToShow.value
@@ -355,7 +360,7 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
   }
   if (req.model === "custom" && !req.customModelId) {
     $q.notify({ type: "warning", message: "Please select a custom model before creating." })
-    showModelPicker.value = true
+    unifiedDialogOpen.value = true
     return false
   }
   // When creating in random/multi mode, switch creations filter to show all
@@ -385,27 +390,7 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
   return true
 }
 const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))
-function setCustomModel(model: CustomModel) {
-  showModelPicker.value = false
-  req.model = "custom"
-  req.customModelId = model.id
-  req.customModelName = model.name
-  createStore.state.customModel = model
-  // Selecting a custom model should exit random/multi mode
-  if (createStore.state.randomizer.enabled) {
-    createStore.state.randomizer.enabled = false
-    createStore.saveRandomizer()
-  }
-  // Ensure creations view filters to this custom model
-  // Important: set filter.model/customModelId BEFORE loading, so the query includes the custom model
-  creationsStore.dynamicModel = true
-  creationsStore.filter.model = "custom"
-  creationsStore.filter.customModelId = model.id
-  void creationsStore.setCustomModelId(model.id, useUserAuth().userId || undefined)
-  // this.activeCreationsStore.searchCreations(this.$userAuth.userId)
-
-  // creationsStore.searchCreations()
-}
+// function setCustomModel(model: CustomModel) { /* legacy */ }
 
 function openImagesDialog() {
   if (!supportsInputImages.value) return
@@ -547,9 +532,44 @@ const modelDisplayValue = computed<string | null>(() => {
     const n = Math.max(1, Number(rnd.picksCount) || 1)
     return `Random (${n})`
   }
-  const count = (rnd.manualSelection || []).length
+  const count = (rnd.manualSelection || []).length + ((rnd as any).manualCustomIds?.length || 0)
   return `Multiple (${count})`
 })
+
+// Chip display helpers when multi-selected
+const selectedChipLabels = computed(() => {
+  const rnd = createStore.state.randomizer
+  if (!rnd.enabled || rnd.mode !== "manual") return [] as { key: string; label: string }[]
+  const list: { key: string; label: string }[] = []
+  const base = rnd.manualSelection || []
+  for (const slug of base) {
+    const m = (modelsStore.models.base || []).find((x) => x.slug === slug)
+    list.push({ key: `b-${slug}`, label: m?.name || String(slug) })
+  }
+  const customIds: string[] = (rnd as any).manualCustomIds || []
+  for (const id of customIds) {
+    const m = (modelsStore.models.userModels || []).find((x) => x.id === id) || (modelsStore.models.custom || []).find((x) => x.id === id)
+    list.push({ key: `c-${id}`, label: m ? `custom: ${m.name}` : "custom model" })
+  }
+  return list
+})
+function removeSelectedChip(chip: { key: string; label: string }) {
+  const key = chip.key || ''
+  const rnd: any = createStore.state.randomizer
+  if (!rnd?.enabled || rnd.mode !== 'manual') return
+  if (key.startsWith('b-')) {
+    const slug = key.slice(2)
+    const list: string[] = rnd.manualSelection || []
+    const idx = list.indexOf(slug)
+    if (idx >= 0) list.splice(idx, 1)
+  } else if (key.startsWith('c-')) {
+    const id = key.slice(2)
+    const list: string[] = rnd.manualCustomIds || []
+    const idx = list.indexOf(id)
+    if (idx >= 0) list.splice(idx, 1)
+  }
+  createStore.saveRandomizer()
+}
 
 function onQuickBuyComplete() {
   quickBuyDialogOpen.value = false
@@ -624,5 +644,14 @@ textarea::-webkit-resizer {
 .model-select:not(.q-field--disabled)::v-deep(.q-field__append),
 .model-select:not(.q-field--disabled)::v-deep(.q-field__label) {
   cursor: pointer !important;
+}
+
+/* Chips box inside the model select */
+.chip-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 100px;
+  overflow-y: auto;
 }
 </style>

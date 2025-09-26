@@ -69,7 +69,9 @@ async function reload() {
 }
 
 onMounted(() => {
-  void reload()
+  if ((modelsStore.models.base || []).length === 0) {
+    void reload()
+  }
 })
 </script>
 

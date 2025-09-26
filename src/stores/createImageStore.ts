@@ -7,6 +7,7 @@ import { aspectRatios, imageModels, type AspectRatio, type ImageModel } from "li
 import { toObject, catchErr } from "lib/util"
 import { useCreateSession } from "stores/createSessionStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
+import * as modelsStore from "src/stores/modelsStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { createImprovePrompt, createRandomPrompt, modelsGetCustomModel, createQueueAsyncBatch, createBatchStatus, creationsGetImageRequest } from "lib/orval"
 import umami from "lib/umami"
@@ -39,6 +40,8 @@ type RandomizerState = {
   maxBudget: number
   excludeExpensive: boolean
   manualSelection: ImageModel[]
+  // New: support selecting multiple custom models by id
+  manualCustomIds: string[]
 }
 
 const availableAspectRatios = Object.freeze(aspectRatios)
@@ -74,6 +77,7 @@ function initState() {
         maxBudget: saved?.maxBudget ?? 30, // default to 30 points budget
         excludeExpensive: saved?.excludeExpensive ?? true,
         manualSelection: saved?.manualSelection ?? [],
+        manualCustomIds: (saved as any)?.manualCustomIds ?? [],
       }
     })(),
   }
@@ -212,8 +216,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     if (!state.randomizer.enabled) return [state.req.model]
     if (state.randomizer.mode === "manual") {
       const manual = state.randomizer.manualSelection.filter((m) => m !== "custom") as ImageModel[]
-      // In manual mode, use exactly the selected models (picks/budget do not apply)
-      return manual.length > 0 ? manual : [state.req.model]
+      // In manual mode, use exactly the selected base models. It's valid for this to be empty
+      // when only custom models are chosen; callers will handle adding custom requests.
+      return manual
     }
     // Random mode
     const candidates = candidateModels()
@@ -223,7 +228,33 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const publicTotalCostMulti = computed(() => {
     if (!state.randomizer.enabled) return publicTotalCost.value
     const models = resolveMultiModels()
-    const sum = models.reduce((acc, m) => acc + priceForModel(m), 0)
+    let sum = models.reduce((acc, m) => acc + priceForModel(m), 0)
+    // Add cost for any selected custom models in manual mode
+    const customIds = state.randomizer.manualCustomIds || []
+    if (customIds.length > 0) {
+      // Price custom models using their base model type plus custom surcharge
+      const baseCustomCharge = prices.forge.customModelCharge || 0
+      for (const id of customIds) {
+        // Try to infer modelType from cached stores if available
+        let baseModel: ImageModel = "flux-dev"
+        const found = (modelsStore.models.userModels || []).find((m: any) => m.id === id) ||
+          (modelsStore.models.custom || []).find((m: any) => m.id === id)
+        if (found?.modelType) {
+          switch (String(found.modelType)) {
+            case "fluxPro":
+              baseModel = "flux-pro" as ImageModel
+              break
+            case "fluxProUltra":
+              baseModel = "flux-pro-ultra" as ImageModel
+              break
+            case "fluxDev":
+            default:
+              baseModel = "flux-dev" as ImageModel
+          }
+        }
+        sum += priceForModel(baseModel) + baseCustomCharge
+      }
+    }
     return sum
   })
 
@@ -330,6 +361,24 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       uploadedStartImageIds: state.req.uploadedStartImageIds,
       startImageIds: state.req.startImageIds,
     }))
+
+    // Also queue any explicitly selected custom models when in manual multi mode
+    if (state.randomizer.enabled && state.randomizer.mode === "manual" && (state.randomizer.manualCustomIds?.length || 0) > 0) {
+      for (const id of state.randomizer.manualCustomIds) {
+        requests.push({
+          prompt: state.req.prompt,
+          negativePrompt: undefined as string | undefined,
+          quantity: 1,
+          seed: state.req.seed,
+          model: "custom" as ImageModel,
+          public: state.req.public,
+          aspectRatio: aspect as any,
+          customModelId: id,
+          uploadedStartImageIds: state.req.uploadedStartImageIds,
+          startImageIds: state.req.startImageIds,
+        })
+      }
+    }
 
     let batchId: string | null = null
     try {
