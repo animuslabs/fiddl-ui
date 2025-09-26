@@ -47,14 +47,52 @@ type RandomizerState = {
 const availableAspectRatios = Object.freeze(aspectRatios)
 
 function initState() {
-  const loadedRequest = LocalStorage.getItem("req") as CreateImageRequestWithCustomModel | null
+  // Safely load and sanitize saved request
+  const loadedRequest = ((): CreateImageRequestWithCustomModel | null => {
+    try {
+      const raw = LocalStorage.getItem("req") as any
+      if (!raw || typeof raw !== "object") return null
+      // Validate model against known list
+      const validModels = new Set(imageModels as unknown as string[])
+      const model = typeof raw.model === "string" && validModels.has(raw.model) ? (raw.model as ImageModel) : (defaultImageRequest.model as ImageModel)
+      // Aspect ratio: ensure string and fallback to a common safe value; model-specific coercion handled by watcher later
+      const aspectRatio = typeof raw.aspectRatio === "string" ? (raw.aspectRatio as any) : (defaultImageRequest.aspectRatio as any)
+      const prompt = typeof raw.prompt === "string" ? raw.prompt : ""
+      const pub = typeof raw.public === "boolean" ? raw.public : true
+      const seed = typeof raw.seed === "number" && Number.isFinite(raw.seed) ? (raw.seed as number) : undefined
+      const customModelId = typeof raw.customModelId === "string" && raw.customModelId.length > 0 ? (raw.customModelId as string) : undefined
+      const customModelName = typeof raw.customModelName === "string" && raw.customModelName.length > 0 ? (raw.customModelName as string) : undefined
+      const uploadedStartImageIds = Array.isArray(raw.uploadedStartImageIds)
+        ? (raw.uploadedStartImageIds as any[]).filter((x) => typeof x === "string")
+        : []
+      const startImageIds = Array.isArray(raw.startImageIds) ? (raw.startImageIds as any[]).filter((x) => typeof x === "string") : []
+      return {
+        prompt,
+        model,
+        aspectRatio,
+        public: pub,
+        quantity: 1,
+        seed,
+        customModelId,
+        customModelName,
+        uploadedStartImageIds,
+        startImageIds,
+      }
+    } catch {
+      return null
+    }
+  })()
+
+  // Best-effort preload of saved custom model (ignore failures)
   if (loadedRequest?.customModelId) {
-    void modelsGetCustomModel({ id: loadedRequest.customModelId }).then((response) => {
-      const store = useCreateImageStore()
-      store.state.customModel = response.data
-      store.state.req.customModelName = response.data.name
-      store.state.req.customModelId = response.data.id
-    })
+    void modelsGetCustomModel({ id: loadedRequest.customModelId })
+      .then((response) => {
+        const store = useCreateImageStore()
+        store.state.customModel = response.data
+        store.state.req.customModelName = response.data.name
+        store.state.req.customModelId = response.data.id
+      })
+      .catch(() => void 0)
   }
 
   const { anyLoading, loading } = useLoadingStates(["new", "randomize", "improve", "create"])
@@ -69,15 +107,34 @@ function initState() {
     pendingPlaceholders: [] as string[],
     // Model randomizer state (persisted separately)
     randomizer: ((): RandomizerState => {
-      const saved = LocalStorage.getItem("modelRandomizer") as Partial<RandomizerState> | null
-      return {
-        enabled: saved?.enabled ?? true,
-        mode: saved?.mode ?? "random",
-        picksCount: saved?.picksCount ?? 3, // default to 3 images
-        maxBudget: saved?.maxBudget ?? 30, // default to 30 points budget
-        excludeExpensive: saved?.excludeExpensive ?? true,
-        manualSelection: saved?.manualSelection ?? [],
-        manualCustomIds: (saved as any)?.manualCustomIds ?? [],
+      // Safely load and validate randomizer settings
+      try {
+        const saved = (LocalStorage.getItem("modelRandomizer") as Partial<RandomizerState> | null) || {}
+        const validModels = new Set(imageModels as unknown as string[])
+        const enabled = typeof saved?.enabled === "boolean" ? saved.enabled : true
+        const mode: RandomizerState["mode"] = saved?.mode === "manual" || saved?.mode === "random" ? saved.mode : "random"
+        let picksCount = Number(saved?.picksCount)
+        if (!Number.isFinite(picksCount) || picksCount < 1) picksCount = 3
+        let maxBudget = Number(saved?.maxBudget)
+        if (!Number.isFinite(maxBudget) || maxBudget < 1) maxBudget = 30
+        const excludeExpensive = typeof saved?.excludeExpensive === "boolean" ? saved.excludeExpensive : true
+        const manualSelection = Array.isArray(saved?.manualSelection)
+          ? (saved!.manualSelection as any[]).filter((m) => typeof m === "string" && m !== "custom" && validModels.has(m))
+          : []
+        const manualCustomIds = Array.isArray((saved as any)?.manualCustomIds)
+          ? ((saved as any).manualCustomIds as any[]).filter((x) => typeof x === "string")
+          : []
+        return { enabled, mode, picksCount, maxBudget, excludeExpensive, manualSelection: manualSelection as ImageModel[], manualCustomIds }
+      } catch {
+        return {
+          enabled: true,
+          mode: "random",
+          picksCount: 3,
+          maxBudget: 30,
+          excludeExpensive: true,
+          manualSelection: [],
+          manualCustomIds: [],
+        }
       }
     })(),
   }
@@ -510,6 +567,32 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       else state[key] = fresh[key]
     }
   }
+
+  // Persist request changes automatically with safe serialization
+  watch(
+    () => state.req,
+    () => {
+      try {
+        LocalStorage.set("req", toObject(state.req))
+      } catch {
+        /* ignore persistence errors */
+      }
+    },
+    { deep: true },
+  )
+
+  // Persist randomizer changes automatically (in addition to explicit saves)
+  watch(
+    () => state.randomizer,
+    () => {
+      try {
+        LocalStorage.set("modelRandomizer", toObject(state.randomizer))
+      } catch {
+        /* ignore persistence errors */
+      }
+    },
+    { deep: true },
+  )
 
   watch(
     () => state.req.model,

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
-import { Dialog } from "quasar"
+import { Dialog, Loading } from "quasar"
 // Import removed: unified flow uses route-based orchestrator to open quick-edit
 // no need to pre-upload input image; we operate by id now
 import { useRouter } from "vue-router"
@@ -372,7 +372,11 @@ async function addAsInput(imageId: string) {
     addInputLoading.value[imageId] = true
     // Route-based unified flow: let the Create page orchestrator
     // open the same InputImageQuickEdit component with default model.
-    void router.push({ name: "create", params: { activeTab: "image" }, query: { inputImageId: imageId } })
+    // Suppress the create panel on mobile for this navigation; the quick-edit dialog will guide the user.
+    try {
+      if ($q.screen.lt.md) Loading.show({ message: "Opening editor…" })
+    } catch {}
+    void router.push({ name: "create", params: { activeTab: "image" }, query: { inputImageId: imageId, noCreateModal: "1" } })
   } catch (e) {
     console.error(e)
   } finally {
@@ -952,18 +956,6 @@ function showVideoOverlay(id: string): boolean {
           v-if="isVisible(m.id) && !shouldMaskNsfw(m) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
           // Add as input (images only)
-          q-btn(
-            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            icon="add_photo_alternate"
-            @click.stop="addAsInput(m.id)"
-            :loading="!!addInputLoading[m.id]"
-            :disable="addInputLoading[m.id] === true"
-          )
           // Delete
           q-btn(
             v-if="canDelete(m)"
@@ -976,6 +968,18 @@ function showVideoOverlay(id: string): boolean {
             @click.stop="handleDeleteClick(m)"
             :loading="!!deleteLoading[m.id]"
             :disable="deleteLoading[m.id] === true"
+          )
+          q-btn(
+            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            icon="add_photo_alternate"
+            @click.stop="addAsInput(m.id)"
+            :loading="!!addInputLoading[m.id]"
+            :disable="addInputLoading[m.id] === true"
           )
           // Visibility toggle
           q-btn(
@@ -997,24 +1001,28 @@ function showVideoOverlay(id: string): boolean {
         // Popularity overlay controls
         .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row
-            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
-            span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
-            q-btn(
-              :size="popIconSize"
-              flat
-              dense
-              round
-              icon="chat_bubble"
-              color="white"
-              @click.stop="openCommentsFromOverlay(m)"
-            )
-            span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
-            .upvote-burst-wrap
-              q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
-              transition(name="burst")
-                .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-            span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
-            q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
+            .pop-item
+              q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
+              span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            .pop-item
+              q-btn(
+                :size="popIconSize"
+                flat
+                dense
+                round
+                icon="chat_bubble"
+                color="white"
+                @click.stop="openCommentsFromOverlay(m)"
+              )
+              span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+            .pop-item
+              .upvote-burst-wrap
+                q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
+                transition(name="burst")
+                  .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+              span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+            .pop-item
+              q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
         // Per-item actions slot (optional)
         slot(name="actions" :media="m" :index="index")
           // default empty
@@ -1099,24 +1107,28 @@ function showVideoOverlay(id: string): boolean {
         // Popularity overlay controls
         .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row
-            q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
-            span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
-            q-btn(
-              :size="popIconSize"
-              flat
-              dense
-              round
-              icon="chat_bubble"
-              color="white"
-              @click.stop="openCommentsFromOverlay(m)"
-            )
-            span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
-            .upvote-burst-wrap
-              q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
-              transition(name="burst")
-                .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-            span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
-            q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
+            .pop-item
+              q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
+              span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+            .pop-item
+              q-btn(
+                :size="popIconSize"
+                flat
+                dense
+                round
+                icon="chat_bubble"
+                color="white"
+                @click.stop="openCommentsFromOverlay(m)"
+              )
+              span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+            .pop-item
+              .upvote-burst-wrap
+                q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+                transition(name="burst")
+                  .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+              span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+            .pop-item
+              q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
         // Per-item actions slot (optional)
         //- slot(name="actions" :media="m" :index="index")
           // default empty
@@ -1261,6 +1273,11 @@ function showVideoOverlay(id: string): boolean {
   align-items: center;
   gap: 6px;
 }
+.popularity-overlay .pop-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .popularity-overlay .count {
   font-size: 12px;
   font-weight: 600;
@@ -1370,12 +1387,20 @@ function showVideoOverlay(id: string): boolean {
 @media (max-width: 600px) {
   .popularity-overlay {
     padding: 2px 4px;
-    gap: 4px;
-    row-gap: 2px;
+    gap: 6px;
+    row-gap: 0;
     max-width: calc(100% - 8px);
   }
+  .popularity-overlay .pop-item {
+    flex-direction: column-reverse; /* show count above icon */
+    align-items: center;
+    gap: 2px;
+  }
   .popularity-overlay .count {
-    display: none;
+    display: block;
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.9;
   }
   .popularity-overlay .q-btn {
     min-width: 0;

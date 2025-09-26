@@ -1,7 +1,7 @@
 // lib/composables/useCreateOrchestrator.ts
 import { computed, onMounted, watch, nextTick } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import { Dialog, useQuasar } from "quasar"
+import { Dialog, useQuasar, Loading } from "quasar"
 import { useCreateImageStore, type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
@@ -91,7 +91,9 @@ export function useCreateOrchestrator() {
     else vidCreate.setReq(req as Partial<CreateVideoRequest>)
 
     // If already on the Create page on mobile, ensure the create card opens
-    if ($q.screen.lt.md) ctx.state.createMode = true
+    // unless explicitly suppressed via ?noCreateModal
+    const suppressCreateModal = typeof route.query.noCreateModal !== "undefined"
+    if ($q.screen.lt.md && !suppressCreateModal) ctx.state.createMode = true
 
     Dialog.create({
       title: "Image Parameters Applied",
@@ -149,17 +151,25 @@ export function useCreateOrchestrator() {
     imgCreate.setReq(req)
 
     // If already on the Create page on mobile, ensure the create card opens
-    if ($q.screen.lt.md) ctx.state.createMode = true
+    // unless explicitly suppressed via ?noCreateModal
+    const suppressCreateModal = typeof route.query.noCreateModal !== "undefined"
+    if ($q.screen.lt.md && !suppressCreateModal) ctx.state.createMode = true
 
     await nextTick()
+    // Show a temporary fullscreen loading overlay during the brief navigation
+    // until the quick-edit dialog is displayed, to avoid jarring transitions.
+    if ($q.screen.lt.md) Loading.show({ message: "Opening editor…" })
     // In some navigations from other pages, immediate dialog creation
     // can be interrupted by route transition/overlay teardown.
     // Defer slightly to ensure the page is fully settled.
     window.setTimeout(() => {
-      Dialog.create({
+      const dlg = Dialog.create({
         component: InputImageQuickEdit,
         componentProps: { imageId: inputImageId },
-      }).onDismiss(async () => {
+      })
+      // Hide the overlay once the dialog has been created.
+      try { if ($q.screen.lt.md) Loading.hide() } catch {}
+      dlg.onDismiss(async () => {
         void (async () => {
           const q = { ...route.query }
           delete q.inputImageId

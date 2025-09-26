@@ -14,49 +14,57 @@ q-dialog(ref="dialogRef" @hide="onDialogHide" :maximized="$q.screen.lt.md")
         )
       // Other images already included in this request (exclude current)
       div(v-if="otherItems.length" class="q-mt-md")
-        .text-caption.text-grey-5.q-mb-xs Other images in this request (tap x to remove):
+        .text-caption.text-grey-5.q-mb-xs.q-mb-md Other images in this request (tap x to remove):
         StartImageThumbs(:items="otherItems" :size="$q.screen.lt.md ? 56 : 64" :gap="8" @remove="removeOther")
     q-card-section
-      q-input(v-model="notes" type="textarea" autogrow filled color="primary" :counter="160" :maxlength="160" placeholder="e.g., make it brighter, remove the background, add a sunset sky")
+      q-input(v-model="notes" type="textarea" autogrow filled color="primary" :maxlength="160" placeholder="e.g., make it brighter, remove the background, add a sunset sky")
     // Quick model select (only models that support input images)
     q-card-section
       p.setting-label Model
       q-select(
         v-model="selectedModel"
-        :options="quickModels"
+        :options="quickOptions"
         option-label="label"
         option-value="slug"
         emit-value
         map-options
-        dense
-        outlined
+        filled
         color="primary"
       )
+        template(#option="{ itemProps, opt }")
+          q-item(v-bind="itemProps")
+            q-item-section
+              div {{ opt.label }}
+            q-item-section(side)
+              .badge-sm {{ opt.price }}
       .text-caption.text-grey-5.q-mt-xs(v-if="!supportsMulti") Selected model only supports a single input image.
-    q-separator(color="grey-9")
-    q-card-actions(align="right" class="actions")
-      q-btn(
-        unelevated
-        color="primary"
-        :loading="creating"
-        :disable="creating"
-        :dense="$q.screen.lt.md"
-        :size="$q.screen.lt.md ? 'sm' : 'md'"
-        label="Create Public"
-        @click="startCreate(true)"
-      )
-      q-btn(
-        flat
-        color="secondary"
-        :loading="creating"
-        :disable="creating"
-        :dense="$q.screen.lt.md"
-        :size="$q.screen.lt.md ? 'sm' : 'md'"
-        label="Create Private"
-        @click="startCreate(false)"
-      )
-      q-space
-      q-btn(flat label="Advanced" color="secondary" @click="onAdvanced" :dense="$q.screen.lt.md" :size="$q.screen.lt.md ? 'sm' : 'md'")
+    .bg-grey-10(style="position:sticky; bottom:0;")
+      q-separator(color="grey-9")
+      q-card-actions(class="actions")
+        q-btn(flat label="Add Only" color="white" @click="onAdvanced" :dense="$q.screen.lt.md" :size="$q.screen.lt.md ? 'sm' : 'md'")
+        q-space
+        q-btn(
+          flat
+          color="grey-4"
+          :loading="creating"
+          :disable="creating"
+          :dense="$q.screen.lt.md"
+          label="Create Private"
+          @click="startCreate(false)"
+        )
+          .badge-sm {{ store.privateTotalCost }}
+        q-btn(
+          unelevated
+          color="primary"
+          :loading="creating"
+          :disable="creating"
+          :dense="$q.screen.lt.md"
+          label="Create Public"
+          @click="startCreate(true)"
+        ).q-mr-md
+          .badge-sm {{ store.publicTotalCost }}
+
+
 </template>
 
 <script lang="ts" setup>
@@ -65,8 +73,10 @@ import { useRouter } from "vue-router"
 import { useDialogPluginComponent } from "quasar"
 import { compressedUrl } from "lib/imageCdn"
 import { useCreateImageStore } from "src/stores/createImageStore"
+import { useCreateContextStore } from "src/stores/createContextStore"
 import { toCreatePage } from "lib/routeHelpers"
 import StartImageThumbs from "components/StartImageThumbs.vue"
+import { prices } from "stores/pricesStore"
 
 const props = defineProps<{ imageId: string }>()
 defineEmits([...useDialogPluginComponent.emits])
@@ -77,6 +87,7 @@ const notesTrimmed = computed(() => notes.value.trim())
 const creating = ref(false)
 const router = useRouter()
 const store = useCreateImageStore()
+const createCtx = useCreateContextStore()
 
 type StartImageItem = { id: string; source: "uploaded" | "existing" }
 
@@ -90,6 +101,12 @@ const quickModels = [
   { slug: "photon", label: "Photon", multi: false },
 ]
 const quickModelSlugs = new Set(quickModels.map((m) => m.slug))
+const quickOptions = computed(() =>
+  quickModels.map((m) => ({
+    ...m,
+    price: prices.image.model[m.slug as keyof typeof prices.image.model] ?? 10,
+  })),
+)
 const selectedModel = computed<string>({
   get() {
     return store.state.req.model as string
@@ -164,6 +181,10 @@ async function startCreate(isPublic: boolean) {
   const text = notesTrimmed.value
   if (text.length > 0) store.setReq({ prompt: text })
   // Set public/private and start creation
+  // Ensure the Create card is closed while we navigate and wait for results
+  try {
+    createCtx.state.createMode = false
+  } catch {}
   creating.value = true
   try {
     store.state.req.public = isPublic

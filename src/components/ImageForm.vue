@@ -47,6 +47,18 @@
               :disable="createStore.anyLoading"
               dense
             )
+              template(#option="{ itemProps, opt, selected }")
+                q-item(v-bind="itemProps")
+                  q-item-section(avatar)
+                    .ar-preview
+                      .ar-box(:style="aspectBoxStyle(String(opt))")
+                  q-item-section
+                    div {{ opt }}
+              template(#selected)
+                .row.items-center.no-wrap
+                  .ar-preview.q-mr-sm
+                    .ar-box(:style="aspectBoxStyle(String(createStore.state.req.aspectRatio || '1:1'))")
+                  span {{ createStore.state.req.aspectRatio }}
             q-badge.q-mt-xs(v-else color="grey-7" label="N/A")
           .col-12.col-md-3(v-if="req.seed != undefined")
             p.setting-label Seed
@@ -576,6 +588,24 @@ function onQuickBuyComplete() {
   void useUserAuth().loadUserData()
   $q.notify({ color: "positive", message: "Points added. You can create now." })
 }
+
+// ----- aspect ratio preview helpers -----
+function parseAspect(r: string | undefined | null): { w: number; h: number } {
+  if (!r) return { w: 1, h: 1 }
+  const parts = String(r).split(":").map((n) => Number(n))
+  const w = parts[0] && isFinite(parts[0]) ? parts[0] : 1
+  const h = parts[1] && isFinite(parts[1]) ? parts[1] : 1
+  return { w, h }
+}
+function aspectBoxStyle(r: string): Record<string, string> {
+  const boxW = 34
+  const boxH = 22
+  const { w, h } = parseAspect(r)
+  const scale = Math.min(boxW / Math.max(w, 1), boxH / Math.max(h, 1))
+  const innerW = Math.max(6, Math.round(w * scale))
+  const innerH = Math.max(6, Math.round(h * scale))
+  return { width: `${innerW}px`, height: `${innerH}px` }
+}
 </script>
 
 <style scoped>
@@ -653,5 +683,22 @@ textarea::-webkit-resizer {
   gap: 4px;
   max-height: 100px;
   overflow-y: auto;
+}
+
+/* Aspect ratio previews in selects */
+.ar-preview {
+  width: 34px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  background: transparent;
+}
+.ar-box {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  background: transparent;
 }
 </style>
