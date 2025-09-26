@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div.media-comments-list
   div.media-comments-loading(v-if="initialLoading")
     q-spinner(size="32px" color="primary")
   template(v-else)
@@ -175,6 +175,13 @@ function scrollToComment(element: HTMLElement) {
 </script>
 
 <style scoped>
+.media-comments-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .media-comments-scroll {
   width: 100%;
   flex: 1 1 auto;

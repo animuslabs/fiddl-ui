@@ -1,5 +1,5 @@
 <template lang="pug">
-div.media-comments-preview.bg-black
+div.media-comments-preview.bg-black(:class="{ 'media-comments-preview--mobile': isMobile }")
   img.media-comments-preview-img(v-if="isImage" :src="previewUrl" alt="Selected media preview")
   video.media-comments-preview-video(
     v-else-if="isVideo"
@@ -13,7 +13,7 @@ div.media-comments-preview.bg-black
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue"
+import { computed, nextTick, onMounted, ref, watch, withDefaults } from "vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 
 type MediaType = "image" | "video"
@@ -21,9 +21,12 @@ type MediaType = "image" | "video"
 interface Props {
   mediaType: MediaType
   previewUrl: string
+  isMobile?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isMobile: false,
+})
 const mediaViewerStore = useMediaViewerStore()
 
 const videoRef = ref<HTMLVideoElement | null>(null)
@@ -32,6 +35,7 @@ const isMuted = computed(() => mediaViewerStore.muted)
 const isImage = computed(() => props.mediaType === "image")
 const isVideo = computed(() => props.mediaType === "video")
 const previewUrl = computed(() => props.previewUrl ?? "")
+const isMobile = computed(() => props.isMobile)
 
 function tryPlayPreview(resetTime = false) {
   const video = videoRef.value
@@ -96,13 +100,15 @@ watch(
   align-self: stretch;
 }
 
-:global(.media-comments-dialog--mobile) .media-comments-preview {
-  flex: 0 0 20vh;
-  flex: 0 0 20dvh;
-  max-height: 20vh;
-  max-height: 20dvh;
+.media-comments-preview--mobile {
   width: 100%;
   max-width: 100%;
+  flex: 0 0 24vh;
+  flex: 0 0 24dvh;
+  max-height: 28vh;
+  max-height: 28dvh;
+  min-height: 160px;
+  align-self: auto;
 }
 
 .media-comments-preview-img {

@@ -6,11 +6,7 @@ import { commentsCreate, commentsDelete, commentsEdit, commentsList } from "src/
 import tma from "src/lib/tmaAnalytics"
 import { catchErr } from "src/lib/util"
 import { useUserAuth } from "src/stores/userAuth"
-import {
-  extractMentionHandles,
-  normalizeComment,
-  type CommentViewModel,
-} from "./commentUtils"
+import { extractMentionHandles, normalizeComment, type CommentViewModel } from "./commentUtils"
 
 export type DialogEmit = {
   (e: "ok", payload: CommentsList200CommentsItem): void
@@ -24,6 +20,7 @@ type Props = {
   mediaType: "image" | "video"
   previewUrl?: string | null
   targetCommentId?: string | null
+  forceMobileLayout?: boolean
 }
 
 type UseDialogContext = {
@@ -53,12 +50,7 @@ type UseDialogContext = {
   canManageComment: (comment: CommentViewModel) => boolean
 }
 
-export function useMediaCommentsDialog(
-  props: Props,
-  emit: DialogEmit,
-  composerRef: ComposerRef,
-  hide: () => void,
-): UseDialogContext {
+export function useMediaCommentsDialog(props: Props, emit: DialogEmit, composerRef: ComposerRef, hide: () => void): UseDialogContext {
   const quasar = useQuasar()
   const userAuth = useUserAuth()
   const router = useRouter()
@@ -79,7 +71,7 @@ export function useMediaCommentsDialog(
   const initialLoading = computed(() => listLoading.value && comments.value.length === 0)
   const loadingMore = computed(() => listLoading.value && comments.value.length > 0)
   const submitDisabled = computed(() => submitting.value || newComment.value.trim().length === 0)
-  const isMobile = computed(() => quasar.screen.lt.md)
+  const isMobile = computed(() => (props.forceMobileLayout !== undefined ? props.forceMobileLayout : quasar.screen.lt.md))
   const previewMediaUrl = computed(() => props.previewUrl ?? "")
   const showPreview = computed(() => Boolean(previewMediaUrl.value) && ["image", "video"].includes(props.mediaType))
 
@@ -186,7 +178,9 @@ export function useMediaCommentsDialog(
       const { data } = await commentsCreate(payload)
       const created = normalizeComment(data)
       comments.value = [created, ...comments.value]
-      try { tma.comment(props.mediaId, props.mediaType, content.length) } catch {}
+      try {
+        tma.comment(props.mediaId, props.mediaType, content.length)
+      } catch {}
       newComment.value = ""
       focusCommentId.value = created.id
       emit("ok", created)

@@ -277,6 +277,7 @@ function showCommentsDialog(targetCommentId?: string | null) {
       mediaType: mediaViewerStore.currentMediaType,
       previewUrl,
       targetCommentId: targetCommentId ?? null,
+      forceMobileLayout: $q.screen.lt.md,
     },
   })
   dialog.onDismiss(() => {

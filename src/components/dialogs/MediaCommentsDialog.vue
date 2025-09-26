@@ -1,6 +1,6 @@
 <template lang="pug">
-q-dialog(ref="dialogRef" @hide="onDialogHide" :maximized="isMobile" style="overflow:hidden")
-  q-card.q-dialog-plugin.media-comments-dialog(:class="{ 'media-comments-dialog--mobile': isMobile, 'media-comments-dialog--with-preview': showPreview }" :style="dialogCardStyle")
+q-dialog.media-comments-shell(ref="dialogRef" @hide="onDialogHide" :maximized="isMobile" style="overflow:hidden")
+  q-card.media-comments-card(:class="{ 'media-comments-card--mobile': isMobile }" :style="isMobile ? undefined : dialogCardStyle")
     q-card-section.media-comments-header
       .row.items-start.justify-between
         .col-auto
@@ -8,8 +8,8 @@ q-dialog(ref="dialogRef" @hide="onDialogHide" :maximized="isMobile" style="overf
           div.text-caption.text-grey-6(v-if="commentCountLabel") {{ commentCountLabel }}
         q-btn(flat dense round icon="close" color="grey-5" @click="hide")
     q-card-section.media-comments-body-section.q-pa-none
-      div.media-comments-body(:class="{ 'media-comments-body--with-preview': showPreview }")
-        MediaCommentsPreview(v-if="showPreview" :media-type="props.mediaType" :preview-url="previewMediaUrl")
+      div.media-comments-body(:class="{ 'media-comments-body--with-preview': showPreview && !isMobile }")
+        MediaCommentsPreview(v-if="showPreview" :media-type="props.mediaType" :preview-url="previewMediaUrl" :is-mobile="isMobile")
         div.media-comments-main
           MediaCommentsList(
             :comments="comments"
@@ -54,6 +54,7 @@ interface Props {
   mediaType: "image" | "video"
   previewUrl?: string | null
   targetCommentId?: string | null
+  forceMobileLayout?: boolean
 }
 
 const props = defineProps<Props>()
@@ -110,64 +111,72 @@ defineExpose({
 </script>
 
 <style scoped>
-.media-comments-dialog {
-  width: min(720px, 95vw);
+.media-comments-card {
+  width: min(960px, 95vw);
   max-height: 90vh;
   max-height: 90dvh;
   display: flex;
   flex-direction: column;
 }
 
-.media-comments-dialog--with-preview {
-  width: min(1440px, 96vw);
-}
-
-.media-comments-dialog--mobile {
+.media-comments-card--mobile {
   width: 100vw;
   max-width: 100vw;
   height: 100vh;
   max-height: 100vh;
-  height: 100dvh;
-  max-height: 100dvh;
-  min-height: 0;
   border-radius: 0;
 }
 
 .media-comments-header {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   color: #fff;
   flex-shrink: 0;
   padding: 16px;
 }
 
-.media-comments-dialog--mobile .media-comments-header {
-  padding: 10px 16px;
+.media-comments-card--mobile .media-comments-header {
+  padding: 12px 16px;
+}
+
+:deep(.media-comments-shell.q-dialog--maximized .q-dialog__inner) {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+:deep(.media-comments-shell.q-dialog--maximized .q-dialog__inner > *) {
+  flex: 1 1 auto;
+  max-width: none;
+  width: 100%;
+  height: 100%;
 }
 
 .media-comments-body-section {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
   padding: 0;
+  min-height: 0;
 }
 
+
 .media-comments-body {
-  min-height: 160px;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  gap: 16px;
   min-height: 0;
+  padding: 0 16px 16px;
 }
 
 .media-comments-body--with-preview {
   flex-direction: row;
-  gap: 16px;
 }
 
-.media-comments-dialog--mobile .media-comments-body--with-preview {
-  flex-direction: column;
+.media-comments-card--mobile .media-comments-body {
+  padding: 0 16px 12px;
   gap: 12px;
+  overflow: hidden;
 }
 
 .media-comments-main {
@@ -178,12 +187,16 @@ defineExpose({
   min-width: 0;
 }
 
+.media-comments-card--mobile .media-comments-main {
+  overflow: hidden;
+}
+
 .media-comments-input {
-  padding-bottom: 16px;
+  padding: 0 16px 16px;
   flex-shrink: 0;
 }
 
-.media-comments-dialog--mobile .media-comments-input {
-  padding-bottom: 24px;
+.media-comments-card--mobile .media-comments-input {
+  padding: 0 16px 16px;
 }
 </style>

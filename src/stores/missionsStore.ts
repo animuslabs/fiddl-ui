@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { Dialog, Notify, SessionStorage } from "quasar"
+import { Dialog, Notify, SessionStorage, Platform } from "quasar"
 import {
   missionsList,
   missionsStatuses,
@@ -153,9 +153,13 @@ export const useMissionsStore = defineStore("missionsStore", {
           msg = res.reason || "Not eligible to claim"
           if ((res.reason || "").toLowerCase().includes("already")) this.claimedMap[mission.id] = true
         }
-        Notify.create({ message: msg, color: (res as any).awarded ? "positive" : "warning" })
+        Notify.create({
+          message: msg,
+          color: (res as any).awarded ? "positive" : "warning",
+          position: Platform.is.mobile ? "top" : void 0,
+        })
       } catch {
-        Notify.create({ message: "Failed to claim reward", color: "negative" })
+        Notify.create({ message: "Failed to claim reward", color: "negative", position: Platform.is.mobile ? "top" : void 0 })
       } finally {
         this.claiming[mission.id] = false
       }
