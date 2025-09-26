@@ -780,7 +780,7 @@ export default defineComponent({
               try { tma.purchaseIntent("paypal", { points: this.selectedPkg.points, usd: Number(this.finalUsd) }) } catch {}
             }
           } catch {}
-          return res.data.id
+          return (res.data as any).id
         },
         onApprove: async (data, actions) => {
           try {

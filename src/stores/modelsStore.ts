@@ -4,7 +4,7 @@ import { LocalStorage } from "quasar"
 import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
 
-// Extend the base model type to include an id: string field
+// Extend the base model type to include identifiers for custom models
 type CustomModel = ModelsGetBaseModels200Item & { id: string; creatorId: string }
 
 export const models = reactive({
@@ -169,21 +169,21 @@ export async function loadUserModels(creatorId: string, page: number = 1) {
     })
 
     const newModels = response.data
-    const transformedModels: CustomModel[] = newModels.map((model) => {
-      return {
-        blogLink: null,
-        description: model.description,
-        featured: model.featured,
-        id: model.id,
-        modelTags: model.modelTags,
-        name: model.name,
-        previewMediaId: model.previewMediaId,
-        slug: model.slug,
-        updatedAt: model.updatedAt,
-        longDescription: null,
-        creatorId: model.creatorId,
-      }
-    })
+  const transformedModels: CustomModel[] = newModels.map((model) => {
+    return {
+      blogLink: null,
+      description: model.description,
+      featured: model.featured,
+      id: model.id,
+      modelTags: model.modelTags,
+      name: model.name,
+      previewMediaId: model.previewMediaId,
+      slug: model.slug,
+      updatedAt: model.updatedAt,
+      longDescription: null,
+      creatorId: model.creatorId,
+    }
+  })
 
     // If it's page 1, replace the array; otherwise append
     if (page === 1) {

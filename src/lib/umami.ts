@@ -1,4 +1,3 @@
-// @ts-expect-error umami should be setup in index
 const Umami = !import.meta.env.SSR ? (window as any).umami : undefined
 //@ts-ignore
 if (!import.meta.env.SSR) {

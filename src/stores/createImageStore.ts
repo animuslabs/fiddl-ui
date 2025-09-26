@@ -148,7 +148,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   const router = useRouter()
 
   // Map each model to the aspect ratios it supports for selection
-  function supportedRatios(model: ImageModel): AspectRatio[] {
+  function supportedRatios(model: ImageModel | string): AspectRatio[] {
     if (model.includes("dall") || model.includes("gpt-image")) return ["1:1", "16:9", "9:16"]
     if (["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "custom"].includes(model)) return ["1:1", "16:9", "9:16", "4:5", "5:4"]
     if (model.includes("imagen")) return ["1:1", "9:16", "16:9", "3:4", "4:3"]
@@ -167,7 +167,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   })
 
   const selectedModelPrice = computed(() => {
-    let modelName: ImageModel = state.req.model
+    let modelName: ImageModel = state.req.model as ImageModel
     console.log(state.customModel?.modelType)
     if (modelName === "custom" && state.customModel?.modelType) {
       switch (state.customModel.modelType) {
@@ -312,7 +312,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
   }
 
   function resolveMultiModels(): ImageModel[] {
-    if (!state.randomizer.enabled) return [state.req.model]
+    if (!state.randomizer.enabled) return [state.req.model as ImageModel]
     if (state.randomizer.mode === "manual") {
       const manual = state.randomizer.manualSelection.filter((m) => m !== "custom") as ImageModel[]
       // In manual mode, use exactly the selected base models. It's valid for this to be empty
@@ -338,8 +338,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
         let baseModel: ImageModel = "flux-dev"
         const found = (modelsStore.models.userModels || []).find((m: any) => m.id === id) ||
           (modelsStore.models.custom || []).find((m: any) => m.id === id)
-        if (found?.modelType) {
-          switch (String(found.modelType)) {
+        const fType = (found as any)?.modelType
+        if (fType) {
+          switch (String(fType)) {
             case "fluxPro":
               baseModel = "flux-pro" as ImageModel
               break
@@ -677,7 +678,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
         return
       }
       // If current value is not available for the selected model, coerce to a valid option
-      if (!opts.includes(state.req.aspectRatio)) {
+      if (!opts.includes(state.req.aspectRatio as any)) {
         ;(state.req.aspectRatio as any) = (opts.includes("16:9") ? "16:9" : opts[0]) as AspectRatio
       }
     },

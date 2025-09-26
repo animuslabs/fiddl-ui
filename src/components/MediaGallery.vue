@@ -57,6 +57,8 @@ const props = withDefaults(
     disableNsfwMask?: boolean
     // Show overlay button to use an image as input in Create page
     showUseAsInput?: boolean
+    // Enable tap-to-select behavior on the model chip overlay
+    enableModelChipSelect?: boolean
   }>(),
   {
     layout: "grid",
@@ -75,6 +77,7 @@ const props = withDefaults(
     showDeleteButton: false,
     disableNsfwMask: false,
     showUseAsInput: false,
+    enableModelChipSelect: false,
   },
 )
 
@@ -126,6 +129,7 @@ const vObserve: import("vue").Directive<HTMLElement, ObserveBinding> = {
 const emit = defineEmits<{
   (e: "select", payload: { id: string; type: "image" | "video" }): void
   (e: "selectedIndex", index: number): void
+  (e: "modelSelect", payload: { model: string; customModelId?: string | null; customModelName?: string | null; mediaId: string }): void
 }>()
 
 const $q = useQuasar()
@@ -921,6 +925,60 @@ function showVideoOverlay(id: string): boolean {
 
   return state !== false
 }
+
+// ----- Model chip helpers -----
+type ModelChipMeta = {
+  label: string
+  model: string
+  customModelId?: string | null
+  customModelName?: string | null
+}
+
+function resolveImageCreation(m: MediaGalleryMeta) {
+  if (!m?.id) return undefined
+  if (m.requestId) return imageCreations.creations.find((c: any) => c.id === m.requestId)
+  return imageCreations.creations.find((c: any) => Array.isArray(c.mediaIds) && c.mediaIds.includes(m.id))
+}
+
+function getModelMeta(m: MediaGalleryMeta): ModelChipMeta | null {
+  try {
+    // Only show for images
+    const isVideo = (m.type ?? m.mediaType) === "video" || isVideoMedia(m)
+    if (isVideo) return null
+
+    // Prefer lookup by requestId if available
+    const creation = resolveImageCreation(m)
+    if (!creation) return null
+
+    const model = creation.model as string | undefined
+    if (!model) return null
+
+    const customModelId = (creation.customModelId as string | undefined) ?? null
+    const customModelName = (creation.customModelName as string | undefined) ?? null
+
+    if (model === "custom") {
+      const name = customModelName && customModelName.trim().length > 0 ? customModelName : "custom"
+      const label = name && name.toLowerCase() !== "custom" ? `custom: ${name}` : "custom"
+      return { label, model, customModelId, customModelName }
+    }
+
+    return { label: model, model, customModelId, customModelName }
+  } catch {
+    return null
+  }
+}
+
+function getModelLabel(m: MediaGalleryMeta): string | null {
+  const meta = getModelMeta(m)
+  return meta?.label ?? null
+}
+
+function onModelChipClick(m: MediaGalleryMeta) {
+  if (!props.enableModelChipSelect) return
+  const meta = getModelMeta(m)
+  if (!meta) return
+  emit("modelSelect", { model: meta.model, customModelId: meta.customModelId, customModelName: meta.customModelName, mediaId: m.id })
+}
 </script>
 
 <template lang="pug">
@@ -1009,6 +1067,12 @@ function showVideoOverlay(id: string): boolean {
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
+        // Model chip (bottom-left)
+        .model-chip(
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+          :class="{ 'is-clickable': props.enableModelChipSelect }"
+          @click.stop="onModelChipClick(m)"
+        ) {{ getModelLabel(m) }}
         // Popularity overlay controls
         .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
@@ -1302,6 +1366,35 @@ function showVideoOverlay(id: string): boolean {
 .popularity-overlay .q-btn,
 .popularity-overlay .count {
   pointer-events: auto;
+}
+
+/* Small chip in bottom-left for model name */
+.model-chip {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  max-width: 62%;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 3;
+  pointer-events: none;
+}
+.model-chip.is-clickable {
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.model-chip.is-clickable:hover {
+  background: var(--q-primary);
+  color: #fff;
 }
 
 .hidden-overlay {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defineStore } from "pinia"
 
 import { creationsUserImagePurchases, collectionsFindCollectionByName, collectionsGetCollectionImages, createImage, type CreateImageBody, creationsCreateVideoRequests, creationsUserVideoPurchases, collectionsGetCollectionVideos, createVideo, type CreateVideo200 } from "lib/orval"

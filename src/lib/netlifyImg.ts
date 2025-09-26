@@ -1,4 +1,4 @@
-import type { ImageSize } from "../../../fiddl-server/dist/lib/types/serverTypes"
+import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
 import { getAvatarVersion } from "./avatarVersion"
 
 export const previewFiles = {

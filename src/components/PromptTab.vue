@@ -30,6 +30,7 @@
               MediaGallery.q-pl-md.q-pr-md(
                 v-else-if="gridMode == 'mosaic'"
                 @selected-index="showDetails"
+                @model-select="handleModelSelect"
                 selectable
                 :mediaObjects="allMediaObjects"
                 layout="mosaic"
@@ -44,10 +45,12 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
+                :enable-model-chip-select="currentTab === 'image'"
               )
               MediaGallery.q-pl-md.q-pr-md(
                 v-else-if="gridMode == 'grid'"
                 @selected-index="showDetails"
+                @model-select="handleModelSelect"
                 selectable
                 :cols-desktop="5"
                 :thumb-size-desktop="190"
@@ -58,6 +61,7 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
+                :enable-model-chip-select="currentTab === 'image'"
               )
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
@@ -124,6 +128,7 @@ import { defineComponent, PropType, ref } from "vue"
 import CreateCard from "components/CreateCard.vue"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import type { CreateImageRequest, CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
+import type { CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { CustomModel } from "lib/api"
@@ -288,7 +293,7 @@ export default defineComponent({
       immediate: false,
     },
     "activeCreateStore.state.req.model": {
-      handler(val: string) {
+      handler(val: any) {
         this.activeCreationsStore.filter.model = val as any
         if (!this.activeCreationsStore.dynamicModel) {
           this.activeCreationsStore.dynamicModel = true
@@ -313,7 +318,7 @@ export default defineComponent({
       handler(val: boolean) {
         console.log("activeCreationsStore.dynamicModel toggled", val)
         if (val) {
-          this.activeCreationsStore.filter.model = this.activeCreateStore.state.req.model
+          this.activeCreationsStore.filter.model = this.activeCreateStore.state.req.model as any
           if (this.currentTab == "image") this.imageCreations.filter.customModelId = this.createImageStore.state.req.customModelId
         } else {
           this.activeCreationsStore.filter.model = undefined
@@ -401,6 +406,30 @@ export default defineComponent({
       // if (this.gridMode) this.showDetails(latestCreation.id)
     },
     // no-op: useAsInput handled internally by MediaGallery now when showUseAsInput is true
+    handleModelSelect(payload: { model: string; customModelId?: string | null; customModelName?: string | null }) {
+      if (!payload?.model) return
+      if (this.currentTab !== "image") this.currentTab = "image"
+
+      const randomizer = this.createImageStore.state.randomizer
+      if (randomizer?.enabled) {
+        randomizer.enabled = false
+        // leave other randomizer fields untouched; disabled state ignores them
+      }
+
+      const updates: Partial<CreateImageRequestWithCustomModel> = {
+        model: payload.model as any,
+      }
+
+      if (payload.model === "custom") {
+        updates.customModelId = payload.customModelId ?? undefined
+        if (payload.customModelName) updates.customModelName = payload.customModelName
+      } else {
+        updates.customModelId = undefined
+        updates.customModelName = undefined
+      }
+
+      this.createImageStore.setReq(updates)
+    },
   },
 })
 </script>

@@ -290,7 +290,7 @@ function localManualPublicCost(): number {
   for (const id of local.customMulti || []) {
     const found = (modelsStore.models.userModels || []).find((m: any) => m.id === id) || (modelsStore.models.custom || []).find((m: any) => m.id === id)
     let base: ImageModel = 'flux-dev'
-    switch (String(found?.modelType || '')) {
+    switch (String((found as any)?.modelType || '')) {
       case 'fluxPro': base = 'flux-pro' as ImageModel; break
       case 'fluxProUltra': base = 'flux-pro-ultra' as ImageModel; break
       default: base = 'flux-dev' as ImageModel

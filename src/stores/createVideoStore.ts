@@ -66,7 +66,7 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
       console.log("model watch triggered")
       console.log(availableDurations, state.req.duration)
       if (!availableDurations.value?.includes(state.req.duration || 0)) state.req.duration = availableDurations.value[0] || 5
-      if (!availableAspectRatios.value?.includes(state.req.aspectRatio || "16:9")) (state.req.aspectRatio as any) = availableAspectRatios.value[0] || ("16:9" as AspectRatio)
+      if (!availableAspectRatios.value?.includes((state.req.aspectRatio as any) || ("16:9" as any))) (state.req.aspectRatio as any) = availableAspectRatios.value[0] || ("16:9" as AspectRatio)
     },
   )
 

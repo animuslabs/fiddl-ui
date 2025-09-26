@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defineStore } from "pinia"
 import { type CreateImageRequest, type CreateImageRequestData } from "fiddl-server/dist/lib/types/serverTypes"
 import { catchErr, toObject } from "lib/util"

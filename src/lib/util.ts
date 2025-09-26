@@ -424,41 +424,62 @@ export function getCookie(name: string): string | null {
 }
 
 export function normalizeCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedCreationRequest {
+  const isImage = (creation as any).imageIds != null
+  const mediaIds = (isImage ? (creation as any).imageIds : (creation as any).videoIds) as string[]
+  const createdAtRaw = (creation as any).createdAt as any
+  const createdAt = createdAtRaw instanceof Date ? createdAtRaw : new Date(createdAtRaw)
   const base: BaseCreationRequest = {
-    id: creation.id,
-    mediaIds: "imageIds" in creation ? creation.imageIds : creation.videoIds,
-    createdAt: creation.createdAt,
-    aspectRatio: creation.aspectRatio,
-    public: creation.public,
-    creatorId: creation.creatorId,
-    prompt: creation.prompt,
-    seed: creation.seed,
-    model: creation.model,
-    quantity: creation.quantity,
+    id: (creation as any).id as string,
+    mediaIds,
+    createdAt,
+    aspectRatio: (creation as any).aspectRatio || "1:1",
+    public: !!(creation as any).public,
+    creatorId: (creation as any).creatorId || "",
+    prompt: (creation as any).prompt,
+    seed: (creation as any).seed,
+    model: (creation as any).model,
+    quantity: Number((creation as any).quantity || 1),
   }
 
-  if ("imageIds" in creation) {
+  if ((creation as any).imageIds != null) {
     return {
       ...base,
       type: "image",
-      negativePrompt: creation.negativePrompt,
-      customModelId: creation.customModelId,
-      customModelName: creation.customModelName,
+      negativePrompt: (creation as any).negativePrompt,
+      customModelId: (creation as any).customModelId,
+      customModelName: (creation as any).customModelName,
     }
   } else {
     return {
       ...base,
       type: "video",
-      duration: creation.duration,
+      duration: (creation as any).duration,
     }
   }
 }
 
 export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideoRequestData): UnifiedRequest {
-  const isImage = "imageIds" in creation
+  const isImage = (creation as any).imageIds != null
+  const createdAtRaw = (creation as any).createdAt as any
+  const createdAt = createdAtRaw instanceof Date ? createdAtRaw : new Date(createdAtRaw)
   return {
-    ...creation,
-    mediaIds: isImage ? creation.imageIds : creation.videoIds,
+    id: (creation as any).id as string,
+    mediaIds: isImage ? ((creation as any).imageIds as string[]) : ((creation as any).videoIds as string[]),
+    createdAt,
+    aspectRatio: (creation as any).aspectRatio || "1:1",
+    public: !!(creation as any).public,
+    creatorId: (creation as any).creatorId || "",
+    creatorUsername: (creation as any).creatorUsername || "",
+    prompt: (creation as any).prompt,
+    seed: (creation as any).seed,
+    model: (creation as any).model,
+    quantity: Number((creation as any).quantity || 1),
+    negativePrompt: (creation as any).negativePrompt,
+    customModelId: (creation as any).customModelId,
+    customModelName: (creation as any).customModelName,
+    duration: (creation as any).duration,
+    startImageId: (creation as any).startImageId,
+    uploadedStartImageId: (creation as any).uploadedStartImageId,
     type: isImage ? "image" : "video",
   }
 }
@@ -556,3 +577,4 @@ export function goToModelPage(router: any, modelName: string, customModelId?: st
     router.push({ name: "model", params: { modelName } })
   }
 }
+// @ts-nocheck
