@@ -75,10 +75,10 @@
                 q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
                 q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
           // Model select moved up to share the row with Aspect Ratio
-          div.relative-position.col-grow
+          div.relative-position.col-grow.cursor-pointer(@click.stop="openModelSelectDialog" )
             p.setting-label Model
             // Keep selector on its own row
-            q-select.relative-position.text-capitalize.model-select(
+            q-select.relative-position.text-capitalize.model-select.full-width(
               ref="modelSelectRef"
               v-model="req.model"
               :options="[]"
@@ -110,7 +110,6 @@
                       )
                         span {{ chip.label }}
                         q-icon(name="close" size="12px" class="q-ml-xs cursor-pointer" @click.stop.prevent="removeSelectedChip(chip)")
-                    q-badge(v-if="selectedChipLabels.length" color="grey-8" class="q-ml-sm self-start") {{ selectedChipLabels.length }}
                 template(v-else)
                   .row.items-start.no-wrap
                     .chip-box
@@ -122,7 +121,8 @@
                         | Exclude expensive
               // Hide single-model cost when multi-select/randomizer is enabled
               .badge-sm.text-white(v-if="!createStore.state.randomizer.enabled") {{ createStore.selectedModelPrice }}
-            // Custom model name shown below selector
+              div
+                h4 {{ selectedChipLabels.length }}
       .row.q-mx-md
         //- Legacy custom-model card removed; chips in the selector show selections
       .row.q-col-gutter-md.full-width.items-start.q-pt-sm
@@ -566,15 +566,15 @@ const selectedChipLabels = computed(() => {
   return list
 })
 function removeSelectedChip(chip: { key: string; label: string }) {
-  const key = chip.key || ''
+  const key = chip.key || ""
   const rnd: any = createStore.state.randomizer
-  if (!rnd?.enabled || rnd.mode !== 'manual') return
-  if (key.startsWith('b-')) {
+  if (!rnd?.enabled || rnd.mode !== "manual") return
+  if (key.startsWith("b-")) {
     const slug = key.slice(2)
     const list: string[] = rnd.manualSelection || []
     const idx = list.indexOf(slug)
     if (idx >= 0) list.splice(idx, 1)
-  } else if (key.startsWith('c-')) {
+  } else if (key.startsWith("c-")) {
     const id = key.slice(2)
     const list: string[] = rnd.manualCustomIds || []
     const idx = list.indexOf(id)
@@ -592,7 +592,9 @@ function onQuickBuyComplete() {
 // ----- aspect ratio preview helpers -----
 function parseAspect(r: string | undefined | null): { w: number; h: number } {
   if (!r) return { w: 1, h: 1 }
-  const parts = String(r).split(":").map((n) => Number(n))
+  const parts = String(r)
+    .split(":")
+    .map((n) => Number(n))
   const w = parts[0] && isFinite(parts[0]) ? parts[0] : 1
   const h = parts[1] && isFinite(parts[1]) ? parts[1] : 1
   return { w, h }
