@@ -142,6 +142,17 @@ const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px
 const popularity = usePopularityStore()
 const popIconSize = ref("8px")
 
+// Decide per-item popularity layout: inline vs stacked on mobile
+function popularityLayoutClass(m: MediaGalleryMeta) {
+  try {
+    const ratio = typeof m?.aspectRatio === "number" && Number.isFinite(m.aspectRatio) ? m.aspectRatio : 1
+    const stacked = $q.screen.lt.md && ratio < 0.95 // stack on tall/narrow tiles only
+    return { "stack-mobile": stacked }
+  } catch {
+    return {}
+  }
+}
+
 const imageCreations = useImageCreations()
 const videoCreations = useVideoCreations()
 const privacyLoading = ref<Record<string, boolean>>({})
@@ -999,8 +1010,8 @@ function showVideoOverlay(id: string): boolean {
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
-          .pop-row
+        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+          .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
               span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
@@ -1023,6 +1034,7 @@ function showVideoOverlay(id: string): boolean {
               span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             .pop-item
               q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
+              span.count.empty 0
         // Per-item actions slot (optional)
         slot(name="actions" :media="m" :index="index")
           // default empty
@@ -1105,8 +1117,8 @@ function showVideoOverlay(id: string): boolean {
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
         // Popularity overlay controls
-        .popularity-overlay(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
-          .pop-row
+        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+          .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
               span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
@@ -1129,6 +1141,7 @@ function showVideoOverlay(id: string): boolean {
               span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             .pop-item
               q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
+              span.count.empty 0
         // Per-item actions slot (optional)
         //- slot(name="actions" :media="m" :index="index")
           // default empty
@@ -1386,7 +1399,7 @@ function showVideoOverlay(id: string): boolean {
   transform: translate(-50%, -10px) scale(0.98);
 }
 
-/* Mobile compaction for popularity controls to avoid overflow on small tiles */
+/* Mobile compaction for popularity controls; stack only when marked */
 @media (max-width: 600px) {
   .popularity-overlay {
     padding: 2px 4px;
@@ -1394,20 +1407,24 @@ function showVideoOverlay(id: string): boolean {
     row-gap: 0;
     max-width: calc(100% - 8px);
   }
-  .popularity-overlay .pop-item {
+  .popularity-overlay.stack-mobile .pop-item {
     flex-direction: column-reverse; /* show count above icon */
     align-items: center;
     gap: 2px;
   }
-  .popularity-overlay .count {
+  .popularity-overlay.stack-mobile .count {
     display: block;
     font-size: 10px;
     line-height: 1;
     opacity: 0.9;
   }
-  .popularity-overlay .count.empty {
+  .popularity-overlay.stack-mobile .count.empty {
     display: block;
     visibility: hidden; /* reserve space for zero counts */
+  }
+  /* If all counts are zero, remove the spacer row entirely */
+  .popularity-overlay.stack-mobile .pop-row:not(.has-any-counts) .count.empty {
+    display: none;
   }
   .popularity-overlay .q-btn {
     min-width: 0;
