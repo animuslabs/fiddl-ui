@@ -1003,7 +1003,7 @@ function showVideoOverlay(id: string): boolean {
           .pop-row
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
-              span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .pop-item
               q-btn(
                 :size="popIconSize"
@@ -1014,13 +1014,13 @@ function showVideoOverlay(id: string): boolean {
                 color="white"
                 @click.stop="openCommentsFromOverlay(m)"
               )
-              span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
             .pop-item
               .upvote-burst-wrap
                 q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
                 transition(name="burst")
                   .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-              span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             .pop-item
               q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
         // Per-item actions slot (optional)
@@ -1109,7 +1109,7 @@ function showVideoOverlay(id: string): boolean {
           .pop-row
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
-              span.count(v-if="popularity.get(m.id)?.favorites") {{ popularity.get(m.id)?.favorites ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
             .pop-item
               q-btn(
                 :size="popIconSize"
@@ -1120,13 +1120,13 @@ function showVideoOverlay(id: string): boolean {
                 color="white"
                 @click.stop="openCommentsFromOverlay(m)"
               )
-              span.count(v-if="popularity.get(m.id)?.commentsCount") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
             .pop-item
               .upvote-burst-wrap
                 q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
                 transition(name="burst")
                   .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-              span.count(v-if="popularity.get(m.id)?.upvotes") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+              span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
             .pop-item
               q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
         // Per-item actions slot (optional)
@@ -1283,6 +1283,9 @@ function showVideoOverlay(id: string): boolean {
   font-weight: 600;
   opacity: 0.9;
 }
+.popularity-overlay .count.empty {
+  display: none;
+}
 .popularity-overlay .q-btn,
 .popularity-overlay .count {
   pointer-events: auto;
@@ -1401,6 +1404,10 @@ function showVideoOverlay(id: string): boolean {
     font-size: 10px;
     line-height: 1;
     opacity: 0.9;
+  }
+  .popularity-overlay .count.empty {
+    display: block;
+    visibility: hidden; /* reserve space for zero counts */
   }
   .popularity-overlay .q-btn {
     min-width: 0;
