@@ -134,9 +134,16 @@ export function useCreateOrchestrator() {
     const modelParam = typeof route.query.model === "string" ? (route.query.model as string) : 'nano-banana'
 
     // Apply input image and optionally model to image create store
+    // Preserve any existing selections and merge uniquely
+    const currentStart = imgCreate.state.req.startImageIds || []
+    const currentUploaded = imgCreate.state.req.uploadedStartImageIds || []
+    const startSet = new Set(currentStart)
+    const uploadedSet = new Set(currentUploaded)
+    if (!startSet.has(inputImageId) && !uploadedSet.has(inputImageId)) startSet.add(inputImageId)
+
     const req: Partial<CreateImageRequestWithCustomModel> = {
-      startImageIds: [inputImageId],
-      uploadedStartImageIds: [],
+      startImageIds: Array.from(startSet),
+      uploadedStartImageIds: Array.from(uploadedSet),
     }
     if (modelParam) (req as any).model = modelParam
     imgCreate.setReq(req)

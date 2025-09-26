@@ -5,7 +5,7 @@ q-dialog(v-model="innerOpen" :maximized="$q.screen.lt.md")
     input(type="file" :multiple="multiSelect" @change="handleFileUpload" style="display: none;" ref="fileInputRef" accept="image/*")
 
     // Selection / upload chooser
-    .q-ma-md(v-if="!showUploads")
+    .uploads-body.q-ma-md(v-if="!showUploads")
       .row.items-center.justify-between.q-gutter-sm.dialog-header
         h4.q-mb-none {{ headerTitle }}
         .text-subtitle2.text-grey-4 Select existing uploads or add new images
@@ -24,7 +24,7 @@ q-dialog(v-model="innerOpen" :maximized="$q.screen.lt.md")
             p Drag and drop {{ multiSelect ? 'images' : 'an image' }} here
 
     // Uploads picker
-    .q-ma-md(v-else).relative-position
+    .uploads-body.q-ma-md(v-else).relative-position
       .row.items-center.justify-between.q-pa-sm.z-top.bg-blur(style="position:sticky; top:0; backdrop-filter: blur(8px);")
         h5.q-mb-none Select {{ multiSelect ? 'Images' : 'Image' }}
         .row.items-center.q-gutter-sm
@@ -56,17 +56,17 @@ q-dialog(v-model="innerOpen" :maximized="$q.screen.lt.md")
           :offset="offset || undefined"
         )
 
-      // Sticky footer on mobile showing selection count (multi only)
-      div(v-if="multiSelect" class="z-top bg-blur q-pa-sm" style="position:sticky; bottom:20px; backdrop-filter: blur(8px);")
-        .row.items-center.justify-between
-          .text-caption {{ selectedIds.length }} selected (max {{ max }})
-          q-btn(unelevated size="lg" icon="done_all" label="Done" color="positive" @click="acceptSelection" :disable="!selectedIds.length")
-
-      // Bottom pagination + rows
-      .row.items-center.q-gutter-sm.q-mt-sm
-        q-select(v-model="rowsPerPage" :options="rowsPerPageOptions" label="Rows" dense outlined style="width:100px")
-        q-space
-        .row.justify-center.full-width
+      // Sticky bottom footer: selection summary + pagination (desktop and mobile)
+      .uploads-sticky-footer.z-top.bg-blur
+        .row.items-center.q-gutter-sm
+          // Selection summary and Done button only in multi-select mode
+          template(v-if="multiSelect")
+            .text-caption.q-ml-sm {{ selectedIds.length }} selected (max {{ max }})
+            q-space
+            q-btn(unelevated size="lg" icon="done_all" label="Done" color="positive" @click="acceptSelection" :disable="!selectedIds.length")
+          template(v-else)
+            q-space
+        .row.justify-center.q-mt-xs
           q-pagination(
             v-if="rowsPerPage !== 0 && total > 0"
             v-model="page"
@@ -286,12 +286,23 @@ function acceptSelection() {
 .uploads-dialog-card {
   width: 90vw;
   max-width: 1400px;
+  /* Constrain height on desktop so inner content scrolls and sticky areas work */
+  max-height: calc(100vh - 8vh);
+  max-height: calc(100dvh - 8vh);
+  display: flex;
+  flex-direction: column;
 }
 .uploads-dialog-card--narrow {
   max-width: 900px;
 }
 .uploads-dialog-card--wide {
   max-width: 1400px;
+}
+/* Scrollable body inside the card so sticky header/footer anchor correctly */
+.uploads-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 /* When dialog is maximized (mobile), make card fill the viewport */
 .q-dialog__inner--maximized .uploads-dialog-card {
@@ -317,6 +328,14 @@ function acceptSelection() {
 
 .bg-blur {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* Sticky bottom footer used on desktop and mobile */
+.uploads-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 8px 10px;
+  backdrop-filter: blur(8px);
 }
 
 .done-fab {

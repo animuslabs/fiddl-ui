@@ -2,8 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { Dialog } from "quasar"
-import { useCreateImageStore } from "src/stores/createImageStore"
-import InputImageQuickEdit from "src/components/dialogs/InputImageQuickEdit.vue"
+// Import removed: unified flow uses route-based orchestrator to open quick-edit
 // no need to pre-upload input image; we operate by id now
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
@@ -203,6 +202,20 @@ function triggerUpvoteBurst(id: string) {
 }
 
 function ownsMediaQuick(id: string, type: MediaType): boolean {
+  // Treat my own creations as owned (no unlock prompt)
+  try {
+    if (type === "image") {
+      // Created by me?
+      if (imageCreations?.allCreations?.some((c) => c.id === id)) return true
+      // Purchased/unlocked list loaded?
+      if (imageCreations?.imagePurchases?.some((p: any) => p.imageId === id)) return true
+    } else {
+      if (videoCreations?.allCreations?.some((c) => c.id === id)) return true
+      if (videoCreations?.imagePurchases?.some((p: any) => p.videoId === id)) return true
+    }
+  } catch {}
+
+  // Local cached ownership/unlock signals
   if (isOwned(id, type)) return true
   if (type === "video") {
     if (mediaViewerStore.hdVideoUrl[id]) return true
@@ -357,17 +370,9 @@ async function addAsInput(imageId: string) {
       return
     }
     addInputLoading.value[imageId] = true
-    // New flow: do not upload; use existing image id directly
-    const imgCreate = useCreateImageStore()
-    // Merge new id into existing arrays (uniquely)
-    const currentStart = imgCreate.state.req.startImageIds || []
-    const currentUploaded = imgCreate.state.req.uploadedStartImageIds || []
-    const startSet = new Set(currentStart)
-    const uploadedSet = new Set(currentUploaded)
-    if (!startSet.has(imageId) && !uploadedSet.has(imageId)) startSet.add(imageId)
-
-    imgCreate.setReq({ startImageIds: Array.from(startSet), uploadedStartImageIds: Array.from(uploadedSet), model: "nano-banana" } as any)
-    Dialog.create({ component: InputImageQuickEdit, componentProps: { imageId } })
+    // Route-based unified flow: let the Create page orchestrator
+    // open the same InputImageQuickEdit component with default model.
+    void router.push({ name: "create", params: { activeTab: "image" }, query: { inputImageId: imageId } })
   } catch (e) {
     console.error(e)
   } finally {
@@ -942,42 +947,50 @@ function showVideoOverlay(id: string): boolean {
         template(v-else)
           // Placeholder keeps layout without mounting the image element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
-        q-btn.delete-chip(
-          v-if="canDelete(m) && isVisible(m.id)"
-          dense
-          flat
-          round
-          color="grey-5"
-          icon="delete"
-          @click.stop="handleDeleteClick(m)"
-          :loading="!!deleteLoading[m.id]"
-          :disable="deleteLoading[m.id] === true"
+        // Top actions overlay (centered; matches bottom popularity row style)
+        .top-actions-overlay(
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
-        q-btn.visibility-chip(
-          v-if="canTogglePrivacy(m) && isVisible(m.id)"
-          dense
-          flat
-          round
-          padding="0"
-          color="grey-5"
-          :icon="m.isPublic ? 'public' : 'visibility_off'"
-          @click.stop="handleVisibilityClick(m)"
-          :loading="!!privacyLoading[m.requestId || '']"
-          :disable="privacyLoading[m.requestId || ''] === true"
-        )
-          q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
-        q-btn.input-chip(
-          v-if="props.showUseAsInput && isVisible(m.id) && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
-          dense
-          flat
-          round
-          padding="0"
-          color="grey-5"
-          icon="add_photo_alternate"
-          @click.stop="addAsInput(m.id)"
-          :loading="!!addInputLoading[m.id]"
-          :disable="addInputLoading[m.id] === true"
-        )
+          // Add as input (images only)
+          q-btn(
+            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            icon="add_photo_alternate"
+            @click.stop="addAsInput(m.id)"
+            :loading="!!addInputLoading[m.id]"
+            :disable="addInputLoading[m.id] === true"
+          )
+          // Delete
+          q-btn(
+            v-if="canDelete(m)"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            icon="delete"
+            @click.stop="handleDeleteClick(m)"
+            :loading="!!deleteLoading[m.id]"
+            :disable="deleteLoading[m.id] === true"
+          )
+          // Visibility toggle
+          q-btn(
+            v-if="canTogglePrivacy(m)"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            :icon="m.isPublic ? 'public' : 'visibility_off'"
+            @click.stop="handleVisibilityClick(m)"
+            :loading="!!privacyLoading[m.requestId || '']"
+            :disable="privacyLoading[m.requestId || ''] === true"
+          )
+            q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
@@ -1035,29 +1048,50 @@ function showVideoOverlay(id: string): boolean {
         template(v-else)
           // Placeholder keeps layout without mounting the video element
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
-        q-btn.delete-chip(
-          v-if="canDelete(m) && isVisible(m.id)"
-          dense
-          flat
-          round
-          color="grey-5"
-          icon="delete"
-          @click.stop="handleDeleteClick(m)"
-          :loading="!!deleteLoading[m.id]"
-          :disable="deleteLoading[m.id] === true"
+        // Top actions overlay (centered; matches bottom popularity row style)
+        .top-actions-overlay(
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
-        q-btn.visibility-chip(
-          v-if="canTogglePrivacy(m) && isVisible(m.id)"
-          dense
-          flat
-          round
-          :color="m.isPublic ? 'primary' : 'grey-5'"
-          :icon="m.isPublic ? 'public' : 'visibility_off'"
-          @click.stop="handleVisibilityClick(m)"
-          :loading="!!privacyLoading[m.requestId || '']"
-          :disable="privacyLoading[m.requestId || ''] === true"
-        )
-          q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+          // Add as input (images only; for video items this won't show)
+          q-btn(
+            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            icon="add_photo_alternate"
+            @click.stop="addAsInput(m.id)"
+            :loading="!!addInputLoading[m.id]"
+            :disable="addInputLoading[m.id] === true"
+          )
+          // Delete
+          q-btn(
+            v-if="canDelete(m)"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            icon="delete"
+            @click.stop="handleDeleteClick(m)"
+            :loading="!!deleteLoading[m.id]"
+            :disable="deleteLoading[m.id] === true"
+          )
+          // Visibility toggle
+          q-btn(
+            v-if="canTogglePrivacy(m)"
+            :size="popIconSize"
+            flat
+            dense
+            round
+            color="white"
+            :icon="m.isPublic ? 'public' : 'visibility_off'"
+            @click.stop="handleVisibilityClick(m)"
+            :loading="!!privacyLoading[m.requestId || '']"
+            :disable="privacyLoading[m.requestId || ''] === true"
+          )
+            q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
         // Hidden overlay - keeps layout stable
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
@@ -1174,45 +1208,26 @@ function showVideoOverlay(id: string): boolean {
   pointer-events: auto;
 }
 
-.visibility-chip {
+/* Centered top actions row (matches bottom popularity overlay) */
+.top-actions-overlay {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(0, 0, 0, 0.85);
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.15);
   color: white;
-  z-index: 4;
-  filter: opacity(0.5);
+  border-radius: 12px;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
-
-.visibility-chip .q-spinner {
-  color: white;
-}
-
-.delete-chip {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  z-index: 4;
-  filter: opacity(0.5);
-}
-
-.delete-chip .q-spinner {
-  color: white;
-}
-
-.input-chip {
-  position: absolute;
-  top: 6px;
-  right: 44px; /* sit just left of visibility toggle */
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  z-index: 4;
-  filter: opacity(0.9);
-}
-.input-chip .q-spinner {
-  color: white;
+.top-actions-overlay .q-btn {
+  pointer-events: auto;
 }
 
 /* Lower the absolute-center slightly to appear visually centered within varying thumbnails */

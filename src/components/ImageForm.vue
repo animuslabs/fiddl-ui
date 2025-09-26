@@ -66,7 +66,7 @@
           div.relative-position.col-grow
             p.setting-label Model
             // Keep selector on its own row
-            q-select.relative-position.text-capitalize(
+            q-select.relative-position.text-capitalize.model-select(
               ref="modelSelectRef"
               v-model="req.model"
               :options="[]"
@@ -80,7 +80,8 @@
               @keydown.space.prevent="openModelSelectDialog"
               dense
             )
-              .badge-sm.text-white {{ createStore.selectedModelPrice }}
+              // Hide single-model cost when multi-select/randomizer is enabled
+              .badge-sm.text-white(v-if="!createStore.state.randomizer.enabled") {{ createStore.selectedModelPrice }}
             // Custom model name shown below selector
       .row.q-mx-md
         .custom-model-card.row.items-center.no-wrap.q-mt-sm.full-width(v-if="req.model === 'custom' && !createStore.state.randomizer.enabled")
@@ -119,7 +120,7 @@
           p.setting-label.q-ml-md {{ supportsMulti ? 'Input Images' : 'Input Image' }}
           // Thumbnails
           div(v-if="supportsMulti")
-            .row.full-width.q-mt-sm
+            .row.full-width.q-mt-sm.q-pl-md
               StartImageThumbs.q-mb-sm(:items="selectedStartImages" :size="$q.screen.lt.md ? 56 : 64" :gap="8" @remove="removeImage")
             .row.items-center.q-gutter-sm.q-mb-md
               q-btn(flat color="primary" icon="add" :label="selectedStartImages.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
@@ -226,7 +227,11 @@ const userAuth = useUserAuth()
 const req = createStore.state.req
 const loading = createStore.state.loading
 
-const createDisabled = computed(() => createStore.anyLoading || (req.prompt?.length || 0) < 5)
+const invalidManualMulti = computed(() => {
+  const rnd = createStore.state.randomizer
+  return !!(rnd?.enabled && rnd.mode === "manual" && (!rnd.manualSelection || rnd.manualSelection.length === 0))
+})
+const createDisabled = computed(() => createStore.anyLoading || (req.prompt?.length || 0) < 5 || invalidManualMulti.value)
 const showBackBtnComputed = computed(() => props.showBackBtn ?? $q.screen.lt.md)
 
 const showModelPicker = ref(false)
@@ -334,6 +339,14 @@ const modelDisplayText = computed(() => {
 async function startCreateImage(isPublic: boolean = req.public ?? true) {
   if (createDisabled.value) return false
   req.public = isPublic
+  // Guard: manual multi-select enabled but no models picked
+  const rnd = createStore.state.randomizer
+  if (rnd?.enabled && rnd.mode === "manual" && (!rnd.manualSelection || rnd.manualSelection.length === 0)) {
+    $q.notify({ type: "negative", message: "Pick at least one model in Multi-select mode." })
+    // Open the randomizer dialog to prompt selection
+    randomizerDialogOpen.value = true
+    return false
+  }
   const targetCost = isPublic ? publicCostToShow.value : privateCostToShow.value
   const available = userAuth.userData?.availablePoints || 0
   if (targetCost > available) {
@@ -395,7 +408,19 @@ function setCustomModel(model: CustomModel) {
 }
 
 function openImagesDialog() {
-  if (supportsInputImages.value) showImagesDialog.value = true
+  if (!supportsInputImages.value) return
+  // Guard: enforce max selected images before opening picker
+  if (supportsMulti.value) {
+    const count = (req.startImageIds?.length || 0) + (req.uploadedStartImageIds?.length || 0)
+    if (count >= maxMulti) {
+      $q.dialog({
+        title: "Max images reached",
+        message: `Only ${maxMulti} input images are supported. Please remove some before adding more.`,
+      })
+      return
+    }
+  }
+  showImagesDialog.value = true
 }
 
 function onImagesAccepted(ids: string[]) {
@@ -418,6 +443,11 @@ function onImagesAccepted(ids: string[]) {
     // Replace unified selection with the newly picked upload
     req.startImageIds = []
     req.uploadedStartImageIds = ids[0] ? [ids[0]] : []
+  }
+  // Ensure the image-creation model supports input images by switching to nano-banana
+  // This avoids cases where a previously selected model doesn't accept input images
+  if (ids && ids.length > 0) {
+    req.model = "nano-banana" as any
   }
 }
 
@@ -582,5 +612,17 @@ textarea::-webkit-resizer {
   white-space: normal;
   word-break: break-word;
   overflow: visible;
+}
+
+/* Make the model selector feel like a button (when enabled) */
+.model-select:not(.q-field--disabled) {
+  cursor: pointer;
+}
+.model-select:not(.q-field--disabled)::v-deep(.q-field__control),
+.model-select:not(.q-field--disabled)::v-deep(.q-field__native),
+.model-select:not(.q-field--disabled)::v-deep(.q-field__marginal),
+.model-select:not(.q-field--disabled)::v-deep(.q-field__append),
+.model-select:not(.q-field--disabled)::v-deep(.q-field__label) {
+  cursor: pointer !important;
 }
 </style>
