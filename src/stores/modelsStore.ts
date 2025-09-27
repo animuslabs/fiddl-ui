@@ -1,11 +1,23 @@
 import type { AnyModel, ModelTags } from "lib/imageModels"
-import { modelsGetBaseModels, modelsGetModelByName, modelsGetPublicModels, type ModelsGetBaseModels200Item, type ModelsGetCustomModel200, type ModelsGetModelByName200, type ModelsGetModelByNameParams, type ModelsGetPublicModels200Item } from "lib/orval"
+import {
+  modelsGetBaseModels,
+  modelsGetModelByName,
+  modelsGetPublicModels,
+  modelsGetUserModels,
+  type ModelsGetBaseModels200Item,
+  type ModelsGetCustomModel200,
+  type ModelsGetModelByName200,
+  type ModelsGetModelByNameParams,
+  type ModelsGetPublicModels200Item,
+  type ModelsGetUserModels200Item,
+} from "lib/orval"
 import { LocalStorage } from "quasar"
 import { arraysEqual } from "lib/util"
 import { computed, reactive, ref, watch } from "vue"
 
 // Extend the base model type to include identifiers for custom models
 type CustomModel = ModelsGetBaseModels200Item & { id: string; creatorId: string }
+type RawCustomModel = ModelsGetPublicModels200Item | ModelsGetUserModels200Item
 
 export const models = reactive({
   // base: LocalStorage.getItem<ModelsGetBaseModels200Item[]>("baseModels") || [],
@@ -14,6 +26,14 @@ export const models = reactive({
   userModels: [] as CustomModel[], // Models filtered by specific user/creator
   currentModel: null as (ModelsGetBaseModels200Item | CustomModel) | null, // Single model for detail pages
 })
+
+function normalizeCustomModel(model: RawCustomModel): CustomModel {
+  return {
+    ...model,
+    blogLink: null,
+    longDescription: null,
+  }
+}
 
 export const filteredBaseModels = computed<ModelsGetBaseModels200Item[]>(() => (filter.tag ? models.base.filter((el) => el.modelTags.includes(filter.tag as ModelTags)) : models.base))
 
@@ -145,13 +165,7 @@ export async function loadCustomModels() {
   }
 
   const mergedSorted = (Object.values(tempObj) as ModelsGetPublicModels200Item[]).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-  const transformedModels: CustomModel[] = mergedSorted.map((model) => {
-    return {
-      ...model,
-      blogLink: null,
-      longDescription: null,
-    }
-  })
+  const transformedModels: CustomModel[] = mergedSorted.map((model) => normalizeCustomModel(model))
   models.custom = transformedModels
 }
 
@@ -169,21 +183,7 @@ export async function loadUserModels(creatorId: string, page: number = 1) {
     })
 
     const newModels = response.data
-  const transformedModels: CustomModel[] = newModels.map((model) => {
-    return {
-      blogLink: null,
-      description: model.description,
-      featured: model.featured,
-      id: model.id,
-      modelTags: model.modelTags,
-      name: model.name,
-      previewMediaId: model.previewMediaId,
-      slug: model.slug,
-      updatedAt: model.updatedAt,
-      longDescription: null,
-      creatorId: model.creatorId,
-    }
-  })
+    const transformedModels: CustomModel[] = newModels.map((model) => normalizeCustomModel(model))
 
     // If it's page 1, replace the array; otherwise append
     if (page === 1) {
@@ -195,6 +195,19 @@ export async function loadUserModels(creatorId: string, page: number = 1) {
       models.userModels = Array.from(existing.values()).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     }
 
+    return response.data
+  } finally {
+    loading.userModels = false
+  }
+}
+
+export async function loadMyCustomModels() {
+  loading.userModels = true
+  try {
+    const response = await modelsGetUserModels()
+    const items = (response.data || []).filter((model) => model.status === "trained")
+    const transformedModels: CustomModel[] = items.map((model) => normalizeCustomModel(model))
+    models.userModels = transformedModels.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     return response.data
   } finally {
     loading.userModels = false

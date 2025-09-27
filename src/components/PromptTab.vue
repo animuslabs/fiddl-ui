@@ -28,6 +28,7 @@
               div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
                 ImageRequestCard(:creation="creation")
               MediaGallery.q-pl-md.q-pr-md(
+                :key="`mosaic-${currentTab}`"
                 v-else-if="gridMode == 'mosaic'"
                 @selected-index="showDetails"
                 @model-select="handleModelSelect"
@@ -48,6 +49,7 @@
                 :enable-model-chip-select="currentTab === 'image'"
               )
               MediaGallery.q-pl-md.q-pr-md(
+                :key="`grid-${currentTab}`"
                 v-else-if="gridMode == 'grid'"
                 @selected-index="showDetails"
                 @model-select="handleModelSelect"
@@ -183,63 +185,23 @@ export default defineComponent({
     }
   },
   computed: {
-    allMediaObjects() {
-      const isImage = this.currentTab === "image"
-      // Sort requests newest-first, then flatten to mediaIds
-      const sorted = [...this.activeCreationsStore.creations].sort((a, b) => {
-        const at = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt as any).getTime()
-        const bt = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt as any).getTime()
-        return bt - at
-      })
-      const data = sorted.flatMap((req) =>
-        req.mediaIds.map((id) => {
-          const base = isImage ? { id, url: img(id, "md"), type: "image" as MediaType } : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
-
-          // Derive a numeric aspect ratio from the request (e.g. "16:9" -> 16/9)
-          const raw = req.aspectRatio as string | undefined
-          let ar: number | undefined
-          if (raw) {
-            if (raw.includes(":")) {
-              const parts = raw.split(":").map((x) => parseFloat(x))
-              const w = parts[0]
-              const h = parts[1]
-              ar = h && w ? w / h : undefined
-            } else {
-              const n = parseFloat(raw)
-              ar = Number.isFinite(n) ? n : undefined
-            }
-          }
-
-          const mediaList = isImage ? (req as any).images : (req as any).videos
-          const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === id)?.nsfw : undefined
-
-          return {
-            ...base,
-            requestId: req.id,
-            requestType: req.type,
-            isPublic: req.public,
-            requestQuantity: req.quantity,
-            aspectRatio: ar,
-            nsfw,
-          }
-        }),
-      )
-
-      // While an image batch is rendering, show placeholder tiles at the front
-      if (isImage) {
-        const pending = this.createImageStore.state.pendingPlaceholders || []
-        if (pending.length) {
-          const placeholders = pending.map((id: string) => ({
-            id,
-            url: img(id, "md"),
-            type: "image" as MediaType,
-            placeholder: true,
-          }))
-          return [...placeholders, ...data]
-        }
-      }
-
-      return data
+    imageMediaObjects(): MediaGalleryMeta[] {
+      const base = this.buildMediaGalleryItems(this.imageCreations.creations, "image")
+      const pending = this.createImageStore.state.pendingPlaceholders || []
+      if (!pending.length) return base
+      const placeholders = pending.map((id: string) => ({
+        id,
+        url: img(id, "md"),
+        type: "image" as MediaType,
+        placeholder: true,
+      }))
+      return [...placeholders, ...base]
+    },
+    videoMediaObjects(): MediaGalleryMeta[] {
+      return this.buildMediaGalleryItems(this.videoCreations.creations, "video")
+    },
+    allMediaObjects(): MediaGalleryMeta[] {
+      return this.currentTab === "image" ? this.imageMediaObjects : this.videoMediaObjects
     },
     activeCreateStore() {
       return match(this.currentTab)
@@ -316,7 +278,6 @@ export default defineComponent({
     },
     "activeCreationsStore.dynamicModel": {
       handler(val: boolean) {
-        console.log("activeCreationsStore.dynamicModel toggled", val)
         if (val) {
           this.activeCreationsStore.filter.model = this.activeCreateStore.state.req.model as any
           if (this.currentTab == "image") this.imageCreations.filter.customModelId = this.createImageStore.state.req.customModelId
@@ -349,11 +310,16 @@ export default defineComponent({
     "$userAuth.loggedIn": {
       immediate: false,
       handler(val) {
-        if (val) void this.activeCreationsStore.loadCreations(this.$userAuth.userId)
-        else {
+        if (!val) {
           this.imageCreations.reset()
           this.videoCreations.reset()
+          this.createContext.setHasLoaded("image", false)
+          this.createContext.setHasLoaded("video", false)
+          return
         }
+
+        this.maybeLoadTab(this.currentTab, { force: true })
+        this.maybePrefetchOppositeTab()
       },
     },
   },
@@ -362,14 +328,86 @@ export default defineComponent({
     if (this.quasar.screen.lt.md && !this.suppressCreateModal) this.createMode = true
     void this.$nextTick(() => {
       this.gridMode = this.createContext.state.gridMode
+      this.maybeLoadTab(this.currentTab)
+      this.maybePrefetchOppositeTab()
     })
   },
   methods: {
+    buildMediaGalleryItems(creations: UnifiedRequest[], mediaType: MediaType): MediaGalleryMeta[] {
+      if (!Array.isArray(creations) || creations.length === 0) return []
+      const sorted = [...creations].sort((a, b) => {
+        const at = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt as any).getTime()
+        const bt = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt as any).getTime()
+        return bt - at
+      })
+
+      return sorted.flatMap((req) => {
+        const ids = Array.isArray(req.mediaIds) ? req.mediaIds : []
+        return ids.map((id) => {
+          const isImage = mediaType === "image"
+          const base = isImage
+            ? { id, url: img(id, "md"), type: "image" as MediaType }
+            : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
+
+          const mediaList = isImage ? (req as any).images : (req as any).videos
+          const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === id)?.nsfw : undefined
+
+          return {
+            ...base,
+            requestId: req.id,
+            requestType: (req.type as MediaType | undefined) || mediaType,
+            isPublic: req.public,
+            requestQuantity: req.quantity,
+            aspectRatio: this.parseAspectRatio(req.aspectRatio),
+            nsfw,
+          }
+        })
+      })
+    },
+    parseAspectRatio(raw: unknown): number | undefined {
+      if (typeof raw === "number" && Number.isFinite(raw)) return raw
+      if (typeof raw !== "string" || !raw.length) return undefined
+      if (raw.includes(":")) {
+        const parts = raw.split(":").map((x) => Number.parseFloat(x))
+        const [w, h] = parts
+        if (Number.isFinite(w) && Number.isFinite(h) && h !== 0) return w / h
+        return undefined
+      }
+      const parsed = Number.parseFloat(raw)
+      return Number.isFinite(parsed) ? parsed : undefined
+    },
     isImageCreations(store: any): store is ReturnType<typeof useImageCreations> {
       return "filter" in store && "customModelId" in store.filter
     },
     setActiveCreationsStore(activeTab: "image" | "video") {
       this.currentTab = activeTab
+      this.createContext.setActiveTab(activeTab)
+      this.maybeLoadTab(activeTab)
+      this.maybePrefetchOppositeTab()
+    },
+    maybeLoadTab(tab: MediaType, options: { force?: boolean } = {}) {
+      if (!this.$userAuth?.loggedIn) return
+      const userId = this.$userAuth.userId
+      if (!userId) return
+
+      const store = tab === "image" ? this.imageCreations : this.videoCreations
+      const { force = false } = options
+      if (store.loadingCreations) return
+      const hasItems = Array.isArray(store.creations) && store.creations.length > 0
+      if (!force && hasItems) {
+        if (!this.createContext.state.hasLoaded[tab]) this.createContext.setHasLoaded(tab, true)
+        return
+      }
+
+      if (force) store.searchCreations(userId)
+      else void store.loadCreations(userId)
+
+      if (!this.createContext.state.hasLoaded[tab]) this.createContext.setHasLoaded(tab, true)
+    },
+    maybePrefetchOppositeTab() {
+      const otherTab: MediaType = this.currentTab === "image" ? "video" : "image"
+      if (this.createContext.state.hasLoaded[otherTab]) return
+      this.maybeLoadTab(otherTab)
     },
     showDetails(imageIndex: number) {
       // Use the exact list and ordering shown in the gallery

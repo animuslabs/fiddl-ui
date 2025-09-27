@@ -223,7 +223,7 @@ async function reloadBase() {
 async function reloadCustom() {
   loading.custom = true
   try {
-    if (auth.userId) await modelsStore.loadUserModels(auth.userId)
+    if (auth.userId) await modelsStore.loadMyCustomModels()
   } finally { loading.custom = false }
 }
 
