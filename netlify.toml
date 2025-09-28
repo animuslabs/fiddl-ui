@@ -55,6 +55,26 @@
   path     = "/"
   cache = "manual"
 
+[[edge_functions]]
+  function = "sitemap"
+  path     = "/sitemap.xml"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "sitemap"
+  path     = "/sitemap-static.xml"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "sitemap"
+  path     = "/sitemap-requests-images.xml"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "sitemap"
+  path     = "/sitemap-requests-videos.xml"
+  cache = "manual"
+
 [functions]
   included_files = [
     "netlify/edge-functions/lib/**",
@@ -74,5 +94,4 @@
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
-
 

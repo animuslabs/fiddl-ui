@@ -1,6 +1,6 @@
 <template lang="pug">
-  q-form.create-form.col.fit(@submit.prevent="startCreateKeyboard()" style="padding-bottom: env(safe-area-inset-bottom, 24px);")
-    component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md}")
+  q-form.create-form.col.fit(@submit.prevent="startCreateKeyboard()" :style="$q.screen.lt.md ? 'padding-bottom: env(safe-area-inset-bottom, 24px);' : ''")
+    component(:is="scrollWrapperComponent" :class="{'form-scroll':quasar.screen.lt.md, 'grow-scroll': quasar.screen.gt.sm}")
       .centered.q-pb-md.relative-position
         q-input.full-width( v-model="vidStore.state.req.prompt" style="resize:none;" :disable="anyLoading" @keydown.enter.prevent="startCreateKeyboard()" color="primary" filled type="textarea" placeholder="Enter a description of the video to create" :autogrow="quasar.screen.lt.md")
         .absolute-bottom-right(style="margin-bottom:30px; margin-right:30px;")
@@ -91,21 +91,22 @@
                 div not supported by model
           q-btn.q-mt-sm(v-if="startingImageUrl" label="Clear" @click="clearStartingImage" icon="close")
           q-btn.q-mt-sm(v-else label="Choose starting Image" @click="showImageDialog = true")
-    .full-width(style="height:30px;").gt-sm
-    CreateActionBar(
-      v-if="$userAuth.userData"
-      :publicCost="vidStore.publicTotalCost"
-      :privateCost="vidStore.privateTotalCost"
-      :disabled="createDisabled"
-      :loadingCreate="loading.create"
-      :currentPublic="req.public"
-      :showBackBtn="showBackBtn"
-      :extraDisabled="actionCooldown"
-      :onCreate="startCreate"
-      caption="Public videos appear in the community feed."
-      kind="video"
-      @back="$emit('back')"
-    )
+    q-space.form-spacer
+    .form-action-bar
+      CreateActionBar(
+        v-if="$userAuth.userData"
+        :publicCost="vidStore.publicTotalCost"
+        :privateCost="vidStore.privateTotalCost"
+        :disabled="createDisabled"
+        :loadingCreate="loading.create"
+        :currentPublic="req.public"
+        :showBackBtn="showBackBtn"
+        :extraDisabled="actionCooldown"
+        :onCreate="startCreate"
+        caption="Public videos appear in the community feed."
+        kind="video"
+        @back="$emit('back')"
+      )
 
   UploadedImagesDialog(v-model="showImageDialog" @accept="onDialogAccept" :multiSelect="false" :thumbSizeMobile="95" context="video")
 
@@ -195,7 +196,7 @@ function onDialogAccept(ids: string[]) {
   req.value.uploadedStartImageId = ids[0]
 }
 
-const scrollWrapperComponent = computed(() => (quasar.screen.lt.md ? "q-scroll-area" : "div"))
+const scrollWrapperComponent = computed(() => "q-scroll-area")
 const showBackBtn = computed(() => quasar.screen.lt.md)
 const startingImageUrl = computed(() => {
   if (req.value.startImageId) return img(req.value.startImageId, "md")
@@ -263,6 +264,22 @@ textarea::-webkit-resizer {
   overflow-x: hidden;
 }
 
+.form-spacer {
+  flex: 1 0 auto;
+  min-height: 0;
+}
+
+.form-action-bar {
+  flex-shrink: 0;
+  padding-top: 16px;
+}
+
+@media (min-width: 768px) {
+  .form-action-bar {
+    padding-top: 30px;
+  }
+}
+
 .settings-grid {
   width: 100%;
 }
@@ -280,6 +297,12 @@ textarea::-webkit-resizer {
   overflow-y: auto;
   overflow-x: hidden;
   height: 700px;
+}
+/* Desktop: let the scroll wrapper grow to fill the card */
+.grow-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 @media (max-width: 1000px) {
   .form-scroll {

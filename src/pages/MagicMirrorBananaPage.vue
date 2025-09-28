@@ -40,7 +40,17 @@ q-page.full-width
       .centered.full-width
         .row.q-ml-lg
           q-btn(flat icon="refresh" label="Start again" :size="isDesktop? 'lg':'md'" no-caps @click="startAgain")
-          q-btn(color="primary" square icon="group" label="More Looks" :size="isDesktop? 'lg':'md'" no-caps @click="openMoreLooks")
+          q-btn(
+            color="primary"
+            square
+            icon="group"
+            label="More Looks"
+            :size="isDesktop? 'lg':'md'"
+            no-caps
+            :loading="checkingMoreLooks"
+            :disable="checkingMoreLooks"
+            @click="openMoreLooks"
+          )
           q-btn(flat icon="home_repair_service" label="Advanced" :size="isDesktop? 'lg':'md'" no-caps @click="goToCreatePage")
           q-btn(flat icon="star" label="Magic Mirror Pro" :size="isDesktop? 'lg':'md'" no-caps @click="$router.push({name:'magicMirror'})")
     .centered.q-mt-sm.q-ma-md.q-pa-md(v-if="showTemplatePreview")
@@ -140,10 +150,14 @@ q-page.full-width
           p.text-secondary.q-mt-sm Analyzing your selfie…
     // Once we know the gender, show the picker immediately
     div(v-else class="tpl-dialog-body")
+      div.q-mb-md.text-center(v-if="dialogMode === 'additional'")
+        p.text-secondary.q-mb-none(v-if="perLookCost > 0 && maxAdditionalSelectable > 0") Each new look costs {{ perLookCost }} points (Nano Banana + Seedream 4). You can generate up to {{ maxAdditionalSelectable }} more looks with your {{ availablePoints }} points.
+        p.text-negative.q-mb-none(v-else-if="perLookCost > 0") You need more points to generate more looks.
       PromptTemplatesPicker(
       :gender="genderForTemplates || 'female'"
       :templates="displayTemplates"
       :selected="dialogSelection"
+      :maxSelected="dialogMode === 'initial' ? 3 : maxAdditionalSelectable"
       :gridMin="isDesktop ? 180 : 120"
       :selectionMode="'multi'"
       :selectable="true"
@@ -228,7 +242,7 @@ import { usePromptTemplatesStore } from "src/stores/promptTemplatesStore"
 import { catchErr } from "lib/util"
 import { toCreatePage } from "lib/routeHelpers"
 import { prices } from "src/stores/pricesStore"
-import { magicMirrorFastTotalPoints } from "src/lib/magic/magicCosts"
+import { magicMirrorFastTotalPoints, applyPrivateTax } from "src/lib/magic/magicCosts"
 import { createUploadImage, createQueueAsyncBatch, creationsDescribeUploadedImage, createBatchStatus } from "lib/orval"
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
@@ -247,6 +261,17 @@ const loginDialogOpen = ref(false)
 // Cost via helper: 3 looks × 2 models + 4 uploads
 const fastRequiredPoints = computed(() => magicMirrorFastTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
+const perLookCost = computed(() => {
+  const banana = applyPrivateTax(prices.image?.model?.["nano-banana"] || 0)
+  const seedream4 = applyPrivateTax(prices.image?.model?.["seedream4"] || 0)
+  return banana + seedream4
+})
+const maxAdditionalSelectable = computed(() => {
+  const cost = perLookCost.value
+  if (cost <= 0) return 3
+  const affordable = Math.floor(availablePoints.value / cost)
+  return Math.max(0, Math.min(3, affordable))
+})
 const buyPointsDialogOpen = ref(false)
 const missingFastPoints = computed(() => Math.max(0, fastRequiredPoints.value - availablePoints.value))
 // Gender handling for templates: default to female (no training-derived gender here)
@@ -277,6 +302,11 @@ const additionalLoadingTemplates = ref<string[]>([])
 const initialLoadingTemplates = ref<string[]>([])
 const pendingNewCount = ref<number>(0)
 const isWaitingForImages = ref(false)
+const balanceRefreshPending = ref(false)
+const waitingCardSuppressed = ref(false)
+const WAITING_CARD_TIMEOUT = 30_000
+
+let waitingCardTimer: number | null = null
 
 // Polling timers
 let creationsPollTimer: number | null = null
@@ -284,6 +314,21 @@ let batchStatusTimer: number | null = null
 
 const SESSION_KEY = "mmBananaState"
 const promptTplStore = usePromptTemplatesStore()
+
+function clearWaitingCardTimer() {
+  if (waitingCardTimer) window.clearTimeout(waitingCardTimer)
+  waitingCardTimer = null
+}
+
+function suppressWaitingCard() {
+  waitingCardSuppressed.value = true
+  isWaitingForImages.value = false
+  generatingMore.value = false
+  pendingNewCount.value = 0
+  initialLoadingTemplates.value = []
+  additionalLoadingTemplates.value = []
+  saveSession()
+}
 
 // Results actions shared via composable
 const {
@@ -306,6 +351,7 @@ const {
   triggeredVideoIds,
   quickBuyDialogOpen,
 } = useMagicMirrorResults({ animatedKey: "mmBananaAnimatedVideoIds", router })
+const checkingMoreLooks = ref(false)
 
 // displayTemplates, mapping, and selection provided by composable
 
@@ -344,8 +390,12 @@ const previewLoadingMessage = computed(() => (initialLoadingTemplates.value.leng
 // Keep the initial template preview visible until the first 3 images
 // are present, avoiding a brief blank state between the first image
 // arriving and the results grid taking over.
-const showInitialPreview = computed(() => templatesConfirmed.value && generatedImageIds.value.length < 3)
-const showTemplatePreview = computed(() => isWaitingForImages.value || pendingNewCount.value > 0 || generatingMore.value)
+const showInitialPreview = computed(
+  () => templatesConfirmed.value && generatedImageIds.value.length < 3 && !waitingCardSuppressed.value,
+)
+const showTemplatePreview = computed(
+  () => !waitingCardSuppressed.value && (isWaitingForImages.value || pendingNewCount.value > 0 || generatingMore.value),
+)
 
 const isDesktop = computed(() => quasar.screen.gt.sm)
 const isMobile = computed(() => quasar.platform.is.mobile)
@@ -491,7 +541,29 @@ async function describeFirstUploaded(firstId: string) {
 }
 
 // Templates dialog handlers
-function openMoreLooks() {
+async function refreshAvailablePoints() {
+  if (!userAuth.userId) return
+  try {
+    await userAuth.loadUserData()
+  } catch (e) {
+    console.warn("Failed to refresh balance", e)
+  }
+}
+
+async function openMoreLooks() {
+  if (checkingMoreLooks.value) return
+  checkingMoreLooks.value = true
+  try {
+    await refreshAvailablePoints()
+  } finally {
+    checkingMoreLooks.value = false
+  }
+  const cost = perLookCost.value
+  if (cost > 0 && availablePoints.value < cost) {
+    quasar.notify({ color: "warning", message: "You need more points to generate new looks." })
+    quickBuyDialogOpen.value = true
+    return
+  }
   openTemplatesDialog("additional")
 }
 
@@ -528,6 +600,19 @@ async function onDialogConfirm() {
 
   const ids = dialogSelection.value.slice()
   if (!ids.length) return
+  const perLook = perLookCost.value
+  if (dialogMode.value === "additional" && perLook > 0) {
+    const totalCost = perLook * ids.length
+    if (totalCost > availablePoints.value) {
+      const missing = Math.max(1, Math.ceil(totalCost - availablePoints.value))
+      quasar.notify({
+        color: "warning",
+        message: `You need ${missing} more points to generate ${ids.length === 1 ? "this look" : "these looks"}.`,
+      })
+      quickBuyDialogOpen.value = true
+      return
+    }
+  }
   try {
     generatingMore.value = true
     dialogOpen.value = false
@@ -550,6 +635,7 @@ async function onDialogConfirm() {
     catchErr(e)
     generatingMore.value = false
     additionalLoadingTemplates.value = []
+    balanceRefreshPending.value = false
   }
 }
 
@@ -557,6 +643,8 @@ async function onDialogConfirm() {
 async function scheduleBananaRenders(templates: PromptTemplate[]) {
   if (!templates.length || !uploadedIds.value.length) return
   try {
+    balanceRefreshPending.value = true
+    waitingCardSuppressed.value = false
     isWaitingForImages.value = true
     pendingBaselineIds.value = generatedImageIds.value.slice()
     // Expect 2 images per template
@@ -597,6 +685,7 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
     void userAuth.loadUserData()
   } catch (e: any) {
     catchErr(e)
+    balanceRefreshPending.value = false
   }
 }
 
@@ -627,11 +716,16 @@ function startCreationsPoll() {
       pendingNewCount.value = Math.max(0, pendingNewCount.value - newlyAdded.length)
       saveSession()
     }
+    const stillWaiting = sessionCreatedIds.value.length < sessionExpectedTotal.value
     // Always refresh waiting flag in case no new items were detected this tick
-    isWaitingForImages.value = sessionCreatedIds.value.length < sessionExpectedTotal.value
+    if (!waitingCardSuppressed.value) {
+      isWaitingForImages.value = stillWaiting
+    } else if (!stillWaiting) {
+      waitingCardSuppressed.value = false
+    }
 
     // If we've met the expected total for the session, clear any preview loaders
-    if (!isWaitingForImages.value) {
+    if (!stillWaiting) {
       generatingMore.value = false
       additionalLoadingTemplates.value = []
       initialLoadingTemplates.value = []
@@ -642,9 +736,13 @@ function startCreationsPoll() {
       }
       lastKnownIds.value = allIds.slice()
       saveSession()
+      if (balanceRefreshPending.value) {
+        balanceRefreshPending.value = false
+        void userAuth.loadUserData()
+      }
     }
 
-    const expecting = sessionCreatedIds.value.length < sessionExpectedTotal.value
+    const expecting = stillWaiting
     if (sessionCreatedIds.value.length >= 3 && step.value !== "results") {
       step.value = "results"
       saveSession()
@@ -724,6 +822,19 @@ watch(step, () => {
   void userAuth.loadUserData()
 })
 
+watch(isWaitingForImages, (waiting) => {
+  if (waiting) {
+    waitingCardSuppressed.value = false
+    clearWaitingCardTimer()
+    waitingCardTimer = window.setTimeout(() => {
+      if (!isWaitingForImages.value) return
+      suppressWaitingCard()
+    }, WAITING_CARD_TIMEOUT)
+  } else {
+    clearWaitingCardTimer()
+  }
+})
+
 // Close login dialog when user logs in
 watch(
   () => userAuth.loggedIn,
@@ -740,6 +851,7 @@ onBeforeUnmount(() => {
   stopCreationsPoll()
   stopAnimPromptCountdown()
   stopBatchStatusWatch()
+  clearWaitingCardTimer()
   if (signupTimer) window.clearTimeout(signupTimer)
 })
 

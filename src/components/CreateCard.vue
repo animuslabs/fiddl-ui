@@ -1,6 +1,6 @@
 <template lang="pug">
   div
-    q-card(style="overflow: hidden;")
+    q-card(class="create-card" style="overflow: hidden;")
       div
         q-tabs(v-model="store.activeTab" class="text-primary" align="center" inline-label)
           q-tab(name="image" label="Image" icon="image")
@@ -10,11 +10,11 @@
           v-model="store.activeTab"
           swipeable
           animated
-          :style="quasar.screen.lt.md ? 'height:calc(95vh - env(safe-area-inset-bottom)); height:calc(95dvh - env(safe-area-inset-bottom));' : ''"
+          :style="quasar.screen.lt.md ? 'height:calc(95vh - env(safe-area-inset-bottom)); height:calc(95dvh - env(safe-area-inset-bottom));' : 'flex:1 1 auto; min-height:0; overflow:hidden;'"
         )
-          q-tab-panel(name="image")
+          q-tab-panel(name="image" style="display:flex; flex-direction:column; height:100%; padding:16px 16px 0 16px;")
             ImageForm(:showBackBtn="showBackBtn" @back="$emit('back')"  @created="emit('created')")
-          q-tab-panel(name="video")
+          q-tab-panel(name="video" style="display:flex; flex-direction:column; height:100%; padding:16px 16px 0 16px;")
             VideoForm(@back="$emit('back')" @created="emit('created')" )
 
 </template>
@@ -109,6 +109,12 @@ watch(
 <style scoped>
 textarea::-webkit-resizer {
   display: none;
+}
+
+.create-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .create-form {

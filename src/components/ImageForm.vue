@@ -1,6 +1,6 @@
 <template lang="pug">
   q-form.create-form.col.fit(@submit.prevent="startCreateKeyboard()")
-    component(:is="scrollWrapperComponent" :class="{'form-scroll':$q.screen.lt.md}")
+    component(:is="scrollWrapperComponent" :class="{'form-scroll':$q.screen.lt.md, 'grow-scroll': $q.screen.gt.sm}")
       .centered.relative-position
         q-input(
           v-model="req.prompt"
@@ -82,7 +82,7 @@
               ref="modelSelectRef"
               v-model="req.model"
               :options="[]"
-              style="font-size:20px; min-width:140px; max-width:220px;"
+              style="font-size:18px; min-width:100px; max-width:220px;"
               :disable="createStore.anyLoading"
               :display-value="modelDisplayText"
               @update:model-value="onModelSelected"
@@ -123,57 +123,47 @@
               .badge-sm.text-white(v-if="!createStore.state.randomizer.enabled") {{ createStore.selectedModelPrice }}
               div(v-if="createStore.state.randomizer.enabled")
                 h4 {{ selectedChipLabels.length }}
-      .row.q-mx-md
-        //- Legacy custom-model card removed; chips in the selector show selections
-      .row.q-col-gutter-md.full-width.items-start.q-pt-sm
-        .col-12
-          // Model selection is unified in the selector above; legacy buttons removed
-          // Randomizer toggle and config
-          //- .row.items-center.q-mt-sm.no-wrap
-            q-toggle.q-mr-sm(
-              v-model="createStore.state.randomizer.enabled"
-              color="primary"
-              label="Random models"
-              @update:model-value="createStore.saveRandomizer()"
-            )
-            q-btn(flat dense no-caps icon="tune" label="Configure" @click="randomizerDialogOpen = true")
-            q-tooltip(v-if="createStore.state.randomizer.enabled")
-              div Picks {{ createStore.state.randomizer.picksCount }} random models per creation.
-              div Aspect ratio forced to 16:9, 9:16, or 1:1.
-
       .row.items-start.wrap.q-col-gutter-md
-
         // Reference / input images section
-        div.relative-position.col-12.q-mt-md(v-if="supportsInputImages")
-          p.setting-label.q-ml-md {{ supportsMulti ? 'Input Images' : 'Input Image' }}
-          // Thumbnails
-          div(v-if="supportsMulti")
-            .row.full-width.q-mt-sm.q-pl-md
-              StartImageThumbs.q-mb-sm(:items="selectedStartImages" :size="$q.screen.lt.md ? 56 : 64" :gap="8" @remove="removeImage")
-            .row.items-center.q-gutter-sm.q-mb-md
-              q-btn(flat color="primary" icon="add" :label="selectedStartImages.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
-              q-badge(v-if="selectedStartImages.length" color="grey-7") {{ selectedStartImages.length }}/{{ maxMulti }}
-              q-btn(v-if="selectedStartImages.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
-          div(v-else)
-            q-img.q-mb-sm.q-mt-xs(v-if="firstSelectedImage" :src="thumbUrl(firstSelectedImage)" fit="contain" :img-style="{ objectFit: 'contain' }" style="max-height:200px; min-width:120px;")
-            .row.items-center.q-gutter-sm
-              q-btn(flat color="primary" icon="photo_library" :label="firstSelectedImage ? 'Change image' : 'Choose image'" @click="openImagesDialog")
-              q-btn(v-if="firstSelectedImage" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+        div.relative-position.col-12.q-mt-md
+          // When some selected models support images
+          template(v-if="supportsInputImages")
+            p.setting-label.q-ml-md {{ supportsMulti ? 'Input Images' : 'Input Image' }}
+            p.text-caption.text-grey-6.q-ml-md.q-mt-xs(v-if="inputSupportNote") {{ inputSupportNote }}
+            // Thumbnails
+            div(v-if="supportsMulti")
+              .row.full-width.q-mt-sm.q-pl-md
+                StartImageThumbs.q-mb-sm(:items="selectedStartImages" :size="$q.screen.lt.md ? 56 : 64" :gap="8" @remove="removeImage")
+              .row.items-center.q-gutter-sm.q-mb-md
+                q-btn(flat color="primary" icon="add" :label="selectedStartImages.length ? 'Add more' : 'Add images'" @click="openImagesDialog")
+                q-badge(v-if="selectedStartImages.length" color="grey-7") {{ selectedStartImages.length }}/{{ maxMulti }}
+                q-btn(v-if="selectedStartImages.length" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+            div(v-else)
+              q-img.q-mb-sm.q-mt-xs(v-if="firstSelectedImage" :src="thumbUrl(firstSelectedImage)" fit="contain" :img-style="{ objectFit: 'contain' }" style="max-height:200px; min-width:120px;")
+              .row.items-center.q-gutter-sm
+                q-btn(flat color="primary" icon="photo_library" :label="firstSelectedImage ? 'Change image' : 'Choose image'" @click="openImagesDialog")
+                q-btn(v-if="firstSelectedImage" flat color="secondary" icon="clear" label="Clear" @click="clearImages")
+          // When no selected models support images, show an explanatory note
+          template(v-else)
+            p.setting-label.q-ml-md Input Images
+            p.text-caption.text-grey-6.q-ml-md.q-mt-xs {{ inputSupportNote || 'All selected models don\'t support image inputs.' }}
 
-    .full-width(style="height:30px;").gt-sm
-    CreateActionBar(
-      v-if="$userAuth.userData"
-      :publicCost="publicCostToShow"
-      :privateCost="privateCostToShow"
-      :disabled="createDisabled"
-      :loadingCreate="loading.create"
-      :currentPublic="req.public"
-      :showBackBtn="showBackBtnComputed"
-      :extraDisabled="actionCooldown"
-      :onCreate="startCreateImage"
-      caption="Public creations appear in the community feed."
-      kind="image"
-      @back="$emit('back')")
+    q-space.form-spacer
+    .form-action-bar
+      CreateActionBar(
+        v-if="$userAuth.userData"
+        :publicCost="publicCostToShow"
+        :privateCost="privateCostToShow"
+        :disabled="createDisabled"
+        :loadingCreate="loading.create"
+        :currentPublic="req.public"
+        :showBackBtn="showBackBtnComputed"
+        :extraDisabled="actionCooldown"
+        :onCreate="startCreateImage"
+        caption="Public creations appear in the community feed."
+        kind="image"
+        @back="$emit('back')"
+      )
   //- Legacy custom models dialog removed (unified picker handles this)
 
   q-dialog(v-model="templatesDialogOpen" :maximized="$q.screen.lt.md")
@@ -279,9 +269,70 @@ async function startCreateKeyboard() {
 // Disable aspect ratio selection only when a single model is selected and it's Nano Banana.
 // In multi-model mode we allow picking a ratio and apply per-model fallbacks.
 const isAspectControlDisabled = computed(() => req.model === "nano-banana" && !createStore.state.randomizer.enabled)
-const supportsMulti = computed(() => ["seedream4", "seedream4k", "nano-banana", "gpt-image-1"].includes(req.model))
-const supportsSingle = computed(() => ["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "photon", "custom"].includes(req.model))
-const supportsInputImages = computed(() => supportsMulti.value || supportsSingle.value)
+
+// Image input support per model
+type InputSupport = "multi" | "single" | "none"
+function modelInputSupport(slug: string): InputSupport {
+  if (["seedream4", "seedream4k", "nano-banana", "gpt-image-1"].includes(slug)) return "multi"
+  if (["flux-dev", "flux-pro", "flux-pro-ultra", "flux-kontext", "photon", "custom"].includes(slug)) return "single"
+  return "none"
+}
+
+function modelDisplayName(slug: string): string {
+  if (slug === "custom") return "Custom model"
+  const m = (modelsStore.models.base || []).find((x) => x.slug === slug)
+  return m?.name || slug
+}
+
+// Compute combined support across multi-model selections when randomizer is enabled (manual mode).
+const combinedInputSupport = computed<InputSupport>(() => {
+  const rnd: any = createStore.state.randomizer
+  // Single-model mode: just check the active model
+  if (!rnd?.enabled) return modelInputSupport(req.model as string)
+  // Only adapt in manual multi-select mode; in random mode, fall back to single-model selection
+  if (rnd.mode !== "manual") return modelInputSupport(req.model as string)
+
+  const base: string[] = Array.isArray(rnd.manualSelection) ? rnd.manualSelection : []
+  const hasCustom = Array.isArray(rnd.manualCustomIds) && rnd.manualCustomIds.length > 0
+  const all = hasCustom ? [...base, "custom"] : [...base]
+  if (all.length === 0) return modelInputSupport(req.model as string)
+
+  let hasMulti = false
+  let hasSingle = false
+  for (const m of all) {
+    const s = modelInputSupport(m)
+    if (s === "multi") hasMulti = true
+    else if (s === "single") hasSingle = true
+  }
+  if (hasMulti) return "multi"
+  if (hasSingle) return "single"
+  return "none"
+})
+
+const supportsMulti = computed(() => combinedInputSupport.value === "multi")
+const supportsSingle = computed(() => combinedInputSupport.value === "single")
+const supportsInputImages = computed(() => combinedInputSupport.value !== "none")
+
+// Optional helper note for mixed selections or no-support cases
+const inputSupportNote = computed(() => {
+  const rnd: any = createStore.state.randomizer
+  if (rnd?.enabled && rnd.mode === "manual") {
+    const base: string[] = Array.isArray(rnd.manualSelection) ? rnd.manualSelection : []
+    const hasCustom = Array.isArray(rnd.manualCustomIds) && rnd.manualCustomIds.length > 0
+    const all = hasCustom ? [...base, "custom"] : [...base]
+    if (all.length === 0) return null
+    const types = new Set(all.map((m) => modelInputSupport(m)))
+    if (!types.has("multi") && !types.has("single")) return "All selected models don’t support image inputs."
+    // If any selected model doesn't support inputs, list them
+    if (types.has("none")) {
+      const unsupportedNames = all.filter((m) => modelInputSupport(m) === "none").map((m) => modelDisplayName(m))
+      if (unsupportedNames.length) return `Some selected models don’t support image inputs: ${unsupportedNames.join(", ")}.`
+    }
+    // Mixed single+multi (but all support inputs)
+    if (types.has("multi") && types.has("single")) return "Some selected models accept only one input image; extras are ignored for those."
+  }
+  return null
+})
 const maxMulti = 10
 
 type StartImageItem = { id: string; source: "uploaded" | "existing" }
@@ -403,7 +454,7 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
   })
   return true
 }
-const scrollWrapperComponent = computed(() => ($q.screen.lt.md ? "q-scroll-area" : "div"))
+const scrollWrapperComponent = computed(() => "q-scroll-area")
 // function setCustomModel(model: CustomModel) { /* legacy */ }
 
 function openImagesDialog() {
@@ -621,8 +672,32 @@ textarea::-webkit-resizer {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  min-height: 0;
   /* Prevent tiny horizontal overflow from gutter/margins */
   overflow-x: hidden;
+}
+
+.form-spacer {
+  flex: 1 0 auto;
+  min-height: 0;
+}
+
+.form-action-bar {
+  flex-shrink: 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  margin-top: auto;
+}
+
+.form-action-bar {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .form-action-bar {
+    padding-top: 30px;
+    padding-bottom: 16px;
+  }
 }
 
 .settings-grid {
@@ -642,6 +717,18 @@ textarea::-webkit-resizer {
   overflow-y: auto;
   overflow-x: hidden;
   height: 700px;
+}
+/* Desktop: let the scroll wrapper grow to fill the card */
+.grow-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+.grow-scroll::v-deep(.q-scrollarea__container) {
+  min-height: 100%;
+}
+.grow-scroll::v-deep(.q-scrollarea__content) {
+  min-height: 100%;
 }
 @media (max-width: 1000px) {
   .form-scroll {

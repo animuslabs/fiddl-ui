@@ -686,13 +686,31 @@ function handleVisibilityClick(item: MediaGalleryMeta) {
   const requestType = (item.requestType || item.type || "image") as "image" | "video"
   const requestId = item.requestId
   const { surcharge, taxPercent } = estimatePrivateTax(requestId, requestType, item)
-  const message = nextPublic
-    ? "Make this creation public? It will appear in the community feed."
-    : taxPercent > 0
-      ? surcharge > 0
-        ? `Make this creation private? This costs ${surcharge} points (${taxPercent}% of the original price).`
-        : `Make this creation private? This adds a ${taxPercent}% surcharge.`
+  // Build context-rich message for image privacy changes, including
+  // unlock pricing and creator earnings from pricesStore.
+  let message: string
+  if (nextPublic) {
+    if (requestType === "image") {
+      const unlockCost = (prices?.image?.unlock as number) ?? 0
+      const earn = (prices?.image?.unlockCommission as number) ?? 0
+      message = `Make this creation public? It will appear in the community feed. Others can unlock the prompt details and the full‑resolution/upscaled image for ${unlockCost} points. You earn ${earn} points each time someone unlocks it.`
+    } else {
+      // Default/generic copy (videos)
+      message = "Make this creation public? It will appear in the community feed."
+    }
+  } else {
+    // Going private: preserve existing surcharge/tax explanation, then append context for images
+    const base = taxPercent > 0
+      ? (surcharge > 0
+          ? `Make this creation private? This costs ${surcharge} points (${taxPercent}% of the original price).`
+          : `Make this creation private? This adds a ${taxPercent}% surcharge.`)
       : "Make this creation private?"
+    if (requestType === "image") {
+      message = `${base} Private creations are hidden from the community feed and can’t be unlocked. Others won’t see your prompt details or the full‑resolution image.`
+    } else {
+      message = base
+    }
+  }
 
   Dialog.create({
     title: nextPublic ? "Share creation publicly?" : "Make creation private?",

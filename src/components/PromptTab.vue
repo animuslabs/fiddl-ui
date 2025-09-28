@@ -3,20 +3,24 @@
   .full-width
     .row.full-height.full-width.no-wrap
       .col-auto.q-ml-md( v-if="quasar.screen.gt.sm")
-        .centered(style="width:450px; padding:0px;")
-          CreateCard.q-mt-md.full-width(
+        // Make the create column sticky and full-height on desktop
+        .centered(
+          style="width:450px; padding:16px 0; position:sticky; top:60px; height:calc(100vh - 60px); height:calc(100dvh - 60px);"
+        )
+          CreateCard.full-width(
             @created="addImage"
-            style="padding-top:0px; min-width:300px; max-width:600px;"
+            style="padding-top:0px; min-width:300px; max-width:600px; height:100%;"
             ref="createCard"
             :customModel="customModel"
             @active-tab="setActiveCreationsStore"
           )
       .col-grow.q-mr-sm.full-height
         q-scroll-area.full-width(:style="quasar.screen.gt.sm ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);' : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'")
-          .full-width(style="height:15px;").gt-sm
+          // top spacer to align right controls with create card
+          .full-width(style="height:16px;").gt-sm
           .full-width.relative-position
             .full-width(style="height:55px;")
-              q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px;")
+              q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px; top:10px;")
                 .row.q-gutter-md.items-center.no-wrap
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   q-separator(vertical)
@@ -333,13 +337,13 @@ export default defineComponent({
     })
   },
   methods: {
-    showDetailsBySelect(payload: { id: string; type: 'image' | 'video' }) {
+    showDetailsBySelect(payload: { id: string; type: "image" | "video" }) {
       const displayObjects = this.allMediaObjects as MediaGalleryMeta[]
       if (!Array.isArray(displayObjects) || !displayObjects.length) return
       if (!payload?.id) return
 
       // Build viewer list excluding placeholders, preserving visual order
-      const viewerObjects = displayObjects.filter((o) => !(typeof o.id === 'string' && o.id.startsWith('pending-')))
+      const viewerObjects = displayObjects.filter((o) => !(typeof o.id === "string" && o.id.startsWith("pending-")))
       if ((mediaViwer as any).showById) void (mediaViwer as any).showById(viewerObjects, payload.id)
       else {
         const startIndex = viewerObjects.findIndex((o) => o.id === payload.id)
@@ -359,9 +363,7 @@ export default defineComponent({
         const ids = Array.isArray(req.mediaIds) ? req.mediaIds : []
         return ids.map((id) => {
           const isImage = mediaType === "image"
-          const base = isImage
-            ? { id, url: img(id, "md"), type: "image" as MediaType }
-            : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
+          const base = isImage ? { id, url: img(id, "md"), type: "image" as MediaType } : ({ id, url: s3Video(id, "preview-sm"), type: "video" as MediaType } as const)
 
           const mediaList = isImage ? (req as any).images : (req as any).videos
           const nsfw = Array.isArray(mediaList) ? mediaList.find((entry: any) => entry.id === id)?.nsfw : undefined
