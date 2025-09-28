@@ -3,6 +3,7 @@ MediaViewerDialog(
   :mediaObjects="mediaObjects"
   :requestId="requestId"
   :startIndex="startIndex"
+  :startId="startId"
   :allowDelete="allowDelete"
   :initialCommentId="initialCommentId"
   @ok="onOKClick"
@@ -33,6 +34,11 @@ export default defineComponent({
     startIndex: {
       type: Number,
       default: 0,
+      required: false,
+    },
+    startId: {
+      type: String,
+      default: undefined,
       required: false,
     },
     allowDelete: {

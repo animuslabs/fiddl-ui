@@ -30,6 +30,8 @@ q-dialog(ref="dialog" @hide="onDialogHide" )
             .col-auto
               q-btn(label="original" icon="image" @click="downloadOriginal()")
             .col-auto(v-if="type == 'image' && !isSvg")
+              q-btn(label="HD JPG" icon="photo" @click="downloadHdJpg()" :disable="isConvertingJpg")
+            .col-auto(v-if="type == 'image' && !isSvg")
               q-btn(label="4k Upscale" icon="4k" @click="downloadUpscaled()" :disable="isUpscaling")
             small(v-if="type == 'image'") Upscaling can take 30+ seconds the first time
       .centered.q-pt-md.q-pb-md
@@ -44,7 +46,7 @@ import { defineComponent, PropType } from "vue"
 import { creationsPurchaseMedia, CreationsGetImageRequest200, creationsGetImageRequest, creationsHdVideo, creationsUpscaledImage } from "src/lib/orval"
 import { MediaType } from "lib/types"
 import { originalFileKey } from "lib/netlifyImg"
-import { originalDownloadUrl, upscaledUrl } from "lib/imageCdn"
+import { originalDownloadUrl, upscaledUrl, hdUrl } from "lib/imageCdn"
 import { sleep } from "lib/util"
 import { dialogProps } from "src/components/dialogs/dialogUtil"
 import { prices } from "stores/pricesStore"
@@ -60,6 +62,7 @@ export default defineComponent({
       prices,
       isSvg: false,
       isUpscaling: false,
+      isConvertingJpg: false,
     }
   },
   watch: {},
@@ -172,6 +175,63 @@ export default defineComponent({
             color: "negative",
           })
         }
+      }
+    },
+    async downloadHdJpg() {
+      if (this.isConvertingJpg) return
+      if (!this.userOwnsMedia && !this.mediaUnlocked) return
+      if (!this.currentMediaId || this.isSvg || this.type !== "image") return
+      this.isConvertingJpg = true
+      Loading.show({ message: "Preparing HD JPG..." })
+      try {
+        const url = await hdUrl(this.currentMediaId)
+        const resp = await fetch(url)
+        if (!resp.ok) throw new Error(`failed to fetch hd image: ${resp.status}`)
+        const webpBlob = await resp.blob()
+
+        // Try fast path with createImageBitmap first
+        let width = 0
+        let height = 0
+        let draw: (ctx: CanvasRenderingContext2D) => void
+        try {
+          const bmp = await createImageBitmap(webpBlob)
+          width = bmp.width
+          height = bmp.height
+          draw = (ctx) => ctx.drawImage(bmp, 0, 0)
+        } catch {
+          // Fallback to HTMLImageElement for broader compatibility
+          const objectUrl = URL.createObjectURL(webpBlob)
+          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const i = new Image()
+            i.onload = () => resolve(i)
+            i.onerror = reject
+            i.src = objectUrl
+          })
+          URL.revokeObjectURL(objectUrl)
+          width = img.naturalWidth || img.width
+          height = img.naturalHeight || img.height
+          draw = (ctx) => ctx.drawImage(img, 0, 0)
+        }
+
+        const canvas = document.createElement("canvas")
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext("2d")
+        if (!ctx) throw new Error("failed to get 2d context")
+        draw(ctx)
+
+        const blob: Blob = await new Promise((resolve, reject) =>
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("JPEG conversion failed"))), "image/jpeg", 0.95),
+        )
+        const filename = `fiddl.art-${longIdToShort(this.currentMediaId)}-hd.jpg`
+        this.saveBlob(blob, filename)
+        this.hide()
+      } catch (e) {
+        console.error(e)
+        Notify.create({ message: "Error preparing HD JPG", color: "negative" })
+      } finally {
+        this.isConvertingJpg = false
+        Loading.hide()
       }
     },
     goToLogin() {

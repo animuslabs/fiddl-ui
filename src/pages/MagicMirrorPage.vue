@@ -154,9 +154,9 @@ q-page.full-width
                 .text-body2.q-mt-xs.text-grey-5 Start in seconds. No training required.
                 .text-body2.text-grey-5 Great for first-time users and quick results.
                 .row.q-ml-sm.q-mt-sm
-                  q-chip(color="grey-8" text-color="white") Uses Nano Banana Model
+                  q-chip(color="grey-8" text-color="white") Uses Seedream 4 + Nano Banana
                 .q-mt-sm
-                  .text-body2.text-grey-5 For 3 images: {{ fastCostFor3 }} pts (save ~{{ estimatedSavings }} vs Pro)
+                  .text-body2.text-grey-5 For 3 looks (6 images): {{ fastCostFor3 }} pts (save ~{{ estimatedSavings }} vs Pro)
               q-separator
               q-card-actions(align="right")
                 q-btn(label="Use Fast" color="primary" size="lg" icon="flash_on" no-caps @click.stop="goToMMFast")
@@ -306,10 +306,12 @@ let signupTimer: number | null = null
 const mmRequiredPoints = computed(() => magicMirrorProTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 const missingPoints = computed(() => Math.max(0, mmRequiredPoints.value - availablePoints.value))
-// Magic Mirror Fast (Banana) costs
+// Magic Mirror Fast per-look cost (Seedream 4 + Nano Banana)
 const bananaCost = computed(() => {
-  const base = prices.image?.model?.["nano-banana"]
-  return applyPrivateTax(typeof base === "number" && Number.isFinite(base) ? base : 0)
+  const sd = prices.image?.model?.["seedream4"]
+  const nb = prices.image?.model?.["nano-banana"]
+  const safe = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? n : 0)
+  return applyPrivateTax(safe(sd)) + applyPrivateTax(safe(nb))
 })
 const fastCostFor3 = computed(() => magicMirrorFastTotalPoints())
 const estimatedSavings = computed(() => Math.max(0, mmRequiredPoints.value - fastCostFor3.value))

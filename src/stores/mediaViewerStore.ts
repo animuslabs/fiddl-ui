@@ -134,9 +134,22 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     // Initialize media viewer
-    async initializeMediaViewer(mediaObjects: MediaGalleryMeta[], startIndex = 0) {
-      this.mediaObjects = [...mediaObjects]
-      this.currentIndex = startIndex
+    async initializeMediaViewer(mediaObjects: MediaGalleryMeta[], startIndex = 0, startId?: string) {
+      // Filter out any placeholder/pending tiles that can appear in galleries
+      const isPlaceholder = (m: MediaGalleryMeta) => m?.placeholder === true || (typeof m?.id === "string" && m.id.startsWith("pending-"))
+
+      const filtered = mediaObjects.filter((m) => !isPlaceholder(m))
+
+      // Derive the intended starting media by id, then remap to filtered list
+      const idHint = startId || mediaObjects?.[startIndex]?.id
+      let mappedIndex = 0
+      if (idHint) {
+        const idx = filtered.findIndex((m) => m.id === idHint)
+        mappedIndex = idx >= 0 ? idx : Math.min(Math.max(startIndex, 0), Math.max(filtered.length - 1, 0))
+      }
+
+      this.mediaObjects = filtered
+      this.currentIndex = mappedIndex
       this.resetStates()
       // Instant ownership from cache
       if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true

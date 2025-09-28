@@ -6,6 +6,7 @@ import { Dialog, Loading } from "quasar"
 // no need to pre-upload input image; we operate by id now
 import { useRouter } from "vue-router"
 import { img, s3Video } from "lib/netlifyImg"
+import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
 import mediaViwer, { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import { usePopularityStore } from "src/stores/popularityStore"
 import { useUserAuth } from "src/stores/userAuth"
@@ -86,6 +87,16 @@ const videoLoading = ref<Record<string, boolean>>({})
 const videoReloadKey = ref<Record<string, number>>({})
 const imageLoading = ref<Record<string, boolean>>({})
 const imageReloadKey = ref<Record<string, number>>({})
+
+// Progressive image upgrade state
+const imageTargetSize = ref<Record<string, ImageSize>>({})
+const imageCurrentSize = ref<Record<string, ImageSize>>({})
+const imageUpgradeQueue = ref<Record<string, ImageSize[]>>({})
+const imageUpgradeAttempts = ref<Record<string, Partial<Record<ImageSize, number>>>>({})
+const imageUpgradeInFlight = ref<Record<string, boolean>>({})
+let imageUpgradeTimer: number | null = null
+const UPGRADE_INTERVAL_MS = 2000
+const MAX_ATTEMPTS_PER_SIZE = 30
 
 // Intersection-based visibility map to unmount offscreen media
 const visibleMap = ref<Record<string, boolean>>({})
@@ -352,10 +363,10 @@ function openCommentsFromOverlay(media: MediaGalleryMeta) {
   if (!media?.id || media.placeholder === true) return
   const items = galleryItems.value
   if (!items.length) return
-  const targetIndex = items.findIndex((item) => item.id === media.id)
-  const startIndex = targetIndex >= 0 ? targetIndex : 0
+  const startId = media.id
   const allowDelete = !!props.showDeleteButton
-  void mediaViwer.show(items, startIndex, allowDelete, { initialCommentId: COMMENT_DIALOG_SENTINEL })
+  // Use id-based navigation to avoid index drift when placeholders are present
+  void (mediaViwer as any).showById(items, startId, allowDelete, { initialCommentId: COMMENT_DIALOG_SENTINEL })
 }
 
 async function addAsInput(imageId: string) {
@@ -509,6 +520,8 @@ async function buildItems(src: MediaGalleryMeta[]) {
     const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
     const fallbackAspect = type === "video" ? 16 / 9 : 1
     const aspectRatio = props.layout === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
+    // Initialize progressive target/current sizes for images
+    if (type === "image") initImageProgressState(item.id, item.url)
     return { ...item, type, aspectRatio }
   })
 
@@ -617,8 +630,31 @@ function markImageLoaded(id: string) {
 }
 
 function markImageErrored(id: string) {
-  // Keep in loading state and allow periodic reload attempts
-  imageLoading.value[id] = true
+  const item = galleryItems.value.find((i) => i.id === id)
+  if (!item) return
+  // Determine current and target sizes
+  const curUrl = item.url || ""
+  const curSize = imageCurrentSize.value[id] || extractSizeFromUrl(curUrl) || ("lg" as ImageSize)
+  const target = imageTargetSize.value[id] || curSize
+  // If current attempted size failed and it's larger than sm, fallback to sm immediately
+  if (curSize !== "sm") {
+    // Initialize upgrade plan if not set
+    if (!imageUpgradeQueue.value[id]) {
+      imageUpgradeQueue.value[id] = target === "lg" ? (["md", "lg"] as ImageSize[]) : target === "md" ? (["md"] as ImageSize[]) : ([] as ImageSize[])
+      imageUpgradeAttempts.value[id] = {}
+    }
+    // Switch to small for instant feedback
+    const nextUrl = img(id, "sm") + cacheBust()
+    item.url = nextUrl
+    imageCurrentSize.value[id] = "sm"
+    // Show loading overlay until sm finishes the very first time
+    imageLoading.value[id] = true
+    // Ensure upgrade loop is running
+    ensureImageUpgradeTimer()
+  } else {
+    // Already at smallest; keep in loading state so periodic reloads can retry
+    imageLoading.value[id] = true
+  }
 }
 
 function canTogglePrivacy(item: MediaGalleryMeta): boolean {
@@ -878,11 +914,13 @@ onMounted(() => {
       }
     }
   }, 10000) as unknown as number
+  ensureImageUpgradeTimer()
 })
 
 onUnmounted(() => {
   if (videoReloadTimer) window.clearInterval(videoReloadTimer)
   stopPopularityPolling()
+  if (imageUpgradeTimer) window.clearInterval(imageUpgradeTimer)
 })
 
 function isVideoMedia(m: MediaGalleryMeta): boolean {
@@ -978,6 +1016,96 @@ function onModelChipClick(m: MediaGalleryMeta) {
   const meta = getModelMeta(m)
   if (!meta) return
   emit("modelSelect", { model: meta.model, customModelId: meta.customModelId, customModelName: meta.customModelName, mediaId: m.id })
+}
+
+// -------- Progressive image helpers --------
+function extractSizeFromUrl(url: string): ImageSize | null {
+  try {
+    const m = url.match(/-(xs|sm|md|lg|xl)\.webp(\?.*)?$/i)
+    return (m?.[1] as ImageSize) || null
+  } catch {
+    return null
+  }
+}
+
+function initImageProgressState(id: string, url: string) {
+  const size = extractSizeFromUrl(url) || ("lg" as ImageSize)
+  if (!imageTargetSize.value[id]) imageTargetSize.value[id] = size
+  if (!imageCurrentSize.value[id]) imageCurrentSize.value[id] = size
+}
+
+function ensureImageUpgradeTimer() {
+  if (imageUpgradeTimer) return
+  imageUpgradeTimer = window.setInterval(runImageUpgradeTick, UPGRADE_INTERVAL_MS) as unknown as number
+}
+
+function runImageUpgradeTick() {
+  try {
+    if (typeof document !== "undefined" && document.hidden) return
+    const now = Date.now()
+    for (const item of galleryItems.value) {
+      if (item.type !== "image") continue
+      const id = item.id
+      const queue = imageUpgradeQueue.value[id]
+      if (!queue || queue.length === 0) continue
+      if (!isVisible(id)) continue
+      if (imageUpgradeInFlight.value[id]) continue
+      const nextSize = queue[0] as ImageSize
+      const attempts = (imageUpgradeAttempts.value[id]?.[nextSize] || 0) as number
+      if (attempts >= MAX_ATTEMPTS_PER_SIZE) {
+        // Give up on this size and move to the next
+        queue.shift()
+        continue
+      }
+      // Prefetch the next size; use a cache-buster to avoid CDN 404 caching
+      const testUrl = img(id, nextSize) + cacheBust(now)
+      imageUpgradeInFlight.value[id] = true
+      prefetchImage(testUrl)
+        .then(() => {
+          // Swap in the higher resolution
+          item.url = img(id, nextSize) + cacheBust(now)
+          imageCurrentSize.value[id] = nextSize
+          // Move to the next step in the queue
+          queue.shift()
+        })
+        .catch(() => {
+          // Increment attempts and try again on a future tick
+          const cur = imageUpgradeAttempts.value[id] || {}
+          cur[nextSize] = (cur[nextSize] || 0) + 1
+          imageUpgradeAttempts.value[id] = cur
+        })
+        .finally(() => {
+          imageUpgradeInFlight.value[id] = false
+        })
+    }
+  } catch (e) {
+    // best-effort; never throw
+    console.warn("image upgrade tick error", e)
+  }
+}
+
+function cacheBust(ts?: number) {
+  const t = ts ?? Date.now()
+  return `?cb=${t}`
+}
+
+function prefetchImage(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const i = new Image()
+    const clean = () => {
+      i.onload = null
+      i.onerror = null
+    }
+    i.onload = () => {
+      clean()
+      resolve()
+    }
+    i.onerror = () => {
+      clean()
+      reject(new Error("prefetch-failed"))
+    }
+    i.src = url
+  })
 }
 </script>
 

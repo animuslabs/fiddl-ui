@@ -30,7 +30,7 @@
               MediaGallery.q-pl-md.q-pr-md(
                 :key="`mosaic-${currentTab}`"
                 v-else-if="gridMode == 'mosaic'"
-                @selected-index="showDetails"
+                @select="showDetailsBySelect"
                 @model-select="handleModelSelect"
                 selectable
                 :mediaObjects="allMediaObjects"
@@ -51,7 +51,7 @@
               MediaGallery.q-pl-md.q-pr-md(
                 :key="`grid-${currentTab}`"
                 v-else-if="gridMode == 'grid'"
-                @selected-index="showDetails"
+                @select="showDetailsBySelect"
                 @model-select="handleModelSelect"
                 selectable
                 :cols-desktop="5"
@@ -333,6 +333,20 @@ export default defineComponent({
     })
   },
   methods: {
+    showDetailsBySelect(payload: { id: string; type: 'image' | 'video' }) {
+      const displayObjects = this.allMediaObjects as MediaGalleryMeta[]
+      if (!Array.isArray(displayObjects) || !displayObjects.length) return
+      if (!payload?.id) return
+
+      // Build viewer list excluding placeholders, preserving visual order
+      const viewerObjects = displayObjects.filter((o) => !(typeof o.id === 'string' && o.id.startsWith('pending-')))
+      if ((mediaViwer as any).showById) void (mediaViwer as any).showById(viewerObjects, payload.id)
+      else {
+        const startIndex = viewerObjects.findIndex((o) => o.id === payload.id)
+        if (startIndex < 0) return
+        void mediaViwer.show(viewerObjects, startIndex)
+      }
+    },
     buildMediaGalleryItems(creations: UnifiedRequest[], mediaType: MediaType): MediaGalleryMeta[] {
       if (!Array.isArray(creations) || creations.length === 0) return []
       const sorted = [...creations].sort((a, b) => {
@@ -369,7 +383,7 @@ export default defineComponent({
       if (typeof raw !== "string" || !raw.length) return undefined
       if (raw.includes(":")) {
         const parts = raw.split(":").map((x) => Number.parseFloat(x))
-        const [w, h] = parts
+        const [w = Number.NaN, h = Number.NaN] = parts
         if (Number.isFinite(w) && Number.isFinite(h) && h !== 0) return w / h
         return undefined
       }
@@ -422,10 +436,14 @@ export default defineComponent({
 
       // Build viewer list excluding placeholders, preserving visual order
       const viewerObjects = displayObjects.filter((o) => !(typeof o.id === "string" && o.id.startsWith("pending-")))
-      const startIndex = viewerObjects.findIndex((o) => o.id === clicked.id)
-      if (startIndex < 0) return
 
-      void mediaViwer.show(viewerObjects, startIndex)
+      // Prefer id-based viewer focus to avoid index drift
+      if ((mediaViwer as any).showById) void (mediaViwer as any).showById(viewerObjects, clicked.id)
+      else {
+        const startIndex = viewerObjects.findIndex((o) => o.id === clicked.id)
+        if (startIndex < 0) return
+        void mediaViwer.show(viewerObjects, startIndex)
+      }
     },
     setReq(request: Partial<CreateImageRequest | CreateVideoRequest>, toggleCreateMode = false) {
       if (toggleCreateMode) this.createMode = true

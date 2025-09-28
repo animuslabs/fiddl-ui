@@ -22,10 +22,13 @@ const mediaViwer = {
     }
     try {
       const popularity = usePopularityStore()
-      const items: { id: string; mediaType: "image" | "video" }[] = mediaObjects.map((m) => ({
-        id: m.id,
-        mediaType: m.type === "video" || m.mediaType === "video" ? "video" : "image",
-      }))
+      // Skip placeholder/pending tiles when prefetching popularity
+      const items: { id: string; mediaType: "image" | "video" }[] = mediaObjects
+        .filter((m) => !(m?.placeholder === true || (typeof m?.id === "string" && m.id.startsWith("pending-"))))
+        .map((m) => ({
+          id: m.id,
+          mediaType: m.type === "video" || m.mediaType === "video" ? "video" : "image",
+        }))
       void popularity.fetchBatchByItems(items)
     } catch (e) {
       console.error("[mediaViewer] failed to prefetch popularity", e)
@@ -40,6 +43,38 @@ const mediaViwer = {
 
         const { pathname } = window.location
         // // Update URL without changing the scroll position
+        window.history.replaceState({}, "", pathname)
+        res()
+      })
+    })
+  },
+
+  // Convenience: open viewer focused by media id instead of index
+  showById(mediaObjects: MediaGalleryMeta[], startId: string, allowDelete = true, options: MediaViewerShowOptions = {}) {
+    const componentProps: Props = {
+      mediaObjects,
+      startIndex: 0, // placeholder; actual mapping done inside store using startId
+      allowDelete,
+      requestId: options.requestId,
+      initialCommentId: options.initialCommentId ?? undefined,
+      startId,
+    }
+    try {
+      const popularity = usePopularityStore()
+      const items: { id: string; mediaType: "image" | "video" }[] = mediaObjects
+        .filter((m) => !(m?.placeholder === true || (typeof m?.id === "string" && m.id.startsWith("pending-"))))
+        .map((m) => ({ id: m.id, mediaType: m.type === "video" || m.mediaType === "video" ? "video" : "image" }))
+      void popularity.fetchBatchByItems(items)
+    } catch (e) {
+      console.error("[mediaViewer] failed to prefetch popularity", e)
+    }
+    return new Promise<void>((res) => {
+      Dialog.create({
+        component: MediaViewer,
+        maximized: true,
+        componentProps,
+      }).onDismiss(() => {
+        const { pathname } = window.location
         window.history.replaceState({}, "", pathname)
         res()
       })

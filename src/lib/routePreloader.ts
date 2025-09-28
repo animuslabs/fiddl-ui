@@ -1,4 +1,4 @@
-import type { Router } from "vue-router"
+import type { RouteLocationRaw, Router } from "vue-router"
 
 type PrefetchOptions = {
   // Route names to skip (e.g. heavy pages)
@@ -39,6 +39,28 @@ export function setupRoutePrefetch(router: Router, opts: PrefetchOptions = {}) {
   // Optionally, also run on the first navigation (in case isReady resolved earlier)
   if (!runOnce) {
     router.afterEach(() => schedule())
+  }
+}
+
+/**
+ * Prefetches the async component chunks for a specific route location.
+ * Useful for hover/touchstart preloading of nav links.
+ */
+export async function prefetchRoute(router: Router, to: RouteLocationRaw) {
+  try {
+    if (import.meta.env.SSR) return
+    const resolved = router.resolve(to)
+    const loaders: Array<() => Promise<unknown>> = []
+
+    for (const rec of resolved.matched) {
+      const maybeComp = (rec as any).components?.default ?? (rec as any).component
+      if (typeof maybeComp === "function") loaders.push(() => (maybeComp as () => Promise<unknown>)())
+    }
+
+    if (loaders.length === 0) return
+    await Promise.allSettled(loaders.map((fn) => fn()))
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn("prefetchRoute failed", err)
   }
 }
 

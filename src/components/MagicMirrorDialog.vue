@@ -21,7 +21,7 @@ q-dialog(v-model="proxyModel" :maximized="isMobile")
               .text-body2.q-mt-xs.text-grey-5 Start in seconds. No training required.
               .text-body2.text-grey-5 Great for first-time users and quick results.
             .row.q-ml-sm
-              q-chip(color="grey-8" text-color="white") Uses Nano Banana Model
+              q-chip(color="grey-8" text-color="white") Uses Seedream 4 + Nano Banana
             q-separator
             q-card-actions(align="right")
               q-btn(label="Use Fast" color="primary" size="lg" icon="flash_on" no-caps @click.stop="goBanana")

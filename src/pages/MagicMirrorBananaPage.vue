@@ -104,7 +104,7 @@ q-page.full-width
           q-btn(flat dense round icon="close" v-close-popup)
       q-separator
       q-card-section
-        p You need {{ fastRequiredPoints }} Fiddl Points to use Magic Mirror Fast (3 looks + uploads).
+        p You need {{ fastRequiredPoints }} Fiddl Points to use Magic Mirror Fast (3 looks × 2 models + uploads).
         p.text-secondary You have {{ availablePoints }} points. Missing {{ missingFastPoints }} points.
         .q-mt-md
           BuyPointsMini(@paymentComplete="onBuyMiniComplete")
@@ -244,7 +244,7 @@ const router = useRouter()
 const step = ref<Step>("init")
 const sessionLoaded = ref(false)
 const loginDialogOpen = ref(false)
-// Cost via helper: 3 nano-banana images + 4 uploads
+// Cost via helper: 3 looks × 2 models + 4 uploads
 const fastRequiredPoints = computed(() => magicMirrorFastTotalPoints())
 const availablePoints = computed(() => userAuth.userData?.availablePoints || 0)
 const buyPointsDialogOpen = ref(false)
@@ -509,14 +509,15 @@ async function onDialogConfirm() {
     quasar.notify({ message: "Templates saved", color: "primary" })
     dialogOpen.value = false
     void nextTick(() => scrollToTopSmooth())
-    // Capture current banana images as baseline for session-only results
+    // Capture current images (all models) as baseline for session-only results
     try {
-      imageCreations.filter.model = "nano-banana" as any
+      imageCreations.filter.model = undefined as any
       await imageCreations.loadCreations(userAuth.userId || undefined)
       const snap = imageCreations.allCreations.map((x) => x.id)
       sessionBaselineIds.value = snap.slice()
       sessionCreatedIds.value = []
-      sessionExpectedTotal.value = dialogSelection.value.length
+      // Expect two images per template (nano-banana + seedream4)
+      sessionExpectedTotal.value = dialogSelection.value.length * 2
       pendingBaselineIds.value = snap.slice()
       lastKnownIds.value = snap.slice()
       saveSession()
@@ -537,8 +538,8 @@ async function onDialogConfirm() {
       additionalLoadingTemplates.value = []
       return
     }
-    // Extend expected total for this session; keep original baseline
-    sessionExpectedTotal.value += ids.length
+    // Extend expected total for this session; two per template
+    sessionExpectedTotal.value += ids.length * 2
     saveSession()
     pendingNewCount.value += templates.length
     await scheduleBananaRenders(templates)
@@ -552,14 +553,17 @@ async function onDialogConfirm() {
   }
 }
 
-// Build and queue banana image requests
+// Build and queue fast image requests (nano-banana + seedream4)
 async function scheduleBananaRenders(templates: PromptTemplate[]) {
   if (!templates.length || !uploadedIds.value.length) return
   try {
     isWaitingForImages.value = true
     pendingBaselineIds.value = generatedImageIds.value.slice()
-    pendingNewCount.value = templates.length
-    const requests = templates.map((tpl) => {
+    // Expect 2 images per template
+    pendingNewCount.value = templates.length * 2
+
+    // First batch: nano-banana (no explicit aspectRatio)
+    const bananaRequests = templates.map((tpl) => {
       const resolved = promptFromTemplates([tpl])
       return {
         prompt: subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt,
@@ -570,8 +574,24 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
         uploadedStartImageIds: uploadedIds.value.slice(),
       }
     })
-    const res = await createQueueAsyncBatch({ requests, emailNotify: false })
-    const batchId = res.data?.batchId
+    const resBanana = await createQueueAsyncBatch({ requests: bananaRequests, emailNotify: false })
+
+    // Second batch: seedream4 at 3:4
+    const sd4Requests = templates.map((tpl) => {
+      const resolved = promptFromTemplates([tpl])
+      return {
+        prompt: subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt,
+        negativePrompt: resolved.negativePrompt,
+        quantity: 1,
+        model: "seedream4" as const,
+        public: false,
+        aspectRatio: "3:4" as const,
+        uploadedStartImageIds: uploadedIds.value.slice(),
+      }
+    })
+    const resSd4 = await createQueueAsyncBatch({ requests: sd4Requests, emailNotify: false })
+
+    const batchId = resSd4.data?.batchId || resBanana.data?.batchId
     if (!creationsPollTimer) startCreationsPoll()
     if (batchId) startBatchStatusWatch(batchId)
     void userAuth.loadUserData()
@@ -585,7 +605,8 @@ function startCreationsPoll() {
   stopCreationsPoll()
   const poll = async () => {
     try {
-      imageCreations.filter.model = "nano-banana" as any
+      // Load without model filter to include both seedream4 and nano-banana
+      imageCreations.filter.model = undefined as any
       // Force a fresh fetch of the latest page each tick (not pagination)
       imageCreations.creations = []
       ;(imageCreations as any).lastQueryKey = null
@@ -684,7 +705,7 @@ function startAgain() {
 }
 
 function goToCreatePage() {
-  void toCreatePage({ model: "nano-banana", type: "image" }, router, { noCreateModal: true })
+  void toCreatePage({ model: "seedream4", type: "image" }, router, { noCreateModal: true })
 }
 
 // share/download/animate: provided by useMagicMirrorResults

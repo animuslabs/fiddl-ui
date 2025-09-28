@@ -40,10 +40,11 @@ export function magicMirrorProTotalPoints(): number {
 }
 
 // Total points required for Magic Mirror Fast
-// = 3 nano-banana images + 4 image uploads
+// = For each look, run 2 models (seedream4 + nano-banana) + 4 uploads total
 export function magicMirrorFastTotalPoints(): number {
+  const sd4 = prices.image?.model?.["seedream4"] || 0
   const banana = prices.image?.model?.["nano-banana"] || 0
   const upload = prices.image?.uploadSoloImage || 0
-  const privateBanana = applyPrivateTax(banana)
-  return privateBanana * 3 + upload * 4
+  const perLook = applyPrivateTax(sd4) + applyPrivateTax(banana)
+  return perLook * 3 + upload * 4
 }

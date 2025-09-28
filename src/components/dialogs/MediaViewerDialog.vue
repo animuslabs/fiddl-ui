@@ -31,6 +31,8 @@ interface Props {
   startIndex?: number
   allowDelete?: boolean
   initialCommentId?: string | null
+  // Optional: focus by specific media id (more robust than index when list mutates)
+  startId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -51,7 +53,9 @@ const userAuth = useUserAuth()
 const { updateRouteIndex } = useMediaNavigation()
 
 onMounted(async () => {
-  await mediaViewerStore.initializeMediaViewer(props.mediaObjects, props.startIndex)
+  // Pass startId when provided to ensure the correct media opens
+  // even if placeholder tiles are present or lists have shifted.
+  await mediaViewerStore.initializeMediaViewer(props.mediaObjects, props.startIndex, props.startId)
   if (userAuth.loggedIn) await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadHdMedia()])
 })
 

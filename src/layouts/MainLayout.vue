@@ -10,15 +10,15 @@ q-layout(view="lHh Lpr lFf" )
               //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
           //- q-route-tab(:to="{ name: 'search' }" exact)
           //-   | Search
-          q-route-tab(:to="{ name: 'create' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'create' }" @mouseenter="prefetch('create')" @touchstart.passive="prefetch('create')").gt-xs.text-white
             | create
-          q-route-tab(:to="{ name: 'browse' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'browse' }" @mouseenter="prefetch('browse')" @touchstart.passive="prefetch('browse')").gt-xs.text-white
             | browse
-          q-route-tab(:to="{ name: 'forge' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'forge' }" @mouseenter="prefetch('forge')" @touchstart.passive="prefetch('forge')").gt-xs.text-white
             | Forge
-          q-route-tab(:to="{ name: 'models' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'models' }" @mouseenter="prefetch('models')" @touchstart.passive="prefetch('models')").gt-xs.text-white
             | Models
-          q-route-tab(:to="{ name: 'missions' }").gt-xs.text-white
+          q-route-tab(:to="{ name: 'missions' }" @mouseenter="prefetch('missions')" @touchstart.passive="prefetch('missions')").gt-xs.text-white
             .relative-position
               | Missions
               q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
@@ -155,13 +155,13 @@ q-layout(view="lHh Lpr lFf" )
 
   q-footer.lt-lg(color="black").bg-grey-10
     q-tabs(color="black").lt-sm
-      q-route-tab(:to="{ name: 'create' }").text-white
+      q-route-tab(:to="{ name: 'create' }" @mouseenter="prefetch('create')" @touchstart.passive="prefetch('create')").text-white
         | create
-      q-route-tab(:to="{ name: 'browse' }").text-white
+      q-route-tab(:to="{ name: 'browse' }" @mouseenter="prefetch('browse')" @touchstart.passive="prefetch('browse')").text-white
         | browse
-      q-route-tab(:to="{ name: 'forge' }").text-white
+      q-route-tab(:to="{ name: 'forge' }" @mouseenter="prefetch('forge')" @touchstart.passive="prefetch('forge')").text-white
         |  Forge
-      q-route-tab(:to="{ name: 'missions' }").text-white
+      q-route-tab(:to="{ name: 'missions' }" @mouseenter="prefetch('missions')" @touchstart.passive="prefetch('missions')").text-white
         .relative-position
           | Missions
           q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
@@ -181,6 +181,7 @@ import { useCreateImageStore } from "stores/createImageStore"
 import NotificationsMenu from "src/components/NotificationsMenu.vue"
 import { useMissionsStore } from "stores/missionsStore"
 import { telegramUnlink } from "lib/orval"
+import { prefetchRoute } from "src/lib/routePreloader"
 
 export default defineComponent({
   components: { NotificationsMenu },
@@ -232,6 +233,11 @@ export default defineComponent({
     },
   },
   methods: {
+    prefetch(name: string) {
+      try {
+        void prefetchRoute(this.$router, { name })
+      } catch {}
+    },
     confirmUnlink() {
       Dialog.create({
         title: "Unlink Telegram?",
