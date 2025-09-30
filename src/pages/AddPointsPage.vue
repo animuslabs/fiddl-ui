@@ -23,11 +23,13 @@ q-page.full-height.full-width
       q-tab-panel(name="buy")
         .row.items-center.justify-between.q-mb-sm
           h4.q-my-none Select Points Package
-          .row.items-center.q-gutter-sm
+          .row.items-center.q-gutter-sm(v-if="!isTma")
             q-btn-toggle(v-model="buyMode" spread dense toggle-color="primary" color="dark" text-color="white" no-caps :options="[{label: 'In-App (PayPal/Crypto)', value: 'app'},{label: 'Telegram Stars', value: 'telegram'}]")
+          .row.items-center.q-gutter-sm(v-else)
+            q-badge(color="positive" text-color="white" label="Telegram Stars" class="text-uppercase")
 
         // In-app packages grid
-        div(v-if="buyMode === 'app' && packages.length > 0" class="packages-grid")
+        div(v-if="!isTma && buyMode === 'app' && packages.length > 0" class="packages-grid")
           q-card.q-pa-md.pkg-card.cursor-pointer(v-for="(pkg, index) in packages" :key="pkg.points" @click="setAddPoints(index)" :class="pkgCardClass(pkg)" v-show="!(isMobile && selectedPkg && selectedPkgIndex !== index)")
             .row.items-center.justify-between
               h4.q-my-none +{{ pkg.points.toLocaleString() }}
@@ -68,7 +70,7 @@ q-page.full-height.full-width
 
         // Selected package summary and actions (in-app only)
         q-slide-transition
-          div(v-show="buyMode === 'app' && selectedPkg" class="q-mt-lg")
+          div(v-show="!isTma && buyMode === 'app' && selectedPkg" class="q-mt-lg")
 
             q-banner(rounded class="bg-dark text-white q-pa-md")
               template(#avatar)
@@ -259,6 +261,19 @@ import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, typ
 import tma from "src/lib/tmaAnalytics"
 // axios not required for Stars in TMA (using orval helper)
 
+const detectTma = (): boolean => {
+  try {
+    if (typeof window === "undefined") return false
+    return Boolean(
+      (window as any).__TMA__?.enabled === true ||
+        document.documentElement.classList.contains("tma-mode") ||
+        (((window as any)?.Telegram?.WebApp?.initData || "").length > 0)
+    )
+  } catch {
+    return false
+  }
+}
+
 interface PointsPackageRender extends PointsPackagesAvailable200Item {
   bgColor: string
 }
@@ -274,6 +289,7 @@ export default defineComponent({
     CryptoPayment,
   },
   data() {
+    const inTma = detectTma()
     return {
       userAuth: useUserAuth(),
       pricesStore: usePricesStore(),
@@ -282,11 +298,12 @@ export default defineComponent({
       packages: [] as PointsPackageRender[],
       selectedPkgIndex: undefined as number | undefined,
       payPal: null as null | PayPalNamespace,
-      paymentMethod: "paypal" as "paypal" | "crypto" | null,
-      buyMode: "app" as "app" | "telegram",
+      paymentMethod: (inTma ? null : "paypal") as "paypal" | "crypto" | null,
+      buyMode: (inTma ? "telegram" : "app") as "app" | "telegram",
       isRenderingPaypal: false,
       mainTab: "buy" as "buy" | "history",
       isMobile: typeof window !== "undefined" ? window.innerWidth <= 768 : false,
+      tmaSession: inTma,
       // Telegram state
       tgLinked: false,
       tgStatusChecked: false,
@@ -311,6 +328,9 @@ export default defineComponent({
     }
   },
   computed: {
+    isTma(): boolean {
+      return this.tmaSession
+    },
     countdownPct(): number {
       if (!this.countdownTotal) return 0
       return Math.max(0, Math.min(1, this.countdown / this.countdownTotal))
@@ -347,21 +367,26 @@ export default defineComponent({
       return this.suggestionsForPoints(points)
     },
     normalizedDiscount(): string | null {
+      if (this.isTma) return null
       return normalizeCode(this.discountInput)
     },
     codeDiscountPct(): number {
+      if (this.isTma) return 0
       return this.discountStatus && this.discountStatus.ok ? this.discountStatus.discountPct || 0 : 0
     },
     finalUsd(): number {
+      if (this.isTma) return 0
       const base = Number(this.selectedPkg?.usd || 0)
       return applyDiscountUsd(base, this.codeDiscountPct)
     },
     finalUsdString(): string {
+      if (this.isTma) return "0.00"
       return usdToString(this.finalUsd)
     },
   },
   watch: {
     discountInput(val: string) {
+      if (this.isTma) return
       // Reset manual-error gating on input changes
       this.manualApplyAttempted = false
       // Clear pending debounce
@@ -386,6 +411,7 @@ export default defineComponent({
       }, 600)
     },
     selectedPkgIndex() {
+      if (this.isTma) return
       // Re-validate current code when package changes (silently)
       if (this.normalizedDiscount) {
         this.manualApplyAttempted = false
@@ -395,6 +421,7 @@ export default defineComponent({
     discountStatus: {
       deep: true,
       handler() {
+        if (this.isTma) return
         if (this.ppButton) {
           void this.ppButton.updateProps({
             message: { amount: this.finalUsd, color: "black", position: "bottom" },
@@ -403,6 +430,7 @@ export default defineComponent({
       },
     },
     selectedPkg() {
+      if (this.isTma) return
       if (!this.selectedPkg) return
       LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
       console.log("selected pkg", this.selectedPkg)
@@ -426,6 +454,7 @@ export default defineComponent({
     },
     paymentMethod: {
       handler(val) {
+        if (this.isTma) return
         LocalStorage.set("orderDetails", { packageId: this.selectedPkgIndex, paymentMethod: this.paymentMethod })
         if (val == "paypal") {
           this.ensurePaypalRendered()
@@ -436,12 +465,17 @@ export default defineComponent({
       immediate: true,
     },
     buyMode(val) {
+      if (this.isTma && val !== "telegram") {
+        this.buyMode = "telegram"
+        return
+      }
       if (val === "app") return
       // Prepare telegram data when user switches
       void this.checkTgStatus()
       void this.loadTgPackages()
     },
     mainTab(val: string) {
+      if (this.isTma) return
       if (val === "buy" && this.paymentMethod === "paypal" && this.selectedPkg) {
         this.ensurePaypalRendered()
       }
@@ -452,28 +486,16 @@ export default defineComponent({
   async mounted() {
     if (typeof window !== "undefined") window.addEventListener("resize", this.updateIsMobile)
     this.updateIsMobile()
-    // If running inside Telegram Mini App, default to Stars
-    try {
-      const isTma =
-        typeof window !== "undefined" &&
-        (
-          // Primary: flag/class set only when we truly detected TMA in boot/tma.ts
-          (window as any).__TMA__?.enabled === true ||
-          document.documentElement.classList.contains("tma-mode") ||
-          // Strict fallback: Telegram SDK present AND has non-empty initData
-          // (the SDK alone is loaded on the website too and must not flip this)
-          (((window as any)?.Telegram?.WebApp?.initData || "").length > 0)
-        )
-      if (isTma) this.buyMode = "telegram"
-    } catch {}
-    const packagesResponse = await pointsPackagesAvailable()
-    if (packagesResponse?.data) {
-      this.packages = packagesResponse.data.map((el: any) => {
-        return {
-          ...el,
-          bgColor: el.discountPct > 0 ? "bg-positive" : "",
-        }
-      })
+    if (!this.isTma) {
+      const packagesResponse = await pointsPackagesAvailable()
+      if (packagesResponse?.data) {
+        this.packages = packagesResponse.data.map((el: any) => {
+          return {
+            ...el,
+            bgColor: el.discountPct > 0 ? "bg-positive" : "",
+          }
+        })
+      }
     }
     if (this.userAuth.loggedIn) {
       void this.userAuth.loadUserData()
@@ -483,22 +505,24 @@ export default defineComponent({
     void this.checkTgStatus()
     void this.loadTgPackages()
     void this.pricesStore.reloadPrices()
-    // Prefill any stored discount code (silently auto-validate)
-    try {
-      const stored = (LocalStorage.getItem("discountCode") as string) || ""
-      if (stored) {
-        this.discountInput = stored
-        this.manualApplyAttempted = false
-        void this.autoValidateDiscount()
-      }
-    } catch {}
-    const orderDetails = LocalStorage.getItem("orderDetails") as { packageId: number; paymentMethod: "paypal" | "crypto" }
-    console.log("orderDetails", orderDetails)
-    if (orderDetails) {
-      this.setAddPoints(orderDetails.packageId)
-      this.paymentMethod = orderDetails.paymentMethod
-      if (orderDetails.paymentMethod === "paypal") {
-        void this.$nextTick(() => this.ensurePaypalRendered())
+    if (!this.isTma) {
+      // Prefill any stored discount code (silently auto-validate)
+      try {
+        const stored = (LocalStorage.getItem("discountCode") as string) || ""
+        if (stored) {
+          this.discountInput = stored
+          this.manualApplyAttempted = false
+          void this.autoValidateDiscount()
+        }
+      } catch {}
+      const orderDetails = LocalStorage.getItem("orderDetails") as { packageId: number; paymentMethod: "paypal" | "crypto" }
+      console.log("orderDetails", orderDetails)
+      if (orderDetails) {
+        this.setAddPoints(orderDetails.packageId)
+        this.paymentMethod = orderDetails.paymentMethod
+        if (orderDetails.paymentMethod === "paypal") {
+          void this.$nextTick(() => this.ensurePaypalRendered())
+        }
       }
     }
   },
@@ -509,6 +533,7 @@ export default defineComponent({
   },
   methods: {
     async autoValidateDiscount() {
+      if (this.isTma) return
       const code = this.normalizedDiscount
       const pkgId = this.selectedPkgIndex
       if (!code || pkgId == null) return
@@ -704,6 +729,7 @@ export default defineComponent({
       }
     },
     ensurePaypalRendered(attempt = 0) {
+      if (this.isTma) return
       if (this.paymentMethod !== "paypal" || !this.selectedPkg) return
 
       const maxAttempts = 40
@@ -753,6 +779,7 @@ export default defineComponent({
       })()
     },
     initPPButton() {
+      if (this.isTma) return
       if (!this.payPal?.Buttons) return
       this.ppButton = this.payPal.Buttons({
         style: {
@@ -827,12 +854,14 @@ export default defineComponent({
       // Rendering is handled by ensurePaypalRendered to avoid race conditions
     },
     setAddPoints(pkgIndex: number) {
+      if (this.isTma) return
       console.log("set add points", pkgIndex)
       this.selectedPkgIndex = pkgIndex
       this.selectedPkg = this.packages[pkgIndex]!
       this.mainTab = "buy"
     },
     paymentCompleted() {
+      if (this.isTma) return
       void this.userAuth.loadUserData()
       void this.userAuth.loadPointsHistory()
       try {
@@ -859,6 +888,7 @@ export default defineComponent({
       })
     },
     async applyDiscount() {
+      if (this.isTma) return
       this.manualApplyAttempted = true
       const code = this.normalizedDiscount
       if (!code) {
@@ -886,6 +916,7 @@ export default defineComponent({
       }
     },
     clearDiscount() {
+      if (this.isTma) return
       this.discountInput = ""
       this.discountStatus = null
       LocalStorage.remove("discountCode")
