@@ -1,6 +1,5 @@
-import { parseISO } from "date-fns"
+import { differenceInSeconds, parseISO } from "date-fns"
 import type { CommentsList200CommentsItem } from "src/lib/orval"
-import { timeSince } from "src/lib/util"
 
 export type MentionStatus = "loading" | "valid" | "invalid"
 
@@ -152,7 +151,29 @@ export function formatTimestamp(value: string | null | undefined): string {
   const parsed = parseCommentTimestamp(value)
   if (!parsed) return "just now"
   try {
-    return timeSince(parsed)
+    const now = new Date()
+    const seconds = Math.max(0, differenceInSeconds(now, parsed))
+
+    if (seconds < 45) return "just now"
+    if (seconds < 90) return "1m ago"
+
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m ago`
+
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+
+    const weeks = Math.floor(days / 7)
+    if (weeks < 5) return `${weeks}w ago`
+
+    const months = Math.floor(days / 30)
+    if (months < 12) return `${months}mo ago`
+
+    const years = Math.floor(days / 365)
+    return years <= 1 ? "1y ago" : `${years}y ago`
   } catch (err) {
     console.error("Failed to format comment timestamp", err)
     return "just now"

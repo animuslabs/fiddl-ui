@@ -5,9 +5,9 @@ div.media-comments-list
   template(v-else)
     q-banner.bg-negative.text-white(v-if="listError") {{ listError }}
     q-scroll-area.media-comments-scroll(ref="scrollAreaRef" :style="scrollAreaStyle")
-      div.q-pa-md
+      div(:class="['media-comments-scroll-inner', isMobile ? 'q-pa-sm' : 'q-pa-md']")
         div(v-if="comments.length")
-          q-list(separator)
+          q-list.media-comments-list-items(separator)
             MediaCommentItem(
               v-for="comment in comments"
               :key="comment.id"
@@ -187,14 +187,26 @@ function scrollToComment(element: HTMLElement) {
   flex: 1 1 auto;
 }
 
+.media-comments-scroll-inner {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.media-comments-list-items {
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .media-comments-scroll-inner {
+    max-width: none;
+  }
+}
+
 .media-comments-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 200px;
-}
-
-.media-comment-item + .media-comment-item {
-  margin-top: 4px;
 }
 </style>

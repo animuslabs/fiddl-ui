@@ -63,7 +63,7 @@ q-layout(view="lHh Lpr lFf" )
         )
           q-img(
             slot="icon"
-            :src="avatarImg($userAuth.userId || 'avatar')"
+            :src="displayAvatarSrc"
             :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '32px' : '40px' }"
             alt="avatar"
             placeholder-src="/blankAvatar.webp"
@@ -182,6 +182,7 @@ import NotificationsMenu from "src/components/NotificationsMenu.vue"
 import { useMissionsStore } from "stores/missionsStore"
 import { telegramUnlink } from "lib/orval"
 import { prefetchRoute } from "src/lib/routePreloader"
+import { getTelegramProfilePhoto } from "lib/tmaProfile"
 
 export default defineComponent({
   components: { NotificationsMenu },
@@ -189,7 +190,6 @@ export default defineComponent({
     return {
       create: useCreateImageStore(),
       menu: false,
-      avatarImg,
       reloadAvatar,
       showUpvoteInfo: false,
       upvoteInfoLoading: false,
@@ -230,6 +230,18 @@ export default defineComponent({
       } catch {
         return false
       }
+    },
+    displayAvatarSrc(): string {
+      try {
+        const userId = this.$userAuth.userId
+        const hasCustomAvatar = Boolean(this.$userAuth.userData?.AvatarConfig?.imageId)
+        if (this.isTMA && !hasCustomAvatar) {
+          const telegramPhoto = getTelegramProfilePhoto()
+          if (telegramPhoto) return telegramPhoto
+        }
+        if (userId) return avatarImg(userId)
+      } catch {}
+      return "/blankAvatar.webp"
     },
   },
   methods: {

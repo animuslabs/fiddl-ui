@@ -174,8 +174,8 @@ defineExpose({
 }
 
 .media-comments-card--mobile .media-comments-body {
-  padding: 0 16px 12px;
-  gap: 12px;
+  padding: 0 12px 12px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -197,6 +197,6 @@ defineExpose({
 }
 
 .media-comments-card--mobile .media-comments-input {
-  padding: 0 16px 16px;
+  padding: 0 12px 16px;
 }
 </style>

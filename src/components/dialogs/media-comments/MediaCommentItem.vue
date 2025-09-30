@@ -1,5 +1,5 @@
 <template lang="pug">
-q-item.media-comment-item(:class="{ 'media-comment-item--highlight': highlighted }")
+q-item.media-comment-item(dense :class="{ 'media-comment-item--highlight': highlighted }")
   q-item-section(avatar)
     q-avatar.comment-avatar(size="36px" color="primary" text-color="white")
       q-img(
@@ -12,9 +12,9 @@ q-item.media-comment-item(:class="{ 'media-comment-item--highlight': highlighted
       )
       template(v-else) {{ authorInitial }}
   q-item-section
-    .row.items-center.no-wrap
-      span.text-subtitle2.text-white {{ authorDisplayName }}
-      span.text-caption.text-grey-4.q-ml-sm {{ timestampLabel }}
+    .media-comment-meta.row.items-center.no-wrap
+      span.media-comment-author.text-subtitle2.text-white {{ authorDisplayName }}
+      span.media-comment-timestamp.text-caption.text-grey-4.q-ml-sm {{ timestampLabel }}
       span.text-caption.text-grey-5.q-ml-sm(v-if="comment.edited") (edited)
       q-space
       q-btn.comment-options-btn.q-ml-xs(
@@ -146,10 +146,48 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
 </script>
 
 <style scoped>
+.media-comment-item {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, transform 0.2s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .media-comment-item--highlight {
   background: rgba(128, 222, 234, 0.18);
-  border-radius: 8px;
-  transition: background 0.3s ease;
+  border-radius: 16px;
+}
+
+.media-comment-meta {
+  column-gap: 8px;
+  flex-wrap: nowrap;
+  width: 100%;
+  align-items: center;
+  min-width: 0;
+}
+
+.media-comment-author {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.media-comment-timestamp {
+  font-size: 0.72rem;
+  white-space: nowrap;
+  opacity: 0.75;
+  flex: 0 1 auto;
+  max-width: 25ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .media-comment-content {
@@ -190,6 +228,23 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
   min-width: 0;
   padding: 0 6px;
   font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .media-comment-item {
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
+
+  .media-comment-meta {
+    column-gap: 6px;
+    min-width: 0;
+  }
+
+  .media-comment-timestamp {
+    font-size: 0.64rem;
+    max-width: 18ch;
+  }
 }
 
 .mention-valid,

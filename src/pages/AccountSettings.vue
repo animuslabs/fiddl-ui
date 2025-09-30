@@ -11,7 +11,7 @@ q-page.full-height.full-width
             q-tooltip
               p View your public profile
         .centered.q-mt-md
-          q-img(v-if="$userAuth.userId" :src="avatarImg($userAuth.userId)" alt="avatar" width="100px" height="100px" placeholder-src="/blankAvatar.webp")
+          q-img(v-if="$userAuth.userId" :src="displayAvatarSrc" alt="avatar" width="100px" height="100px" placeholder-src="/blankAvatar.webp")
             q-tooltip(slot="overlay")
               p To change your Avatar, use the button at the top right when viewing an image
         .centered.q-mt-sm
@@ -192,6 +192,7 @@ import { telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotifica
 import { usdToString } from "src/lib/discount"
 import { requestEmailLoginCode, completeEmailLoginWithCode } from "src/lib/oauth"
 import { defineComponent } from "vue"
+import { getTelegramProfilePhoto, isTmaMode } from "lib/tmaProfile"
 
 type DiscountCodeWithPayouts = DiscountsMyCodes200Item & { pendingPayout?: number; totalPayout?: number }
 
@@ -223,7 +224,6 @@ export default defineComponent({
       editingUsername: false,
       newUsername: "",
       validateUsername,
-      avatarImg,
       usdToString,
       userBio: "",
       bioEditMode: false,
@@ -275,6 +275,17 @@ export default defineComponent({
     },
     hasAvatar() {
       return !!this.$userAuth.userData?.AvatarConfig
+    },
+    displayAvatarSrc(): string {
+      try {
+        const userId = this.$userAuth.userId
+        if (!this.hasAvatar && isTmaMode()) {
+          const telegramPhoto = getTelegramProfilePhoto()
+          if (telegramPhoto) return telegramPhoto
+        }
+        if (userId) return avatarImg(userId)
+      } catch {}
+      return "/blankAvatar.webp"
     },
     hasBio() {
       return !!this.$userAuth.userProfile?.bio
