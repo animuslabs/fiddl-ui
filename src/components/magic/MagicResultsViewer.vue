@@ -43,6 +43,7 @@ h1 {{ isDesktop }}
 import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
 import { img } from "lib/netlifyImg"
+import { hdDownloadUrl, originalDownloadUrl } from "src/lib/imageCdn"
 import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
 
 const props = withDefaults(
@@ -74,11 +75,24 @@ async function share() {
     const url = currentImageUrl.value
     const tg: any = (window as any)?.Telegram?.WebApp
     const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
-    // Prefer Telegram share dialog inside Mini Apps
-    if (inTma && typeof tg?.openTelegramLink === "function") {
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out my Magic Mirror image")}`
-      tg.openTelegramLink(shareUrl)
-      return
+    // Prefer Telegram story share if available (uses image file, better UX)
+    if (inTma) {
+      try {
+        const orig = await originalDownloadUrl(currentImageId.value || "").catch(() => url)
+        const canStory = typeof tg?.shareToStory === "function" && /\.(png|jpe?g)$/i.test(orig)
+        if (canStory) {
+          tg.shareToStory(orig, {
+            text: "Made with Fiddl.art",
+            widget_link: { url: window.location.origin, text: "Open Fiddl.art" },
+          })
+          return
+        }
+      } catch {}
+      if (typeof tg?.openTelegramLink === "function") {
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out my Magic Mirror image")}`
+        tg.openTelegramLink(shareUrl)
+        return
+      }
     }
     // Fallbacks: Web Share, then clipboard
     if ((navigator as any).share) {
@@ -95,13 +109,15 @@ async function share() {
 
 async function download() {
   try {
-    const url = currentImageUrl.value
+    const url = await hdDownloadUrl(currentImageId.value || "")
+      .catch(async () => currentImageUrl.value)
     if (!url) throw new Error("No image")
     const filename = (currentImageId.value || "image") + ".webp"
     const tg: any = (window as any)?.Telegram?.WebApp
     const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
     if (inTma && typeof tg?.downloadFile === "function") {
-      tg.downloadFile({ url, file_name: filename }, () => {})
+      const params: any = { url, file_name: filename, filename }
+      tg.downloadFile(params, () => {})
       return
     }
     // Fetch as blob for reliable downloading (mirrors MediaViewerControls approach)

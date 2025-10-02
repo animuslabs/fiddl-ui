@@ -145,8 +145,10 @@ import { useUserAuth } from "src/stores/userAuth"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
-import { creationsDeleteMedia, creationsGetCreationData } from "src/lib/orval"
+import { creationsDeleteMedia, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
+import { originalDownloadUrl } from "lib/imageCdn"
+import { img } from "lib/netlifyImg"
 import { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
@@ -206,7 +208,35 @@ async function mobileShare() {
       query: userAuth.userProfile?.username ? { referredBy: userAuth.userProfile.username } : {},
     }).href
 
-  // Use shareMedia only if on mobile and Web Share API supports files, else use shareLink
+  // Prefer Telegram Mini App share when inside TMA
+  try {
+    const tg: any = (window as any)?.Telegram?.WebApp
+    const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+    if (inTma) {
+      // Try sharing to Story for images (PNG/JPG), else fall back to share link
+      if (mediaViewerStore.currentMediaType === "image") {
+        try {
+          const orig = await originalDownloadUrl(mediaViewerStore.currentMediaId).catch(() => "")
+          const canStory = typeof tg?.shareToStory === "function" && /\.(png|jpe?g)$/i.test(orig)
+          if (canStory) {
+            tg.shareToStory(orig, {
+              text: "Made with Fiddl.art",
+              widget_link: { url: window.location.origin, text: "Open Fiddl.art" },
+            })
+            return
+          }
+        } catch {}
+      }
+      // Fallback inside Telegram: open share url
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out this creation on Fiddl.art")}`
+      if (typeof tg?.openTelegramLink === "function") {
+        tg.openTelegramLink(shareUrl)
+        return
+      }
+    }
+  } catch {}
+
+  // Outside Telegram (or fallback): use Web Share if available with files, else share link
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
   const fileName = `${mediaViewerStore.currentMediaId}-fiddl-art.${mediaViewerStore.currentMediaType === "video" ? "mp4" : "webp"}`
   const file = new File([], fileName)
@@ -372,25 +402,61 @@ function editMedia() {
   })
 }
 
+async function tmaDownloadCurrent(): Promise<boolean> {
+  try {
+    const tg: any = (window as any)?.Telegram?.WebApp
+    const inTma = Boolean((window as any)?.__TMA__?.enabled && tg && typeof tg.downloadFile === "function")
+    if (!inTma) return false
+
+    // If user doesn't own media, let the dialog handle unlock/purchase
+    if (!mediaViewerStore.userOwnsMedia) return false
+
+    const id = mediaViewerStore.currentMediaId
+    if (!id) return false
+
+    if (mediaViewerStore.currentMediaType === "image") {
+      let url = await originalDownloadUrl(id).catch(() => "")
+      if (!url) url = mediaViewerStore.hdImageSrc[id] || ""
+      if (!url) url = img(id, "lg")
+      const ext = (/\.([a-z0-9]+)(?:\?|$)/i.exec(url)?.[1] || "png").toLowerCase()
+      const filename = `fiddl.art-${longIdToShort(id)}.${ext}`
+      tg.downloadFile({ url, file_name: filename, filename }, () => {})
+      return true
+    } else {
+      const { data } = await creationsHdVideo({ download: true, videoId: id })
+      const filename = `fiddl.art-${longIdToShort(id)}-original.mp4`
+      tg.downloadFile({ url: data, file_name: filename, filename }, () => {})
+      return true
+    }
+  } catch {
+    return false
+  }
+}
+
 function showDownloadWindow() {
-  Dialog.create({
-    component: DownloadMedia,
-    componentProps: {
-      ...mediaViewerStore.getDialogParams(),
-      requestId: mediaViewerStore.loadedRequestId,
-    },
-  })
-    .onOk(() => {
-      mediaViewerStore.userOwnsMedia = true
-      mediaViewerStore.triedHdLoad = false
-      void mediaViewerStore.loadHdMedia()
+  // In Telegram Mini App, prefer using the native download prompt when possible
+  void (async () => {
+    const handled = await tmaDownloadCurrent()
+    if (handled) return
+
+    Dialog.create({
+      component: DownloadMedia,
+      componentProps: {
+        ...mediaViewerStore.getDialogParams(),
+        requestId: mediaViewerStore.loadedRequestId,
+      },
     })
-    .onDismiss(() => {
-      mediaViewerStore.triedHdLoad = false
-      mediaViewerStore.hdMediaLoaded = false
-      // mediaViewerStore.imgLoading = true
-      void mediaViewerStore.loadHdMedia()
-    })
+      .onOk(() => {
+        mediaViewerStore.userOwnsMedia = true
+        mediaViewerStore.triedHdLoad = false
+        void mediaViewerStore.loadHdMedia()
+      })
+      .onDismiss(() => {
+        mediaViewerStore.triedHdLoad = false
+        mediaViewerStore.hdMediaLoaded = false
+        void mediaViewerStore.loadHdMedia()
+      })
+  })()
 }
 
 watch(

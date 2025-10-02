@@ -522,6 +522,16 @@ export function unifiyRequest(request: CreationsGetImageRequest200 | CreationsGe
 }
 
 export function triggerDownload(url: string, filename: string) {
+  try {
+    const tg: any = (typeof window !== "undefined" ? (window as any)?.Telegram?.WebApp : null)
+    const inTma = Boolean((typeof window !== "undefined" ? (window as any)?.__TMA__?.enabled : false) && tg && typeof tg.downloadFile === "function")
+    if (inTma) {
+      try {
+        tg.downloadFile({ url, file_name: filename, filename }, () => {})
+        return
+      } catch {}
+    }
+  } catch {}
   const a = document.createElement("a")
   a.href = url
   a.download = filename

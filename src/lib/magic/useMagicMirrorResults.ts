@@ -1,6 +1,7 @@
 import { ref, computed } from "vue"
 import { useQuasar } from "quasar"
 import { img } from "lib/netlifyImg"
+import { hdDownloadUrl, originalDownloadUrl } from "src/lib/imageCdn"
 import { toCreatePage } from "lib/routeHelpers"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
 import { useUserAuth } from "src/stores/userAuth"
@@ -128,6 +129,19 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
       // First-class Telegram share inside Mini App
       if (inTma) {
         try {
+          // Prefer sharing the actual image to Telegram Story if supported
+          const origUrl = await originalDownloadUrl(id).catch(() => url)
+          const canStory = typeof tg?.shareToStory === "function" && /\.(png|jpe?g)$/i.test(origUrl)
+          if (canStory) {
+            try {
+              tg.shareToStory(origUrl, {
+                text: "Made with Fiddl.art",
+                widget_link: { url: window.location.origin, text: "Open Fiddl.art" },
+              })
+              return
+            } catch {}
+          }
+          // Fallback to "share link" flow inside Telegram
           const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out my Magic Mirror image")}`
           if (typeof tg?.openTelegramLink === "function") {
             tg.openTelegramLink(shareUrl)
@@ -166,11 +180,27 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   }
   async function downloadImage(id: string) {
     try {
-      const blob = await fetchImageBlob(id)
+      const tg: any = (window as any)?.Telegram?.WebApp
+      const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+
+      // Prefer server-proxied HD download URL with filename when in Telegram
+      const dlUrl = await hdDownloadUrl(id).catch(async () => img(id, "lg"))
+      const filename = `${id}.webp`
+      if (inTma && typeof tg?.downloadFile === "function") {
+        try {
+          const params: any = { url: dlUrl, file_name: filename, filename }
+          tg.downloadFile(params, () => {})
+          return
+        } catch {}
+      }
+
+      // Outside Telegram (or fallback): fetch and trigger browser download
+      const resp = await fetch(dlUrl, { mode: "cors" })
+      const blob = await resp.blob()
       const objectUrl = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = objectUrl
-      a.download = id + ".webp"
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -181,15 +211,19 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   }
   async function saveToGallery(id: string) {
     try {
-      const url = img(id, "lg")
-      const filename = id + ".webp"
+      // Prefer original PNG for gallery saves if available, else HD webp
+      const orig = await originalDownloadUrl(id).catch(() => "")
+      const usePng = /\.png$/i.test(orig)
+      const url = usePng ? orig : await hdDownloadUrl(id).catch(() => img(id, "lg"))
+      const filename = id + (usePng ? ".png" : ".webp")
       const tg: any = (window as any)?.Telegram?.WebApp
       const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
 
       // Prefer native Telegram download prompt when in TMA
       if (inTma && typeof tg?.downloadFile === "function") {
         try {
-          tg.downloadFile({ url, file_name: filename }, (ok: boolean) => {
+          const params: any = { url, file_name: filename, filename }
+          tg.downloadFile(params, (_ok: boolean) => {
             // No-op; Telegram shows its own UI. We could notify on cancel if desired.
           })
           return

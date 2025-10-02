@@ -393,11 +393,26 @@ export default defineComponent({
       studio.removeOutput(output.id)
     }
 
-    function downloadOutput(output: StudioOutputEntry) {
-      if (typeof window !== 'undefined') {
-        window.open(output.src, '_blank')
-      } else {
-        console.info('Download requested', output.src)
+    async function downloadOutput(output: StudioOutputEntry) {
+      try {
+        const tg: any = (window as any)?.Telegram?.WebApp
+        const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+        const filename = (output?.metadata?.name || 'fiddl-output') + '.png'
+        if (inTma && typeof tg?.downloadFile === 'function') {
+          try {
+            const params: any = { url: output.src, file_name: filename, filename }
+            tg.downloadFile(params, () => {})
+            return
+          } catch {}
+        }
+        if (typeof window !== 'undefined') {
+          // Fallback: open in new tab (browser handles download or display)
+          window.open(output.src, '_blank')
+        } else {
+          console.info('Download requested', output.src)
+        }
+      } catch (e) {
+        console.warn('downloadOutput failed', e)
       }
     }
 
