@@ -71,16 +71,22 @@ const mediaObjects = computed<MediaGalleryMeta[]>(() => (props.imageIds || []).m
 
 async function share() {
   try {
-    if ((navigator as any).share) {
-      await (navigator as any).share({
-        title: "My Magic Mirror image",
-        text: "Check out my Magic Mirror result",
-        url: currentImageUrl.value,
-      })
-    } else {
-      await navigator.clipboard.writeText(currentImageUrl.value)
-      $q.notify({ message: "Link copied to clipboard", color: "primary" })
+    const url = currentImageUrl.value
+    const tg: any = (window as any)?.Telegram?.WebApp
+    const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+    // Prefer Telegram share dialog inside Mini Apps
+    if (inTma && typeof tg?.openTelegramLink === "function") {
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out my Magic Mirror image")}`
+      tg.openTelegramLink(shareUrl)
+      return
     }
+    // Fallbacks: Web Share, then clipboard
+    if ((navigator as any).share) {
+      await (navigator as any).share({ title: "My Magic Mirror image", text: "Check out my Magic Mirror result", url })
+      return
+    }
+    await navigator.clipboard.writeText(url)
+    $q.notify({ message: "Link copied to clipboard", color: "primary" })
   } catch (e: any) {
     console.warn("share failed", e)
     $q.notify({ message: "Unable to share", color: "negative" })
@@ -91,13 +97,20 @@ async function download() {
   try {
     const url = currentImageUrl.value
     if (!url) throw new Error("No image")
+    const filename = (currentImageId.value || "image") + ".webp"
+    const tg: any = (window as any)?.Telegram?.WebApp
+    const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+    if (inTma && typeof tg?.downloadFile === "function") {
+      tg.downloadFile({ url, file_name: filename }, () => {})
+      return
+    }
     // Fetch as blob for reliable downloading (mirrors MediaViewerControls approach)
     const resp = await fetch(url, { mode: "cors" })
     const blob = await resp.blob()
     const objectUrl = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = objectUrl
-    a.download = (currentImageId.value || "image") + ".webp"
+    a.download = filename
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

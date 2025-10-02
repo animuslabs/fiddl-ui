@@ -121,20 +121,39 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   }
   async function shareImage(id: string) {
     try {
-      const blob = await fetchImageBlob(id)
-      const filename = id + ".webp"
-      const file = new File([blob], filename, { type: blob.type || "image/webp" })
-      const nav: any = navigator as any
-      if (nav?.canShare && nav?.canShare({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: "My Magic Mirror image" })
-          return
-        } catch (err: any) {
-          if (String(err?.name || "").toLowerCase() === "aborterror") return
-        }
-      }
-      // Fallback: share URL or copy link
       const url = img(id, "lg")
+      const tg: any = (window as any)?.Telegram?.WebApp
+      const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+
+      // First-class Telegram share inside Mini App
+      if (inTma) {
+        try {
+          const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out my Magic Mirror image")}`
+          if (typeof tg?.openTelegramLink === "function") {
+            tg.openTelegramLink(shareUrl)
+            return
+          }
+        } catch {}
+        // If anything above fails, fall back to Web Share / clipboard
+      }
+
+      // Outside Telegram (or as fallback): try Web Share with file first
+      const nav: any = navigator as any
+      try {
+        const blob = await fetch(url, { mode: "cors" }).then((r) => r.blob())
+        const filename = id + ".webp"
+        const file = new File([blob], filename, { type: blob.type || "image/webp" })
+        if (nav?.canShare && nav?.canShare({ files: [file] })) {
+          try {
+            await nav.share({ files: [file], title: "My Magic Mirror image" })
+            return
+          } catch (err: any) {
+            if (String(err?.name || "").toLowerCase() === "aborterror") return
+          }
+        }
+      } catch {}
+
+      // Fallback: share URL or copy link
       if (nav && typeof nav.share === "function") {
         await nav.share({ title: "My Magic Mirror image", url })
       } else {
@@ -162,28 +181,50 @@ export function useMagicMirrorResults(opts: { animatedKey: string; router: Route
   }
   async function saveToGallery(id: string) {
     try {
-      const blob = await fetchImageBlob(id)
+      const url = img(id, "lg")
       const filename = id + ".webp"
-      const file = new File([blob], filename, { type: blob.type || "image/webp" })
-      const nav: any = navigator as any
-      if (nav?.canShare && nav?.canShare({ files: [file] })) {
+      const tg: any = (window as any)?.Telegram?.WebApp
+      const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+
+      // Prefer native Telegram download prompt when in TMA
+      if (inTma && typeof tg?.downloadFile === "function") {
         try {
-          await nav.share({ files: [file], title: "Magic Mirror" })
-          quasar.notify({ message: "Opened share sheet", color: "primary" })
+          tg.downloadFile({ url, file_name: filename }, (ok: boolean) => {
+            // No-op; Telegram shows its own UI. We could notify on cancel if desired.
+          })
           return
-        } catch (err: any) {
-          if (String(err?.name || "").toLowerCase() === "aborterror") return
-        }
+        } catch {}
       }
-      // Fallback to normal download
-      const objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = objectUrl
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(objectUrl)
+
+      // Outside Telegram (or if Telegram download fails), try Web Share with file (common pattern for iOS gallery save)
+      try {
+        const resp = await fetch(url, { mode: "cors" })
+        const blob = await resp.blob()
+        const file = new File([blob], filename, { type: blob.type || "image/webp" })
+        const nav: any = navigator as any
+        if (nav?.canShare && nav?.canShare({ files: [file] })) {
+          try {
+            await nav.share({ files: [file], title: "Save image" })
+            quasar.notify({ message: "Opened share sheet", color: "primary" })
+            return
+          } catch (err: any) {
+            if (String(err?.name || "").toLowerCase() === "aborterror") return
+          }
+        }
+        // Fallback to traditional download
+        const objectUrl = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = objectUrl
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(objectUrl)
+      } catch (e) {
+        // As last resort, copy link
+        await navigator.clipboard.writeText(url)
+        quasar.notify({ message: "Link copied to clipboard", color: "primary" })
+      }
     } catch (e: any) {
       catchErr(e)
     }
