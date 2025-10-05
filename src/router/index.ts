@@ -3,6 +3,7 @@ import { createMemoryHistory, createRouter, createWebHashHistory, createWebHisto
 
 import routes from "./routes"
 import { setupRoutePrefetch } from "src/lib/routePreloader"
+import { events } from "lib/eventsManager"
 
 // const createHistory = import.meta.env.SERVER ? createMemoryHistory : import.meta.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory
 const createHistory = () => createWebHistory(import.meta.env.VUE_ROUTER_BASE || "/")
@@ -86,13 +87,13 @@ Router.afterEach((to) => {
   }
 })
 
-// Track Meta Pixel page views on SPA navigations (skip initial load)
+// Track page views on SPA navigations (skip initial load)
 let hasTrackedInitialPageView = false
 Router.afterEach(() => {
   if (!import.meta.env.SSR) {
     if (hasTrackedInitialPageView) {
-      const fbq = (window as any).fbq
-      if (typeof fbq === "function") fbq("track", "PageView")
+      // Fan out to all trackers via the unified manager
+      events.pageView()
     } else {
       hasTrackedInitialPageView = true
     }

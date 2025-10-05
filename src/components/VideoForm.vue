@@ -135,7 +135,7 @@ import UploadedImagesDialog from "components/dialogs/UploadedImagesDialog.vue"
 import CreateActionBar from "components/CreateActionBar.vue"
 import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
 import { useUserAuth } from "src/stores/userAuth"
-import tma from "src/lib/tmaAnalytics"
+import { events } from "lib/eventsManager"
 
 const emit = defineEmits(["created", "back"])
 // const props = defineProps({
@@ -180,13 +180,13 @@ async function startCreate(isPublic: boolean = req.value.public ?? true) {
     return false
   }
   try {
-    tma.createStart("video", { model: req.value.model, public: !!req.value.public, cost: targetCost })
+    events.createStart("video", { model: req.value.model as any, public: !!req.value.public, cost: targetCost })
   } catch {}
   void vidStore
     .createVideoRequest()
     .then(() => {
       try {
-        tma.createSuccess("video", { model: req.value.model, public: !!req.value.public })
+        events.createSuccess("video", { model: req.value.model as any, public: !!req.value.public })
       } catch {}
       emit("created")
     })

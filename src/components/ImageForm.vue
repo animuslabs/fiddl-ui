@@ -217,7 +217,7 @@ import QuickBuyPointsDialog from "components/dialogs/QuickBuyPointsDialog.vue"
 import CreateActionBar from "src/components/CreateActionBar.vue"
 import UnifiedModelSelectDialog from "components/dialogs/UnifiedModelSelectDialog.vue"
 import * as modelsStore from "stores/modelsStore"
-import tma from "src/lib/tmaAnalytics"
+import { events } from "lib/eventsManager"
 import StartImageThumbs from "components/StartImageThumbs.vue"
 
 const emit = defineEmits(["created", "back"])
@@ -435,20 +435,20 @@ async function startCreateImage(isPublic: boolean = req.public ?? true) {
     if (creationsStore.filter?.customModelId) creationsStore.filter.customModelId = undefined
     void creationsStore.searchCreations(userAuth.userId)
   }
-  // TMA analytics: creation start
+  // Unified analytics: creation start
   try {
-    tma.createStart("image", {
-      model: req.model,
+    events.createStart("image", {
+      model: req.model as any,
       public: !!req.public,
       cost: targetCost,
       randomizer: createStore.state.randomizer?.enabled || false,
-      picks: createStore.state.randomizer?.picksCount || null,
+      picks: (createStore.state.randomizer as any)?.picksCount || null,
     })
   } catch {}
 
   void createStore.createImage().then(() => {
     try {
-      tma.createSuccess("image", { model: req.model, public: !!req.public })
+      events.createSuccess("image", { model: req.model as any, public: !!req.public })
     } catch {}
     emit("created")
   })

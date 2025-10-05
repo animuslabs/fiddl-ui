@@ -6,7 +6,7 @@ import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
 import telemetree from "lib/telemetree"
-import { metaPixel } from "lib/metaPixel"
+import { events } from "lib/eventsManager"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageSecretCache } from "lib/imageCdn"
 import { clearAvatarVersion, setAvatarVersion } from "lib/avatarVersion"
@@ -100,8 +100,10 @@ export const useUserAuth = defineStore("userAuth", {
             })
           } catch {}
           try {
-            metaPixel.setAdvancedMatching({
-              em: this.userProfile?.email || undefined,
+            events.identify({
+              userId: this.userId || undefined,
+              userName: this.userProfile?.username || undefined,
+              emailHash: this.userProfile?.email || undefined,
               external_id: this.userId || undefined,
             })
           } catch {}
@@ -265,7 +267,7 @@ export const useUserAuth = defineStore("userAuth", {
       const { token, userId } = data
       // this.logout()
       await this.applyServerSession(userId, token)
-      try { metaPixel.trackCompleteRegistration({ status: true }) } catch {}
+      try { events.registrationCompleted({ status: true }) } catch {}
     },
     async attemptAutoLogin() {
       // In Telegram Mini App mode, always require a fresh login via TMA flow
@@ -310,9 +312,7 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {
       const result = await pkAuth.register(data)
-      try {
-        metaPixel.trackCompleteRegistration({ status: true })
-      } catch {}
+      try { events.registrationCompleted({ status: true }) } catch {}
       await this.pkLogin(result.registration.user.name)
       console.log(result.registration)
     },

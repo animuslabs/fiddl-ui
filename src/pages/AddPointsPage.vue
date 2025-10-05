@@ -253,7 +253,7 @@ import { catchErr, throwErr, getCookie } from "lib/util"
 import type { PointsPackagesAvailable200Item } from "src/lib/orval"
 import { Dialog, LocalStorage, Notify } from "quasar"
 import umami from "lib/umami"
-import { metaPixel } from "lib/metaPixel"
+import { events } from "lib/eventsManager"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
@@ -796,15 +796,15 @@ export default defineComponent({
           if (!res) return ""
           try {
             if (this.selectedPkg) {
-              metaPixel.trackInitiateCheckout({
+              events.purchaseInitiated({
+                method: "payPal",
                 currency: "USD",
                 value: Number(this.finalUsd),
                 num_items: 1,
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
                 content_name: `Fiddl Points ${this.selectedPkg.points}`,
-              })
-              try { tma.purchaseIntent("paypal", { points: this.selectedPkg.points, usd: Number(this.finalUsd) }) } catch {}
+              } as any)
             }
           } catch {}
           return (res.data as any).id
@@ -866,14 +866,15 @@ export default defineComponent({
       void this.userAuth.loadPointsHistory()
       try {
         if (this.selectedPkg) {
-          metaPixel.trackPurchase({
+          events.purchaseCompleted({
+            method: "payPal",
             currency: "USD",
             value: Number(this.finalUsd),
             num_items: 1,
             content_type: "product",
             contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
             content_name: `Fiddl Points ${this.selectedPkg.points}`,
-          })
+          } as any)
         }
       } catch {}
       umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.finalUsd })

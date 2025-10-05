@@ -1,6 +1,7 @@
 import { boot } from "quasar/wrappers"
 import { useUserAuth } from "src/stores/userAuth"
 import { setSettings, setFetch } from "@tonomy/tonomy-id-sdk"
+import { events } from "lib/eventsManager"
 
 export default boot(({ app }) => {
   console.log("quasar boot")
@@ -35,4 +36,10 @@ export default boot(({ app }) => {
   } else {
     localStorage.removeItem("umami.disabled")
   }
+
+  // Initialize unified events dispatcher (best-effort)
+  try {
+    const debug = !!(import.meta as any).env?.DEV
+    events.init({ debug })
+  } catch {}
 })

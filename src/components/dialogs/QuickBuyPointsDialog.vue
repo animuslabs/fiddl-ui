@@ -158,7 +158,7 @@ import { PayPalButtonsComponent, PayPalNamespace } from "@paypal/paypal-js"
 import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, type DiscountValidationStatus } from "lib/discount"
 import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
-import { metaPixel } from "lib/metaPixel"
+import { events } from "lib/eventsManager"
 import tma from "src/lib/tmaAnalytics"
 
 const detectTma = (): boolean => {
@@ -540,14 +540,15 @@ export default defineComponent({
           const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode }).catch(catchErr)
           if (!res?.data) return ""
           try {
-            metaPixel.trackInitiateCheckout({
+            events.purchaseInitiated({
+              method: "payPal",
               currency: "USD",
               value: Number(this.finalUsd || this.selectedPkg?.usd || 0),
               num_items: 1,
               content_type: "product",
               contents: [{ id: `points_${this.selectedPkg?.points || 0}`, quantity: 1, item_price: Number(this.finalUsd || this.selectedPkg?.usd || 0) }],
               content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
-            })
+            } as any)
           } catch {}
           return (res.data as any).id || ""
         },
@@ -560,14 +561,15 @@ export default defineComponent({
               return
             }
             try {
-              metaPixel.trackPurchase({
+              events.purchaseCompleted({
+                method: "payPal",
                 currency: "USD",
                 value: Number(this.finalUsd || this.selectedPkg?.usd || 0),
                 num_items: 1,
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPkg?.points || 0}`, quantity: 1, item_price: Number(this.finalUsd || this.selectedPkg?.usd || 0) }],
                 content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
-              })
+              } as any)
             } catch {}
             if (typeof umami.track === "function") {
               umami.track("buyPointsPkgSuccess", {

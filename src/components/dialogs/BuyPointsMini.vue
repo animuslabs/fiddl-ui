@@ -26,7 +26,7 @@ import { useUserAuth } from "stores/userAuth"
 import { Dialog } from "quasar"
 import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
-import { metaPixel } from "lib/metaPixel"
+import { events } from "lib/eventsManager"
 
 export default defineComponent({
   name: "BuyPointsMini",
@@ -115,14 +115,15 @@ export default defineComponent({
               const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountCode || undefined }).catch(catchErr)
             if (!res?.data) return ""
             try {
-              metaPixel.trackInitiateCheckout({
+              events.purchaseInitiated({
+                method: "payPal",
                 currency: "USD",
                 value: Number(this.selectedUsd || 0),
                 num_items: 1,
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
                 content_name: `Fiddl Points ${this.selectedPoints || 0}`,
-              })
+              } as any)
             } catch {}
             return (res.data as any).id || ""
           },
@@ -136,15 +137,16 @@ export default defineComponent({
               }
               void this.userAuth.loadUserData()
               try {
-                metaPixel.trackPurchase({
+                events.purchaseCompleted({
+                  method: "payPal",
                   currency: "USD",
                   value: Number(this.selectedUsd || 0),
                   num_items: 1,
-                content_type: "product",
-                contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
-                content_name: `Fiddl Points ${this.selectedPoints || 0}`,
-              })
-            } catch {}
+                  content_type: "product",
+                  contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
+                  content_name: `Fiddl Points ${this.selectedPoints || 0}`,
+                } as any)
+              } catch {}
             if (typeof umami.track === "function") {
               umami.track("buyPointsPkgSuccess", {
                 points: this.selectedPoints,
