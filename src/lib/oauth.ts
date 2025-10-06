@@ -40,6 +40,21 @@ function sanitizeReturnToPath(input?: string | null): string {
   }
 }
 
+function detectBraveSync(): boolean {
+  try {
+    // Quick sync heuristics (works on Desktop Brave; iOS may not expose navigator.brave)
+    // We avoid awaiting isBrave() to keep the public API synchronous.
+    // If this returns false negatives, the server-side token injection still helps.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nav: any = navigator
+    if (nav?.brave) return true
+    const ua = String(navigator.userAgent || "")
+    return /Brave/i.test(ua)
+  } catch {
+    return false
+  }
+}
+
 export async function requestEmailLoginCode(email: string): Promise<string> {
   const { data } = await loginLinkInitLoginLink({
     email,
@@ -70,6 +85,29 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     sessionStorage.setItem("returnTo", returnTo)
   } else {
     sessionStorage.removeItem("returnTo")
+  }
+
+  // For Brave firewall / strict privacy browsers, prefer a direct navigation
+  // to the API start endpoint so any server cookies are set in a first-party context.
+  if ((options.mode ?? "login") === "link" && detectBraveSync()) {
+    const callbackUrl = new URL(`/auth/callback/${callbackSegment}`, window.location.origin)
+    if (returnTo) callbackUrl.searchParams.set("returnTo", returnTo)
+
+    const requestUrl = new URL(`${apiUrl}/auth/oauth/${providerKey}/start`)
+    requestUrl.searchParams.set("mode", "link")
+    requestUrl.searchParams.set("redirect", `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`)
+    const referrer = getReferredBy()
+    if (referrer) requestUrl.searchParams.set("referrer", referrer)
+    try {
+      const auth = jwt.read()
+      if (auth?.token) {
+        requestUrl.searchParams.set("token", auth.token)
+        requestUrl.searchParams.set("authorization", `Bearer ${auth.token}`)
+        requestUrl.searchParams.set("userId", auth.userId)
+      }
+    } catch {}
+    window.location.href = requestUrl.toString()
+    return
   }
 
   // New orval route for LINK mode. Server returns a fully-qualified URL.

@@ -116,7 +116,7 @@ class EventsManager {
     } catch {}
     try {
       const { value, currency, ...rest } = payload as any
-      tiktokPixel.trackCompletePayment({ value, currency, ...rest })
+      tiktokPixel.trackPurchase({ value, currency, ...rest })
     } catch {}
     try {
       tmaAnalytics.purchaseSuccess((payload as any).method as any, payload)
