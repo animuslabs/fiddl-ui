@@ -2098,6 +2098,47 @@ export type UserAuthConnections200 = {
   passkeys: number;
 };
 
+export type UserOauthLinkStartUrlParams = {
+provider?: UserOauthLinkStartUrlProvider;
+redirect?: string;
+referrer?: string;
+response_format?: string;
+redirect_tma?: string;
+};
+
+export type UserOauthLinkStartUrlProvider = typeof UserOauthLinkStartUrlProvider[keyof typeof UserOauthLinkStartUrlProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserOauthLinkStartUrlProvider = {
+  google: 'google',
+  x: 'x',
+  tonid: 'tonid',
+} as const;
+
+export type UserOauthLinkStartUrl200 = {
+  url: string;
+};
+
+export type UserUnlinkOAuthBodyProvider = typeof UserUnlinkOAuthBodyProvider[keyof typeof UserUnlinkOAuthBodyProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserUnlinkOAuthBodyProvider = {
+  google: 'google',
+  x: 'x',
+  tonid: 'tonid',
+} as const;
+
+export type UserUnlinkOAuthBody = {
+  provider: UserUnlinkOAuthBodyProvider;
+};
+
+export type UserUnlinkOAuth200 = {
+  ok: boolean;
+  reason?: string;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
@@ -6002,6 +6043,56 @@ export const userAuthConnections = async ( options?: RequestInit): Promise<UserA
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getUserOauthLinkStartUrlUrl = (params?: UserOauthLinkStartUrlParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/user/oauthLinkStartUrl?${stringifiedParams}` : `/user/oauthLinkStartUrl`
+}
+
+export const userOauthLinkStartUrl = async (params?: UserOauthLinkStartUrlParams, options?: RequestInit): Promise<UserOauthLinkStartUrl200> => {
+  
+  return fetcher<UserOauthLinkStartUrl200>(getUserOauthLinkStartUrlUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUserUnlinkOAuthUrl = () => {
+
+
+  
+
+  return `/user/unlinkOAuth`
+}
+
+export const userUnlinkOAuth = async (userUnlinkOAuthBody: UserUnlinkOAuthBody, options?: RequestInit): Promise<UserUnlinkOAuth200> => {
+  
+  return fetcher<UserUnlinkOAuth200>(getUserUnlinkOAuthUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userUnlinkOAuthBody,)
   }
 );}
 

@@ -1,7 +1,15 @@
 import { apiUrl } from "lib/api"
 import { jwt } from "lib/jwt"
 import { getReferredBy } from "lib/util"
-import { loginLinkInitLoginLink, loginLinkLoginWithCode, type LoginLinkLoginWithLink200 } from "lib/orval"
+import {
+  loginLinkInitLoginLink,
+  loginLinkLoginWithCode,
+  userOauthLinkStartUrl,
+  userUnlinkOAuth,
+  type LoginLinkLoginWithLink200,
+  type UserOauthLinkStartUrlParams,
+  UserUnlinkOAuthBodyProvider,
+} from "lib/orval"
 
 export type OAuthProvider = "google" | "twitter"
 
@@ -64,6 +72,27 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     sessionStorage.removeItem("returnTo")
   }
 
+  // New orval route for LINK mode. Server returns a fully-qualified URL.
+  if ((options.mode ?? "login") === "link") {
+    const apiProvider = provider === "twitter" ? ("x" as UserOauthLinkStartUrlParams["provider"]) : "google"
+    const redirect = returnTo || "/settings"
+    const params: UserOauthLinkStartUrlParams = { provider: apiProvider, redirect }
+    const referrer = getReferredBy()
+    if (referrer) params.referrer = referrer
+    // Fire request; then navigate the browser to the returned URL
+    void userOauthLinkStartUrl(params)
+      .then((res) => {
+        const url = res?.data?.url
+        if (!url) throw new Error("Invalid response: missing url")
+        window.location.href = url
+      })
+      .catch((e) => {
+        // Surface the error in console; caller usually wraps with catchErr
+        console.error("Failed to start OAuth link:", e)
+      })
+    return
+  }
+
   const callbackUrl = new URL(`/auth/callback/${callbackSegment}`, window.location.origin)
   if (returnTo) callbackUrl.searchParams.set("returnTo", returnTo)
 
@@ -86,24 +115,23 @@ export function getProviderLabel(provider: OAuthProvider): string {
  * Falls back between POST and DELETE to be resilient to backend method choice.
  */
 export async function unlinkOAuthProvider(provider: OAuthProvider): Promise<void> {
-  const providerKey = provider === "twitter" ? "twitter" : "google"
-  const endpoint = `${apiUrl}/auth/oauth/${providerKey}/unlink`
-  const auth = jwt.read()
-  const headers: Record<string, string> = { "Content-Type": "application/json" }
-  if (auth?.token) headers.Authorization = `Bearer ${auth.token}`
-
-  // Prefer POST, fallback to DELETE for older servers
-  const tryRequest = async (method: "POST" | "DELETE") => {
-    const res = await fetch(endpoint, { method, headers })
-    if (!res.ok) {
-      const text = await res.text().catch(() => "")
-      throw new Error(`Unlink failed (${method}): ${res.status} ${text}`)
-    }
-  }
-
+  // Use new Orval route; map twitter->x
+  const apiProvider: UserUnlinkOAuthBodyProvider = provider === "twitter" ? "x" : "google"
   try {
-    await tryRequest("POST")
-  } catch (e) {
-    await tryRequest("DELETE")
+    await userUnlinkOAuth({ provider: apiProvider })
+    return
+  } catch (err) {
+    // Fallback to legacy endpoint if server is older
+    try {
+      const providerKey = provider === "twitter" ? "twitter" : "google"
+      const endpoint = `${apiUrl}/auth/oauth/${providerKey}/unlink`
+      const auth = jwt.read()
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (auth?.token) headers.Authorization = `Bearer ${auth.token}`
+      const res = await fetch(endpoint, { method: "POST", headers })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    } catch (e) {
+      throw err
+    }
   }
 }

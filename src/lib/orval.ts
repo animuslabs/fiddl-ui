@@ -2127,6 +2127,47 @@ export type UserAuthConnections200 = {
   passkeys: number;
 };
 
+export type UserOauthLinkStartUrlParams = {
+provider?: UserOauthLinkStartUrlProvider;
+redirect?: string;
+referrer?: string;
+response_format?: string;
+redirect_tma?: string;
+};
+
+export type UserOauthLinkStartUrlProvider = typeof UserOauthLinkStartUrlProvider[keyof typeof UserOauthLinkStartUrlProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserOauthLinkStartUrlProvider = {
+  google: 'google',
+  x: 'x',
+  tonid: 'tonid',
+} as const;
+
+export type UserOauthLinkStartUrl200 = {
+  url: string;
+};
+
+export type UserUnlinkOAuthBodyProvider = typeof UserUnlinkOAuthBodyProvider[keyof typeof UserUnlinkOAuthBodyProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserUnlinkOAuthBodyProvider = {
+  google: 'google',
+  x: 'x',
+  tonid: 'tonid',
+} as const;
+
+export type UserUnlinkOAuthBody = {
+  provider: UserUnlinkOAuthBodyProvider;
+};
+
+export type UserUnlinkOAuth200 = {
+  ok: boolean;
+  reason?: string;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
@@ -8040,6 +8081,120 @@ export function useUserAuthConnections<TData = Awaited<ReturnType<typeof userAut
 
 
 
+export const userOauthLinkStartUrl = (
+    params?: MaybeRef<UserOauthLinkStartUrlParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserOauthLinkStartUrl200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/user/oauthLinkStartUrl`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getUserOauthLinkStartUrlQueryKey = (params?: MaybeRef<UserOauthLinkStartUrlParams>,) => {
+    return ['user','oauthLinkStartUrl', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUserOauthLinkStartUrlQueryOptions = <TData = Awaited<ReturnType<typeof userOauthLinkStartUrl>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<UserOauthLinkStartUrlParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userOauthLinkStartUrl>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUserOauthLinkStartUrlQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userOauthLinkStartUrl>>> = ({ signal }) => userOauthLinkStartUrl(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userOauthLinkStartUrl>>, TError, TData> 
+}
+
+export type UserOauthLinkStartUrlQueryResult = NonNullable<Awaited<ReturnType<typeof userOauthLinkStartUrl>>>
+export type UserOauthLinkStartUrlQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUserOauthLinkStartUrl<TData = Awaited<ReturnType<typeof userOauthLinkStartUrl>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<UserOauthLinkStartUrlParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userOauthLinkStartUrl>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserOauthLinkStartUrlQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const userUnlinkOAuth = (
+    userUnlinkOAuthBody: MaybeRef<UserUnlinkOAuthBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserUnlinkOAuth200>> => {
+    userUnlinkOAuthBody = unref(userUnlinkOAuthBody);
+    
+    return axios.post(
+      `/user/unlinkOAuth`,
+      userUnlinkOAuthBody,options
+    );
+  }
+
+
+
+export const getUserUnlinkOAuthMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userUnlinkOAuth>>, TError,{data: UserUnlinkOAuthBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof userUnlinkOAuth>>, TError,{data: UserUnlinkOAuthBody}, TContext> => {
+
+const mutationKey = ['userUnlinkOAuth'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userUnlinkOAuth>>, {data: UserUnlinkOAuthBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userUnlinkOAuth(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserUnlinkOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof userUnlinkOAuth>>>
+    export type UserUnlinkOAuthMutationBody = UserUnlinkOAuthBody
+    export type UserUnlinkOAuthMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUserUnlinkOAuth = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userUnlinkOAuth>>, TError,{data: UserUnlinkOAuthBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof userUnlinkOAuth>>,
+        TError,
+        {data: UserUnlinkOAuthBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUserUnlinkOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const loginLinkInitLoginLink = (
     loginLinkInitLoginLinkBody: MaybeRef<LoginLinkInitLoginLinkBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string>> => {
