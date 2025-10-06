@@ -1853,6 +1853,15 @@ export type UserSendVerificationEmailBody = {
   email: string;
 };
 
+export type UserVerifyEmailTokenBody = {
+  token: string;
+};
+
+export type UserVerifyEmailToken200 = {
+  token: string;
+  userId: string;
+};
+
 export type UserPointsHistoryParams = {
 userId?: string;
 startDateTime?: string;
@@ -2063,6 +2072,30 @@ export type UserAllUsers200Item = {
   updatedAt: string;
   /** @nullable */
   Profile: UserAllUsers200ItemProfile;
+};
+
+export type UserAuthConnections200Email = {
+  linked: boolean;
+  /** @nullable */
+  address: string | null;
+  verified: boolean;
+};
+
+export type UserAuthConnections200Telegram = {
+  linked: boolean;
+  /** @nullable */
+  id: string | null;
+  /** @nullable */
+  name: string | null;
+};
+
+export type UserAuthConnections200 = {
+  google: boolean;
+  x: boolean;
+  tonid: boolean;
+  email: UserAuthConnections200Email;
+  telegram: UserAuthConnections200Telegram;
+  passkeys: number;
 };
 
 export type LoginLinkInitLoginLinkBody = {
@@ -5662,6 +5695,28 @@ export const userSendVerificationEmail = async (userSendVerificationEmailBody: U
 
 
 
+export const getUserVerifyEmailTokenUrl = () => {
+
+
+  
+
+  return `/user/verifyEmailToken`
+}
+
+export const userVerifyEmailToken = async (userVerifyEmailTokenBody: UserVerifyEmailTokenBody, options?: RequestInit): Promise<UserVerifyEmailToken200> => {
+  
+  return fetcher<UserVerifyEmailToken200>(getUserVerifyEmailTokenUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userVerifyEmailTokenBody,)
+  }
+);}
+
+
+
 export const getUserPointsHistoryUrl = (params?: UserPointsHistoryParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -5921,6 +5976,27 @@ export const getUserAllUsersUrl = () => {
 export const userAllUsers = async ( options?: RequestInit): Promise<UserAllUsers200Item[]> => {
   
   return fetcher<UserAllUsers200Item[]>(getUserAllUsersUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getUserAuthConnectionsUrl = () => {
+
+
+  
+
+  return `/user/authConnections`
+}
+
+export const userAuthConnections = async ( options?: RequestInit): Promise<UserAuthConnections200> => {
+  
+  return fetcher<UserAuthConnections200>(getUserAuthConnectionsUrl(),
   {      
     ...options,
     method: 'GET'

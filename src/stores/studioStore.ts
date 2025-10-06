@@ -54,6 +54,8 @@ export interface StudioOutputEntry {
   src: string
   createdAt: number
   sourceItemIds: string[]
+  // Optional metadata for display/download purposes
+  metadata?: { name?: string }
 }
 
 interface HistoryEntry {

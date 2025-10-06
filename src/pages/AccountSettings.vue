@@ -62,32 +62,72 @@ q-page.full-height.full-width
               .q-ml-sm Earned: {{ referralsSummary?.earnedReferralPoints ?? 0 }} Points
         div(style="max-width: 400px;").q-mt-md
           small You will earn a 5% Fiddl Points bonus when users who register using your referral link purchase Fiddl Points.
-        h5.q-pt-md Email
-        .row.items-center
-          div
-            p {{ $userAuth.userProfile?.email?.toLowerCase() || "no email" }}
-          div.q-ml-md
-            q-icon(v-if="$userAuth.userProfile?.emailVerified" name="check" color="positive" size="sm")
-            q-icon(v-else name="close" color="negative" size="sm")
-          .q-ma-md(v-if="!$userAuth.userProfile?.emailVerified")
-            q-btn( @click="linkEmail()" label="Verify your email" flat color="positive" icon="link" size="md")
-        .centered(v-if="!$userAuth.userProfile?.emailVerified")
-          small.text-positive Earn 100 Points when you link your email
-        //- h6.q-pt-md Link Telegram
-        //- .row.items-center.q-gutter-sm
-        //-   q-btn(@click="linkTelegram()" label="Link Telegram" color="primary" flat icon="fa-brands fa-telegram")
-        // Telegram linking panel
-        .q-mt-lg
-          .row.items-center.q-gutter-sm
-            h5 Telegram
-            q-badge(v-if="tgStatusChecked" :color="tgLinked ? 'positive' : 'warning'" class="q-ml-sm") {{ tgLinked ? (tgTelegramName ? `Connected as ${tgTelegramName}` : 'Connected') : 'Not Connected' }}
-          div(v-if="!tgLinked" class="q-mt-sm")
-            div.q-mb-sm Connect your Fiddl account to our Telegram bot to receive updates and buy points with Stars.
-            TelegramConnect(mode="link" @linked="onTgLinked")
-          div.q-mt-sm(v-if="tgStatusChecked && !tgLinked")
-            div If you have Telegram Premium, you'll earn 100 extra Points
-          div(v-else class="q-mt-sm")
-            p You are connected to Telegram.
+        h5.q-pt-md Linked Accounts
+        q-card(flat bordered class="bg-dark-2 q-pa-md")
+          q-list(separator)
+            // Email
+            q-item
+              q-item-section(avatar)
+                q-icon(name="email")
+              q-item-section
+                q-item-label Email
+                q-item-label(caption)
+                  span {{ (connections?.email?.address || $userAuth.userProfile?.email || 'No email').toLowerCase?.() || (connections?.email?.address || $userAuth.userProfile?.email || 'No email') }}
+              q-item-section(side)
+                template(v-if="connections?.email?.verified ?? $userAuth.userProfile?.emailVerified")
+                  q-chip(outline color="positive" text-color="positive" icon="check") Verified
+                template(v-else)
+                  .row.items-center.q-gutter-sm
+                    q-btn(flat color="positive" icon="link" label="Verify email" @click="linkEmail()")
+                    q-chip(dense color="grey-8" text-color="white" icon="img:/FiddlPointsLogo.svg") +{{ linkRewards.linkEmail }} pts
+            // Google
+            q-item
+              q-item-section(avatar)
+                q-icon(name="img:https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg")
+              q-item-section
+                q-item-label Google
+                q-item-label(caption)
+                  span {{ isGoogleLinked ? 'Connected' : 'Not connected' }}
+              q-item-section(side)
+                template(v-if="isGoogleLinked")
+                  q-btn(flat color="negative" icon="link_off" label="Unlink" @click="onUnlinkProvider('google')")
+                template(v-else)
+                  .row.items-center.q-gutter-sm
+                    q-btn(flat color="primary" icon="link" label="Link" @click="onLinkProvider('google')")
+                    q-chip(dense color="grey-8" text-color="white" icon="img:/FiddlPointsLogo.svg") +{{ linkRewards.linkGoogle }} pts
+            // X (Twitter)
+            q-item
+              q-item-section(avatar)
+                q-icon(name="img:/x-logo.svg")
+              q-item-section
+                q-item-label X (Twitter)
+                q-item-label(caption)
+                  span(v-if="twitterHandle") @{{ twitterHandle }}
+                  span(v-else) {{ isTwitterLinked ? 'Connected' : 'Not connected' }}
+              q-item-section(side)
+                template(v-if="isTwitterLinked")
+                  q-btn(flat color="negative" icon="link_off" label="Unlink" @click="onUnlinkProvider('twitter')")
+                template(v-else)
+                  .row.items-center.q-gutter-sm
+                    q-btn(flat color="primary" icon="link" label="Link" @click="onLinkProvider('twitter')")
+                    q-chip(dense color="grey-8" text-color="white" icon="img:/FiddlPointsLogo.svg") +{{ linkRewards.linkTwitter }} pts
+            // Telegram
+            q-item
+              q-item-section(avatar)
+                q-icon(name="fa-brands fa-telegram")
+              q-item-section
+                q-item-label Telegram
+                q-item-label(caption)
+                  span(v-if="tgTelegramName") Connected as {{ tgTelegramName }}
+                  span(v-else) {{ tgLinked ? 'Connected' : 'Not connected' }}
+              q-item-section(side)
+                template(v-if="tgLinked")
+                  q-btn(flat color="negative" icon="link_off" label="Unlink" @click="onUnlinkTelegram")
+                template(v-else)
+                  .row.items-center.q-gutter-sm
+                    TelegramConnect(mode="link" button-label="Connect" @linked="onTgLinked")
+                    q-chip(dense color="grey-8" text-color="white" icon="img:/FiddlPointsLogo.svg") +{{ linkRewards.linkTelegram }} pts
+            div(v-if="!tgLinked" class="q-mt-sm") If you have Telegram Premium, you'll earn 100 extra Points
           // Stars purchase moved to Add Points page
           // (See AddPointsPage → Telegram Stars toggle)
         // Legacy widget mount (unused)
@@ -154,21 +194,7 @@ q-page.full-height.full-width
               :rows-per-page-options="[10,25,50,0]"
               :no-data-label="'No payout receipts yet'"
             )
-        // QR Code dialog for Telegram linking (desktop)
-        q-dialog(v-model="tgQrDialogOpen" :maximized="isMobile")
-          q-card(style="width:520px; max-width:100vw;")
-            q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
-              .row.items-center.justify-between
-                h6.q-mt-none.q-mb-none Scan with your phone to login via Telegram
-                q-btn(flat dense round icon="close" v-close-popup)
-            q-separator
-            q-card-section
-              .centered
-                q-spinner(v-if="tgQrLoading || !tgQrDataUrl" color="primary" size="120px")
-                q-img(v-else :src="tgQrDataUrl" style="width:min(92vw, 600px); height:auto;" no-spinner)
-              .centered.q-mt-md
-                q-btn(v-if="deepLink?.deepLink" type="a" :href="deepLink?.deepLink" target="_blank" color="primary" icon="fa-brands fa-telegram" label="Open Telegram on this device" rounded)
-                q-btn(color="grey-7" icon="close" label="Close" flat rounded v-close-popup).q-ml-sm
+
         h6.q-pt-md Notifications
         .row(v-if="$userAuth.notificationConfig")
           //- pre {{ $userAuth.notificationConfig }}
@@ -187,14 +213,42 @@ import { copyToClipboard, Dialog, Loading, Notify, useQuasar } from "quasar"
 import type { QTableColumn } from "quasar"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import TelegramConnect from "src/components/TelegramConnect.vue"
-import { jwt } from "src/lib/jwt"
-import { telegramCreateDeepLink, telegramLinkStatus, userSetBio, userSetNotificationConfig, userSetUsername, discountsMyCodes, userGetAffiliatePayoutDetails, userSetAffiliatePayoutDetails, userAffiliatePayoutReceipts, userReferralsSummary, type DiscountsMyCodes200Item, type TelegramCreateDeepLink200, type UserAffiliatePayoutReceipts200Item, type UserReferralsSummary200 } from "src/lib/orval"
+// JWT is handled by axios interceptors in boot; no direct use here
+import {
+  telegramCreateDeepLink,
+  telegramLinkStatus,
+  userSetBio,
+  userSetNotificationConfig,
+  userSetUsername,
+  discountsMyCodes,
+  userGetAffiliatePayoutDetails,
+  userSetAffiliatePayoutDetails,
+  userAffiliatePayoutReceipts,
+  userReferralsSummary,
+  userAuthConnections,
+  type DiscountsMyCodes200Item,
+  type TelegramCreateDeepLink200,
+  type UserAffiliatePayoutReceipts200Item,
+  type UserReferralsSummary200,
+} from "src/lib/orval"
 import { usdToString } from "src/lib/discount"
-import { requestEmailLoginCode, completeEmailLoginWithCode } from "src/lib/oauth"
+import { requestEmailLoginCode, completeEmailLoginWithCode, startOAuthLogin, unlinkOAuthProvider } from "src/lib/oauth"
+import { usePricesStore } from "src/stores/pricesStore"
+import { telegramUnlink } from "src/lib/orval"
 import { defineComponent } from "vue"
 import { getTelegramProfilePhoto, isTmaMode } from "lib/tmaProfile"
 
 type DiscountCodeWithPayouts = DiscountsMyCodes200Item & { pendingPayout?: number; totalPayout?: number }
+
+type AuthConnections = {
+  email: { address: string | null; verified: boolean; linked?: boolean }
+  google: { linked: boolean }
+  twitter: { linked: boolean; handle: string | null; verified?: boolean }
+  telegram: { linked: boolean; id: string | null; name: string | null }
+  phone?: { number: string | null; verified: boolean }
+  tonid?: boolean
+  passkeys?: number
+}
 
 function validateUsername(username: string): string | true {
   // This regex allows letters, numbers, underscores, hyphens, and emojis, but no spaces
@@ -221,6 +275,8 @@ export default defineComponent({
   data() {
     return {
       quasar: useQuasar(),
+      pricesStore: usePricesStore(),
+      connections: null as AuthConnections | null,
       editingUsername: false,
       newUsername: "",
       validateUsername,
@@ -263,6 +319,21 @@ export default defineComponent({
     }
   },
   computed: {
+    linkRewards(): { linkEmail: number; linkGoogle: number; linkPhone: number; linkTelegram: number; linkTwitter: number } {
+      return this.pricesStore.prices.socialRewards
+    },
+    isGoogleLinked(): boolean {
+      if (this.connections) return Boolean(this.connections.google.linked)
+      return Boolean(this.$userAuth.userData?.googleId)
+    },
+    isTwitterLinked(): boolean {
+      if (this.connections) return Boolean(this.connections.twitter.linked)
+      return Boolean(this.$userAuth.userData?.twitterId) || Boolean(this.$userAuth.userProfile?.twitterVerified)
+    },
+    twitterHandle(): string | null {
+      if (this.connections) return this.connections.twitter.handle
+      return this.$userAuth.userProfile?.twitter || null
+    },
     countdownPct(): number {
       if (!this.countdownTotal) return 0
       return Math.max(0, Math.min(1, this.countdown / this.countdownTotal))
@@ -302,7 +373,7 @@ export default defineComponent({
         if (!val) return
         this.loadData()
         void this.loadMyCodes()
-        void this.checkTgStatus()
+        void this.loadAuthConnections()
         void this.loadReferralsSummary()
       },
     },
@@ -321,6 +392,106 @@ export default defineComponent({
     if (this.tgPollTimer) clearInterval(this.tgPollTimer)
   },
   methods: {
+    async loadAuthConnections() {
+      if (!this.$userAuth.loggedIn) return
+      try {
+        const { data } = await userAuthConnections()
+        const conn: AuthConnections = {
+          email: { address: data.email?.address ?? null, verified: Boolean(data.email?.verified), linked: Boolean(data.email?.linked) },
+          google: { linked: Boolean(data.google) },
+          twitter: { linked: Boolean(data.x), handle: this.$userAuth.userProfile?.twitter || null, verified: Boolean(this.$userAuth.userProfile?.twitterVerified) },
+          telegram: { linked: Boolean(data.telegram?.linked), id: data.telegram?.id ?? null, name: data.telegram?.name ?? null },
+          phone: this.$userAuth.userProfile ? { number: this.$userAuth.userProfile.phone || null, verified: Boolean(this.$userAuth.userProfile.phoneVerified) } : undefined,
+          tonid: Boolean((data as any).tonid),
+          passkeys: Number((data as any).passkeys ?? 0),
+        }
+        this.connections = conn
+        this.tgLinked = Boolean(conn.telegram.linked)
+        this.tgTelegramId = conn.telegram.id
+        this.tgTelegramName = conn.telegram.name
+      } catch (e) {
+        // Fallback with orval telegram status + profile
+        try {
+          const { data } = await telegramLinkStatus()
+          const extra = (data?.data || null) as any
+          if (data?.linked || extra?.telegramId) {
+            this.tgLinked = true
+            this.tgTelegramId = extra?.telegramId || null
+            this.tgTelegramName = extra?.telegramName || null
+          }
+        } catch {}
+        this.connections = {
+          email: { address: this.$userAuth.userProfile?.email || null, verified: Boolean(this.$userAuth.userProfile?.emailVerified) },
+          google: { linked: Boolean(this.$userAuth.userData?.googleId) },
+          twitter: { linked: Boolean(this.$userAuth.userData?.twitterId) || Boolean(this.$userAuth.userProfile?.twitterVerified), handle: this.$userAuth.userProfile?.twitter || null, verified: Boolean(this.$userAuth.userProfile?.twitterVerified) },
+          telegram: { linked: this.tgLinked, id: this.tgTelegramId, name: this.tgTelegramName },
+          phone: { number: this.$userAuth.userProfile?.phone || null, verified: Boolean(this.$userAuth.userProfile?.phoneVerified) },
+        }
+      }
+    },
+    onLinkProvider(provider: "google" | "twitter") {
+      try {
+        const rt = "/settings"
+        startOAuthLogin(provider, { mode: "link", returnTo: rt })
+      } catch (e) {
+        catchErr(e)
+      }
+    },
+    async onUnlinkProvider(provider: "google" | "twitter") {
+      try {
+        Dialog.create({
+          title: `Unlink ${provider === "twitter" ? "X" : "Google"}?`,
+          message: `Are you sure you want to unlink your ${provider === "twitter" ? "X" : "Google"} account? You can re-link later.`,
+          ok: { label: "Unlink", flat: true, color: "negative" },
+          cancel: true,
+          persistent: true,
+        }).onOk(async () => {
+          try {
+            Loading.show({ message: "Unlinking..." })
+            await unlinkOAuthProvider(provider)
+            await this.$userAuth.loadUserData()
+            await this.$userAuth.loadUserProfile()
+            await this.loadAuthConnections()
+            Notify.create({ type: "positive", message: `${provider === "twitter" ? "X" : "Google"} account unlinked` })
+          } catch (err) {
+            catchErr(err)
+          } finally {
+            Loading.hide()
+          }
+        })
+      } catch (e) {
+        catchErr(e)
+      }
+    },
+    async onUnlinkTelegram() {
+      try {
+        Dialog.create({
+          title: "Unlink Telegram?",
+          message: "Unlink this Fiddl account from your Telegram account?",
+          ok: { label: "Unlink", flat: true, color: "negative" },
+          cancel: true,
+          persistent: true,
+        }).onOk(async () => {
+          try {
+            Loading.show({ message: "Unlinking Telegram..." })
+            await telegramUnlink()
+            this.tgLinked = false
+            this.tgTelegramId = null
+            this.tgTelegramName = null
+            await this.$userAuth.loadUserProfile()
+            await this.$userAuth.loadUserData()
+            await this.loadAuthConnections()
+            Notify.create({ type: "positive", message: "Telegram unlinked" })
+          } catch (err) {
+            catchErr(err)
+          } finally {
+            Loading.hide()
+          }
+        })
+      } catch (e) {
+        catchErr(e)
+      }
+    },
     copyCode(code: string) {
       void copyToClipboard(code)
       Notify.create({ message: "Code copied", color: "positive", icon: "check" })
@@ -525,6 +696,7 @@ export default defineComponent({
       this.tgTelegramId = payload.telegramId || null
       this.tgTelegramName = payload.telegramName || null
       void this.$userAuth.loadNotificationConfig()
+      void this.loadAuthConnections()
     },
     async updateBio() {
       await userSetBio({ bio: this.userBio || "" }).catch(catchErr)
@@ -579,6 +751,7 @@ export default defineComponent({
               Loading.show({ message: "Verifying code..." })
               const result = await completeEmailLoginWithCode(String(code || ""))
               await this.$userAuth.applyServerSession(result.userId, result.token)
+              await this.loadAuthConnections()
               Loading.hide()
               Notify.create({ message: "Email verified", color: "positive", icon: "check" })
             } catch (e: any) {

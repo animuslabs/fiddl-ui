@@ -1882,6 +1882,15 @@ export type UserSendVerificationEmailBody = {
   email: string;
 };
 
+export type UserVerifyEmailTokenBody = {
+  token: string;
+};
+
+export type UserVerifyEmailToken200 = {
+  token: string;
+  userId: string;
+};
+
 export type UserPointsHistoryParams = {
 userId?: string;
 startDateTime?: string;
@@ -2092,6 +2101,30 @@ export type UserAllUsers200Item = {
   updatedAt: string;
   /** @nullable */
   Profile: UserAllUsers200ItemProfile;
+};
+
+export type UserAuthConnections200Email = {
+  linked: boolean;
+  /** @nullable */
+  address: string | null;
+  verified: boolean;
+};
+
+export type UserAuthConnections200Telegram = {
+  linked: boolean;
+  /** @nullable */
+  id: string | null;
+  /** @nullable */
+  name: string | null;
+};
+
+export type UserAuthConnections200 = {
+  google: boolean;
+  x: boolean;
+  tonid: boolean;
+  email: UserAuthConnections200Email;
+  telegram: UserAuthConnections200Telegram;
+  passkeys: number;
 };
 
 export type LoginLinkInitLoginLinkBody = {
@@ -7269,6 +7302,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const userVerifyEmailToken = (
+    userVerifyEmailTokenBody: MaybeRef<UserVerifyEmailTokenBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserVerifyEmailToken200>> => {
+    userVerifyEmailTokenBody = unref(userVerifyEmailTokenBody);
+    
+    return axios.post(
+      `/user/verifyEmailToken`,
+      userVerifyEmailTokenBody,options
+    );
+  }
+
+
+
+export const getUserVerifyEmailTokenMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userVerifyEmailToken>>, TError,{data: UserVerifyEmailTokenBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof userVerifyEmailToken>>, TError,{data: UserVerifyEmailTokenBody}, TContext> => {
+
+const mutationKey = ['userVerifyEmailToken'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userVerifyEmailToken>>, {data: UserVerifyEmailTokenBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userVerifyEmailToken(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserVerifyEmailTokenMutationResult = NonNullable<Awaited<ReturnType<typeof userVerifyEmailToken>>>
+    export type UserVerifyEmailTokenMutationBody = UserVerifyEmailTokenBody
+    export type UserVerifyEmailTokenMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUserVerifyEmailToken = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userVerifyEmailToken>>, TError,{data: UserVerifyEmailTokenBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof userVerifyEmailToken>>,
+        TError,
+        {data: UserVerifyEmailTokenBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUserVerifyEmailTokenMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const userPointsHistory = (
     params?: MaybeRef<UserPointsHistoryParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserPointsHistory200Item[]>> => {
@@ -7884,6 +7973,62 @@ export function useUserAllUsers<TData = Awaited<ReturnType<typeof userAllUsers>>
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getUserAllUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const userAuthConnections = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserAuthConnections200>> => {
+    
+    
+    return axios.get(
+      `/user/authConnections`,options
+    );
+  }
+
+
+export const getUserAuthConnectionsQueryKey = () => {
+    return ['user','authConnections'] as const;
+    }
+
+    
+export const getUserAuthConnectionsQueryOptions = <TData = Awaited<ReturnType<typeof userAuthConnections>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userAuthConnections>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getUserAuthConnectionsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userAuthConnections>>> = ({ signal }) => userAuthConnections({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userAuthConnections>>, TError, TData> 
+}
+
+export type UserAuthConnectionsQueryResult = NonNullable<Awaited<ReturnType<typeof userAuthConnections>>>
+export type UserAuthConnectionsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useUserAuthConnections<TData = Awaited<ReturnType<typeof userAuthConnections>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userAuthConnections>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserAuthConnectionsQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

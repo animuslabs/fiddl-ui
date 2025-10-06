@@ -1,4 +1,5 @@
 import { apiUrl } from "lib/api"
+import { jwt } from "lib/jwt"
 import { getReferredBy } from "lib/util"
 import { loginLinkInitLoginLink, loginLinkLoginWithCode, type LoginLinkLoginWithLink200 } from "lib/orval"
 
@@ -77,4 +78,32 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
 
 export function getProviderLabel(provider: OAuthProvider): string {
   return provider === "twitter" ? "X" : "Google"
+}
+
+/**
+ * Attempt to unlink an OAuth provider from the current user.
+ * Backend recently added unlink routes; we call them directly.
+ * Falls back between POST and DELETE to be resilient to backend method choice.
+ */
+export async function unlinkOAuthProvider(provider: OAuthProvider): Promise<void> {
+  const providerKey = provider === "twitter" ? "twitter" : "google"
+  const endpoint = `${apiUrl}/auth/oauth/${providerKey}/unlink`
+  const auth = jwt.read()
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (auth?.token) headers.Authorization = `Bearer ${auth.token}`
+
+  // Prefer POST, fallback to DELETE for older servers
+  const tryRequest = async (method: "POST" | "DELETE") => {
+    const res = await fetch(endpoint, { method, headers })
+    if (!res.ok) {
+      const text = await res.text().catch(() => "")
+      throw new Error(`Unlink failed (${method}): ${res.status} ${text}`)
+    }
+  }
+
+  try {
+    await tryRequest("POST")
+  } catch (e) {
+    await tryRequest("DELETE")
+  }
 }

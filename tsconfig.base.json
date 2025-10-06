@@ -6,6 +6,7 @@
       "esnext"
     ],
     "allowImportingTsExtensions": true,
+    "allowArbitraryExtensions": true,
     "target": "ESNext",
     "module": "ESNext",
     "strict": true,

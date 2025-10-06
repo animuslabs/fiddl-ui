@@ -42,6 +42,8 @@ Single place to track progress and reference best practices while adding Capacit
 
 | Step | Notes |
 | --- | --- |
+| [ ] Apple Developer Program + Team ID | Required to create App IDs, Push capability, and TestFlight builds. |
+| [ ] Google Play Console developer account | Required to create app listing and upload internal track builds. |
 | [ ] Install/update Xcode (iOS) and Android Studio + SDK Manager | Required for native builds, simulators, entitlements. Keep both on stable channels. |
 | [ ] Install CocoaPods (`brew install cocoapods`) | iOS dependency manager used by Capacitor plugins. Run `pod setup` once. |
 | [ ] Install JDK 17 (Zulu/Temurin) and set `JAVA_HOME` | Android Gradle requires LTS JDK; avoid newer JDKs unless plugin set supports. |
@@ -51,6 +53,8 @@ Single place to track progress and reference best practices while adding Capacit
 | [ ] Install `@capacitor/assets` globally (optional) | For generating icons/splash from a single source image. |
 | [ ] Snapshot current `package-lock.json` / `pnpm-lock.yaml` | Helps diff when plugins are added. |
 | [ ] Ensure Git LFS if storing large assets | Avoid bloating repo with large binaries. |
+| [ ] Set Xcode command line tools | `xcode-select -p` (or `sudo xcode-select --switch /Applications/Xcode.app`). |
+| [ ] Decide and reserve bundle ID | Keep stable across envs, e.g., `art.fiddl.app`. |
 
 Key environment variables
 
@@ -83,6 +87,9 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   server: {
     androidScheme: 'https',
+    // for remote dev you can use a dev server URL (ensure local network permissions on iOS)
+    // url: process.env.VITE_DEV_SERVER_URL,
+    // cleartext: true
   },
   plugins: {
     SplashScreen: { launchShowDuration: 0 },
@@ -95,8 +102,9 @@ export default config
 
 Quasar build integration
 
-- Ensure `quasar.config.ts` sets a distinct output folder when `mode === 'capacitor'` (e.g., `dist/capacitor`).
+- Ensure `quasar.config.(js|ts)` sets a distinct output folder when `mode === 'capacitor'` (e.g., `dist/capacitor`).
 - Exclude `@capacitor/*` and native SDKs from web build via dynamic imports only (never static imports in non‑capacitor code paths).
+- Prefer Vite hooks in Quasar (`extendViteConf`, `vitePlugins`) for aliases/defines; avoid `chainWebpack` (Webpack only).
 
 ---
 
@@ -198,6 +206,7 @@ export * as Camera from './camera'
 | [ ] Configure Info.plist and Android permissions | iOS: nothing explicit for push; Android 13+: `POST_NOTIFICATIONS`. |
 | [ ] Create Android notification channels | At app start, create a default channel and any high‑priority channels. |
 | [ ] Handle push open → navigation | Use `App.addListener('appUrlOpen', ...)` or push listener to route. |
+| [ ] Sync native projects | After adding plugins run `quasar cap sync` (or `npx cap sync`). |
 
 Server integration
 
@@ -259,6 +268,41 @@ App.addListener('appUrlOpen', ({ url }) => {
 })
 ```
 
+Example files to host
+
+- `https://your.domain/.well-known/apple-app-site-association`
+
+```json
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.art.fiddl.app",
+        "paths": [ "/", "/create/*", "/browse/*" ]
+      }
+    ]
+  }
+}
+```
+
+- `https://your.domain/.well-known/assetlinks.json`
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "art.fiddl.app",
+      "sha256_cert_fingerprints": [
+        "AA:BB:CC:...:ZZ"
+      ]
+    }
+  }
+]
+```
+
 ---
 
 ## Phase 6 · Files, Camera, Share & Browser
@@ -281,6 +325,20 @@ Android manifest (examples)
 - Add `<uses-permission android:name="android.permission.CAMERA" />` as needed.
 - Declare `android:exported` on activities for SDK 31+.
 
+Usage example (Browser)
+
+```ts
+import { Browser } from '@capacitor/browser'
+await Browser.open({ url: 'https://fiddl.art/terms', presentationStyle: 'popover' })
+```
+
+Usage example (Camera)
+
+```ts
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
+const photo = await Camera.getPhoto({ resultType: CameraResultType.Uri, source: CameraSource.Prompt, quality: 80 })
+```
+
 ---
 
 ## Phase 7 · App Lifecycle, Back Button, UI Chrome
@@ -296,6 +354,22 @@ Android manifest (examples)
 Back button guideline
 
 - If at a root route, double‑press to exit pattern; otherwise, `router.back()`. Avoid closing modals unexpectedly.
+
+Example back button handler
+
+```ts
+import { App } from '@capacitor/app'
+import { Router } from 'vue-router'
+
+export function installBackButton(router: Router) {
+  App.addListener('backButton', ({ canGoBack }) => {
+    if (canGoBack) router.back()
+    else {
+      // show toast "Press back again to exit"; second press within window exits
+    }
+  })
+}
+```
 
 ---
 
@@ -327,8 +401,11 @@ Build commands (examples)
 
 Quasar config tips
 
-- Use `chainWebpack`/`vitePlugins` to tree‑shake capacitor code from web builds.
+- Use `extendViteConf`/`vitePlugins` (Quasar CLI Vite) to tree‑shake capacitor code from web builds.
 - Guard any SDK initializers with `if (process.env.MODE === 'capacitor')`.
+- Move third‑party scripts out of `index.html` into a boot file and guard with `!isCapacitor()` for native builds.
+- Optionally strip tags during capacitor builds via a small Vite plugin in `extendViteConf` that removes specific `<script>` tags when `process.env.MODE === 'capacitor'`.
+- Inject `VITE_APP_VERSION`/`VITE_APP_BUILD` (from CI or package.json) so the app can report version/build to the backend.
 
 ---
 
@@ -347,6 +424,29 @@ Continuous Delivery tips
 
 - Separate pipelines for web vs. native. Native builds are slower and require signing secrets.
 - Use Fastlane Match or manual profiles; never commit signing keys to repo.
+ - iOS runners must be macOS; Android can build on Linux with JDK 17.
+
+Minimal Android CI example (GitHub Actions)
+
+```yaml
+name: android-release
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm run build:cap:android # wraps quasar build -m capacitor -T android
+      - run: cd android && ./gradlew assembleRelease
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+```
 
 ---
 
@@ -359,6 +459,7 @@ Continuous Delivery tips
 | [ ] Data safety (Play) | Declare data collection/usage categories. |
 | [ ] IAP product review | Connect products to the submitted binary; provide demo account/video. |
 | [ ] Versioning | Keep `CFBundleShortVersionString` / `CFBundleVersion` (iOS) and `versionName` / `versionCode` (Android) aligned with repo tags. |
+| [ ] iOS privacy manifests | Verify included SDKs provide `PrivacyInfo.xcprivacy`; add reasons if using required APIs. |
 | [ ] Signing | iOS: provisioning profiles and certificates; Android: upload keystore secure storage. |
 | [ ] Post‑launch validation | Reconcile purchases vs. backend; monitor crashes and ANRs; watch retention. |
 | [ ] Post‑launch retro | Document issues, update this guide with lessons learned. |
@@ -390,6 +491,7 @@ export async function initPurchases(apiKey: string, appUserId?: string) {
 - Info.plist keys: camera/photo usage strings, any URL schemes, LSApplicationQueriesSchemes if required.
 - Cocoapods: run `pod repo update` when plugins add pods.
 - Set deployment target aligned with Capacitor major (iOS 13+ typically, check release notes).
+- Consider additional entitlements if integrating file providers or background modes.
 
 ### C. Android configuration checklist
 
@@ -397,12 +499,14 @@ export async function initPurchases(apiKey: string, appUserId?: string) {
 - `android/app/build.gradle`: apply `com.google.gms.google-services` if using Firebase.
 - Add notification channels on startup.
 - Verify manifest merges for permissions; avoid duplicates and set `android:exported`.
+- Set `android:launchMode="singleTask"` on the main activity to simplify deep link routing.
 
 ### D. Security & secrets
 
 - Never commit `.p8`, keystores, or service JSON/Plists to the repo. Use CI secrets and runtime injection.
 - Consider encrypting keystores at rest and using Fastlane Match or similar for iOS.
 - Scope API keys to mobile origins only when possible; rotate on compromise.
+- Gate analytics/crash reporting with explicit user consent; avoid fingerprinting or hidden identifiers.
 
 ### E. Troubleshooting
 
@@ -410,6 +514,7 @@ export async function initPurchases(apiKey: string, appUserId?: string) {
 - Android build complaining about Kotlin/Gradle versions → align to plugin release notes, update `gradle-wrapper.properties`.
 - Push not received on Android 13+ → ensure `POST_NOTIFICATIONS` runtime permission requested before `register()`.
 - Missing universal link routing → verify `apple-app-site-association` and `assetlinks.json` content and HTTPS hosting without redirects.
+- Analytics scripts loading in native builds → move from `index.html` to guarded boot files or strip during capacitor builds.
 
 ### F. Resources
 
@@ -419,5 +524,22 @@ export async function initPurchases(apiKey: string, appUserId?: string) {
 - Apple App Store Review Guidelines §§ 3.1.1 (In‑App Purchases), 5.1 (Data collection)
 - Google Play Payments policy: https://support.google.com/googleplay/android-developer/answer/9858738
 
-Keep this guide evolving. As new native features are added (biometrics, background tasks, in‑app review, haptics), create new wrapper pairs and document platform steps here.
+### G. Assets generation
 
+- Prepare a square source image (1024×1024+) and optional splash background.
+- Run: `npx @capacitor/assets generate --ios --android --iconBackgroundColor "#121212"`
+- Inspect generated icons/splash under `ios/App/App/Assets.xcassets` and `android/app/src/main/res`.
+
+### H. Example Sentry gating (Capacitor‑only)
+
+```ts
+// src/boot/sentry.ts
+import * as Sentry from '@sentry/vue'
+import { isCapacitor } from 'src/lib/platform'
+export default ({ app }) => {
+  if (!isCapacitor()) return
+  Sentry.init({ app, dsn: import.meta.env.VITE_SENTRY_DSN, release: import.meta.env.VITE_APP_VERSION })
+}
+```
+
+Keep this guide evolving. As new native features are added (biometrics, background tasks, in‑app review, haptics), create new wrapper pairs and document platform steps here.
