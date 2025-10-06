@@ -80,10 +80,26 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     const referrer = getReferredBy()
     if (referrer) params.referrer = referrer
     // Fire request; then navigate the browser to the returned URL
-    void userOauthLinkStartUrl(params)
+    void userOauthLinkStartUrl({ ...params, response_format: "json" })
       .then((res) => {
-        const url = res?.data?.url
+        let url = res?.data?.url
         if (!url) throw new Error("Invalid response: missing url")
+        // If backend returns an internal start URL that still requires auth,
+        // append the JWT as query parameters to avoid 401 on cross-domain nav.
+        try {
+          const u = new URL(url, window.location.origin)
+          const isInternalStart = /\/auth\/oauth\//.test(u.pathname)
+          const hasToken = u.searchParams.has("token") || u.searchParams.has("authorization")
+          if (isInternalStart && !hasToken) {
+            const auth = jwt.read()
+            if (auth?.token) {
+              u.searchParams.set("token", auth.token)
+              u.searchParams.set("authorization", `Bearer ${auth.token}`)
+              u.searchParams.set("userId", auth.userId)
+              url = u.toString()
+            }
+          }
+        } catch {}
         window.location.href = url
       })
       .catch((e) => {
