@@ -254,6 +254,7 @@ import type { PointsPackagesAvailable200Item } from "src/lib/orval"
 import { Dialog, LocalStorage, Notify } from "quasar"
 import umami from "lib/umami"
 import { events } from "lib/eventsManager"
+import { getTikTokAttribution } from "lib/tiktokAttribution"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
@@ -812,8 +813,16 @@ export default defineComponent({
         onApprove: async (data, actions) => {
           try {
             const datafastVisitorId = getCookie("datafast_visitor_id")
+            const { ttclid, ttp, userAgent } = getTikTokAttribution()
 
-            const res = await pointsFinishBuyPackage({ method: "payPal", orderId: data.orderID, trackingId: datafastVisitorId || undefined })
+            const res = await pointsFinishBuyPackage({
+              method: "payPal",
+              orderId: data.orderID,
+              trackingId: datafastVisitorId || undefined,
+              ttclid,
+              ttp,
+              userAgent,
+            })
             if (!res?.data) {
               throwErr("Failed to capture order")
               return

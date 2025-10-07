@@ -159,6 +159,7 @@ import { applyDiscountUsd, normalizeCode, usdToString, validateDiscountCode, typ
 import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
 import { events } from "lib/eventsManager"
+import { getTikTokAttribution } from "lib/tiktokAttribution"
 import tma from "src/lib/tmaAnalytics"
 
 const detectTma = (): boolean => {
@@ -555,7 +556,15 @@ export default defineComponent({
         onApprove: async (data: any, actions: any) => {
           try {
             const datafastVisitorId = getCookie("datafast_visitor_id")
-            const res = await pointsFinishBuyPackage({ method: "payPal", orderId: data.orderID, trackingId: datafastVisitorId || undefined })
+            const { ttclid, ttp, userAgent } = getTikTokAttribution()
+            const res = await pointsFinishBuyPackage({
+              method: "payPal",
+              orderId: data.orderID,
+              trackingId: datafastVisitorId || undefined,
+              ttclid,
+              ttp,
+              userAgent,
+            })
             if (!res?.data) {
               throwErr("Failed to capture order")
               return

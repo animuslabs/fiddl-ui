@@ -1526,6 +1526,9 @@ export type PointsFinishBuyPackageBody = {
   orderId: string;
   method: PointsFinishBuyPackageBodyMethod;
   trackingId?: string;
+  ttclid?: string;
+  ttp?: string;
+  userAgent?: string;
 };
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
@@ -4551,6 +4554,17 @@ export type CommentsDeleteBody = {
 
 export type CommentsDelete200 = {
   success: boolean;
+};
+
+export type TiktokCompleteRegistrationBody = {
+  ttclid?: string;
+  ttp?: string;
+  userAgent?: string;
+  eventId?: string;
+};
+
+export type TiktokCompleteRegistration200 = {
+  ok: boolean;
 };
 
 export const pkAuthRegisterStart = (
@@ -13475,6 +13489,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getCommentsDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const tiktokCompleteRegistration = (
+    tiktokCompleteRegistrationBody: MaybeRef<TiktokCompleteRegistrationBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<TiktokCompleteRegistration200>> => {
+    tiktokCompleteRegistrationBody = unref(tiktokCompleteRegistrationBody);
+    
+    return axios.post(
+      `/tiktok/completeRegistration`,
+      tiktokCompleteRegistrationBody,options
+    );
+  }
+
+
+
+export const getTiktokCompleteRegistrationMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tiktokCompleteRegistration>>, TError,{data: TiktokCompleteRegistrationBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof tiktokCompleteRegistration>>, TError,{data: TiktokCompleteRegistrationBody}, TContext> => {
+
+const mutationKey = ['tiktokCompleteRegistration'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tiktokCompleteRegistration>>, {data: TiktokCompleteRegistrationBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  tiktokCompleteRegistration(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TiktokCompleteRegistrationMutationResult = NonNullable<Awaited<ReturnType<typeof tiktokCompleteRegistration>>>
+    export type TiktokCompleteRegistrationMutationBody = TiktokCompleteRegistrationBody
+    export type TiktokCompleteRegistrationMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useTiktokCompleteRegistration = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tiktokCompleteRegistration>>, TError,{data: TiktokCompleteRegistrationBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof tiktokCompleteRegistration>>,
+        TError,
+        {data: TiktokCompleteRegistrationBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTiktokCompleteRegistrationMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -64,6 +64,7 @@ import { copyToClipboard, LocalStorage, Notify } from "quasar"
 let interval: ReturnType<typeof setInterval> | null = null
 import ms from "ms"
 import { events } from "lib/eventsManager"
+import { getTikTokAttribution } from "lib/tiktokAttribution"
 export default defineComponent({
   name: "CryptoPayment",
   props: {
@@ -126,9 +127,13 @@ export default defineComponent({
       console.log("startFinishOrder", this.cryptoOrder, this.selectedMethod)
       if (!this.cryptoOrder || !this.selectedMethod) return
       try {
+        const { ttclid, ttp, userAgent } = getTikTokAttribution()
         const response = await pointsFinishBuyPackage({
           method: this.selectedMethod,
           orderId: this.cryptoOrder?.id,
+          ttclid,
+          ttp,
+          userAgent,
         })
         if (response?.data) {
           try {

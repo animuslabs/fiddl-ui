@@ -2,6 +2,8 @@ import { metaPixel } from "lib/metaPixel"
 import umami from "lib/umami"
 import { tmaAnalytics } from "lib/tmaAnalytics"
 import { tiktokPixel } from "lib/tiktokPixel"
+import { getTikTokAttribution } from "lib/tiktokAttribution"
+import { tiktokCompleteRegistration } from "lib/orval"
 import SHA256 from "crypto-js/sha256"
 import encHex from "crypto-js/enc-hex"
 
@@ -177,6 +179,18 @@ class EventsManager {
     try {
       tiktokPixel.trackCompleteRegistration(payload as any)
     } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        const { ttclid, ttp, userAgent } = getTikTokAttribution()
+        const maybeEventId = (payload as Record<string, any>)?.event_id
+        const eventId = typeof maybeEventId === "string" ? maybeEventId : undefined
+        void tiktokCompleteRegistration({ ttclid, ttp, userAgent, eventId }).catch((err) => {
+          if (this._debug) console.warn("[Events] TikTok server registration fallback failed", err)
+        })
+      }
+    } catch (err) {
+      if (this._debug) console.warn("[Events] TikTok registration fallback threw", err)
+    }
     try {
       umami.track("registrationCompleted", payload)
     } catch {}

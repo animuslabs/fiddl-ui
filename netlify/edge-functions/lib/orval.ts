@@ -1497,6 +1497,9 @@ export type PointsFinishBuyPackageBody = {
   orderId: string;
   method: PointsFinishBuyPackageBodyMethod;
   trackingId?: string;
+  ttclid?: string;
+  ttp?: string;
+  userAgent?: string;
 };
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
@@ -4522,6 +4525,17 @@ export type CommentsDeleteBody = {
 
 export type CommentsDelete200 = {
   success: boolean;
+};
+
+export type TiktokCompleteRegistrationBody = {
+  ttclid?: string;
+  ttp?: string;
+  userAgent?: string;
+  eventId?: string;
+};
+
+export type TiktokCompleteRegistration200 = {
+  ok: boolean;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -8355,5 +8369,27 @@ export const commentsDelete = async (commentsDeleteBody: CommentsDeleteBody, opt
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       commentsDeleteBody,)
+  }
+);}
+
+
+
+export const getTiktokCompleteRegistrationUrl = () => {
+
+
+  
+
+  return `/tiktok/completeRegistration`
+}
+
+export const tiktokCompleteRegistration = async (tiktokCompleteRegistrationBody: TiktokCompleteRegistrationBody, options?: RequestInit): Promise<TiktokCompleteRegistration200> => {
+  
+  return fetcher<TiktokCompleteRegistration200>(getTiktokCompleteRegistrationUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      tiktokCompleteRegistrationBody,)
   }
 );}
