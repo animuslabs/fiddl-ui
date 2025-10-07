@@ -2,6 +2,8 @@ import { metaPixel } from "lib/metaPixel"
 import umami from "lib/umami"
 import { tmaAnalytics } from "lib/tmaAnalytics"
 import { tiktokPixel } from "lib/tiktokPixel"
+import SHA256 from "crypto-js/sha256"
+import encHex from "crypto-js/enc-hex"
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json }
 
@@ -41,6 +43,45 @@ class EventsManager {
     // Initialize wrappers that benefit from explicit init without injecting scripts
     tiktokPixel.init({ debug: this._debug })
     // metaPixel: assumed loaded/initialized via index.html; wrapper is ready if fbq exists
+  }
+
+  /** Item added to cart */
+  addToCart(data: {
+    contents?: Array<Record<string, Json>>
+    content_type?: string
+    currency?: string
+    value?: number
+    content_name?: string
+    num_items?: number
+  }): void {
+    const payload = data || {}
+    if (this._debug) console.info("[Events] addToCart", payload)
+    try {
+      metaPixel.trackAddToCart(payload as any)
+    } catch {}
+    try {
+      tiktokPixel.trackAddToCart(payload as any)
+    } catch {}
+    try {
+      umami.track("addToCart", payload)
+    } catch {}
+  }
+
+  /** Search performed from browse page */
+  search(query: string): void {
+    const q = String(query || "").trim()
+    if (!q) return
+    const payload: Record<string, Json> = { search_string: q, query: q }
+    if (this._debug) console.info("[Events] search", payload)
+    try {
+      metaPixel.trackSearch(payload as any)
+    } catch {}
+    try {
+      tiktokPixel.trackSearch(payload as any)
+    } catch {}
+    try {
+      umami.track("search", payload)
+    } catch {}
   }
 
   /** SPA page navigation */
@@ -149,16 +190,35 @@ class EventsManager {
     } catch {}
     try {
       const am: Record<string, string> = {}
-      if (user.emailHash) am.em = String(user.emailHash)
-      if (user.phoneHash) am.ph = String(user.phoneHash)
+      const emailHashed = this.hashSha256IfNeeded(user.emailHash, /*email*/ true)
+      const phoneHashed = this.hashSha256IfNeeded(user.phoneHash)
+      if (emailHashed) am.em = emailHashed
+      if (phoneHashed) am.ph = phoneHashed
       if (user.external_id) (am as any).external_id = String(user.external_id)
       if (Object.keys(am).length) metaPixel.setAdvancedMatching(am as any)
     } catch {}
     try {
       const tk: Record<string, any> = {}
       if (user.external_id) tk.external_id = user.external_id
+      const emailHashed = this.hashSha256IfNeeded(user.emailHash, /*email*/ true)
+      const phoneHashed = this.hashSha256IfNeeded(user.phoneHash)
+      if (emailHashed) tk.email = emailHashed
+      if (phoneHashed) tk.phone_number = phoneHashed
       if (Object.keys(tk).length) tiktokPixel.identify(tk)
     } catch {}
+  }
+
+  private hashSha256IfNeeded(value?: string, lowerBeforeHash = false): string | undefined {
+    if (!value) return undefined
+    const v = String(value)
+    const maybeNorm = lowerBeforeHash ? v.trim().toLowerCase() : v.trim()
+    // Already a sha256 hex?
+    if (/^[a-f0-9]{64}$/i.test(maybeNorm)) return maybeNorm.toLowerCase()
+    try {
+      return SHA256(maybeNorm).toString(encHex).toLowerCase()
+    } catch {
+      return undefined
+    }
   }
 }
 

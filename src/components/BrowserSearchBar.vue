@@ -1,7 +1,7 @@
 <template lang="pug">
 .search-bar
   .centered
-    q-form(@submit="browserStore.searchCreations()" inline style="max-width:100vw;")
+    q-form(@submit="onSubmit" inline style="max-width:100vw;")
       .row.no-wrap.items-center.hide-scrollbar(style="overflow: auto; width:fit-content; max-width:100vw;")
         //- q-btn(:label="browserStore.filter.sort" @click="browserStore.toggleSort")
         q-btn-dropdown(:label="browserStore.filter.mediaType || 'Media Type'" flat color="primary" :icon="mediaTypeIcon[browserStore.filter.mediaType]")
@@ -51,6 +51,7 @@ import { aspectRatios, imageModels } from "lib/imageModels"
 import { LocalStorage, useQuasar } from "quasar"
 import { useBrowserStore, sortMethodIcon, mediaTypeIcon } from "stores/browserStore"
 import { defineComponent } from "vue"
+import { events } from "lib/eventsManager"
 
 let interval: any = null
 // const gridModeOptions =
@@ -98,6 +99,14 @@ export default defineComponent({
     exitTextSearch() {
       this.expandSearch = false
       this.browserStore.search = ""
+      this.browserStore.searchCreations()
+    },
+    onSubmit(e: Event) {
+      try { e?.preventDefault?.() } catch {}
+      const q = (this.browserStore.search || "").trim()
+      if (q) {
+        try { events.search(q) } catch {}
+      }
       this.browserStore.searchCreations()
     },
   },

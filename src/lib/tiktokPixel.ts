@@ -33,11 +33,12 @@ export class TikTokPixel {
   init(options: TikTokInitOptions = {}): void {
     if (!this.isBrowser()) return
     this._debug = !!options.debug
-    if (window.ttq && typeof window.ttq === "function") {
+    const ttq = this.getTtq()
+    if (ttq) {
       this._initialized = true
-      if (this._debug) console.info("[TikTokPixel] initialized (script present)")
-    } else {
-      if (this._debug) console.warn("[TikTokPixel] init: ttq not present; will no-op until available")
+      if (this._debug) console.info("[TikTokPixel] initialized", this.describeTtq())
+    } else if (this._debug) {
+      console.warn("[TikTokPixel] init: ttq not present; waiting for script")
     }
   }
 
@@ -47,7 +48,7 @@ export class TikTokPixel {
     const normalized = this.normalizePayload(payload)
     if (this._debug) console.info("[TikTokPixel] track", event, normalized || {})
     try {
-      window.ttq!.track?.(event, normalized || {})
+      this.getTtq()!.track(event, normalized || {})
     } catch (e) {
       if (this._debug) console.warn("[TikTokPixel] track failed", e)
     }
@@ -58,7 +59,7 @@ export class TikTokPixel {
     if (!this.canTrack()) return
     if (this._debug) console.info("[TikTokPixel] page", payload || {})
     try {
-      window.ttq!.page?.(payload || {})
+      this.getTtq()!.page?.(payload || {})
     } catch (e) {
       if (this._debug) console.warn("[TikTokPixel] page failed", e)
     }
@@ -131,7 +132,7 @@ export class TikTokPixel {
   identify(payload: Record<string, any>): void {
     if (!this.canTrack()) return
     try {
-      window.ttq!.identify?.(payload)
+      this.getTtq()!.identify?.(payload)
       if (this._debug) console.info("[TikTokPixel] identify", payload)
     } catch (e) {
       if (this._debug) console.warn("[TikTokPixel] identify failed", e)
@@ -141,7 +142,7 @@ export class TikTokPixel {
   /** Run callback when ttq is ready (best-effort) */
   onReady(cb: () => void): void {
     if (!this.isBrowser()) return
-    const t = window.ttq
+    const t = this.getTtq()
     if (t?.ready && typeof t.ready === "function") {
       try {
         t.ready(cb)
@@ -153,16 +154,36 @@ export class TikTokPixel {
 
   private canTrack(): boolean {
     if (!this.isBrowser()) return false
-    if (window.ttq && typeof window.ttq === "function") {
+    const ttq = this.getTtq()
+    if (ttq && typeof ttq.track === "function") {
       if (!this._initialized) this._initialized = true
       return true
     }
-    if (this._debug) console.warn("[TikTokPixel] not initialized or ttq missing; ignoring track call")
+    if (this._debug) console.warn("[TikTokPixel] ttq missing or track unavailable; ignoring call", this.describeTtq())
     return false
   }
 
   private isBrowser(): boolean {
     return typeof window !== "undefined" && typeof document !== "undefined"
+  }
+
+  private getTtq(): (TTQ & { track: (event: string, payload?: Record<string, any>) => void }) | null {
+    if (!this.isBrowser()) return null
+    const ttq = window.ttq as TTQ & { track?: (event: string, payload?: Record<string, any>) => void }
+    if (ttq && typeof ttq.track === "function") return ttq as TTQ & { track: (event: string, payload?: Record<string, any>) => void }
+    return null
+  }
+
+  private describeTtq(): Record<string, any> {
+    const ttq = (window as any)?.ttq
+    if (!ttq) return { present: false }
+    return {
+      present: true,
+      typeof: typeof ttq,
+      hasTrack: typeof ttq.track === "function",
+      hasPage: typeof ttq.page === "function",
+      hasPush: typeof ttq.push === "function",
+    }
   }
 
   /**

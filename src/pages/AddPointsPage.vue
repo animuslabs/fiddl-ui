@@ -856,9 +856,30 @@ export default defineComponent({
     setAddPoints(pkgIndex: number) {
       if (this.isTma) return
       console.log("set add points", pkgIndex)
+      const prev = this.selectedPkgIndex
       this.selectedPkgIndex = pkgIndex
       this.selectedPkg = this.packages[pkgIndex]!
       this.mainTab = "buy"
+      // Fire AddToCart when user selects a package (only if changed)
+      try {
+        if (prev !== pkgIndex && this.selectedPkg) {
+          const priceUsd = Number(this.finalUsd)
+          events.addToCart({
+            currency: "USD",
+            value: priceUsd,
+            num_items: 1,
+            content_type: "product",
+            contents: [
+              {
+                id: `points_${this.selectedPkg.points}`,
+                quantity: 1,
+                item_price: priceUsd,
+              },
+            ],
+            content_name: `Fiddl Points ${this.selectedPkg.points}`,
+          } as any)
+        }
+      } catch {}
     },
     paymentCompleted() {
       if (this.isTma) return
