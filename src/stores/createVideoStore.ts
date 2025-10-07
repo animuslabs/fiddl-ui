@@ -92,17 +92,18 @@ export const useCreateVideoStore = defineStore("createVideoStore", () => {
 
   const availableAspectRatios = computed((): AspectRatio[] => {
     const model = state.req.model
-    let result: AspectRatio[] = []
-    if (model === "kling" || model === "veo-3") result = ["16:9"]
-    if (model === "seedance-pro" || model == "seedance-lite") result = ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "9:21"]
-    if (model === "veo-2") result = ["16:9", "9:16"]
-    return result
+    if (model === "kling" || model === "veo-3") return ["16:9"]
+    if (model === "seedance-pro" || model === "seedance-lite") return ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "9:21"]
+    if (model === "veo-2") return ["16:9", "9:16"]
+    if (model === "sora-2" || model === "sora-2-pro") return ["16:9", "9:16"]
+    return ["16:9"]
   })
 
   const availableDurations = computed(() => {
     return match(state.req.model)
       .with("veo-3", () => [8])
       .with("kling", "seedance-pro", "seedance-lite", () => [5, 10])
+      .with("sora-2", "sora-2-pro", () => [5, 10])
       .with("veo-2", () => [5, 6, 7, 8])
       .exhaustive()
   })

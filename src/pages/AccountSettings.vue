@@ -201,6 +201,16 @@ q-page.full-height.full-width
           .row.items-center.q-gutter-md
             q-toggle(v-model="$userAuth.notificationConfig.email" label="Email Notifications" @click="updateNotificationConfig()")
             q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.emailFrequency" label="Email Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 140px; text-transform: capitalize;")
+        q-separator.q-my-lg(color="grey-8" inset)
+        h6.text-negative Danger Zone
+        q-card(flat bordered class="bg-dark-2 q-pa-md q-mt-sm")
+          .column.q-gutter-sm
+            div.text-white Delete account
+            small.text-grey-4(style="max-width: 420px;") We'll send a confirmation link to your verified contact. You must approve the request via email or Telegram before your account is removed.
+            q-input(v-model="deleteAccountEmail" type="email" label="Email for confirmation (optional)" :disable="deleteAccountLoading" clearable)
+            q-btn(color="negative" icon="delete" label="Request account deletion" :loading="deleteAccountLoading" :disable="deleteAccountLoading" @click="requestAccountDeletion")
+            q-alert(v-if="deleteAccountStatusMessage" dense :color="deleteAccountStatusColor" text-color="white" class="q-mt-sm" :icon="deleteAccountMethod === 'telegram' ? 'send' : deleteAccountMethod === 'email' ? 'mail' : 'info'")
+              div {{ deleteAccountStatusMessage }}
     .centered.q-mt-md(v-else)
       h4 Please login to view your account
 </template>
@@ -219,6 +229,7 @@ import {
   telegramLinkStatus,
   userSetBio,
   userSetNotificationConfig,
+  userRequestDeleteAccount,
   userSetUsername,
   discountsMyCodes,
   userGetAffiliatePayoutDetails,
@@ -230,6 +241,7 @@ import {
   type TelegramCreateDeepLink200,
   type UserAffiliatePayoutReceipts200Item,
   type UserReferralsSummary200,
+  type UserRequestDeleteAccount200Method,
 } from "src/lib/orval"
 import { usdToString } from "src/lib/discount"
 import { requestEmailLoginCode, completeEmailLoginWithCode, startOAuthLogin, unlinkOAuthProvider } from "src/lib/oauth"
@@ -316,6 +328,11 @@ export default defineComponent({
       // Referral summary
       referralsLoading: false as boolean,
       referralsSummary: null as UserReferralsSummary200 | null,
+      deleteAccountEmail: "",
+      deleteAccountLoading: false,
+      deleteAccountMethod: null as UserRequestDeleteAccount200Method | null,
+      deleteAccountStatusMessage: "",
+      deleteAccountStatusColor: "positive" as string,
     }
   },
   computed: {
@@ -383,6 +400,10 @@ export default defineComponent({
       handler(val) {
         if (!val.userProfile) return
         this.userBio = val.userProfile.bio || ""
+        if (!this.deleteAccountEmail) {
+          const email = val.userProfile.email || ""
+          if (email) this.deleteAccountEmail = email
+        }
       },
     },
   },
@@ -409,6 +430,9 @@ export default defineComponent({
         this.tgLinked = Boolean(conn.telegram.linked)
         this.tgTelegramId = conn.telegram.id
         this.tgTelegramName = conn.telegram.name
+        if (!this.deleteAccountEmail && conn.email.address) {
+          this.deleteAccountEmail = conn.email.address
+        }
       } catch (e) {
         // Fallback with orval telegram status + profile
         try {
@@ -426,6 +450,9 @@ export default defineComponent({
           twitter: { linked: Boolean(this.$userAuth.userData?.twitterId) || Boolean(this.$userAuth.userProfile?.twitterVerified), handle: this.$userAuth.userProfile?.twitter || null, verified: Boolean(this.$userAuth.userProfile?.twitterVerified) },
           telegram: { linked: this.tgLinked, id: this.tgTelegramId, name: this.tgTelegramName },
           phone: { number: this.$userAuth.userProfile?.phone || null, verified: Boolean(this.$userAuth.userProfile?.phoneVerified) },
+        }
+        if (!this.deleteAccountEmail && this.connections.email.address) {
+          this.deleteAccountEmail = this.connections.email.address
         }
       }
     },
@@ -764,6 +791,55 @@ export default defineComponent({
           catchErr(err)
         }
       })
+    },
+    async requestAccountDeletion() {
+      if (this.deleteAccountLoading) return
+      const email = (this.deleteAccountEmail || "").trim()
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        Notify.create({ type: "negative", message: "Please enter a valid email address." })
+        this.deleteAccountMethod = null
+        this.deleteAccountStatusMessage = "Please enter a valid email or leave the field blank to use your linked contacts."
+        this.deleteAccountStatusColor = "negative"
+        return
+      }
+      try {
+        this.deleteAccountLoading = true
+        this.deleteAccountMethod = null
+        this.deleteAccountStatusMessage = ""
+        this.deleteAccountStatusColor = "positive"
+        const payload = email ? { email } : undefined
+        const { data } = await userRequestDeleteAccount(payload)
+        if (!data?.ok) {
+          const reason = data?.reason || "Unable to request account deletion."
+          this.deleteAccountMethod = null
+          this.deleteAccountStatusMessage = reason
+          this.deleteAccountStatusColor = "negative"
+          Notify.create({ type: "negative", message: reason })
+          return
+        }
+
+        this.deleteAccountMethod = data.method ?? null
+        let message = "We sent confirmation instructions to your linked contact."
+        if (data.method === "telegram") {
+          const tgName = this.tgTelegramName ? ` ${this.tgTelegramName}` : ""
+          message = `Check Telegram${tgName ? ` (${tgName})` : ""} for a message to confirm the deletion request.`
+        } else if (data.method === "email") {
+          const targetEmailRaw = (email || this.connections?.email?.address || this.$userAuth.userProfile?.email || "your email").toString()
+          const targetEmail = targetEmailRaw.includes("@") ? targetEmailRaw.toLowerCase() : targetEmailRaw
+          message = `We sent a confirmation email to ${targetEmail}. Follow the link to finish deleting your account.`
+        }
+
+        this.deleteAccountStatusMessage = message
+        this.deleteAccountStatusColor = "positive"
+        Notify.create({ type: "positive", message })
+      } catch (err) {
+        this.deleteAccountStatusColor = "negative"
+        this.deleteAccountStatusMessage = "Couldn't request account deletion. Please try again later."
+        this.deleteAccountMethod = null
+        catchErr(err)
+      } finally {
+        this.deleteAccountLoading = false
+      }
     },
     loadData() {
       void this.$userAuth.loadUserData()

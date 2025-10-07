@@ -49,8 +49,10 @@ export const prices = reactive<PointsPrices200>({
       "seedance-lite": 25,
       "seedance-pro": 45,
       kling: 25,
-      "veo-2": 150,
-      "veo-3": 200,
+      "veo-2": 125,
+      "veo-3": 185,
+      "sora-2": 220,
+      "sora-2-pro": 300,
     },
   },
   socialRewards: {

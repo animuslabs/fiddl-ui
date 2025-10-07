@@ -140,7 +140,7 @@ const vObserve: import("vue").Directive<HTMLElement, ObserveBinding> = {
 const emit = defineEmits<{
   (e: "select", payload: { id: string; type: "image" | "video" }): void
   (e: "selectedIndex", index: number): void
-  (e: "modelSelect", payload: { model: string; customModelId?: string | null; customModelName?: string | null; mediaId: string }): void
+  (e: "modelSelect", payload: { model: string; customModelId?: string | null; customModelName?: string | null; mediaId: string; mediaType: "image" | "video" }): void
 }>()
 
 const $q = useQuasar()
@@ -988,37 +988,54 @@ type ModelChipMeta = {
   model: string
   customModelId?: string | null
   customModelName?: string | null
+  mediaType: "image" | "video"
 }
 
-function resolveImageCreation(m: MediaGalleryMeta) {
-  if (!m?.id) return undefined
-  if (m.requestId) return imageCreations.creations.find((c: any) => c.id === m.requestId)
-  return imageCreations.creations.find((c: any) => Array.isArray(c.mediaIds) && c.mediaIds.includes(m.id))
+function resolveMediaCreation(m: MediaGalleryMeta): { creation: any; mediaType: "image" | "video" } | null {
+  if (!m?.id) return null
+
+  const mediaType = (m.type ?? m.mediaType ?? (isVideoMedia(m) ? "video" : "image")) as "image" | "video"
+  const store: any = mediaType === "video" ? videoCreations : imageCreations
+
+  if (m.requestId) {
+    const byRequest = store.creations.find((c: any) => c.id === m.requestId)
+    if (byRequest) return { creation: byRequest, mediaType }
+  }
+
+  const byMediaId = store.creations.find((c: any) => Array.isArray(c.mediaIds) && c.mediaIds.includes(m.id))
+  if (byMediaId) return { creation: byMediaId, mediaType }
+
+  try {
+    const entries: any[] = (mediaType === "video" ? videoCreations.allCreations : imageCreations.allCreations) || []
+    const link = entries.find((entry: any) => entry.id === m.id)
+    if (link?.creationId) {
+      const viaCreationId = store.creations.find((c: any) => c.id === link.creationId)
+      if (viaCreationId) return { creation: viaCreationId, mediaType }
+    }
+  } catch {}
+
+  return null
 }
 
 function getModelMeta(m: MediaGalleryMeta): ModelChipMeta | null {
   try {
-    // Only show for images
-    const isVideo = (m.type ?? m.mediaType) === "video" || isVideoMedia(m)
-    if (isVideo) return null
+    const resolved = resolveMediaCreation(m)
+    if (!resolved) return null
+    const { creation, mediaType } = resolved
 
-    // Prefer lookup by requestId if available
-    const creation = resolveImageCreation(m)
-    if (!creation) return null
-
-    const model = creation.model as string | undefined
+    const model = creation?.model as string | undefined
     if (!model) return null
 
-    const customModelId = (creation.customModelId as string | undefined) ?? null
-    const customModelName = (creation.customModelName as string | undefined) ?? null
+    const customModelId = (creation?.customModelId as string | undefined) ?? null
+    const customModelName = (creation?.customModelName as string | undefined) ?? null
 
     if (model === "custom") {
       const name = customModelName && customModelName.trim().length > 0 ? customModelName : "custom"
       const label = name && name.toLowerCase() !== "custom" ? `custom: ${name}` : "custom"
-      return { label, model, customModelId, customModelName }
+      return { label, model, customModelId, customModelName, mediaType }
     }
 
-    return { label: model, model, customModelId, customModelName }
+    return { label: model, model, customModelId, customModelName, mediaType }
   } catch {
     return null
   }
@@ -1033,7 +1050,7 @@ function onModelChipClick(m: MediaGalleryMeta) {
   if (!props.enableModelChipSelect) return
   const meta = getModelMeta(m)
   if (!meta) return
-  emit("modelSelect", { model: meta.model, customModelId: meta.customModelId, customModelName: meta.customModelName, mediaId: m.id })
+  emit("modelSelect", { model: meta.model, customModelId: meta.customModelId, customModelName: meta.customModelName, mediaId: m.id, mediaType: meta.mediaType })
 }
 
 // -------- Progressive image helpers --------
@@ -1148,8 +1165,9 @@ function prefetchImage(url: string): Promise<void> {
           template(v-else)
             // Loading overlay for images that are still rendering/propagating
             div.loading-overlay(v-if="showImageOverlay(m.id)")
-              h4 Loading
-              q-spinner-gears(color="grey-10" size="120px")
+              div.loading-overlay__stack
+                q-spinner-gears(color="grey-10" size="120px")
+                span.loading-overlay__label Loading
             // Actual image (rendered underneath the overlay)
             q-img(
               :src="m.url"
@@ -1168,7 +1186,7 @@ function prefetchImage(url: string): Promise<void> {
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         // Top actions overlay (centered; matches bottom popularity row style)
         .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
           // Add as input (images only)
           // Delete
@@ -1259,8 +1277,9 @@ function prefetchImage(url: string): Promise<void> {
               span.nsfw-helper Tap to confirm viewing
           template(v-else)
             div.loading-overlay(v-if="showVideoOverlay(m.id)")
-              h4 Loading
-              q-spinner-gears(color="grey-10" size="120px")
+              div.loading-overlay__stack
+                q-spinner-gears(color="grey-10" size="120px")
+                span.loading-overlay__label Loading
             div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
               video(
                 :src="m.url"
@@ -1280,7 +1299,7 @@ function prefetchImage(url: string): Promise<void> {
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         // Top actions overlay (centered; matches bottom popularity row style)
         .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
           // Add as input (images only; for video items this won't show)
           q-btn(
@@ -1326,6 +1345,12 @@ function prefetchImage(url: string): Promise<void> {
         .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
           .hidden-text Hidden
           q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
+        // Model chip (bottom-left)
+        .model-chip(
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+          :class="{ 'is-clickable': props.enableModelChipSelect }"
+          @click.stop="onModelChipClick(m)"
+        ) {{ getModelLabel(m) }}
         // Popularity overlay controls
         .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
           .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
@@ -1394,17 +1419,30 @@ function prefetchImage(url: string): Promise<void> {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   background: rgba(0, 0, 0, 0.2);
   color: white;
   z-index: 2;
   pointer-events: none;
 }
-.loading-overlay h4 {
-  margin: 0;
+
+.loading-overlay__stack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-overlay__label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.04em;

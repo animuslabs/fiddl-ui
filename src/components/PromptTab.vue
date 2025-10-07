@@ -50,7 +50,7 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
-                :enable-model-chip-select="currentTab === 'image'"
+                :enable-model-chip-select="['image', 'video'].includes(currentTab)"
               )
               MediaGallery.q-pl-md.q-pr-md(
                 :key="`grid-${currentTab}`"
@@ -67,7 +67,7 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
-                :enable-model-chip-select="currentTab === 'image'"
+                :enable-model-chip-select="['image', 'video'].includes(currentTab)"
               )
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")
@@ -464,8 +464,15 @@ export default defineComponent({
       // if (this.gridMode) this.showDetails(latestCreation.id)
     },
     // no-op: useAsInput handled internally by MediaGallery now when showUseAsInput is true
-    handleModelSelect(payload: { model: string; customModelId?: string | null; customModelName?: string | null }) {
+    handleModelSelect(payload: { model: string; customModelId?: string | null; customModelName?: string | null; mediaId: string; mediaType: MediaType }) {
       if (!payload?.model) return
+
+      if (payload.mediaType === "video") {
+        if (this.currentTab !== "video") this.currentTab = "video"
+        this.createVideoStore.setReq({ model: payload.model as any })
+        return
+      }
+
       if (this.currentTab !== "image") this.currentTab = "image"
 
       const randomizer = this.createImageStore.state.randomizer

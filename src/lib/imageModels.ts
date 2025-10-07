@@ -21,7 +21,7 @@ export const imageModels = [
 ] as const
 export type ImageModel = (typeof imageModels)[number]
 
-export const videoModels = ["veo-2", "veo-3", "seedance-pro", "kling", "seedance-lite"] as const
+export const videoModels = ["veo-2", "veo-3", "seedance-pro", "seedance-lite", "kling", "sora-2", "sora-2-pro"] as const
 export type AnyModel = ImageModel | VideoModel
 
 export type VideoModel = (typeof videoModels)[number]

@@ -182,6 +182,8 @@ export const CreateVideoBodyModel = {
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
 } as const;
 
 export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
@@ -238,6 +240,8 @@ export type CreateVideo200VideosItem = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
@@ -399,6 +403,8 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
 } as const;
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio];
@@ -587,6 +593,8 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -660,6 +668,8 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -733,6 +743,8 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -823,6 +835,8 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -913,6 +927,8 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -1353,6 +1369,8 @@ export type PointsPrices200VideoModel = {
   'seedance-pro': number;
   'seedance-lite': number;
   kling: number;
+  'sora-2': number;
+  'sora-2-pro': number;
 };
 
 export type PointsPrices200Video = {
@@ -2142,6 +2160,33 @@ export type UserUnlinkOAuth200 = {
   reason?: string;
 };
 
+export type UserRequestDeleteAccountBody = {
+  email?: string;
+};
+
+export type UserRequestDeleteAccount200Method = typeof UserRequestDeleteAccount200Method[keyof typeof UserRequestDeleteAccount200Method];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserRequestDeleteAccount200Method = {
+  email: 'email',
+  telegram: 'telegram',
+} as const;
+
+export type UserRequestDeleteAccount200 = {
+  ok: boolean;
+  method?: UserRequestDeleteAccount200Method;
+  reason?: string;
+};
+
+export type UserConfirmDeleteAccountBody = {
+  token: string;
+};
+
+export type UserConfirmDeleteAccount200 = {
+  ok: boolean;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
@@ -2344,6 +2389,8 @@ export type CollectionsGetCollectionImages200Item = {
   errored: boolean;
   filtered: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
@@ -2393,6 +2440,8 @@ export type CollectionsGetCollectionVideos200Item = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
@@ -6107,6 +6156,50 @@ export const userUnlinkOAuth = async (userUnlinkOAuthBody: UserUnlinkOAuthBody, 
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       userUnlinkOAuthBody,)
+  }
+);}
+
+
+
+export const getUserRequestDeleteAccountUrl = () => {
+
+
+  
+
+  return `/user/requestDeleteAccount`
+}
+
+export const userRequestDeleteAccount = async (userRequestDeleteAccountBody?: UserRequestDeleteAccountBody, options?: RequestInit): Promise<UserRequestDeleteAccount200> => {
+  
+  return fetcher<UserRequestDeleteAccount200>(getUserRequestDeleteAccountUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userRequestDeleteAccountBody,)
+  }
+);}
+
+
+
+export const getUserConfirmDeleteAccountUrl = () => {
+
+
+  
+
+  return `/user/confirmDeleteAccount`
+}
+
+export const userConfirmDeleteAccount = async (userConfirmDeleteAccountBody: UserConfirmDeleteAccountBody, options?: RequestInit): Promise<UserConfirmDeleteAccount200> => {
+  
+  return fetcher<UserConfirmDeleteAccount200>(getUserConfirmDeleteAccountUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userConfirmDeleteAccountBody,)
   }
 );}
 

@@ -211,6 +211,8 @@ export const CreateVideoBodyModel = {
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
 } as const;
 
 export type CreateVideoBodyAspectRatio = typeof CreateVideoBodyAspectRatio[keyof typeof CreateVideoBodyAspectRatio];
@@ -267,6 +269,8 @@ export type CreateVideo200VideosItem = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
@@ -428,6 +432,8 @@ export const CreateQueueAsyncBatchBodyRequestsItemAnyOfFourModel = {
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
 } as const;
 
 export type CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio = typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio[keyof typeof CreateQueueAsyncBatchBodyRequestsItemAnyOfFourAspectRatio];
@@ -616,6 +622,8 @@ export const CreationsUserImagePurchasesModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -689,6 +697,8 @@ export const CreationsUserVideoPurchasesModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -762,6 +772,8 @@ export const CreationsCreateImageRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -852,6 +864,8 @@ export const CreationsCreateVideoRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -942,6 +956,8 @@ export const CreationsGetMediaRequestsModel = {  'veo-2': 'veo-2',
   'seedance-pro': 'seedance-pro',
   'seedance-lite': 'seedance-lite',
   kling: 'kling',
+  'sora-2': 'sora-2',
+  'sora-2-pro': 'sora-2-pro',
   ultra: 'ultra',
   'sd3-lg': 'sd3-lg',
   core: 'core',
@@ -1382,6 +1398,8 @@ export type PointsPrices200VideoModel = {
   'seedance-pro': number;
   'seedance-lite': number;
   kling: number;
+  'sora-2': number;
+  'sora-2-pro': number;
 };
 
 export type PointsPrices200Video = {
@@ -2171,6 +2189,33 @@ export type UserUnlinkOAuth200 = {
   reason?: string;
 };
 
+export type UserRequestDeleteAccountBody = {
+  email?: string;
+};
+
+export type UserRequestDeleteAccount200Method = typeof UserRequestDeleteAccount200Method[keyof typeof UserRequestDeleteAccount200Method];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserRequestDeleteAccount200Method = {
+  email: 'email',
+  telegram: 'telegram',
+} as const;
+
+export type UserRequestDeleteAccount200 = {
+  ok: boolean;
+  method?: UserRequestDeleteAccount200Method;
+  reason?: string;
+};
+
+export type UserConfirmDeleteAccountBody = {
+  token: string;
+};
+
+export type UserConfirmDeleteAccount200 = {
+  ok: boolean;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
@@ -2373,6 +2418,8 @@ export type CollectionsGetCollectionImages200Item = {
   errored: boolean;
   filtered: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   imageRequest: CollectionsGetCollectionImages200ItemImageRequest;
 };
@@ -2422,6 +2469,8 @@ export type CollectionsGetCollectionVideos200Item = {
   seed: string | null;
   errored: boolean;
   deleted: boolean;
+  /** @nullable */
+  deletedAt: string | null;
   nsfw: boolean;
   videoRequestId: string;
   /** @nullable */
@@ -8205,6 +8254,118 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getUserUnlinkOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const userRequestDeleteAccount = (
+    userRequestDeleteAccountBody?: MaybeRef<UserRequestDeleteAccountBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserRequestDeleteAccount200>> => {
+    userRequestDeleteAccountBody = unref(userRequestDeleteAccountBody);
+    
+    return axios.post(
+      `/user/requestDeleteAccount`,
+      userRequestDeleteAccountBody,options
+    );
+  }
+
+
+
+export const getUserRequestDeleteAccountMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userRequestDeleteAccount>>, TError,{data: UserRequestDeleteAccountBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof userRequestDeleteAccount>>, TError,{data: UserRequestDeleteAccountBody}, TContext> => {
+
+const mutationKey = ['userRequestDeleteAccount'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userRequestDeleteAccount>>, {data: UserRequestDeleteAccountBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userRequestDeleteAccount(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserRequestDeleteAccountMutationResult = NonNullable<Awaited<ReturnType<typeof userRequestDeleteAccount>>>
+    export type UserRequestDeleteAccountMutationBody = UserRequestDeleteAccountBody
+    export type UserRequestDeleteAccountMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUserRequestDeleteAccount = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userRequestDeleteAccount>>, TError,{data: UserRequestDeleteAccountBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof userRequestDeleteAccount>>,
+        TError,
+        {data: UserRequestDeleteAccountBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUserRequestDeleteAccountMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const userConfirmDeleteAccount = (
+    userConfirmDeleteAccountBody: MaybeRef<UserConfirmDeleteAccountBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<UserConfirmDeleteAccount200>> => {
+    userConfirmDeleteAccountBody = unref(userConfirmDeleteAccountBody);
+    
+    return axios.post(
+      `/user/confirmDeleteAccount`,
+      userConfirmDeleteAccountBody,options
+    );
+  }
+
+
+
+export const getUserConfirmDeleteAccountMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userConfirmDeleteAccount>>, TError,{data: UserConfirmDeleteAccountBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof userConfirmDeleteAccount>>, TError,{data: UserConfirmDeleteAccountBody}, TContext> => {
+
+const mutationKey = ['userConfirmDeleteAccount'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userConfirmDeleteAccount>>, {data: UserConfirmDeleteAccountBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userConfirmDeleteAccount(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserConfirmDeleteAccountMutationResult = NonNullable<Awaited<ReturnType<typeof userConfirmDeleteAccount>>>
+    export type UserConfirmDeleteAccountMutationBody = UserConfirmDeleteAccountBody
+    export type UserConfirmDeleteAccountMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useUserConfirmDeleteAccount = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userConfirmDeleteAccount>>, TError,{data: UserConfirmDeleteAccountBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof userConfirmDeleteAccount>>,
+        TError,
+        {data: UserConfirmDeleteAccountBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUserConfirmDeleteAccountMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

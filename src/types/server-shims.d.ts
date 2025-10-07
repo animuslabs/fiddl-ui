@@ -22,7 +22,7 @@ declare module 'fiddl-server/dist/lib/types/serverTypes' {
 
   export interface CreateVideoRequest {
     prompt: string
-    model: 'veo-2' | 'veo-3' | 'seedance-pro' | 'kling' | 'seedance-lite'
+    model: 'veo-2' | 'veo-3' | 'seedance-pro' | 'seedance-lite' | 'kling' | 'sora-2' | 'sora-2-pro'
     public?: boolean
     // UI uses the following optional fields
     aspectRatio?: string

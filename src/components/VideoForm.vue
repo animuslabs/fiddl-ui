@@ -110,6 +110,42 @@
 
   UploadedImagesDialog(v-model="showImageDialog" @accept="onDialogAccept" :multiSelect="false" :thumbSizeMobile="95" context="video")
 
+  // Sora aspect ratio mismatch dialog
+  q-dialog(v-model="aspectDialogOpen" :maximized="quasar.screen.lt.md")
+    q-card(:style="quasar.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;' : 'width:560px; max-width:100vw;'")
+      q-card-section.z-top.bg-grey-10(style="position:sticky; top:0px;")
+        .row.items-center.justify-between
+          .row.items-center.q-gutter-sm
+            q-icon(name="image_aspect_ratio" color="primary" size="md")
+            h6.q-mt-none.q-mb-none Aspect Ratio Notice
+          q-btn(flat dense round icon="close" v-close-popup)
+      q-separator
+      q-card-section
+        .q-mb-sm
+          p Your input image aspect ratio
+            span.text-bold.q-ml-xs {{ inputAspectLabel || 'unknown' }}
+            |  does not match the selected output aspect
+            span.text-bold.q-ml-xs {{ req.aspectRatio }}
+            |  for Sora.
+          p.q-mt-sm To preserve composition, we will generate a proxy image that matches your selected aspect ratio before animating with Sora.
+        .q-mt-md
+          .row.items-center.q-gutter-sm
+            q-icon(name="schedule" size="xs" color="primary")
+            span Expect a short additional delay.
+          .row.items-center.q-gutter-sm.q-mt-xs
+            q-icon(name="payments" size="xs" color="primary")
+            span This adds an extra
+            q-badge(color="primary" text-color="white" transparent) +{{ seedreamExtraCost }}
+            span points (Seedream4 image).
+        q-separator.q-my-md
+        .text-caption.text-grey-5
+          p Tip: Provide a starting image with
+            span.text-bold.q-ml-xs {{ req.aspectRatio }}
+            |  and there is no extra charge and the process is faster.
+      q-card-actions(align="right")
+        q-btn(flat color="secondary" label="Cancel" no-caps @click="aspectDialogOpen = false")
+        q-btn(color="primary" label="Continue" no-caps @click="confirmAspectDialog")
+
   // Quick purchase dialog when insufficient points
   q-dialog(v-model="quickBuyDialogOpen" :maximized="quasar.screen.lt.md")
     q-card(:style="quasar.screen.lt.md ? 'width:100vw; max-width:100vw; height:100vh; height:100dvh; border-radius:0;' : 'width:520px; max-width:100vw;'")
@@ -128,7 +164,7 @@
 import { videoModels } from "lib/imageModels"
 import { useQuasar } from "quasar"
 import { useCreateVideoStore } from "src/stores/createVideoStore"
-import { computed, ref, toRef } from "vue"
+import { computed, ref, toRef, watch } from "vue"
 import { prices } from "stores/pricesStore"
 import { img, s3Img } from "lib/netlifyImg"
 import UploadedImagesDialog from "components/dialogs/UploadedImagesDialog.vue"
@@ -149,6 +185,13 @@ const quasar = useQuasar()
 const showImageDialog = ref(false)
 const quickBuyDialogOpen = ref(false)
 const actionCooldown = ref(false)
+const aspectDialogOpen = ref(false)
+const pendingPublicFlag = ref<boolean | null>(null)
+const inputImageAspect = ref<number | null>(null)
+const inputAspectLabel = ref<string | null>(null)
+
+const isSoraSelected = computed(() => req.value.model === 'sora-2' || req.value.model === 'sora-2-pro')
+const seedreamExtraCost = computed(() => prices.image.model?.["seedream4"] ?? 13)
 
 async function startCreateKeyboard() {
   const started = await startCreate()
@@ -173,6 +216,22 @@ function clearStartingImage() {
 async function startCreate(isPublic: boolean = req.value.public ?? true) {
   if (createDisabled.value) return false
   req.value.public = isPublic
+  // If Sora with an uploaded start image and aspect mismatch, show dialog first
+  const needsAspectCheck = isSoraSelected.value && !!req.value.uploadedStartImageId
+  if (needsAspectCheck) {
+    // ensure we have the input image aspect measured
+    await ensureInputImageAspect()
+    if (inputImageAspect.value && typeof req.value.aspectRatio === 'string') {
+      const { w, h } = parseAspect(req.value.aspectRatio)
+      const target = Math.max(0.0001, w / Math.max(1, h))
+      const mismatch = Math.abs((inputImageAspect.value || target) - target) > 0.01
+      if (mismatch) {
+        pendingPublicFlag.value = isPublic
+        aspectDialogOpen.value = true
+        return false
+      }
+    }
+  }
   const targetCost = isPublic ? vidStore.publicTotalCost : vidStore.privateTotalCost
   const available = userAuth.userData?.availablePoints || 0
   if (targetCost > available) {
@@ -203,6 +262,88 @@ const startingImageUrl = computed(() => {
   else if (req.value.uploadedStartImageId) return s3Img("uploads/" + req.value.uploadedStartImageId)
   else return false
 })
+
+// Load the aspect ratio from the selected uploaded image when it changes
+async function ensureInputImageAspect() {
+  if (!req.value.uploadedStartImageId) {
+    inputImageAspect.value = null
+    inputAspectLabel.value = null
+    return null
+  }
+  const url = s3Img("uploads/" + req.value.uploadedStartImageId)
+  try {
+    const ratio = await getImageAspect(url)
+    inputImageAspect.value = ratio
+    inputAspectLabel.value = toAspectLabel(ratio)
+    return ratio
+  } catch {
+    inputImageAspect.value = null
+    inputAspectLabel.value = null
+    return null
+  }
+}
+
+function getImageAspect(url: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const el = new Image()
+    el.crossOrigin = 'anonymous'
+    el.onload = () => {
+      const w = Math.max(1, el.naturalWidth || el.width || 1)
+      const h = Math.max(1, el.naturalHeight || el.height || 1)
+      resolve(w / h)
+    }
+    el.onerror = reject
+    el.src = url
+  })
+}
+
+function toAspectLabel(ratio: number): string {
+  // Try mapping to a known preset first
+  const presets = ["16:9", "9:16", "4:3", "3:4", "1:1", "21:9", "9:21", "3:2", "2:3", "5:4", "4:5"] as const
+  for (const p of presets) {
+    const { w, h } = parseAspect(p)
+    const r = w / h
+    if (Math.abs(r - ratio) < 0.02) return p
+  }
+  // Fallback label like ~1.33:1
+  const val = Math.round(ratio * 100) / 100
+  return `~${val}:1`
+}
+
+// React when an uploaded image is picked/changed
+watch(
+  () => req.value.uploadedStartImageId,
+  () => {
+    void ensureInputImageAspect()
+  }
+)
+
+function confirmAspectDialog() {
+  aspectDialogOpen.value = false
+  const isPublic = pendingPublicFlag.value ?? (req.value.public ?? true)
+  // proceed with normal creation flow
+  void (async () => {
+    const targetCost = isPublic ? vidStore.publicTotalCost : vidStore.privateTotalCost
+    const available = userAuth.userData?.availablePoints || 0
+    if (targetCost > available) {
+      quickBuyDialogOpen.value = true
+      return
+    }
+    try {
+      events.createStart("video", { model: req.value.model as any, public: !!isPublic, cost: targetCost })
+    } catch {}
+    void vidStore
+      .createVideoRequest()
+      .then(() => {
+        try {
+          events.createSuccess("video", { model: req.value.model as any, public: !!isPublic })
+        } catch {}
+        emit("created")
+        // notify to match action bar behavior when proceeding from dialog
+        quasar.notify({ color: "positive", message: `Starting video creation ${isPublic ? "(Public)" : "(Private)"} · ${targetCost} points` })
+      })
+  })()
+}
 
 const missingPoints = computed(() => {
   const available = userAuth.userData?.availablePoints || 0
