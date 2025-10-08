@@ -442,7 +442,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     // Decide models for this creation
     const modelsForThisRun = resolveMultiModels()
     // Use requested aspect ratio and coerce per-model as needed
-    let aspect: AspectRatio | undefined = state.req.aspectRatio as AspectRatio | undefined
+    const aspect: AspectRatio | undefined = state.req.aspectRatio as AspectRatio | undefined
     // Build batch request payloads (image variant, one per model)
     const requests = modelsForThisRun.map((m) => ({
       prompt: state.req.prompt,

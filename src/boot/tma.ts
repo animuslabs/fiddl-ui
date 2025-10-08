@@ -25,14 +25,14 @@ const D = {
   log: (...a: any[]) => {
     if (!isDebugEnabled()) return
     try {
-      // eslint-disable-next-line no-console
+       
       console.log("[TMA]", ...a)
     } catch {}
   },
   warn: (...a: any[]) => {
     if (!isDebugEnabled()) return
     try {
-      // eslint-disable-next-line no-console
+       
       console.warn("[TMA]", ...a)
     } catch {}
   },

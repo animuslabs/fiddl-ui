@@ -42,6 +42,7 @@ import { tawk } from "lib/tawk"
 import { promoClaimPromoCode } from "lib/orval"
 import { handleClaimCode } from "lib/promoCodeUtil"
 import { useMissionsStore } from "stores/missionsStore"
+import { useAsyncErrorStore } from "stores/asyncErrorStore"
 LoadingBar.setDefaults({
   color: "primary",
   size: "1px",
@@ -87,12 +88,15 @@ export default defineComponent({
       immediate: true,
       handler(val: boolean) {
         const missions = useMissionsStore()
+        const asyncErrors = useAsyncErrorStore()
         if (val) {
           missions.startPolling()
           // Initial check for claimables after login
           this.maybeNotifyClaimables()
+          asyncErrors.startPolling()
         } else {
           missions.stopPolling()
+          asyncErrors.stopPolling()
         }
       },
     },

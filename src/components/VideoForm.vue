@@ -217,7 +217,7 @@ async function startCreate(isPublic: boolean = req.value.public ?? true) {
   if (createDisabled.value) return false
   req.value.public = isPublic
   // If Sora with an uploaded start image and aspect mismatch, show dialog first
-  const needsAspectCheck = isSoraSelected.value && !!req.value.uploadedStartImageId
+  const needsAspectCheck = isSoraSelected.value && (!!req.value.uploadedStartImageId || !!req.value.startImageId)
   if (needsAspectCheck) {
     // ensure we have the input image aspect measured
     await ensureInputImageAspect()
@@ -265,12 +265,12 @@ const startingImageUrl = computed(() => {
 
 // Load the aspect ratio from the selected uploaded image when it changes
 async function ensureInputImageAspect() {
-  if (!req.value.uploadedStartImageId) {
+  const url = startingImageUrl.value || null
+  if (!url) {
     inputImageAspect.value = null
     inputAspectLabel.value = null
     return null
   }
-  const url = s3Img("uploads/" + req.value.uploadedStartImageId)
   try {
     const ratio = await getImageAspect(url)
     inputImageAspect.value = ratio
@@ -286,7 +286,6 @@ async function ensureInputImageAspect() {
 function getImageAspect(url: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const el = new Image()
-    el.crossOrigin = 'anonymous'
     el.onload = () => {
       const w = Math.max(1, el.naturalWidth || el.width || 1)
       const h = Math.max(1, el.naturalHeight || el.height || 1)
@@ -312,7 +311,7 @@ function toAspectLabel(ratio: number): string {
 
 // React when an uploaded image is picked/changed
 watch(
-  () => req.value.uploadedStartImageId,
+  () => [req.value.uploadedStartImageId, req.value.startImageId],
   () => {
     void ensureInputImageAspect()
   }

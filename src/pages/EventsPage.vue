@@ -14,6 +14,7 @@ q-page.q-pa-md
     .row.items-center.q-gutter-md.q-mb-md
       q-toggle(v-model="showUnseenOnly" label="Show unseen only")
       q-toggle(v-model="showOwnActivity" label="Show my activity")
+      q-toggle(v-model="includeErrors" label="Include critical errors")
       q-select(
         v-model="selectedTypes"
         label="Types"
@@ -72,7 +73,7 @@ q-page.q-pa-md
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
+import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, EventsPrivateEventsTypesItem as EventsTypesConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
@@ -90,6 +91,7 @@ export default defineComponent({
       pageSize: 20 as number,
       showUnseenOnly: false as boolean,
       showOwnActivity: false as boolean,
+      includeErrors: false as boolean,
       selectedTypes: [] as EventsPrivateEvents200ItemType[],
       typeOptions: ALL_TYPES.map((t) => ({ label: t, value: t })),
       seenCleanup: null as null | (() => void),
@@ -105,6 +107,7 @@ export default defineComponent({
     },
     filtered(): EventsPrivateEvents200Item[] {
       let arr = this.events
+      if (!this.includeErrors) arr = arr.filter((e) => e.type !== "asyncError")
       if (this.showUnseenOnly) arr = arr.filter((e) => !e.seen)
       if (!this.showOwnActivity) arr = arr.filter((e) => !this.isOwnEvent(e))
       if (this.selectedTypes.length > 0) arr = arr.filter((e) => this.selectedTypes.includes(e.type))
@@ -135,6 +138,11 @@ export default defineComponent({
     showUnseenOnly() {
       this.page = 1
     },
+    includeErrors() {
+      // refetch when toggling inclusion to be efficient server-side
+      void this.refresh()
+      this.page = 1
+    },
     // Keep page in range when filters change
     sorted() {
       if (this.page > this.pageCount) this.page = this.pageCount
@@ -151,6 +159,10 @@ export default defineComponent({
     }
   },
   methods: {
+    nonErrorTypes(): string[] {
+      const ALL = Object.values(EventsTypesConst) as string[]
+      return ALL.filter((t) => t !== "asyncError")
+    },
     isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
       const uid = this.$userAuth?.userId
       if (!uid) return false
@@ -192,8 +204,11 @@ export default defineComponent({
           const sinceTs = times.length ? Math.max(...times) : 0
           if (sinceTs > 0) since = new Date(sinceTs).toISOString()
         }
-
-        const baseParams: EventsPrivateEventsParams = { limit: 200, includeSeen: true }
+        const baseParams: EventsPrivateEventsParams = {
+          limit: 200,
+          includeSeen: true,
+          types: this.includeErrors ? undefined : (this.nonErrorTypes() as any),
+        }
         const params = since ? { ...baseParams, since } : baseParams
         const { data } = await eventsPrivateEvents(params)
         let incoming = Array.isArray(data) ? data : []
@@ -203,6 +218,9 @@ export default defineComponent({
           incoming = Array.isArray(fullResponse.data) ? fullResponse.data : []
           since = undefined
         }
+
+        // Ensure asyncError is excluded when not requested
+        if (!this.includeErrors) incoming = incoming.filter((e) => e.type !== "asyncError")
 
         // Mark our own activity as seen immediately so it never counts as unread
         try {

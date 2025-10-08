@@ -4008,6 +4008,7 @@ export const EventsPublicEventsTypesItem = {
   earnedComission: 'earnedComission',
   creationCommented: 'creationCommented',
   commentMentioned: 'commentMentioned',
+  asyncError: 'asyncError',
 } as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -4028,6 +4029,7 @@ export const EventsPublicEvents200ItemType = {
   earnedComission: 'earnedComission',
   creationCommented: 'creationCommented',
   commentMentioned: 'commentMentioned',
+  asyncError: 'asyncError',
 } as const;
 
 export type EventsPublicEvents200Item = {
@@ -4066,6 +4068,7 @@ export const EventsPrivateEventsTypesItem = {
   earnedComission: 'earnedComission',
   creationCommented: 'creationCommented',
   commentMentioned: 'commentMentioned',
+  asyncError: 'asyncError',
 } as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
@@ -4086,6 +4089,7 @@ export const EventsPrivateEvents200ItemType = {
   earnedComission: 'earnedComission',
   creationCommented: 'creationCommented',
   commentMentioned: 'commentMentioned',
+  asyncError: 'asyncError',
 } as const;
 
 export type EventsPrivateEvents200Item = {

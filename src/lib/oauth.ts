@@ -45,7 +45,7 @@ function detectBraveSync(): boolean {
     // Quick sync heuristics (works on Desktop Brave; iOS may not expose navigator.brave)
     // We avoid awaiting isBrave() to keep the public API synchronous.
     // If this returns false negatives, the server-side token injection still helps.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const nav: any = navigator
     if (nav?.brave) return true
     const ua = String(navigator.userAgent || "")
