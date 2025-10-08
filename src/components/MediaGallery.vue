@@ -148,21 +148,32 @@ const userAuth = useUserAuth()
 const mediaViewerStore = useMediaViewerStore()
 const router = useRouter()
 const isMobile = computed(() => $q.screen.lt.md)
+const isPhone = computed(() => $q.screen.lt.sm)
+// Effective layout mirrors prop; parent decides default. We adapt behavior per screen.
+const layoutEffective = computed<"grid" | "mosaic">(() => props.layout)
 const cols = computed(() => {
+  // Phones: single column for grid; allow 2 columns for mosaic if ever enabled
+  if (isPhone.value) return layoutEffective.value === "mosaic" ? 2 : 1
+  // Small screens (e.g., small tablets): use mobile setting
   if ($q.screen.lt.md) return props.colsMobile
+  // Desktop and up
   return props.colsDesktop
 })
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
-const popIconSize = ref("8px")
+// Popularity button sizing: larger on phones when in grid view
+const popIconSize = computed(() => {
+  if (isPhone.value) return layoutEffective.value === "grid" ? "18px" : "10px"
+  return "8px"
+})
 
 // Decide per-item popularity layout: inline vs stacked on mobile
 function popularityLayoutClass(m: MediaGalleryMeta) {
   try {
     const ratio = typeof m?.aspectRatio === "number" && Number.isFinite(m.aspectRatio) ? m.aspectRatio : 1
     const stacked = $q.screen.lt.md && ratio < 0.95 // stack on tall/narrow tiles only
-    return { "stack-mobile": stacked }
+    return { "stack-mobile": stacked, "mode-grid": layoutEffective.value === "grid", "mode-mosaic": layoutEffective.value === "mosaic" }
   } catch {
     return {}
   }
@@ -411,7 +422,7 @@ async function addAsInput(imageId: string) {
 }
 
 const wrapperStyles = computed(() => {
-  const isMosaic = props.layout === "mosaic"
+  const isMosaic = layoutEffective.value === "mosaic"
   const base: Record<string, string> = {
     display: "grid",
     gap: gapValue.value,
@@ -420,6 +431,17 @@ const wrapperStyles = computed(() => {
     minWidth: "0",
     overflowX: "clip",
     boxSizing: "border-box",
+  }
+
+  // On phones: grid uses single column; mosaic (if enabled) uses two slim columns
+  if (isPhone.value) {
+    const phoneCols = isMosaic ? 2 : 1
+    base.gridTemplateColumns = `repeat(${phoneCols}, 1fr)`
+    if (isMosaic) {
+      base.gridAutoRows = `${thumbSize.value * props.rowHeightRatio}px`
+      base.gridAutoFlow = "dense"
+    }
+    return base
   }
 
   if (isMosaic && props.centerAlign) {
@@ -444,7 +466,7 @@ const selectedSet = computed(() => new Set(props.selectedIds || []))
 
 const mediaStyles = computed(() => {
   const style =
-    props.layout === "grid"
+    layoutEffective.value === "grid"
       ? {
           height: "100%",
           width: "100%",
@@ -488,7 +510,7 @@ const layoutSpans = ref<Record<string, { colSpan?: number; rowSpan: number }>>({
 
 // Reset cached spans when layout-affecting inputs change
 watch(
-  () => [cols.value, props.rowHeightRatio, props.layout, thumbSize.value, props.centerAlign],
+  () => [cols.value, props.rowHeightRatio, layoutEffective.value, thumbSize.value, props.centerAlign],
   () => {
     layoutSpans.value = {}
   },
@@ -503,7 +525,7 @@ watch(
 )
 
 watch(
-  () => props.layout,
+  () => [props.layout, isPhone.value],
   () => {
     void buildItems(props.mediaObjects)
   },
@@ -519,7 +541,7 @@ async function buildItems(src: MediaGalleryMeta[]) {
     const type: "image" | "video" = derived === "video" ? "video" : "image"
     const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
     const fallbackAspect = type === "video" ? 16 / 9 : 1
-    const aspectRatio = props.layout === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
+    const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
     // Initialize progressive target/current sizes for images
     if (type === "image") initImageProgressState(item.id, item.url)
     return { ...item, type, aspectRatio }
@@ -544,7 +566,7 @@ async function buildItems(src: MediaGalleryMeta[]) {
         url: img(id, "lg"),
         type: "image",
         placeholder: true,
-        aspectRatio: props.layout === "grid" ? 1 : 1.6,
+        aspectRatio: layoutEffective.value === "grid" ? 1 : 1.6,
         addedAt: now,
       } as any
       stickyOrder.value.push(id)
@@ -804,7 +826,7 @@ function handleDeleteClick(item: MediaGalleryMeta) {
 }
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
-  if (props.layout !== "mosaic") return {}
+  if (layoutEffective.value !== "mosaic") return {}
 
   const cached = layoutSpans.value[m.id]
   if (cached) {
@@ -1186,7 +1208,7 @@ function prefetchImage(url: string): Promise<void> {
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         // Top actions overlay (centered; matches bottom popularity row style)
         .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
           // Add as input (images only)
           // Delete
@@ -1238,7 +1260,7 @@ function prefetchImage(url: string): Promise<void> {
           @click.stop="onModelChipClick(m)"
         ) {{ getModelLabel(m) }}
         // Popularity overlay controls
-        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
           .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
@@ -1299,7 +1321,7 @@ function prefetchImage(url: string): Promise<void> {
           div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
         // Top actions overlay (centered; matches bottom popularity row style)
         .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
         )
           // Add as input (images only; for video items this won't show)
           q-btn(
@@ -1352,7 +1374,7 @@ function prefetchImage(url: string): Promise<void> {
           @click.stop="onModelChipClick(m)"
         ) {{ getModelLabel(m) }}
         // Popularity overlay controls
-        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
           .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
             .pop-item
               q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
@@ -1678,12 +1700,25 @@ function prefetchImage(url: string): Promise<void> {
 
 /* Mobile compaction for popularity controls; stack only when marked */
 @media (max-width: 600px) {
+  /* Default mobile baseline (keeps desktop look when unspecified) */
   .popularity-overlay {
     padding: 2px 4px;
     gap: 6px;
     row-gap: 0;
     max-width: calc(100% - 8px);
   }
+
+  /* Grid mode on phones: larger targets and spacing */
+  .popularity-overlay.mode-grid {
+    padding: 6px 10px;
+    gap: 10px;
+    row-gap: 4px;
+    max-width: calc(100% - 12px);
+  }
+  .popularity-overlay.mode-grid .count {
+    font-size: 13px;
+  }
+
   .popularity-overlay.stack-mobile .pop-item {
     flex-direction: column-reverse; /* show count above icon */
     align-items: center;

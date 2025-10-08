@@ -79,28 +79,16 @@ export interface BaseParams {
 /** Event-specific params (aligned to Meta standard events) */
 
 /** AddPaymentInfo: optional content and value fields */
-export type AddPaymentInfoParams = Pick<
-  BaseParams,
-  "content_ids" | "contents" | "currency" | "value" | "content_type" | "event_id"
-> & Partial<BaseParams>
+export type AddPaymentInfoParams = Pick<BaseParams, "content_ids" | "contents" | "currency" | "value" | "content_type" | "event_id"> & Partial<BaseParams>
 
 /** AddToCart: contents optional (required for Advantage+ catalog ads) */
-export type AddToCartParams = Pick<
-  BaseParams,
-  "content_ids" | "content_type" | "contents" | "currency" | "value" | "event_id"
-> & Partial<BaseParams>
+export type AddToCartParams = Pick<BaseParams, "content_ids" | "content_type" | "contents" | "currency" | "value" | "event_id"> & Partial<BaseParams>
 
 /** AddToWishlist: optional content and value fields */
-export type AddToWishlistParams = Pick<
-  BaseParams,
-  "content_ids" | "contents" | "currency" | "value" | "content_type" | "event_id"
-> & Partial<BaseParams>
+export type AddToWishlistParams = Pick<BaseParams, "content_ids" | "contents" | "currency" | "value" | "content_type" | "event_id"> & Partial<BaseParams>
 
 /** CompleteRegistration: optional currency/value/status */
-export type CompleteRegistrationParams = Pick<
-  BaseParams,
-  "currency" | "value" | "status" | "event_id"
-> & Partial<BaseParams>
+export type CompleteRegistrationParams = Pick<BaseParams, "currency" | "value" | "status" | "event_id"> & Partial<BaseParams>
 
 /** Contact: no required fields */
 export type ContactParams = BaseParams
@@ -115,10 +103,7 @@ export type DonateParams = BaseParams
 export type FindLocationParams = BaseParams
 
 /** InitiateCheckout: optional content_ids, contents, currency, num_items, value */
-export type InitiateCheckoutParams = Pick<
-  BaseParams,
-  "content_ids" | "contents" | "currency" | "num_items" | "value" | "content_type" | "event_id"
-> & Partial<BaseParams>
+export type InitiateCheckoutParams = Pick<BaseParams, "content_ids" | "contents" | "currency" | "num_items" | "value" | "content_type" | "event_id"> & Partial<BaseParams>
 
 /** Lead: optional currency/value */
 export type LeadParams = Pick<BaseParams, "currency" | "value" | "event_id"> & Partial<BaseParams>
@@ -133,31 +118,19 @@ export interface PurchaseParams extends Omit<BaseParams, "currency" | "value"> {
 export type ScheduleParams = BaseParams
 
 /** Search: includes optional content params + search_string */
-export type SearchParams = Pick<
-  BaseParams,
-  "content_ids" | "content_type" | "contents" | "currency" | "search_string" | "value" | "event_id"
-> & Partial<BaseParams>
+export type SearchParams = Pick<BaseParams, "content_ids" | "content_type" | "contents" | "currency" | "search_string" | "value" | "event_id"> & Partial<BaseParams>
 
 /** StartTrial: optional currency/predicted_ltv/value */
-export type StartTrialParams = Pick<
-  BaseParams,
-  "currency" | "predicted_ltv" | "value" | "event_id"
-> & Partial<BaseParams>
+export type StartTrialParams = Pick<BaseParams, "currency" | "predicted_ltv" | "value" | "event_id"> & Partial<BaseParams>
 
 /** SubmitApplication: no required fields */
 export type SubmitApplicationParams = BaseParams
 
 /** Subscribe: optional currency/predicted_ltv/value */
-export type SubscribeParams = Pick<
-  BaseParams,
-  "currency" | "predicted_ltv" | "value" | "event_id"
-> & Partial<BaseParams>
+export type SubscribeParams = Pick<BaseParams, "currency" | "predicted_ltv" | "value" | "event_id"> & Partial<BaseParams>
 
 /** ViewContent: optional content and value fields */
-export type ViewContentParams = Pick<
-  BaseParams,
-  "content_ids" | "content_type" | "contents" | "currency" | "value" | "event_id"
-> & Partial<BaseParams>
+export type ViewContentParams = Pick<BaseParams, "content_ids" | "content_type" | "contents" | "currency" | "value" | "event_id"> & Partial<BaseParams>
 
 /** Event payload map for strong typing of track() */
 export interface EventPayloadMap {
@@ -201,7 +174,7 @@ export const PromotedObjectEventType: Record<StandardEvent, string> = {
   StartTrial: "START_TRIAL",
   SubmitApplication: "SUBMIT_APPLICATION",
   Subscribe: "SUBSCRIBE",
-  ViewContent: "VIEW_CONTENT"
+  ViewContent: "VIEW_CONTENT",
 }
 
 export interface MetaPixelInitOptions {
@@ -269,7 +242,7 @@ export class MetaPixel {
     let pid = this._pixelId
     if (!pid) {
       try {
-        pid = (import.meta as any).env?.VITE_META_PIXEL_ID || (import.meta as any).env?.METAPIXEL_ID || null
+        pid = "686586947240581"
       } catch {
         pid = null as any
       }
@@ -384,7 +357,7 @@ export class MetaPixel {
       if (!this._initialized) {
         this._initialized = true
         try {
-          const pid = (import.meta as any).env?.VITE_META_PIXEL_ID || (import.meta as any).env?.METAPIXEL_ID
+          const pid = "686586947240581"
           if (pid) this._pixelId = String(pid)
         } catch {}
       }

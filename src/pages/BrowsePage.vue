@@ -54,7 +54,8 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const browserStore = useBrowserStore()
-    const viewMode = ref<"grid" | "mosaic">("mosaic")
+    // Default to grid on phones for better media visibility; keep mosaic elsewhere
+    const viewMode = ref<"grid" | "mosaic">($q.screen.lt.sm ? "grid" : "mosaic")
     const searchBarRef = ref<any>(null)
     const searchBarHeight = ref(56)
 
