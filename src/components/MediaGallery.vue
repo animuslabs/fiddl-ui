@@ -5,7 +5,7 @@ import { Dialog, Loading } from "quasar"
 // Import removed: unified flow uses route-based orchestrator to open quick-edit
 // no need to pre-upload input image; we operate by id now
 import { useRouter } from "vue-router"
-import { img, s3Video } from "lib/netlifyImg"
+import { img, s3Video, avatarImg } from "lib/netlifyImg"
 import type { ImageSize } from "fiddl-server/dist/lib/types/serverTypes"
 import mediaViwer, { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import { usePopularityStore } from "src/stores/popularityStore"
@@ -34,6 +34,9 @@ export interface MediaGalleryMeta {
   requestQuantity?: number
   placeholder?: boolean
   nsfw?: boolean
+  // Optional creator metadata (when available from caller)
+  creatorId?: string
+  creatorUsername?: string
 }
 
 const props = withDefaults(
@@ -60,6 +63,13 @@ const props = withDefaults(
     showUseAsInput?: boolean
     // Enable tap-to-select behavior on the model chip overlay
     enableModelChipSelect?: boolean
+    // Reserve vertical space (in px) above/below media for controls.
+    // When > 0, controls render in bars instead of overlaid, and the grid/mosaic
+    // layout will account for the extra height so tiles never overlap.
+    topBarHeight?: number | string
+    bottomBarHeight?: number | string
+    // When true, show small creator avatar+name in the reserved bottom bar
+    showCreator?: boolean
   }>(),
   {
     layout: "grid",
@@ -79,6 +89,9 @@ const props = withDefaults(
     disableNsfwMask: false,
     showUseAsInput: false,
     enableModelChipSelect: false,
+    topBarHeight: 0,
+    bottomBarHeight: 0,
+    showCreator: false,
   },
 )
 
@@ -160,6 +173,12 @@ const cols = computed(() => {
   return props.colsDesktop
 })
 const thumbSize = computed(() => (isMobile.value ? props.thumbSizeMobile : props.thumbSizeDesktop))
+// Minimum visual size for grid tiles to avoid pop as content swaps
+const gridMinSize = computed(() => {
+  const base = Number(thumbSize.value) || 0
+  // Clamp to a sensible range so phones don't look huge
+  return Math.min(Math.max(base, 120), 260)
+})
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
 // Popularity button sizing: larger on phones when in grid view
@@ -464,30 +483,105 @@ const wrapperStyles = computed(() => {
 // Fast lookup for selection state
 const selectedSet = computed(() => new Set(props.selectedIds || []))
 
-const mediaStyles = computed(() => {
-  const style =
-    layoutEffective.value === "grid"
-      ? {
-          height: "100%",
-          width: "100%",
-          // maxHeight: "100px",
-          aspectRatio: "1 / 1",
-          "object-fit": "cover",
-          display: "block",
-        }
-      : {
-          width: "100%",
-          height: "100%",
-          "object-fit": "cover",
-          display: "block",
-        }
+// ----- Reserved control bars (top/bottom) -----
+function toPxNumber(v: number | string | undefined | null): number {
+  if (v == null) return 0
+  if (typeof v === "number") return isFinite(v) ? v : 0
+  const trim = String(v).trim()
+  if (trim.endsWith("px")) return Number(parseFloat(trim)) || 0
+  const n = Number(trim)
+  return isFinite(n) ? n : 0
+}
 
-  return Object.entries(style)
+const topBarPx = computed(() => toPxNumber(props.topBarHeight))
+const bottomBarPx = computed(() => toPxNumber(props.bottomBarHeight))
+const useReservedBars = computed(() => topBarPx.value > 0 || bottomBarPx.value > 0)
+
+// Ensure bar heights are adequate for current icon size, especially on phones
+const iconPxNum = computed(() => toPxNumber(popIconSize.value as unknown as string))
+// Mobile scales bars a bit larger to avoid overflow with bigger icons
+const mobileBarScale = computed(() => (isPhone.value ? 2.2 : 1))
+const effectiveTopBarPx = computed(() => {
+  if (topBarPx.value <= 0) return 0
+  const minPad = isPhone.value ? iconPxNum.value + 10 : iconPxNum.value + 8
+  // Ensure enough room for comfortable padding even in grid
+  const minForLayout = isPhone.value ? 28 : 24
+  const base = Math.max(topBarPx.value, minPad, minForLayout)
+  return Math.round(base * mobileBarScale.value)
+})
+const effectiveBottomBarPx = computed(() => {
+  if (bottomBarPx.value <= 0) return 0
+  // Slightly larger to fit counts comfortably on phones
+  const minPad = isPhone.value ? iconPxNum.value + 16 : iconPxNum.value + 12
+  // Account for text size (~12px) plus padding so controls don't feel cramped
+  const minForText = isPhone.value ? 34 : 28
+  const base = Math.max(bottomBarPx.value, minPad, minForText)
+  return Math.round(base * mobileBarScale.value)
+})
+
+// Wrapper style for each tile’s inner container that holds media and optional bars
+const mediaWrapperStyle = computed(() => {
+  const base: Record<string, string> = {
+    width: "100%",
+    display: useReservedBars.value ? "flex" : "block",
+  }
+  if (useReservedBars.value) {
+    base["flex-direction"] = "column"
+    // In mosaic we must constrain the wrapper to the grid tile height
+    if (layoutEffective.value === "mosaic") base.height = "100%"
+  }
+
+  // Grid mode: keep square media area via an inner aspect box; for overlay mode we
+  // continue to set aspect ratio on the wrapper for backward-compat.
+  if (!useReservedBars.value) {
+    if (layoutEffective.value === "grid") {
+      base.height = "100%"
+      base.aspectRatio = "1 / 1"
+    } else {
+      base.width = "100%"
+      base.height = "100%"
+    }
+  }
+
+  return Object.entries(base)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(";")
+})
+
+// Inner aspect box (only when using reserved bars)
+const mediaAspectBoxStyle = computed(() => {
+  if (!useReservedBars.value) return ""
+  const base: Record<string, string> = {
+    width: "100%",
+    position: "relative",
+    overflow: "hidden",
+  }
+  if (layoutEffective.value === "grid") {
+    // Grid: keep a square media box; bars add extra height above/below
+    base.aspectRatio = "1 / 1"
+  } else {
+    // Mosaic: let the media fill the remaining space between bars exactly
+    base.flex = "1 1 0%"
+    base.minHeight = "0"
+  }
+  return Object.entries(base)
     .map(([k, v]) => `${k}:${v}`)
     .join(";")
 })
 
 const galleryItems = ref<MediaGalleryMeta[]>([])
+// Show skeletons when loading and no items yet
+const showSkeletons = computed(() => {
+  if (!props.showLoading) return false
+  if ((galleryItems.value?.length || 0) > 0) return false
+  return imageCreations.loadingCreations || videoCreations.loadingCreations
+})
+
+const skeletonCount = computed(() => {
+  if (isPhone.value) return layoutEffective.value === "grid" ? 4 : 6
+  const c = cols.value || 4
+  return layoutEffective.value === "grid" ? c * 2 : c * 3
+})
 // Offscreen unloading is disabled for small galleries to avoid Safari popping
 const UNLOAD_THRESHOLD = 200
 const unloadingEnabled = computed(() => (galleryItems.value?.length || 0) > UNLOAD_THRESHOLD)
@@ -499,9 +593,9 @@ const prevRealIds = ref<Set<string>>(new Set())
 const prevPlaceholderIds = ref<Set<string>>(new Set())
 
 const filteredGalleryItems = computed(() => {
-  // const list = props.showLoading ? galleryItems.value : galleryItems.value.filter((el) => videoLoading.value[el.id])
-  // console.log(list)
-  return galleryItems.value
+  const list = Array.isArray(galleryItems.value) ? galleryItems.value : []
+  // Filter out any undefined/null or items without id to keep template safe
+  return list.filter((el) => !!el && (typeof (el as any).id === "string" || typeof (el as any).id === "number"))
 })
 
 // Cache per-item layout spans so size stays stable across load/unload
@@ -531,21 +625,29 @@ watch(
   },
 )
 
-async function buildItems(src: MediaGalleryMeta[]) {
+async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
+  if (!Array.isArray(src)) {
+    galleryItems.value = []
+    prevRealIds.value = new Set()
+    prevPlaceholderIds.value = new Set()
+    return
+  }
   // IMPORTANT: avoid preloading image/video metadata for offscreen items to keep memory low.
   // We only compute aspect ratio from existing data; otherwise fall back to 1 until media loads.
-  const normalized = src.map((item) => {
-    const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
-    if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
-    const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
-    const type: "image" | "video" = derived === "video" ? "video" : "image"
-    const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
-    const fallbackAspect = type === "video" ? 16 / 9 : 1
-    const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
-    // Initialize progressive target/current sizes for images
-    if (type === "image") initImageProgressState(item.id, item.url)
-    return { ...item, type, aspectRatio }
-  })
+  const normalized = src
+    .filter((item): item is MediaGalleryMeta => !!item && (typeof (item as any).id === "string" || typeof (item as any).id === "number"))
+    .map((item) => {
+      const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
+      if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
+      const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
+      const type: "image" | "video" = derived === "video" ? "video" : "image"
+      const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
+      const fallbackAspect = type === "video" ? 16 / 9 : 1
+      const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
+      // Initialize progressive target/current sizes for images
+      if (type === "image") initImageProgressState(item.id, item.url)
+      return { ...item, type, aspectRatio }
+    })
 
   // Helper predicates
   const isPlaceholderId = (id: string | undefined) => typeof id === "string" && id.startsWith("pending-")
@@ -722,11 +824,7 @@ function handleVisibilityClick(item: MediaGalleryMeta) {
     }
   } else {
     // Going private: preserve existing surcharge/tax explanation, then append context for images
-    const base = taxPercent > 0
-      ? (surcharge > 0
-          ? `Make this creation private? This costs ${surcharge} points (${taxPercent}% of the original price).`
-          : `Make this creation private? This adds a ${taxPercent}% surcharge.`)
-      : "Make this creation private?"
+    const base = taxPercent > 0 ? (surcharge > 0 ? `Make this creation private? This costs ${surcharge} points (${taxPercent}% of the original price).` : `Make this creation private? This adds a ${taxPercent}% surcharge.`) : "Make this creation private?"
     if (requestType === "image") {
       message = `${base} Private creations are hidden from the community feed and can’t be unlocked. Others won’t see your prompt details or the full‑resolution image.`
     } else {
@@ -826,7 +924,10 @@ function handleDeleteClick(item: MediaGalleryMeta) {
 }
 
 function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | undefined> {
-  if (layoutEffective.value !== "mosaic") return {}
+  if (layoutEffective.value !== "mosaic") {
+    // In grid mode, enforce a minimum height so the cell never collapses
+    return layoutEffective.value === "grid" ? { minHeight: `${gridMinSize.value}px` } : {}
+  }
 
   const cached = layoutSpans.value[m.id]
   if (cached) {
@@ -840,9 +941,19 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
   const aspect = m.aspectRatio ?? 1
   const baseColSpan = aspect > 1.5 && cols.value > 1 ? Math.min(2, cols.value) : undefined
   const colFactor = baseColSpan ?? 1
-  const rowSpan = Math.max(1, Math.ceil((colFactor / Math.max(0.01, aspect)) * props.rowHeightRatio))
 
-  const entry = { colSpan: baseColSpan, rowSpan }
+  // Base rows needed for the media area itself
+  let rows = Math.max(1, Math.ceil((colFactor / Math.max(0.01, aspect)) * props.rowHeightRatio))
+
+  // When reserved bars are enabled, add extra rows to account for their height so
+  // the item never overlaps neighbors.
+  if (useReservedBars.value) {
+    const gridAutoRowPx = thumbSize.value * props.rowHeightRatio
+    const extra = Math.ceil((effectiveTopBarPx.value + effectiveBottomBarPx.value) / Math.max(1, gridAutoRowPx))
+    rows += extra
+  }
+
+  const entry = { colSpan: baseColSpan, rowSpan: rows }
   layoutSpans.value[m.id] = entry
 
   return {
@@ -963,7 +1074,8 @@ onUnmounted(() => {
   if (imageUpgradeTimer) window.clearInterval(imageUpgradeTimer)
 })
 
-function isVideoMedia(m: MediaGalleryMeta): boolean {
+function isVideoMedia(m?: MediaGalleryMeta): boolean {
+  if (!m) return false
   const url = m.url || ""
   const t = m.type ?? getMediaType(url)
   return t === "video"
@@ -1004,6 +1116,24 @@ function showVideoOverlay(id: string): boolean {
   return state !== false
 }
 
+// ----- Creator helpers (browse page) -----
+function showCreatorFor(m: MediaGalleryMeta): boolean {
+  try {
+    if (!props.showCreator) return false
+    if (!m?.creatorId || !m?.creatorUsername) return false
+    if (shouldMaskNsfw(m)) return false
+    return isVisible(m.id)
+  } catch {
+    return false
+  }
+}
+
+function goToCreator(m: MediaGalleryMeta) {
+  try {
+    if (!m?.creatorUsername) return
+    void router.push({ name: "profile", params: { username: m.creatorUsername } })
+  } catch {}
+}
 // ----- Model chip helpers -----
 type ModelChipMeta = {
   label: string
@@ -1167,249 +1297,374 @@ function prefetchImage(url: string): Promise<void> {
 </script>
 
 <template lang="pug">
-.full-width(:style="wrapperStyles")
-  div(
-    v-for="(m, index) in filteredGalleryItems"
-    :key="m.id"
-    :style="getItemStyle(m)"
-    :class="{ 'media-cell': true, 'is-selected': props.selectable && selectedSet.has(m.id) }"
-    v-observe="m.id"
+.full-width
+  // Initial skeleton shimmer when loading with no items
+  div(v-if="showSkeletons" :style="wrapperStyles" class="mg-grid")
+    div(v-for="i in skeletonCount" :key="'sk-'+i" class="mg-skel-cell")
+      q-skeleton(type="rect" animation="wave" class="mg-skel-box")
+
+  transition-group.mg-group(
+    v-else
+    tag="div"
+    name="mg"
+    :style="wrapperStyles"
   )
-    template(v-if="!isVideoMedia(m)")
-      .media-wrapper(:style="mediaStyles")
-        // Only mount heavy content when visible
-        template(v-if="isVisible(m.id)")
-          template(v-if="shouldMaskNsfw(m)")
-            div.nsfw-overlay(@click.stop="handleSelect(m, index)")
-              q-icon(name="sym_o_visibility_off" size="36px")
-              span.nsfw-label NSFW Content
-              span.nsfw-helper Tap to confirm viewing
+    div(
+      v-for="(m, index) in filteredGalleryItems"
+      :key="m.id"
+      :style="getItemStyle(m)"
+      :class="{ 'media-cell': true, 'is-selected': props.selectable && selectedSet.has(m.id) }"
+      v-observe="m.id"
+    )
+      template(v-if="!isVideoMedia(m)")
+        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic' }")
+          // Reserved top/bottom bars path
+          template(v-if="useReservedBars")
+            // Top bar (reserved space)
+            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }")
+              template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
+                q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+                q-btn(v-if="props.showUseAsInput && !m.placeholder" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
+                q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                  q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+            // Media area
+            .media-aspect(:style="mediaAspectBoxStyle")
+              // Only mount heavy content when visible
+              template(v-if="isVisible(m.id)")
+                template(v-if="shouldMaskNsfw(m)")
+                  div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+                    q-icon(name="sym_o_visibility_off" size="36px")
+                    span.nsfw-label NSFW Content
+                    span.nsfw-helper Tap to confirm viewing
+                template(v-else)
+                  // Loading overlay for images that are still rendering/propagating
+                  // Use v-show to avoid DOM remove/add and prevent pop
+                  div.loading-overlay(v-show="showImageOverlay(m.id)")
+                    div.loading-overlay__stack
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      span.loading-overlay__label Loading
+                  // Actual image (rendered underneath the overlay)
+                  q-img(
+                    :src="m.url"
+                    :key="imageReloadKey[m.id]"
+                    position="top"
+                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block; background-color:#000;"
+                    spinner-color="white"
+                    :class="props.selectable ? 'cursor-pointer' : ''"
+                    :img-attrs="{ 'data-id': m.id }"
+                    @load="markImageLoaded(m.id)"
+                    @error="markImageErrored(m.id)"
+                    @click="handleSelect(m, index)"
+                  )
+              template(v-else)
+                // Placeholder keeps layout without mounting the image element
+                div(style="width:100%; height:100%; background: #000;")
+              // Hidden overlay - keeps layout stable
+              .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+                .hidden-text Hidden
+                q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
+              // Model chip
+              .model-chip(
+                v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+                :class="{ 'is-clickable': props.enableModelChipSelect }"
+                @click.stop="onModelChipClick(m)"
+              ) {{ getModelLabel(m) }}
+            // Bottom bar (reserved space)
+            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
+              // Creator avatar + username (left side)
+              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                q-img(:src="avatarImg(m.creatorId!)" style="width:18px; height:18px; border-radius:50%;")
+                .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
+              // Popularity controls (right side when with-creator)
+              template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+                .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+                  .pop-item
+                    .upvote-burst-wrap
+                      q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
+                      transition(name="burst")
+                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
+                    span.count.empty 0
+            // Optional extra actions slot
+            slot(name="actions" :media="m" :index="index")
+          // Legacy overlay path (no reserved bars)
           template(v-else)
-            // Loading overlay for images that are still rendering/propagating
-            div.loading-overlay(v-if="showImageOverlay(m.id)")
-              div.loading-overlay__stack
-                q-spinner-gears(color="grey-10" size="120px")
-                span.loading-overlay__label Loading
-            // Actual image (rendered underneath the overlay)
-            q-img(
-              :src="m.url"
-              :key="imageReloadKey[m.id]"
-              position="top"
-              style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
-              spinner-color="white"
-              :class="props.selectable ? 'cursor-pointer' : ''"
-              :img-attrs="{ 'data-id': m.id }"
-              @load="markImageLoaded(m.id)"
-              @error="markImageErrored(m.id)"
-              @click="handleSelect(m, index)"
+            // Stable inner wrapper so swapping preview/img does not trigger group transitions
+            .media-fill
+              // Only mount heavy content when visible
+              template(v-if="isVisible(m.id)")
+                template(v-if="shouldMaskNsfw(m)")
+                  div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+                    q-icon(name="sym_o_visibility_off" size="36px")
+                    span.nsfw-label NSFW Content
+                    span.nsfw-helper Tap to confirm viewing
+                template(v-else)
+                  // Loading overlay for images that are still rendering/propagating
+                  div.loading-overlay(v-show="showImageOverlay(m.id)")
+                    div.loading-overlay__stack
+                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      span.loading-overlay__label Loading
+                  // Actual image (rendered underneath the overlay)
+                  q-img(
+                    :src="m.url"
+                    :key="imageReloadKey[m.id]"
+                    position="top"
+                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
+                    spinner-color="white"
+                    transition="none"
+                    :class="props.selectable ? 'cursor-pointer' : ''"
+                    :img-attrs="{ 'data-id': m.id }"
+                    @load="markImageLoaded(m.id)"
+                    @error="markImageErrored(m.id)"
+                    @click="handleSelect(m, index)"
+                  )
+              template(v-else)
+                // Placeholder keeps layout without mounting the image element
+                div.media-placeholder
+            // Top actions overlay (centered; matches bottom popularity row style)
+            .top-actions-overlay(
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
             )
-        template(v-else)
-          // Placeholder keeps layout without mounting the image element
-          div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
-        // Top actions overlay (centered; matches bottom popularity row style)
-        .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
-        )
-          // Add as input (images only)
-          // Delete
-          q-btn(
-            v-if="canDelete(m)"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            icon="delete"
-            @click.stop="handleDeleteClick(m)"
-            :loading="!!deleteLoading[m.id]"
-            :disable="deleteLoading[m.id] === true"
-          )
-          q-btn(
-            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            icon="add_photo_alternate"
-            @click.stop="addAsInput(m.id)"
-            :loading="!!addInputLoading[m.id]"
-            :disable="addInputLoading[m.id] === true"
-          )
-          // Visibility toggle
-          q-btn(
-            v-if="canTogglePrivacy(m)"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            :icon="m.isPublic ? 'public' : 'visibility_off'"
-            @click.stop="handleVisibilityClick(m)"
-            :loading="!!privacyLoading[m.requestId || '']"
-            :disable="privacyLoading[m.requestId || ''] === true"
-          )
-            q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
-        .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
-          .hidden-text Hidden
-          q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
-        // Model chip (bottom-left)
-        .model-chip(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
-          :class="{ 'is-clickable': props.enableModelChipSelect }"
-          @click.stop="onModelChipClick(m)"
-        ) {{ getModelLabel(m) }}
-        // Popularity overlay controls
-        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
-          .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
-            .pop-item
-              q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
-              span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
-            .pop-item
-              q-btn(
-                :size="popIconSize"
-                flat
-                dense
-                round
-                icon="chat_bubble"
-                color="white"
-                @click.stop="openCommentsFromOverlay(m)"
-              )
-              span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
-            .pop-item
-              .upvote-burst-wrap
-                q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
-                transition(name="burst")
-                  .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-              span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
-            .pop-item
-              q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
-              span.count.empty 0
-        // Per-item actions slot (optional)
-        slot(name="actions" :media="m" :index="index")
-          // default empty
-    template(v-else)
-      .media-wrapper(:style="mediaStyles")
-        // Only mount heavy content when visible
-        template(v-if="isVisible(m.id)")
-          template(v-if="shouldMaskNsfw(m)")
-            div.nsfw-overlay(@click.stop="handleSelect(m, index)")
-              q-icon(name="sym_o_visibility_off" size="36px")
-              span.nsfw-label NSFW Content
-              span.nsfw-helper Tap to confirm viewing
+              // Delete
+              q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+              // Add as input (images only)
+              q-btn(v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
+              // Visibility toggle
+              q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+            .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+              .hidden-text Hidden
+              q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'image')" label="Unhide")
+            // Model chip (bottom-left)
+            .model-chip(
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+              :class="{ 'is-clickable': props.enableModelChipSelect }"
+              @click.stop="onModelChipClick(m)"
+            ) {{ getModelLabel(m) }}
+            // Popularity overlay controls
+            .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
+              .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
+                .pop-item
+                  q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
+                .pop-item
+                  q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+                .pop-item
+                  .upvote-burst-wrap
+                    q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
+                    transition(name="burst")
+                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+                .pop-item
+                  q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
+                  span.count.empty 0
+            // Per-item actions slot (optional)
+            slot(name="actions" :media="m" :index="index")
+              // default empty
+      template(v-else)
+        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic' }")
+          // Reserved top/bottom bars path for videos
+          template(v-if="useReservedBars")
+            // Top bar
+            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }")
+              template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
+                q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+                q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                  q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+            // Media area
+            .media-aspect(:style="mediaAspectBoxStyle")
+              // Only mount heavy content when visible
+              template(v-if="isVisible(m.id)")
+                template(v-if="shouldMaskNsfw(m)")
+                  div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+                    q-icon(name="sym_o_visibility_off" size="36px")
+                    span.nsfw-label NSFW Content
+                    span.nsfw-helper Tap to confirm viewing
+                template(v-else)
+                  // Use v-show to avoid DOM remove/add and prevent pop
+                  div.loading-overlay(v-show="showVideoOverlay(m.id)")
+                    div.loading-overlay__stack
+                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      span.loading-overlay__label Loading
+                  div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                    video(
+                      :src="m.url"
+                      :key="videoReloadKey[m.id]"
+                      :data-id="m.id"
+                      loop autoplay muted playsinline
+                      @loadstart="markVideoLoadStart(m.id)"
+                      @canplay="markVideoLoaded(m.id)"
+                      @loadeddata="markVideoLoaded(m.id)"
+                      @error="markVideoErrored(m.id)"
+                      @click="handleSelect(m, index)"
+                      style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; background-color:#000;"
+                      :class="videoClass(m)"
+                    )
+              template(v-else)
+                // Placeholder keeps layout without mounting the video element
+                div(style="width:100%; height:100%; background: #000;")
+              // Hidden overlay - keeps layout stable
+              .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+                .hidden-text Hidden
+                q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
+              // Model chip
+              .model-chip(
+                v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+                :class="{ 'is-clickable': props.enableModelChipSelect }"
+                @click.stop="onModelChipClick(m)"
+              ) {{ getModelLabel(m) }}
+            // Bottom bar
+            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
+              // Creator avatar + username (left side)
+              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                q-img(:src="avatarImg(m.creatorId!)" style="width:18px; height:18px; border-radius:50%;")
+                .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
+              template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
+                .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+                  .pop-item
+                    .upvote-burst-wrap
+                      q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+                      transition(name="burst")
+                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                    span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+                  .pop-item
+                    q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
+                    span.count.empty 0
+          // Legacy overlay path (no reserved bars)
           template(v-else)
-            div.loading-overlay(v-if="showVideoOverlay(m.id)")
-              div.loading-overlay__stack
-                q-spinner-gears(color="grey-10" size="120px")
-                span.loading-overlay__label Loading
-            div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
-              video(
-                :src="m.url"
-                :key="videoReloadKey[m.id]"
-                :data-id="m.id"
-                loop autoplay muted playsinline
-                @loadstart="markVideoLoadStart(m.id)"
-                @canplay="markVideoLoaded(m.id)"
-                @loadeddata="markVideoLoaded(m.id)"
-                @error="markVideoErrored(m.id)"
-                @click="handleSelect(m, index)"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
-                :class="videoClass(m)"
-              )
-        template(v-else)
-          // Placeholder keeps layout without mounting the video element
-          div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
-        // Top actions overlay (centered; matches bottom popularity row style)
-        .top-actions-overlay(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
-        )
-          // Add as input (images only; for video items this won't show)
-          q-btn(
-            v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            icon="add_photo_alternate"
-            @click.stop="addAsInput(m.id)"
-            :loading="!!addInputLoading[m.id]"
-            :disable="addInputLoading[m.id] === true"
-          )
-          // Delete
-          q-btn(
-            v-if="canDelete(m)"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            icon="delete"
-            @click.stop="handleDeleteClick(m)"
-            :loading="!!deleteLoading[m.id]"
-            :disable="deleteLoading[m.id] === true"
-          )
-          // Visibility toggle
-          q-btn(
-            v-if="canTogglePrivacy(m)"
-            :size="popIconSize"
-            flat
-            dense
-            round
-            color="white"
-            :icon="m.isPublic ? 'public' : 'visibility_off'"
-            @click.stop="handleVisibilityClick(m)"
-            :loading="!!privacyLoading[m.requestId || '']"
-            :disable="privacyLoading[m.requestId || ''] === true"
-          )
-            q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
-        // Hidden overlay - keeps layout stable
-        .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
-          .hidden-text Hidden
-          q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
-        // Model chip (bottom-left)
-        .model-chip(
-          v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
-          :class="{ 'is-clickable': props.enableModelChipSelect }"
-          @click.stop="onModelChipClick(m)"
-        ) {{ getModelLabel(m) }}
-        // Popularity overlay controls
-        .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
-          .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
-            .pop-item
-              q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
-              span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
-            .pop-item
-              q-btn(
-                :size="popIconSize"
-                flat
-                dense
-                round
-                icon="chat_bubble"
-                color="white"
-                @click.stop="openCommentsFromOverlay(m)"
-              )
-              span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
-            .pop-item
-              .upvote-burst-wrap
-                q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
-                transition(name="burst")
-                  .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
-              span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
-            .pop-item
-              q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
-              span.count.empty 0
-        // Per-item actions slot (optional)
-        //- slot(name="actions" :media="m" :index="index")
-          // default empty
+            // Only mount heavy content when visible
+            template(v-if="isVisible(m.id)")
+              template(v-if="shouldMaskNsfw(m)")
+                div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+                  q-icon(name="sym_o_visibility_off" size="36px")
+                  span.nsfw-label NSFW Content
+                  span.nsfw-helper Tap to confirm viewing
+              template(v-else)
+                div.loading-overlay(v-if="showVideoOverlay(m.id)")
+                  div.loading-overlay__stack
+                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                    span.loading-overlay__label Loading
+                div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                  video(
+                    :src="m.url"
+                    :key="videoReloadKey[m.id]"
+                    :data-id="m.id"
+                    loop autoplay muted playsinline
+                    @loadstart="markVideoLoadStart(m.id)"
+                    @canplay="markVideoLoaded(m.id)"
+                    @loadeddata="markVideoLoaded(m.id)"
+                    @error="markVideoErrored(m.id)"
+                    @click="handleSelect(m, index)"
+                    style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
+                    :class="videoClass(m)"
+                  )
+            template(v-else)
+              // Placeholder keeps layout without mounting the video element
+              div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
+            // Top actions overlay (centered; matches bottom popularity row style)
+            .top-actions-overlay(
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+            )
+              // Add as input (images only; for video items this won't show)
+              q-btn(v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
+              // Delete
+              q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+              // Visibility toggle
+              q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+            // Hidden overlay - keeps layout stable
+            .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
+              .hidden-text Hidden
+              q-btn(size="sm" color="orange" flat @click.stop="popularity.unhide(m.id, 'video')" label="Unhide")
+            // Model chip (bottom-left)
+            .model-chip(
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && getModelLabel(m)"
+              :class="{ 'is-clickable': props.enableModelChipSelect }"
+              @click.stop="onModelChipClick(m)"
+            ) {{ getModelLabel(m) }}
+            // Popularity overlay controls
+            .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
+              .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
+                .pop-item
+                  q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
+                .pop-item
+                  q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
+                .pop-item
+                  .upvote-burst-wrap
+                    q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+                    transition(name="burst")
+                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                  span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
+                .pop-item
+                  q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
+                  span.count.empty 0
+          // Per-item actions slot (optional)
+          //- slot(name="actions" :media="m" :index="index")
+            // default empty
 </template>
 
 <style>
+/* Transition-group for grid/mosaic updates (name: mg) */
+/* Move-only transition: avoid enter/leave animations on initial swap */
+.mg-move {
+  transition: transform 140ms ease-out;
+}
+
+/* Skeleton grid sizing */
+.mg-grid {
+  width: 100%;
+}
+.mg-skel-cell {
+  width: 100%;
+  height: 100%;
+}
+.mg-skel-box {
+  width: 100%;
+  height: 100px;
+  border-radius: 6px;
+}
 .media-container {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
+  background: #000; /* black backdrop before media loads */
+}
+
+.media-fill {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000; /* ensure offscreen/unmounted area is black */
+}
+
+/* Inner aspect box used when reserved bars are enabled */
+.media-aspect {
+  background: #000; /* black before image/video renders */
+}
+
+.media-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #000; /* black placeholder */
 }
 
 .media-container img,
@@ -1435,6 +1690,11 @@ function prefetchImage(url: string): Promise<void> {
     box-shadow 120ms ease;
   /* Ensure absolutely-positioned overlays never push outside tiles */
   overflow: hidden;
+}
+
+.media-wrapper.mode-grid {
+  /* Ensure spinner/gears stay visible in grid */
+  min-height: 120px;
 }
 
 .loading-overlay {
@@ -1468,6 +1728,8 @@ function prefetchImage(url: string): Promise<void> {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  z-index: 1; /* ensure text renders above spinner */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 /* Selected state: subtle scale + inset highlight */
@@ -1501,6 +1763,76 @@ function prefetchImage(url: string): Promise<void> {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
   z-index: 2;
   pointer-events: auto;
+}
+
+/* Reserved bars (when enabled) */
+.mg-topbar,
+.mg-bottombar {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 10px; /* add breathing room so icons don't hug the image */
+}
+.mg-topbar {
+  /* dark background to visually connect with media */
+  background: rgba(0, 0, 0, 0.9);
+}
+.mg-bottombar {
+  background: rgba(0, 0, 0, 0.9);
+}
+.mg-bottombar.with-creator {
+  justify-content: space-between;
+}
+.mg-bottombar .creator-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  max-width: 50%;
+}
+.mg-bottombar .creator-meta .creator-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mg-bottombar .pop-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 10px;
+}
+.mg-bottombar .pop-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  justify-content: center;
+}
+.mg-bottombar .count {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.mg-bottombar .count.empty {
+  display: none;
+}
+.mg-bottombar .q-btn {
+  min-width: 0;
+}
+
+/* Slightly larger spacing on small screens */
+@media (max-width: 600px) {
+  .mg-topbar,
+  .mg-bottombar {
+    gap: 12px;
+    padding: 10px 12px;
+  }
 }
 
 /* Centered top actions row (matches bottom popularity overlay) */
@@ -1596,7 +1928,9 @@ function prefetchImage(url: string): Promise<void> {
 .model-chip.is-clickable {
   cursor: pointer;
   pointer-events: auto;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 .model-chip.is-clickable:hover {
   background: var(--q-primary);

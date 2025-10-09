@@ -475,6 +475,12 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       }
     }
 
+    // Pre-insert placeholder tiles immediately so the gallery shows progress without a blank state
+    const preQty = Math.max(1, requests.length)
+    const stampNow = Date.now()
+    const tempPlaceholderIds = Array.from({ length: preQty }, (_, i) => `pending-${stampNow}-${Math.random().toString(36).slice(2, 8)}-${i}`)
+    state.pendingPlaceholders.unshift(...tempPlaceholderIds)
+
     let batchId: string | null = null
     try {
       const res = await createQueueAsyncBatch({ requests })
@@ -490,15 +496,12 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     await userAuth.loadUserData()
     umami.track("createImage")
 
-    // Only add pending placeholders if the batch successfully queued
-    if (!batchId) return
-
-    // Immediately add placeholder tiles so users see progress while the batch runs
-    const qty = Math.max(1, requests.length)
-    const stamp = Date.now()
-    const placeholders = Array.from({ length: qty }, (_, i) => `pending-${stamp}-${Math.random().toString(36).slice(2, 8)}-${i}`)
-    // Add to the front so placeholders appear first in galleries
-    state.pendingPlaceholders.unshift(...placeholders)
+    // If the batch failed to queue, roll back the optimistic placeholders
+    if (!batchId) {
+      const toRemove = new Set(tempPlaceholderIds)
+      state.pendingPlaceholders = state.pendingPlaceholders.filter((id) => !toRemove.has(id))
+      return
+    }
 
     // Poll batch status every 2s and push finished jobs into the creations store as soon as they are ready
     const processedReqs = new Set<string>()

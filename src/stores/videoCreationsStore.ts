@@ -74,9 +74,8 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
       }
     },
     searchCreations(targetUserId?: string | null) {
-      // if (this.loadingCreations) return
-      this.creations = []
-      void this.loadCreations(targetUserId)
+      // Refresh without clearing UI to avoid flicker
+      void this.loadCreations(targetUserId, { reset: true, replace: true })
     },
     deleteCreation(creationId: string) {
       const index = this.creations.findIndex((i) => i.id === creationId)
@@ -109,12 +108,12 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
       this.favoritesCollectionId = null
       this.activeUserId = null
     },
-    async loadCreations(targetUserId?: string | null) {
+    async loadCreations(targetUserId?: string | null, opts?: { reset?: boolean; replace?: boolean }) {
       // Determine which user ID to use: targetUserId (for profiles) or authenticated user (for user's own creations)
       const userId = targetUserId
 
       // Compute params and a stable query key for de-duplication
-      const lastItem = this.creations[this.creations.length - 1]
+      const lastItem = opts?.reset ? undefined : this.creations[this.creations.length - 1]
       const params = {
         userId: userId || undefined,
         order: "desc" as const,
@@ -143,11 +142,20 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
         const creations = response.data
         if (!creations) return
 
-        for (const creation of creations) {
-          this.addItem({
+        if (opts?.replace) {
+          this.creations = creations.map((creation: any) => ({
             ...creation,
+            type: "video",
+            mediaIds: creation.videoIds,
             createdAt: new Date(creation.createdAt),
-          })
+          }))
+        } else {
+          for (const creation of creations) {
+            this.addItem({
+              ...creation,
+              createdAt: new Date(creation.createdAt),
+            })
+          }
         }
       } catch (err: any) {
         console.error("Error loading creations:", err)

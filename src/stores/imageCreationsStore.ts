@@ -86,9 +86,8 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       }
     },
     searchCreations(targetUserId?: string | null) {
-      // if (this.loadingCreations) return
-      this.creations = []
-      void this.loadCreations(targetUserId)
+      // Refresh the list without clearing UI to avoid flicker
+      void this.loadCreations(targetUserId, { reset: true, replace: true })
     },
     deleteCreation(creationId: string) {
       const index = this.creations.findIndex((i) => i.id === creationId)
@@ -132,19 +131,19 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     async setCustomModelId(customModelId: string, targetUserId?: string) {
       if (customModelId === this.customModelId) return
       this.customModelId = customModelId
-      this.creations = []
-      await this.loadCreations(targetUserId)
+      // Replace results once loaded; keep current list visible while fetching
+      await this.loadCreations(targetUserId, { reset: true, replace: true })
     },
     async clearCustomModelId(targetUserId?: string) {
       this.customModelId = null
-      this.creations = []
-      await this.loadCreations(targetUserId)
+      // Replace results once loaded; keep current list visible while fetching
+      await this.loadCreations(targetUserId, { reset: true, replace: true })
     },
-    async loadCreations(targetUserId?: string | null) {
+    async loadCreations(targetUserId?: string | null, opts?: { reset?: boolean; replace?: boolean }) {
       const userId = targetUserId
 
       // Build params and compute a query key for de-duplication
-      const lastItem = this.creations[this.creations.length - 1]
+      const lastItem = opts?.reset ? undefined : this.creations[this.creations.length - 1]
       const params = {
         userId: userId || undefined,
         order: "desc" as const,
@@ -176,12 +175,21 @@ export const useImageCreations = defineStore("imageCreationsStore", {
 
         const creations = response.data
         if (!creations) return
-
-        for (const creation of creations) {
-          this.addItem({
+        if (opts?.replace) {
+          // Replace the current list in one shot to avoid empty state between requests
+          this.creations = creations.map((creation: any) => ({
             ...creation,
+            type: "image",
+            mediaIds: creation.imageIds,
             createdAt: new Date(creation.createdAt),
-          })
+          }))
+        } else {
+          for (const creation of creations) {
+            this.addItem({
+              ...creation,
+              createdAt: new Date(creation.createdAt),
+            })
+          }
         }
       } catch (err: any) {
         console.error("Error loading creations:", err)

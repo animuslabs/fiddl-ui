@@ -39,6 +39,9 @@ interface BrowseRow {
   createdAt: string // ISO string
   aspectRatio: string
   media: { id: string; nsfw?: boolean }[] | null
+  // Optional creator metadata when provided by the API
+  creatorId?: string
+  creatorUsername?: string
 }
 type MediaTypeFilter = MediaType | "all"
 
@@ -190,6 +193,9 @@ export const useBrowserStore = defineStore("browserStore", {
             aspectRatio: aspectRatioToNumber(row.aspectRatio),
             createdAt: new Date(row.createdAt),
             nsfw: m.nsfw === true,
+            // pass-through optional creator metadata (when present)
+            creatorId: (row as any).creatorId,
+            creatorUsername: (row as any).creatorUsername,
           }
 
           if (prepend) {

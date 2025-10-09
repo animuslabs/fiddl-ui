@@ -42,7 +42,8 @@ export const useMissionsStore = defineStore("missionsStore", {
           return { type: "points", amount: 0 }
         })
       }
-      return (state.missions || []).map((m) => ({
+      const list: MissionsList200Item[] = Array.isArray(state.missions) ? state.missions : []
+      return list.map((m) => ({
         ...m,
         progress: state.progressMap[m.id] ?? 0,
         rewardsNormalized: normalize(m.rewards || []),

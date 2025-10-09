@@ -29,7 +29,6 @@ q-card.q-pa-md.blurbg.full-height.fadeIn(style="min-height:200px;")
 }
 </style>
 <script setup lang="ts">
-import { defineComponent, defineProps } from "vue"
 const props = defineProps<{
   title: string
   description: string

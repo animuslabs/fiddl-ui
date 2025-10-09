@@ -26,7 +26,7 @@
   </template>
 
 <script setup lang="ts">
-import { computed, ref, defineEmits, onMounted } from "vue"
+import { computed, ref, onMounted } from "vue"
 import { Dialog, Notify, useQuasar } from "quasar"
 import { useForgeStore } from "stores/forgeStore"
 import { sleep } from "lib/util"

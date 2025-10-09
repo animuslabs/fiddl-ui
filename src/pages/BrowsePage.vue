@@ -3,7 +3,8 @@ q-page.full-height.full-width.relative-position
   .centered.relative-position
     // The search bar is fixed; we add a spacer below based on its runtime height
     SearchBar(ref="searchBarRef" @setViewMode="viewMode = $event" fixed)
-  .q-ma-md
+  // Use full margin on desktop/tablet; remove top margin on small screens
+  div(:class="isSmallScreen ? 'q-mx-md q-mb-md' : 'q-ma-md'")
     .full-width(:style="{ height: searchBarHeight + 'px' }")
       .centered
         q-linear-progress(
@@ -18,6 +19,9 @@ q-page.full-height.full-width.relative-position
         :layout="viewMode"
         :rowHeightRatio="1.2"
         :show-loading="false"
+        :top-bar-height="18"
+        :bottom-bar-height="26"
+        show-creator
         gap="8px"
         :show-use-as-input="true"
         @select="handleSelect"
@@ -30,7 +34,7 @@ q-page.full-height.full-width.relative-position
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onUnmounted, nextTick } from "vue"
+import { defineComponent, ref, onMounted, onUnmounted, nextTick, computed } from "vue"
 import { useBrowserStore } from "stores/browserStore"
 import { throttle, useQuasar } from "quasar"
 import SearchBar from "src/components/BrowserSearchBar.vue"
@@ -58,6 +62,7 @@ export default defineComponent({
     const viewMode = ref<"grid" | "mosaic">($q.screen.lt.sm ? "grid" : "mosaic")
     const searchBarRef = ref<any>(null)
     const searchBarHeight = ref(56)
+    const isSmallScreen = computed(() => $q.screen.lt.md)
 
     const onScroll = throttle(() => void browserStore.loadCreations(), 1000)
     const onScrollUp = throttle(() => void browserStore.loadRecentCreations(), 1000)
@@ -113,6 +118,7 @@ export default defineComponent({
       viewMode,
       searchBarRef,
       searchBarHeight,
+      isSmallScreen,
     }
   },
 })

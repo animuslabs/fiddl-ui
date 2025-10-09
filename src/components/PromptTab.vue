@@ -29,8 +29,20 @@
                   q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
 
             .centered
-              div(v-if="gridMode == 'list'" v-for="creation in activeCreationsStore.creations"  :key="creation.id").full-width.q-pr-md.q-pl-md
-                ImageRequestCard(:creation="creation")
+              // Initial loading skeletons for list mode
+              div(v-if="gridMode === 'list' && showInitialLoading").full-width.q-pr-md.q-pl-md
+                div(v-for="i in 5" :key="'skl-list-'+i" class="q-mb-md")
+                  q-card
+                    q-skeleton(type="rect" height="170px" animation="wave")
+              // Animated list when items are present
+              transition-group(
+                v-else-if="gridMode === 'list'"
+                name="fade-list"
+                tag="div"
+                class="full-width q-pr-md q-pl-md"
+              )
+                div(v-for="creation in activeCreationsStore.creations" :key="creation.id" class="full-width q-mb-md")
+                  ImageRequestCard(:creation="creation")
               MediaGallery.q-pl-md.q-pr-md(
                 :key="`mosaic-${currentTab}`"
                 v-else-if="gridMode == 'mosaic'"
@@ -40,7 +52,7 @@
                 :mediaObjects="allMediaObjects"
                 layout="mosaic"
                 :rowHeightRatio="1.2"
-                :show-loading="false"
+                :show-loading="true"
                 gap="8px"
                 :cols-desktop="8"
                 :thumb-size-desktop="90"
@@ -63,6 +75,7 @@
                 :rowHeightRatio="1"
                 layout="grid"
                 :mediaObjects="allMediaObjects"
+                :show-loading="true"
                 :disable-nsfw-mask="true"
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
@@ -189,6 +202,13 @@ export default defineComponent({
     }
   },
   computed: {
+    showInitialLoading(): boolean {
+      const store = this.activeCreationsStore
+      const loading = !!store?.loadingCreations
+      const empty = !Array.isArray(store?.creations) || store.creations.length === 0
+      const notLoadedYet = !this.createContext?.state?.hasLoaded?.[this.currentTab]
+      return empty && (loading || notLoadedYet)
+    },
     imageMediaObjects(): MediaGalleryMeta[] {
       const base = this.buildMediaGalleryItems(this.imageCreations.creations, "image")
       const pending = this.createImageStore.state.pendingPlaceholders || []
@@ -498,3 +518,17 @@ export default defineComponent({
   },
 })
 </script>
+
+<style scoped>
+/* Smooth list transitions */
+.fade-list-enter-active,
+.fade-list-leave-active,
+.fade-list-move {
+  transition: all 180ms ease;
+}
+.fade-list-enter-from,
+.fade-list-leave-to {
+  opacity: 0.01;
+  transform: translateY(6px);
+}
+</style>
