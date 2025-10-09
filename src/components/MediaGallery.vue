@@ -598,6 +598,20 @@ const filteredGalleryItems = computed(() => {
   return list.filter((el) => !!el && (typeof (el as any).id === "string" || typeof (el as any).id === "number"))
 })
 
+// When placeholders are present, disable move transitions to avoid a janky
+// shuffle effect when the real items replace them in place.
+const hasPlaceholders = computed(() => {
+  try {
+    return filteredGalleryItems.value.some((it) => it?.placeholder === true || (typeof (it as any)?.id === "string" && String((it as any).id).startsWith("pending-")))
+  } catch {
+    return false
+  }
+})
+
+// Use a different transition-group name while placeholders exist so the
+// generated "*-move" class has no CSS and items don't animate movement.
+const groupTransitionName = computed(() => (hasPlaceholders.value ? "mg-off" : "mg"))
+
 // Cache per-item layout spans so size stays stable across load/unload
 // This prevents grid jumpiness when media mounts/unmounts or updates its ratio
 const layoutSpans = ref<Record<string, { colSpan?: number; rowSpan: number }>>({})
@@ -1306,7 +1320,7 @@ function prefetchImage(url: string): Promise<void> {
   transition-group.mg-group(
     v-else
     tag="div"
-    name="mg"
+    :name="groupTransitionName"
     :style="wrapperStyles"
   )
     div(
@@ -1373,7 +1387,7 @@ function prefetchImage(url: string): Promise<void> {
             .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
               // Creator avatar + username (left side)
               .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId!)" style="width:18px; height:18px; border-radius:50%;")
+                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
                 .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
               // Popularity controls (right side when with-creator)
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
@@ -1526,7 +1540,7 @@ function prefetchImage(url: string): Promise<void> {
             .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
               // Creator avatar + username (left side)
               .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId!)" style="width:18px; height:18px; border-radius:50%;")
+                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
                 .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
