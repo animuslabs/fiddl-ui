@@ -164,6 +164,8 @@ export default defineComponent({
       return ALL.filter((t) => t !== "asyncError")
     },
     isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
+      // Show critical errors regardless of the "Show my activity" toggle
+      if (ev.type === "asyncError") return false
       const uid = this.$userAuth?.userId
       if (!uid) return false
       return ev.originUserId === uid
@@ -336,6 +338,20 @@ export default defineComponent({
     messageFor(ev: EventsPrivateEvents200Item) {
       const u = ev.originUsername || "someone"
       switch (ev.type) {
+        case "asyncError": {
+          const data = this.parseData(ev) || {}
+          const mediaType = (data.mediaType || data.media_type || (data.videoId || data.video_id ? "video" : "image")) as
+            | "image"
+            | "video"
+          const refund =
+            data.refund ?? data.refunded ?? data.refundPoints ?? data.refundedPoints ?? data.pointsRefunded ??
+            data.refund_points
+          const reason = String(data.reason || data.error || data.message || "").trim()
+          const base = `Generation failed for your ${mediaType}`
+          const refundMsg = typeof refund === "number" && refund > 0 ? ` — refunded ${refund} points` : ""
+          const reasonMsg = reason ? ` — ${reason}` : ""
+          return `${base}${refundMsg}${reasonMsg}`
+        }
         case "likedImage":
           return `@${u} liked your image`
         case "likedVideo":

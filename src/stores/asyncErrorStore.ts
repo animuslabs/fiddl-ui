@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { Dialog, Platform } from "quasar"
+import { Dialog, Platform, LocalStorage } from "quasar"
 import {
   eventsPrivateEvents,
   eventsMarkEventSeen,
@@ -18,8 +18,40 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
     _visHandler: null as any,
     _pendingIds: new Set<string>(),
     _showing: false,
+    _shownCounts: {} as Record<string, number>,
   }),
   actions: {
+    _loadShownCounts() {
+      try {
+        const obj = LocalStorage.getItem("asyncErrorShownCounts") as any
+        if (obj && typeof obj === "object") this._shownCounts = { ...obj }
+      } catch {
+        /* ignore */
+      }
+    },
+    _saveShownCounts() {
+      try {
+        // Trim to the most recent 100 entries to avoid unbounded growth
+        const entries = Object.entries(this._shownCounts)
+        if (entries.length > 120) {
+          const limited = Object.fromEntries(entries.slice(entries.length - 100))
+          LocalStorage.set("asyncErrorShownCounts", limited)
+        } else {
+          LocalStorage.set("asyncErrorShownCounts", this._shownCounts)
+        }
+      } catch {
+        /* ignore */
+      }
+    },
+    _getShownCount(id: string): number {
+      if (!this._shownCounts || Object.keys(this._shownCounts).length === 0) this._loadShownCounts()
+      return Number(this._shownCounts?.[id] || 0)
+    },
+    _incrementShown(id: string) {
+      const next = this._getShownCount(id) + 1
+      this._shownCounts[id] = next
+      this._saveShownCounts()
+    },
     startPolling() {
       const auth = useUserAuth()
       if (!auth.loggedIn) return
@@ -77,7 +109,12 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
         const { data } = await eventsPrivateEvents(params)
         const events = Array.isArray(data) ? data : []
         const unseenNew = events
-          .filter((e) => e.type === "asyncError" && !this._pendingIds.has(e.id))
+          .filter(
+            (e) =>
+              e.type === "asyncError" &&
+              !this._pendingIds.has(e.id) &&
+              this._getShownCount(e.id) < 2,
+          )
           .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
         for (const ev of unseenNew) this._pendingIds.add(ev.id)
         if (unseenNew.length > 0) await this._drainQueueSequential(unseenNew)
@@ -90,8 +127,10 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
       this._showing = true
       try {
         for (const ev of queue) {
+          // Skip if already shown twice in this or a previous session
+          if (this._getShownCount(ev.id) >= 2) continue
           const payload = this._parse(ev)
-          const message = (payload?.message && String(payload.message)) || "An unexpected error occurred."
+          const message = this._buildMessage(ev, payload)
           await new Promise<void>((resolve) => {
             Dialog.create({
               title: "Generation Error",
@@ -100,12 +139,15 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
               persistent: Platform.is.mobile, // avoid accidental dismiss on mobile
             }).onOk(() => resolve())
           })
+          // Count this display regardless of server state
+          this._incrementShown(ev.id)
           try {
             await eventsMarkEventSeen({ eventId: ev.id })
-          } catch {
-            // If mark seen fails, keep id in pending set to avoid spamming this session
-          } finally {
+            // On success, remove from pending set so store stays tidy
             this._pendingIds.delete(ev.id)
+          } catch {
+            // If mark seen fails, keep id in pending set to avoid spamming.
+            // It will be naturally cleared on reload; shown-count also enforces a hard cap.
           }
         }
       } finally {
@@ -119,6 +161,25 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
         return null
       }
     },
+    _buildMessage(ev: EventsPrivateEvents200Item, payload: any): string {
+      const p = payload || {}
+      const type = String(
+        p.mediaType || p.media_type || (p.videoId || p.video_id ? "video" : p.imageId || p.image_id ? "image" : "item"),
+      )
+      const refund = [
+        p.refund,
+        p.refunded,
+        p.refundPoints,
+        p.refundedPoints,
+        p.pointsRefunded,
+        p.refund_points,
+      ].find((v: any) => typeof v === "number")
+      const reason = String(p.reason || p.error || p.message || "").trim()
+
+      const base = `We hit an issue generating your ${type}.`
+      const refundMsg = typeof refund === "number" && refund > 0 ? ` A refund of ${refund} points was applied to your account.` : ""
+      const reasonMsg = reason ? `\n\nDetails: ${reason}` : ""
+      return `${base}${refundMsg}${reasonMsg}`
+    },
   },
 })
-

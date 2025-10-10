@@ -101,6 +101,116 @@ const videoReloadKey = ref<Record<string, number>>({})
 const imageLoading = ref<Record<string, boolean>>({})
 const imageReloadKey = ref<Record<string, number>>({})
 
+// ----- Mobile pinch-to-zoom (ephemeral) -----
+// Shows a temporary fixed overlay while user pinches an image tile on mobile.
+// When they release, the image snaps back and overlay hides.
+const pinchActiveId = ref<string | null>(null)
+const pinchImageUrl = ref<string>("")
+const pinchScale = ref(1)
+const pinchOrigin = ref({ x: 0, y: 0 }) // transform-origin within the tile rect
+const pinchStartDistance = ref(0)
+const pinchStartRect = ref<{ left: number; top: number; width: number; height: number } | null>(null)
+const pinchSuppressClick = ref(false)
+// Computed inline style for the pinch overlay image to avoid long inline Pug expression
+const pinchImageStyle = computed(() => {
+  const r = pinchStartRect.value
+  return {
+    left: ((r?.left ?? 0) as number) + "px",
+    top: ((r?.top ?? 0) as number) + "px",
+    width: ((r?.width ?? 0) as number) + "px",
+    height: ((r?.height ?? 0) as number) + "px",
+    transformOrigin: `${pinchOrigin.value.x}px ${pinchOrigin.value.y}px`,
+    transform: `scale(${pinchScale.value})`,
+  } as Record<string, string>
+})
+
+function getTouches(ev: TouchEvent): [Touch, Touch] | null {
+  if (!ev || !ev.touches || ev.touches.length < 2) return null
+  const t1 = typeof ev.touches.item === "function" ? ev.touches.item(0) : (ev.touches[0] as Touch | undefined)
+  const t2 = typeof ev.touches.item === "function" ? ev.touches.item(1) : (ev.touches[1] as Touch | undefined)
+  if (!t1 || !t2) return null
+  return [t1, t2]
+}
+
+function dist(a: Touch, b: Touch): number {
+  const dx = a.clientX - b.clientX
+  const dy = a.clientY - b.clientY
+  return Math.hypot(dx, dy)
+}
+
+function onPinchStart(ev: TouchEvent, m: MediaGalleryMeta) {
+  try {
+    if (!isMobile.value) return
+    const pair = getTouches(ev)
+    if (!pair) return
+    // Avoid interfering with NSFW mask or placeholders
+    if (shouldMaskNsfw(m) || m.placeholder) return
+
+    const [t1, t2] = pair
+    const target = ev.target as HTMLElement | null
+    // Find the media box element to measure initial rect
+    const host = (target?.closest?.(".media-aspect") || target?.closest?.(".media-fill") || target) as HTMLElement | null
+    const rect = host?.getBoundingClientRect?.()
+    if (!rect) return
+
+    pinchActiveId.value = m.id
+    pinchImageUrl.value = m.url || img(m.id, "lg")
+    pinchStartRect.value = { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+    pinchStartDistance.value = dist(t1, t2)
+    // Center between touches relative to the host top-left for transform-origin
+    const cx = (t1.clientX + t2.clientX) / 2
+    const cy = (t1.clientY + t2.clientY) / 2
+    pinchOrigin.value = { x: cx - rect.left, y: cy - rect.top }
+    pinchScale.value = 1
+    pinchSuppressClick.value = true
+    // Prevent the page from scrolling/zooming while active
+    ev.preventDefault()
+  } catch {}
+}
+
+function onPinchMove(ev: TouchEvent) {
+  try {
+    if (!pinchActiveId.value) return
+    const pair = getTouches(ev)
+    if (!pair) return
+    const [t1, t2] = pair
+    const start = pinchStartRect.value
+    if (!start || !pinchStartDistance.value) return
+    const currentDist = dist(t1, t2)
+    let scale = currentDist / pinchStartDistance.value
+    // Clamp scale for a reasonable zoom range
+    scale = Math.max(1, Math.min(3, scale))
+    pinchScale.value = scale
+    // Update origin to follow finger midpoint (relative to initial rect)
+    const cx = (t1.clientX + t2.clientX) / 2
+    const cy = (t1.clientY + t2.clientY) / 2
+    pinchOrigin.value = { x: cx - start.left, y: cy - start.top }
+    ev.preventDefault()
+  } catch {}
+}
+
+function onPinchEnd(ev: TouchEvent) {
+  try {
+    if (!pinchActiveId.value) return
+    // If still two touches remain, ignore; otherwise snap back and hide
+    if (ev.touches && ev.touches.length >= 2) return
+    // Snap back animation: set scale to 1, then clear overlay after a tick
+    pinchScale.value = 1
+    const clear = () => {
+      pinchActiveId.value = null
+      pinchImageUrl.value = ""
+      pinchStartRect.value = null
+    }
+    // Give CSS transition a moment (matches 120ms in styles)
+    window.setTimeout(clear, 140)
+    // Suppress the click that follows touchend so we don't open the viewer
+    window.setTimeout(() => {
+      pinchSuppressClick.value = false
+    }, 200)
+    ev.preventDefault()
+  } catch {}
+}
+
 // Progressive image upgrade state
 const imageTargetSize = ref<Record<string, ImageSize>>({})
 const imageCurrentSize = ref<Record<string, ImageSize>>({})
@@ -181,9 +291,13 @@ const gridMinSize = computed(() => {
 })
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
 const popularity = usePopularityStore()
-// Popularity button sizing: larger on phones when in grid view
+// Popularity button sizing: slightly reduced on phones (−20%)
 const popIconSize = computed(() => {
-  if (isPhone.value) return layoutEffective.value === "grid" ? "18px" : "10px"
+  if (isPhone.value) {
+    // Previously 18px (grid) and 10px (mosaic) on phones
+    // Reduce by 20% to make targets a bit more compact
+    return layoutEffective.value === "grid" ? "10px" : "8px"
+  }
   return "8px"
 })
 
@@ -354,6 +468,12 @@ async function handleSelect(media: MediaGalleryMeta, index: number) {
   emit("selectedIndex", index)
 }
 
+// Wrap image click to avoid firing after a pinch gesture
+function onImageClick(media: MediaGalleryMeta, index: number) {
+  if (pinchSuppressClick.value) return
+  void handleSelect(media, index)
+}
+
 function onFavorite(id: string, type: MediaType) {
   if (!userAuth.loggedIn) {
     Dialog.create({
@@ -495,12 +615,14 @@ function toPxNumber(v: number | string | undefined | null): number {
 
 const topBarPx = computed(() => toPxNumber(props.topBarHeight))
 const bottomBarPx = computed(() => toPxNumber(props.bottomBarHeight))
-const useReservedBars = computed(() => topBarPx.value > 0 || bottomBarPx.value > 0)
+// Use reserved bars (black padding) only on smaller screens.
+// On larger screens we revert to overlay controls regardless of provided heights.
+const useReservedBars = computed(() => $q.screen.lt.md && (topBarPx.value > 0 || bottomBarPx.value > 0))
 
 // Ensure bar heights are adequate for current icon size, especially on phones
 const iconPxNum = computed(() => toPxNumber(popIconSize.value as unknown as string))
 // Mobile scales bars a bit larger to avoid overflow with bigger icons
-const mobileBarScale = computed(() => (isPhone.value ? 2.2 : 1))
+const mobileBarScale = computed(() => (isPhone.value ? 1 : 1))
 const effectiveTopBarPx = computed(() => {
   if (topBarPx.value <= 0) return 0
   const minPad = isPhone.value ? iconPxNum.value + 10 : iconPxNum.value + 8
@@ -535,7 +657,11 @@ const mediaWrapperStyle = computed(() => {
   // continue to set aspect ratio on the wrapper for backward-compat.
   if (!useReservedBars.value) {
     if (layoutEffective.value === "grid") {
-      base.height = "100%"
+      // Important: let aspect-ratio compute the height. If we force height:100%
+      // without an explicit parent height, the box collapses to the min-height
+      // fallback and appears as a thin strip until the image loads.
+      // Using height:auto here makes the placeholder square and avoids layout jump.
+      base.height = "auto"
       base.aspectRatio = "1 / 1"
     } else {
       base.width = "100%"
@@ -598,19 +724,8 @@ const filteredGalleryItems = computed(() => {
   return list.filter((el) => !!el && (typeof (el as any).id === "string" || typeof (el as any).id === "number"))
 })
 
-// When placeholders are present, disable move transitions to avoid a janky
-// shuffle effect when the real items replace them in place.
-const hasPlaceholders = computed(() => {
-  try {
-    return filteredGalleryItems.value.some((it) => it?.placeholder === true || (typeof (it as any)?.id === "string" && String((it as any).id).startsWith("pending-")))
-  } catch {
-    return false
-  }
-})
-
-// Use a different transition-group name while placeholders exist so the
-// generated "*-move" class has no CSS and items don't animate movement.
-const groupTransitionName = computed(() => (hasPlaceholders.value ? "mg-off" : "mg"))
+// Note: We intentionally avoid any TransitionGroup move animations for the
+// gallery to keep item updates snappy and avoid re-order jank.
 
 // Cache per-item layout spans so size stays stable across load/unload
 // This prevents grid jumpiness when media mounts/unmounts or updates its ratio
@@ -621,6 +736,16 @@ watch(
   () => [cols.value, props.rowHeightRatio, layoutEffective.value, thumbSize.value, props.centerAlign],
   () => {
     layoutSpans.value = {}
+  },
+)
+
+// When switching between small/large screens, the reserved-bars mode may flip.
+// Reset cached spans so mosaic recalculates row spans with/without bar rows.
+watch(
+  () => useReservedBars.value,
+  () => {
+    layoutSpans.value = {}
+    void buildItems(props.mediaObjects)
   },
 )
 
@@ -748,7 +873,16 @@ function markVideoLoaded(id: string) {
     if (el.videoWidth && el.videoHeight) {
       const realAspect = el.videoWidth / el.videoHeight
       const item = galleryItems.value.find((i) => i.id === id)
-      if (item) item.aspectRatio = realAspect
+      if (item) {
+        const prev = item.aspectRatio
+        // If aspect changed meaningfully, drop cached grid spans so the tile
+        // can grow/shrink to the correct height (important for tall media in
+        // mobile mosaic with reserved padding/bars).
+        if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
+          delete layoutSpans.value[id]
+        }
+        item.aspectRatio = realAspect
+      }
     }
   }
 }
@@ -763,7 +897,15 @@ function markImageLoaded(id: string) {
   if (im && im.naturalWidth && im.naturalHeight) {
     const realAspect = im.naturalWidth / im.naturalHeight
     const item = galleryItems.value.find((i) => i.id === id)
-    if (item) item.aspectRatio = realAspect
+    if (item) {
+      const prev = item.aspectRatio
+      // Clear cached mosaic row/col spans when the real aspect arrives so the
+      // grid can reflow and reveal the full image height on mobile.
+      if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
+        delete layoutSpans.value[id]
+      }
+      item.aspectRatio = realAspect
+    }
   }
 }
 
@@ -1312,15 +1454,19 @@ function prefetchImage(url: string): Promise<void> {
 
 <template lang="pug">
 .full-width
+  // Pinch zoom overlay (mobile only). Displays while pinching a tile
+  div.pinch-zoom-overlay(v-if="pinchActiveId && pinchStartRect")
+    img.pinch-zoom-img(
+      :src="pinchImageUrl"
+      :style="pinchImageStyle"
+    )
   // Initial skeleton shimmer when loading with no items
   div(v-if="showSkeletons" :style="wrapperStyles" class="mg-grid")
     div(v-for="i in skeletonCount" :key="'sk-'+i" class="mg-skel-cell")
       q-skeleton(type="rect" animation="wave" class="mg-skel-box")
 
-  transition-group.mg-group(
+  div.mg-group(
     v-else
-    tag="div"
-    :name="groupTransitionName"
     :style="wrapperStyles"
   )
     div(
@@ -1335,12 +1481,18 @@ function prefetchImage(url: string): Promise<void> {
           // Reserved top/bottom bars path
           template(v-if="useReservedBars")
             // Top bar (reserved space)
-            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }")
+            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
-                q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
-                q-btn(v-if="props.showUseAsInput && !m.placeholder" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
-                q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
-                  q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+                // Creator avatar + username (left)
+                .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                  q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                  .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
+                // Actions (right)
+                div(style="display:flex; align-items:center; gap:10px;")
+                  q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+                  q-btn(v-if="props.showUseAsInput && !m.placeholder" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
+                  q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                    q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
             // Media area
             .media-aspect(:style="mediaAspectBoxStyle")
               // Only mount heavy content when visible
@@ -1368,7 +1520,11 @@ function prefetchImage(url: string): Promise<void> {
                     :img-attrs="{ 'data-id': m.id }"
                     @load="markImageLoaded(m.id)"
                     @error="markImageErrored(m.id)"
-                    @click="handleSelect(m, index)"
+                    @click="onImageClick(m, index)"
+                    @touchstart="onPinchStart($event, m)"
+                    @touchmove="onPinchMove"
+                    @touchend="onPinchEnd"
+                    @touchcancel="onPinchEnd"
                   )
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
@@ -1384,12 +1540,8 @@ function prefetchImage(url: string): Promise<void> {
                 @click.stop="onModelChipClick(m)"
               ) {{ getModelLabel(m) }}
             // Bottom bar (reserved space)
-            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
-              // Creator avatar + username (left side)
-              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
-                .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
-              // Popularity controls (right side when with-creator)
+            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }")
+              // Popularity controls
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                   .pop-item
@@ -1402,7 +1554,7 @@ function prefetchImage(url: string): Promise<void> {
                     .upvote-burst-wrap
                       q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
                       transition(name="burst")
-                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") | +{{ upvoteBursts[m.id]?.count || 0 }}
                     span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
                   .pop-item
                     q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
@@ -1424,7 +1576,7 @@ function prefetchImage(url: string): Promise<void> {
                   // Loading overlay for images that are still rendering/propagating
                   div.loading-overlay(v-show="showImageOverlay(m.id)")
                     div.loading-overlay__stack
-                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
                   // Actual image (rendered underneath the overlay)
                   q-img(
@@ -1438,15 +1590,22 @@ function prefetchImage(url: string): Promise<void> {
                     :img-attrs="{ 'data-id': m.id }"
                     @load="markImageLoaded(m.id)"
                     @error="markImageErrored(m.id)"
-                    @click="handleSelect(m, index)"
+                    @click="onImageClick(m, index)"
+                    @touchstart="onPinchStart($event, m)"
+                    @touchmove="onPinchMove"
+                    @touchend="onPinchEnd"
+                    @touchcancel="onPinchEnd"
                   )
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
                 div.media-placeholder
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
-              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
             )
+              // Creator profile
+              q-btn(v-if="showCreatorFor(m)" :size="popIconSize" flat dense round color="white" icon="alternate_email" @click.stop="goToCreator(m)")
+                q-tooltip @{{ m.creatorUsername }}
               // Delete
               q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
               // Add as input (images only)
@@ -1476,7 +1635,7 @@ function prefetchImage(url: string): Promise<void> {
                   .upvote-burst-wrap
                     q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'image')")
                     transition(name="burst")
-                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") | +{{ upvoteBursts[m.id]?.count || 0 }}
                   span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
                 .pop-item
                   q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'image')")
@@ -1489,11 +1648,17 @@ function prefetchImage(url: string): Promise<void> {
           // Reserved top/bottom bars path for videos
           template(v-if="useReservedBars")
             // Top bar
-            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }")
+            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
-                q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
-                q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
-                  q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
+                // Creator avatar + username (left)
+                .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                  q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                  .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
+                // Actions (right)
+                div(style="display:flex; align-items:center; gap:10px;")
+                  q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
+                  q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
+                    q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
             // Media area
             .media-aspect(:style="mediaAspectBoxStyle")
               // Only mount heavy content when visible
@@ -1507,7 +1672,7 @@ function prefetchImage(url: string): Promise<void> {
                   // Use v-show to avoid DOM remove/add and prevent pop
                   div.loading-overlay(v-show="showVideoOverlay(m.id)")
                     div.loading-overlay__stack
-                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
                   div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
                     video(
@@ -1537,11 +1702,7 @@ function prefetchImage(url: string): Promise<void> {
                 @click.stop="onModelChipClick(m)"
               ) {{ getModelLabel(m) }}
             // Bottom bar
-            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
-              // Creator avatar + username (left side)
-              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
-                .creator-name(title="@{{ m.creatorUsername }}") @{{ m.creatorUsername }}
+            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }")
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                   .pop-item
@@ -1554,7 +1715,7 @@ function prefetchImage(url: string): Promise<void> {
                     .upvote-burst-wrap
                       q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
                       transition(name="burst")
-                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                        .upvote-burst(v-if="upvoteBursts[m.id]?.visible") | +{{ upvoteBursts[m.id]?.count || 0 }}
                     span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
                   .pop-item
                     q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
@@ -1592,8 +1753,11 @@ function prefetchImage(url: string): Promise<void> {
               div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
-              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')))"
+              v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
             )
+              // Creator profile
+              q-btn(v-if="showCreatorFor(m)" :size="popIconSize" flat dense round color="white" icon="alternate_email" @click.stop="goToCreator(m)")
+                q-tooltip @{{ m.creatorUsername }}
               // Add as input (images only; for video items this won't show)
               q-btn(v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
               // Delete
@@ -1622,12 +1786,12 @@ function prefetchImage(url: string): Promise<void> {
                   span.count(:class="{ empty: !(popularity.get(m.id)?.commentsCount) }") {{ popularity.get(m.id)?.commentsCount ?? 0 }}
                 .pop-item
                   .upvote-burst-wrap
-                    q-btn( :size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
+                    q-btn(:size="popIconSize" flat dense round :icon="popularity.get(m.id)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'" @click.stop="onUpvote(m.id, 'video')")
                     transition(name="burst")
-                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") +{{ upvoteBursts[m.id]?.count || 0 }}
+                      .upvote-burst(v-if="upvoteBursts[m.id]?.visible") | +{{ upvoteBursts[m.id]?.count || 0 }}
                   span.count(:class="{ empty: !(popularity.get(m.id)?.upvotes) }") {{ popularity.get(m.id)?.upvotes ?? 0 }}
                 .pop-item
-                  q-btn( :size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
+                  q-btn(:size="popIconSize" flat dense round icon="thumb_down" color="white" @click.stop="popularity.downvoteAndHide(m.id, 'video')")
                   span.count.empty 0
           // Per-item actions slot (optional)
           //- slot(name="actions" :media="m" :index="index")
@@ -1635,11 +1799,7 @@ function prefetchImage(url: string): Promise<void> {
 </template>
 
 <style>
-/* Transition-group for grid/mosaic updates (name: mg) */
-/* Move-only transition: avoid enter/leave animations on initial swap */
-.mg-move {
-  transition: transform 140ms ease-out;
-}
+/* Transition-group moves disabled intentionally for snappier updates */
 
 /* Skeleton grid sizing */
 .mg-grid {
@@ -1797,9 +1957,13 @@ function prefetchImage(url: string): Promise<void> {
 .mg-bottombar {
   background: rgba(0, 0, 0, 0.9);
 }
+.mg-topbar.with-creator {
+  justify-content: space-between;
+}
 .mg-bottombar.with-creator {
   justify-content: space-between;
 }
+.mg-topbar .creator-meta,
 .mg-bottombar .creator-meta {
   display: inline-flex;
   align-items: center;
@@ -1807,6 +1971,7 @@ function prefetchImage(url: string): Promise<void> {
   cursor: pointer;
   max-width: 50%;
 }
+.mg-topbar .creator-meta .creator-name,
 .mg-bottombar .creator-meta .creator-name {
   font-size: 12px;
   font-weight: 600;
@@ -2020,6 +2185,23 @@ function prefetchImage(url: string): Promise<void> {
   pointer-events: none;
   white-space: nowrap;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Pinch zoom overlay */
+.pinch-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none; /* let original element keep receiving touch events */
+}
+.pinch-zoom-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition: transform 120ms ease;
+  user-select: none;
+  touch-action: none;
 }
 
 /* transition for the burst popup */

@@ -1,4 +1,4 @@
-import type { Context } from "@netlify/edge-functions"
+import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { buildMediaEls, buildMediaListSchema, buildStaticTopNavHtml, renderJsonAsHtml, shortIdToLong, type MediaItem } from "./lib/util.ts"
 import { creationsGetImageRequest, creationsGetVideoRequest } from "./lib/orval.ts"
@@ -44,16 +44,26 @@ const handler = async (request: Request, context: Context) => {
     }))
     const imageUrl = type === "video" ? s3Video(mediaId, "thumbnail") : img(mediaId, "md")
     const pageUrl = `${url.origin}${url.pathname}`
+
+    // Build SEO-friendly title and description
+    const creator = data.creatorUsername ? `@${data.creatorUsername}` : ""
+    const pageTitle = `A creation on Fiddl.art${creator ? ` by ${creator}` : ""} | ${shortId}`
+    const metaSnippet = (data.meta || data.prompt || "").trim()
+    const typePhrase = type === "video" ? "AI-generated video" : "AI-generated image"
+    const description = `${metaSnippet ? `${metaSnippet} — ` : ""}${typePhrase}${creator ? ` by ${creator}` : ""} on Fiddl.art.`
+
     return await buildPageResponse({
       request,
       context,
-      pageTitle: `Fiddl.art ${type === "video" ? "Video" : "Image"} Request: ${shortId}`,
+      pageTitle,
       social: {
         imageUrl,
-        description: `View this creation ${data.creatorUsername ? "by @" + data.creatorUsername : ""} on Fiddl.art.`,
+        description,
+        twitterImageAlt: metaSnippet || undefined,
         ogType: type === "video" ? "video.other" : "website",
       },
       blocks: {
+        title: pageTitle,
         jsonLd: [buildMediaListSchema(medias, pageUrl)],
         htmlBlocks: [buildStaticTopNavHtml(), buildMediaEls(medias), renderJsonAsHtml(data, "Creation Request Metadata")],
       },
@@ -65,3 +75,7 @@ const handler = async (request: Request, context: Context) => {
 }
 
 export default safeEdge(handler, "request")
+
+export const config: Config = {
+  path: "/request/:type/:shortId/:index?",
+}
