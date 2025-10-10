@@ -19,8 +19,60 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
     _pendingIds: new Set<string>(),
     _showing: false,
     _shownCounts: {} as Record<string, number>,
+    // Persist IDs the user has acknowledged (closed the dialog)
+    _acked: {} as Record<string, number>, // id -> timestamp (ms)
   }),
   actions: {
+    // ---- Persistent acknowledged IDs (prevents re-popups across reloads) ----
+    _loadAcked() {
+      try {
+        const obj = LocalStorage.getItem("asyncErrorAcked") as any
+        if (obj && typeof obj === "object") this._acked = { ...obj }
+      } catch {
+        /* ignore */
+      }
+    },
+    _saveAcked() {
+      try {
+        const entries = Object.entries(this._acked)
+        // Keep only the most recent 200 acknowledgements
+        if (entries.length > 220) {
+          const sorted = entries
+            .map(([id, ts]) => [id, Number(ts) || 0] as [string, number])
+            .sort((a, b) => a[1] - b[1])
+            .slice(entries.length - 200)
+          this._acked = Object.fromEntries(sorted)
+        }
+        LocalStorage.set("asyncErrorAcked", this._acked)
+      } catch {
+        /* ignore */
+      }
+    },
+    _isAcked(id: string): boolean {
+      if (!this._acked || Object.keys(this._acked).length === 0) this._loadAcked()
+      return Boolean((this._acked as any)?.[id])
+    },
+    _acknowledge(id: string) {
+      if (!id) return
+      if (!this._acked || Object.keys(this._acked).length === 0) this._loadAcked()
+      this._acked[id] = Date.now()
+      this._saveAcked()
+    },
+    async _flushAckedToServer() {
+      // Best-effort: try to mark any acked IDs as seen server-side
+      try {
+        const ids = Object.keys(this._acked || {})
+        if (ids.length === 0) return
+        await Promise.all(
+          ids.map((id) =>
+            eventsMarkEventSeen({ eventId: id }).catch(() => undefined),
+          ),
+        )
+      } catch {
+        /* ignore */
+      }
+    },
+    // ---- Shown-count bookkeeping (safety cap) ----
     _loadShownCounts() {
       try {
         const obj = LocalStorage.getItem("asyncErrorShownCounts") as any
@@ -63,6 +115,8 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
 
       const run = async () => {
         try {
+          // Opportunistically flush any locally acknowledged IDs to server
+          await this._flushAckedToServer()
           await this._checkAndDisplay()
         } finally {
           const hidden = typeof document !== "undefined" && document.hidden
@@ -114,6 +168,8 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
             (e) =>
               e.type === "asyncError" &&
               !this._pendingIds.has(e.id) &&
+              // Never re-surface an event the user already acknowledged
+              !this._isAcked(e.id) &&
               this._getShownCount(e.id) < 2,
           )
           .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -145,6 +201,8 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
           })
           // Count this display regardless of server state
           this._incrementShown(ev.id)
+          // Persist local acknowledgement immediately so it won't reappear on reload
+          this._acknowledge(ev.id)
           try {
             await eventsMarkEventSeen({ eventId: ev.id })
             // On success, remove from pending set so store stays tidy

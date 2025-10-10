@@ -4048,7 +4048,7 @@ export type PopularityBatch200Item = {
 export type EventsPublicEventsParams = {
 since?: string;
 limit?: number;
-types?: string;
+types?: string | string[];
 };
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
@@ -4087,7 +4087,7 @@ export type EventsPrivateEventsParams = {
 since?: string;
 limit?: number;
 includeSeen?: boolean;
-types?: string;
+types?: string | string[];
 };
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
