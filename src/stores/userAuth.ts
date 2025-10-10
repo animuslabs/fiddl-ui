@@ -104,6 +104,7 @@ export const useUserAuth = defineStore("userAuth", {
               userId: this.userId || undefined,
               userName: this.userProfile?.username || undefined,
               emailHash: this.userProfile?.email || undefined,
+              phoneHash: this.userProfile?.phone || undefined,
               external_id: this.userId || undefined,
             })
           } catch {}

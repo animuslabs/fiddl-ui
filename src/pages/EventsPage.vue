@@ -73,7 +73,7 @@ q-page.q-pa-md
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, EventsPrivateEventsTypesItem as EventsTypesConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
+import { eventsPrivateEvents, eventsMarkEventSeen, EventsPrivateEvents200ItemType as EventsTypeConst, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, type EventsPrivateEvents200ItemType } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
@@ -160,7 +160,7 @@ export default defineComponent({
   },
   methods: {
     nonErrorTypes(): string[] {
-      const ALL = Object.values(EventsTypesConst) as string[]
+      const ALL = Object.values(EventsTypeConst) as string[]
       return ALL.filter((t) => t !== "asyncError")
     },
     isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
@@ -209,7 +209,8 @@ export default defineComponent({
         const baseParams: EventsPrivateEventsParams = {
           limit: 200,
           includeSeen: true,
-          types: this.includeErrors ? undefined : (this.nonErrorTypes() as any),
+          // Server expects CSV string for types
+          types: this.includeErrors ? undefined : this.nonErrorTypes().join(","),
         }
         const params = since ? { ...baseParams, since } : baseParams
         const { data } = await eventsPrivateEvents(params)

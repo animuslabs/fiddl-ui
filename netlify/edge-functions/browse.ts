@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { creationsBrowseCreateRequests } from "./lib/orval.ts"
-import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort } from "./lib/util.ts"
+import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort, normalizeCanonicalUrl } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
@@ -68,15 +68,18 @@ const handler = async (request: Request, context: Context) => {
 
     const pageTitle = buildPageTitle(sortMethod, mediaType, search, model)
     const description = buildPageDescription(sortMethod, mediaType, search, model)
+    const canonical = normalizeCanonicalUrl(url.toString(), ["search", "model", "type"]) // keep only content-defining params
 
     return await buildPageResponse({
       request,
       context,
       pageTitle,
+      cache: { edgeTtl: 3600, edgeSwr: 300, tags: ["browse"] },
       social: {
         description,
         imageUrl: mediaItems[0]?.url || "https://app.fiddl.art/OGImage-1.jpg",
         ogType: "website",
+        canonicalUrl: canonical,
       },
       blocks: {
         jsonLd: [buildBrowseListSchema(mediaItems, `${url.origin}${url.pathname}`, { sortMethod, mediaType, search, model })],

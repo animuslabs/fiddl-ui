@@ -88,6 +88,7 @@ const handler = async (request: Request, context: Context) => {
       request,
       context,
       pageTitle,
+      cache: { edgeTtl: 3600, edgeSwr: 300, tags: ["profile", profileData.userId] },
       social: {
         description,
         imageUrl: ogImageUrl,

@@ -205,7 +205,10 @@ class EventsManager {
     try {
       const am: Record<string, string> = {}
       const emailHashed = this.hashSha256IfNeeded(user.emailHash, /*email*/ true)
-      const phoneHashed = this.hashSha256IfNeeded(user.phoneHash)
+      // Normalize phone to digits-only before hashing when not already hashed
+      const phoneRaw = user.phoneHash
+      const phoneNormalized = phoneRaw && !/^[a-f0-9]{64}$/i.test(String(phoneRaw)) ? String(phoneRaw).replace(/[^0-9]/g, "") : phoneRaw
+      const phoneHashed = this.hashSha256IfNeeded(phoneNormalized)
       if (emailHashed) am.em = emailHashed
       if (phoneHashed) am.ph = phoneHashed
       if (user.external_id) (am as any).external_id = String(user.external_id)
@@ -215,7 +218,9 @@ class EventsManager {
       const tk: Record<string, any> = {}
       if (user.external_id) tk.external_id = user.external_id
       const emailHashed = this.hashSha256IfNeeded(user.emailHash, /*email*/ true)
-      const phoneHashed = this.hashSha256IfNeeded(user.phoneHash)
+      const phoneRaw = user.phoneHash
+      const phoneNormalized = phoneRaw && !/^[a-f0-9]{64}$/i.test(String(phoneRaw)) ? String(phoneRaw).replace(/[^0-9]/g, "") : phoneRaw
+      const phoneHashed = this.hashSha256IfNeeded(phoneNormalized)
       if (emailHashed) tk.email = emailHashed
       if (phoneHashed) tk.phone_number = phoneHashed
       if (Object.keys(tk).length) tiktokPixel.identify(tk)

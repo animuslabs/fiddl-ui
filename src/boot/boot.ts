@@ -2,6 +2,8 @@ import { boot } from "quasar/wrappers"
 import { useUserAuth } from "src/stores/userAuth"
 import { setSettings, setFetch } from "@tonomy/tonomy-id-sdk"
 import { events } from "lib/eventsManager"
+import { metaPixel } from "lib/metaPixel"
+import { jwt } from "lib/jwt"
 import { captureTikTokAttributionFromPage } from "lib/tiktokAttribution"
 
 export default boot(({ app }) => {
@@ -45,5 +47,13 @@ export default boot(({ app }) => {
   try {
     const debug = !!(import.meta as any).env?.DEV
     events.init({ debug })
+    // Initialize Meta Pixel with env pixel id and any early advanced matching
+    const pixelId = (import.meta as any)?.env?.VITE_META_PIXEL_ID as string | undefined
+    if (typeof window !== "undefined" && pixelId) {
+      const saved = jwt.read()
+      const am: Record<string, string> = {}
+      if (saved?.userId) am.external_id = String(saved.userId)
+      metaPixel.init(pixelId, { debug, advancedMatching: Object.keys(am).length ? (am as any) : undefined, skipScriptInject: true })
+    }
   } catch {}
 })

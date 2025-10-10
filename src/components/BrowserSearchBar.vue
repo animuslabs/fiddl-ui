@@ -21,7 +21,7 @@
 
         q-separator(vertical)
         div
-          q-btn-toggle(v-model="viewMode" flat :options="gridModeOptions")
+          q-btn-toggle(v-model="localViewMode" flat :options="gridModeOptions")
         q-separator(vertical)
         q-btn-dropdown(:label="browserStore.filter.aspectRatio ||'Aspect'" flat :color="browserStore.filter.aspectRatio ? 'primary' : 'white'")
           q-list
@@ -50,7 +50,7 @@
 import { aspectRatios, imageModels } from "lib/imageModels"
 import { LocalStorage, useQuasar } from "quasar"
 import { useBrowserStore, sortMethodIcon, mediaTypeIcon } from "stores/browserStore"
-import { defineComponent } from "vue"
+import { defineComponent, PropType } from "vue"
 import { events } from "lib/eventsManager"
 
 let interval: any = null
@@ -58,6 +58,13 @@ let interval: any = null
 export default defineComponent({
   emits: {
     setViewMode: (size: "grid" | "mosaic") => true,
+  },
+  props: {
+    // Parent-provided current view mode
+    viewMode: {
+      type: String as PropType<"grid" | "mosaic">,
+      default: "mosaic",
+    },
   },
   data() {
     return {
@@ -68,7 +75,8 @@ export default defineComponent({
       aspectRatios,
       imageModels,
       expandSearch: false,
-      viewMode: "mosaic" as "mosaic" | "grid",
+      // Internal local state for the toggle
+      localViewMode: "mosaic" as "mosaic" | "grid",
       gridModeOptions: [
         { icon: "grid_view", value: "grid" },
         { icon: "dashboard", value: "mosaic" },
@@ -82,7 +90,8 @@ export default defineComponent({
         this.browserStore.reset()
       },
     },
-    viewMode: {
+    // Emit when the internal toggle changes
+    localViewMode: {
       handler(val) {
         console.log("emit imageSize event", val)
         LocalStorage.set("browserViewMode", val)
@@ -90,10 +99,15 @@ export default defineComponent({
       },
       immediate: false,
     },
+    // Keep internal in sync if parent prop changes
+    viewMode(val: "grid" | "mosaic") {
+      if (val && val !== this.localViewMode) this.localViewMode = val
+    },
   },
   mounted() {
-    const savedViewMode = LocalStorage.getItem("browserViewMode")
-    if (savedViewMode) this.viewMode = savedViewMode as any
+    const savedViewMode = LocalStorage.getItem("browserViewMode") as "grid" | "mosaic" | null
+    // Prefer saved user choice; otherwise sync with parent-provided mode
+    this.localViewMode = (savedViewMode || this.viewMode || "mosaic") as any
   },
   methods: {
     exitTextSearch() {

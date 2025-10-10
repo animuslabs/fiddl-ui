@@ -51,6 +51,21 @@
   cache = "manual"
 
 [[edge_functions]]
+  function = "forge"
+  path     = "/forge/:mode?"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "studio"
+  path     = "/studio"
+  cache = "manual"
+
+[[edge_functions]]
+  function = "tos"
+  path     = "/tos"
+  cache = "manual"
+
+[[edge_functions]]
   function = "index"
   path     = "/"
   cache = "manual"
@@ -94,4 +109,3 @@
 
 [images]
   remote_images = ["https://api.fiddl.art/images/.*","https://api.fiddl.art/avatars/.*"]
-

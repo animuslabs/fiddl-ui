@@ -18,15 +18,34 @@
         q-scroll-area.full-width(:style="quasar.screen.gt.sm ? 'height:calc(100vh - 60px); height:calc(100dvh - 60px);' : 'height:calc(100vh - 110px); height:calc(100dvh - 110px);'")
           // top spacer to align right controls with create card
           .full-width(style="height:16px;").gt-sm
-          .full-width.relative-position
-            .full-width(style="height:55px;")
+            .full-width.relative-position
+            .full-width(:style="quasar.screen.lt.md ? (!createMode ? 'height:92px;' : 'height:0;') : 'height:55px;'")
               q-card.q-pa-sm.fixed-top.blur-bg(style="z-index:100; margin:6px; top:10px;")
-                .row.q-gutter-md.items-center.no-wrap
+                // Desktop/topbar layout (unchanged)
+                .row.q-gutter-md.items-center.no-wrap.gt-sm
                   q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
                   q-separator(vertical)
                   q-btn-toggle(v-if="showModelFilter" v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
                   .col-grow
                   q-btn.gt-sm(label="Magic Mirror" color="primary" rounded @click="showMMChoice = true")
+
+                // Mobile layout with tabs and small label
+                .column.q-gutter-sm.lt-md(v-if="!createMode")
+                  .row.items-center.no-wrap.q-gutter-sm
+                    .text-caption.text-grey-7 My creations
+                    .col-grow
+                    q-btn-toggle(v-model="gridMode" :options="gridModeOptions" size="sm" flat)
+                    q-btn-toggle(v-if="showModelFilter" v-model="activeCreationsStore.dynamicModel" :options="dynamicModelOptions" size="sm" flat)
+                  q-tabs(
+                    v-model="currentTab"
+                    dense
+                    inline-label
+                    active-color="primary"
+                    indicator-color="primary"
+                    narrow-indicator
+                  )
+                    q-tab(name="image" icon="image" label="Images")
+                    q-tab(name="video" icon="movie" label="Videos")
 
             .centered
               // Initial loading skeletons for list mode
@@ -263,6 +282,10 @@ export default defineComponent({
     },
   },
   watch: {
+    currentTab(val: "image" | "video") {
+      // Keep stores and context in sync when user switches via mobile tabs
+      this.setActiveCreationsStore(val)
+    },
     "createImageStore.state.req.customModelId": {
       handler(val: string | undefined) {
         // React to changes in selected custom model while dynamic model filter is active

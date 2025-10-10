@@ -199,6 +199,14 @@ export class MetaPixel {
   private _initialized = false
   private _debug = false
 
+  private getEnvPixelId(): string | null {
+    try {
+      const id = (import.meta as any)?.env?.VITE_META_PIXEL_ID || (process?.env as any)?.VITE_META_PIXEL_ID
+      if (id && typeof id === "string" && id.trim()) return id.trim()
+    } catch {}
+    return null
+  }
+
   /**
    * Initialize Meta Pixel and inject the script on client
    */
@@ -241,11 +249,7 @@ export class MetaPixel {
     if (!fbq) return
     let pid = this._pixelId
     if (!pid) {
-      try {
-        pid = "686586947240581"
-      } catch {
-        pid = null as any
-      }
+      pid = this.getEnvPixelId() as any
     }
     if (pid) {
       fbq("init", pid as any, am)
@@ -357,7 +361,7 @@ export class MetaPixel {
       if (!this._initialized) {
         this._initialized = true
         try {
-          const pid = "686586947240581"
+          const pid = this.getEnvPixelId()
           if (pid) this._pixelId = String(pid)
         } catch {}
       }

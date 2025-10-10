@@ -2,7 +2,7 @@
 q-page.full-height.full-width.relative-position
   .centered.relative-position
     // The search bar is fixed; we add a spacer below based on its runtime height
-    SearchBar(ref="searchBarRef" @setViewMode="viewMode = $event" fixed)
+    SearchBar(ref="searchBarRef" :viewMode="viewMode" @setViewMode="viewMode = $event" fixed)
   // Use full margin on desktop/tablet; remove top margin on small screens
   div(:class="isSmallScreen ? 'q-mx-md q-mb-md' : 'q-ma-md'")
     .full-width(:style="{ height: searchBarHeight + 'px' }")

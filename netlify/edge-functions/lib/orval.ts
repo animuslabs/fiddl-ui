@@ -1180,6 +1180,34 @@ export const CreationsBrowseCreateRequestsMediaType = {
   all: 'all',
 } as const;
 
+export type CreationsBrowseCreateRequests200ItemMediaType = typeof CreationsBrowseCreateRequests200ItemMediaType[keyof typeof CreationsBrowseCreateRequests200ItemMediaType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreationsBrowseCreateRequests200ItemMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type CreationsBrowseCreateRequests200ItemMediaItem = {
+  id: string;
+  nsfw: boolean;
+};
+
+export type CreationsBrowseCreateRequests200ItemUser = {
+  id: string;
+  username: string;
+};
+
+export type CreationsBrowseCreateRequests200Item = {
+  mediaType: CreationsBrowseCreateRequests200ItemMediaType;
+  id: string;
+  createdAt: string;
+  aspectRatio: string;
+  media: CreationsBrowseCreateRequests200ItemMediaItem[];
+  user: CreationsBrowseCreateRequests200ItemUser;
+};
+
 export type CreationsHdImageParams = {
 imageId: string;
 download?: boolean;
@@ -1701,6 +1729,8 @@ export type UserGet200 = {
   /** @nullable */
   tonId: string | null;
   /** @nullable */
+  openaiId: string | null;
+  /** @nullable */
   AvatarConfig: UserGet200AvatarConfig;
 };
 
@@ -2114,6 +2144,7 @@ export type UserAuthConnections200 = {
   google: boolean;
   x: boolean;
   tonid: boolean;
+  openai: boolean;
   email: UserAuthConnections200Email;
   telegram: UserAuthConnections200Telegram;
   passkeys: number;
@@ -2135,6 +2166,7 @@ export const UserOauthLinkStartUrlProvider = {
   google: 'google',
   x: 'x',
   tonid: 'tonid',
+  openai: 'openai',
 } as const;
 
 export type UserOauthLinkStartUrl200 = {
@@ -3987,29 +4019,8 @@ export type PopularityBatch200Item = {
 export type EventsPublicEventsParams = {
 since?: string;
 limit?: number;
-types?: EventsPublicEventsTypesItem[];
+types?: string;
 };
-
-export type EventsPublicEventsTypesItem = typeof EventsPublicEventsTypesItem[keyof typeof EventsPublicEventsTypesItem];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EventsPublicEventsTypesItem = {
-  likedImage: 'likedImage',
-  likedVideo: 'likedVideo',
-  unlikedVideo: 'unlikedVideo',
-  addedImageToCollection: 'addedImageToCollection',
-  unlockedImage: 'unlockedImage',
-  unlockedVideo: 'unlockedVideo',
-  unlikedImage: 'unlikedImage',
-  removedImageFromCollection: 'removedImageFromCollection',
-  referredUser: 'referredUser',
-  missionCompleted: 'missionCompleted',
-  earnedComission: 'earnedComission',
-  creationCommented: 'creationCommented',
-  commentMentioned: 'commentMentioned',
-  asyncError: 'asyncError',
-} as const;
 
 export type EventsPublicEvents200ItemType = typeof EventsPublicEvents200ItemType[keyof typeof EventsPublicEvents200ItemType];
 
@@ -4047,29 +4058,8 @@ export type EventsPrivateEventsParams = {
 since?: string;
 limit?: number;
 includeSeen?: boolean;
-types?: EventsPrivateEventsTypesItem[];
+types?: string;
 };
-
-export type EventsPrivateEventsTypesItem = typeof EventsPrivateEventsTypesItem[keyof typeof EventsPrivateEventsTypesItem];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EventsPrivateEventsTypesItem = {
-  likedImage: 'likedImage',
-  likedVideo: 'likedVideo',
-  unlikedVideo: 'unlikedVideo',
-  addedImageToCollection: 'addedImageToCollection',
-  unlockedImage: 'unlockedImage',
-  unlockedVideo: 'unlockedVideo',
-  unlikedImage: 'unlikedImage',
-  removedImageFromCollection: 'removedImageFromCollection',
-  referredUser: 'referredUser',
-  missionCompleted: 'missionCompleted',
-  earnedComission: 'earnedComission',
-  creationCommented: 'creationCommented',
-  commentMentioned: 'commentMentioned',
-  asyncError: 'asyncError',
-} as const;
 
 export type EventsPrivateEvents200ItemType = typeof EventsPrivateEvents200ItemType[keyof typeof EventsPrivateEvents200ItemType];
 
@@ -5078,9 +5068,9 @@ export const getCreationsBrowseCreateRequestsUrl = (params: CreationsBrowseCreat
   return stringifiedParams.length > 0 ? `/creations/browseCreateRequests?${stringifiedParams}` : `/creations/browseCreateRequests`
 }
 
-export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<unknown[]> => {
+export const creationsBrowseCreateRequests = async (params: CreationsBrowseCreateRequestsParams, options?: RequestInit): Promise<CreationsBrowseCreateRequests200Item[]> => {
   
-  return fetcher<unknown[]>(getCreationsBrowseCreateRequestsUrl(params),
+  return fetcher<CreationsBrowseCreateRequests200Item[]>(getCreationsBrowseCreateRequestsUrl(params),
   {      
     ...options,
     method: 'GET'

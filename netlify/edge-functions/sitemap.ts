@@ -46,6 +46,8 @@ async function sitemapStatic(origin: string): Promise<Response> {
       <url><loc>${origin}/missions</loc><lastmod>${now}</lastmod><priority>0.8</priority></url>
       <url><loc>${origin}/events</loc><lastmod>${now}</lastmod><priority>0.7</priority></url>
       <url><loc>${origin}/claim</loc><lastmod>${now}</lastmod><priority>0.7</priority></url>
+      <url><loc>${origin}/studio</loc><lastmod>${now}</lastmod><priority>0.7</priority></url>
+      <url><loc>${origin}/tos</loc><lastmod>${now}</lastmod><priority>0.5</priority></url>
     </urlset>
   `.trim()
   return new Response(body, { status: 200, headers: headers() })

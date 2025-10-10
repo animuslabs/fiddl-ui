@@ -7,6 +7,7 @@ declare namespace NodeJS {
     VITE_PRIVY_APP_ID: string
     VITE_TELEMETREE_API_KEY?: string
     VITE_TELEMETREE_PROJECT_ID?: string
+    VITE_META_PIXEL_ID?: string
   }
 }
 
@@ -15,6 +16,7 @@ interface ImportMetaEnv {
   readonly VITE_PRIVY_APP_ID: string
   readonly VITE_TELEMETREE_API_KEY?: string
   readonly VITE_TELEMETREE_PROJECT_ID?: string
+  readonly VITE_META_PIXEL_ID?: string
 }
 
 interface ImportMeta {

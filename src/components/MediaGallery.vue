@@ -1603,9 +1603,10 @@ function prefetchImage(url: string): Promise<void> {
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
             )
-              // Creator profile
-              q-btn(v-if="showCreatorFor(m)" :size="popIconSize" flat dense round color="white" icon="alternate_email" @click.stop="goToCreator(m)")
-                q-tooltip @{{ m.creatorUsername }}
+              // Creator profile chip (avatar + @username)
+              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
               // Delete
               q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
               // Add as input (images only)
@@ -1755,9 +1756,10 @@ function prefetchImage(url: string): Promise<void> {
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
             )
-              // Creator profile
-              q-btn(v-if="showCreatorFor(m)" :size="popIconSize" flat dense round color="white" icon="alternate_email" @click.stop="goToCreator(m)")
-                q-tooltip @{{ m.creatorUsername }}
+              // Creator profile chip (avatar + @username)
+              .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
+                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
               // Add as input (images only; for video items this won't show)
               q-btn(v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
               // Delete
@@ -2036,6 +2038,23 @@ function prefetchImage(url: string): Promise<void> {
   pointer-events: auto;
 }
 
+/* Make creator chip clickable within overlay and keep text tidy */
+.top-actions-overlay .creator-meta {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.top-actions-overlay .creator-meta .creator-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Lower the absolute-center slightly to appear visually centered within varying thumbnails */
 .absolute-center.offset-down {
   top: 58% !important;
@@ -2083,6 +2102,21 @@ function prefetchImage(url: string): Promise<void> {
 .popularity-overlay .q-btn,
 .popularity-overlay .count {
   pointer-events: auto;
+}
+
+/* Desktop: keep overlay controls faint until hover/focus for subtle affordance */
+@media (hover: hover) and (pointer: fine) {
+  .media-wrapper .top-actions-overlay,
+  .media-wrapper .popularity-overlay {
+    opacity: 0.25;
+    transition: opacity 320ms ease;
+  }
+  .media-wrapper:hover .top-actions-overlay,
+  .media-wrapper:hover .popularity-overlay,
+  .media-wrapper:focus-within .top-actions-overlay,
+  .media-wrapper:focus-within .popularity-overlay {
+    opacity: 1;
+  }
 }
 
 /* Small chip in bottom-left for model name */

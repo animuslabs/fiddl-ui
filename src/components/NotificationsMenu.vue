@@ -90,7 +90,7 @@ div.relative-position.self-center
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, EventsPrivateEventsTypesItem as EventsTypesConst } from "../lib/orval"
+import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, EventsPrivateEvents200ItemType as EventsTypeConst } from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
@@ -211,7 +211,7 @@ export default defineComponent({
   },
   methods: {
     nonErrorTypes(): string[] {
-      const ALL = Object.values(EventsTypesConst) as string[]
+      const ALL = Object.values(EventsTypeConst) as string[]
       return ALL.filter((t) => t !== "asyncError")
     },
     isOwnEvent(ev: EventsPrivateEvents200Item): boolean {
@@ -312,7 +312,12 @@ export default defineComponent({
           const sinceTs = times.length ? Math.max(...times) : 0
           if (sinceTs > 0) since = new Date(sinceTs).toISOString()
         }
-        const baseParams: EventsPrivateEventsParams = { limit: 25, includeSeen: true, types: this.nonErrorTypes() as any }
+        const baseParams: EventsPrivateEventsParams = {
+          limit: 25,
+          includeSeen: true,
+          // Server expects CSV string for types
+          types: this.nonErrorTypes().join(","),
+        }
         const params = since ? { ...baseParams, since } : baseParams
         const { data } = await eventsPrivateEvents(params)
         let incoming = Array.isArray(data) ? data : []

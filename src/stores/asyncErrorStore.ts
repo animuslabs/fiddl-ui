@@ -101,7 +101,8 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
       const auth = useUserAuth()
       if (!auth.loggedIn) return
       const params: EventsPrivateEventsParams = {
-        types: ["asyncError"],
+        // Server expects a CSV string for types per OpenAPI/zod
+        types: "asyncError",
         includeSeen: false,
         limit: 25,
       }
@@ -132,12 +133,15 @@ export const useAsyncErrorStore = defineStore("asyncErrorStore", {
           const payload = this._parse(ev)
           const message = this._buildMessage(ev, payload)
           await new Promise<void>((resolve) => {
-            Dialog.create({
+            const dlg = Dialog.create({
               title: "Generation Error",
               message,
               ok: { label: "OK", color: "primary" },
               persistent: Platform.is.mobile, // avoid accidental dismiss on mobile
-            }).onOk(() => resolve())
+            })
+            // Consider any dismissal (OK, click-away, ESC) as acknowledged
+            dlg.onOk(() => resolve())
+            dlg.onDismiss(() => resolve())
           })
           // Count this display regardless of server state
           this._incrementShown(ev.id)

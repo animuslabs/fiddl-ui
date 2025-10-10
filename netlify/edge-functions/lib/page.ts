@@ -69,6 +69,14 @@ function injectSsrBlocks(html: string, blocks: string[]): string {
   return html.replace(/<body([^>]*)>/i, `<body$1>\n${wrapper}`)
 }
 
+function setMetaDescription(html: string, description: string): string {
+  // Replace existing generic description meta with the provided one
+  const rx = /<meta\s+name=["']description["'][^>]*?>/gi
+  html = html.replace(rx, "")
+  const tag = `<meta name="description" content="${escapeAttr(description)}">`
+  return html.replace(/<\/head>/i, `  ${tag}\n</head>`)
+}
+
 function setSocial(html: string, meta: Required<SocialMetaInput>): string {
   // remove only the OG/Twitter tags we override (leave custom ones intact)
   const overridden = [
@@ -77,11 +85,14 @@ function setSocial(html: string, meta: Required<SocialMetaInput>): string {
     "og:image",
     "og:url",
     "og:type",
+    "og:site_name",
+    "og:locale",
     "twitter:card",
     "twitter:title",
     "twitter:description",
     "twitter:image",
     "twitter:image:alt",
+    "twitter:site",
   ]
   const rx = new RegExp(
     `<meta\\s+[^>]*?(?:property|name)=["']?(?:${overridden.join("|")})["'][^>]*?>`,
@@ -97,11 +108,14 @@ function setSocial(html: string, meta: Required<SocialMetaInput>): string {
     `<meta property="og:description" content="${escapeAttr(meta.description)}">`,
     `<meta property="og:image"       content="${escapeAttr(meta.imageUrl)}">`,
     `<meta property="og:url"         content="${escapeAttr(meta.ogUrl)}">`,
+    `<meta property="og:site_name"   content="Fiddl.art">`,
+    `<meta property="og:locale"      content="en_US">`,
 
     `<meta name="twitter:card"       content="${meta.twitterCard}">`,
     `<meta name="twitter:title"      content="${escapeAttr(meta.title)}">`,
     `<meta name="twitter:description"content="${escapeAttr(meta.description)}">`,
     `<meta name="twitter:image"      content="${escapeAttr(meta.imageUrl)}">`,
+    `<meta name="twitter:site"       content="@fiddlart">`,
     ...(meta.twitterImageAlt ? [`<meta name="twitter:image:alt" content="${escapeAttr(meta.twitterImageAlt)}">`] : []),
 
     `<link rel="canonical"           href="${escapeAttr(meta.canonicalUrl)}">`,
@@ -161,12 +175,18 @@ export async function buildPageResponse({ request, context, social, pageTitle, c
 
   // assemble HTML
   let html = baseHtml
-  if (blocks?.title) html = replaceTitle(html, blocks.title || pageTitle || new URL(request.url).pathname.split("/").pop() + "| Fiddl.art")
+  const computedTitle = (blocks?.title || pageTitle || (new URL(request.url).pathname.split("/").pop() + " | Fiddl.art")) as string
+  html = replaceTitle(html, computedTitle)
   if (blocks?.jsonLd?.length) html = injectJsonLd(html, blocks.jsonLd)
   if (!meta.description) meta.description = "Explore AI-generated creations on Fiddl.art"
+  // keep description meta in sync across generic + social tags
+  html = setMetaDescription(html, meta.description)
   if (social) html = setSocial(html, meta)
-  const h1Block = `<h1>${escapeAttr(pageTitle || meta.title || "Fiddl.art")}</h1>`
-  const htmlBlocksWithH1 = [h1Block, ...(blocks?.htmlBlocks || [])]
+  // Inject a single H1 only if blocks don't already include one
+  const provided = blocks?.htmlBlocks?.join("\n") || ""
+  const hasH1 = /<h1\b/i.test(provided)
+  const h1Block = hasH1 ? "" : `<h1>${escapeAttr(pageTitle || meta.title || "Fiddl.art")}</h1>`
+  const htmlBlocksWithH1 = h1Block ? [h1Block, ...(blocks?.htmlBlocks || [])] : (blocks?.htmlBlocks || [])
   html = injectSsrBlocks(html, htmlBlocksWithH1)
   html = html.replace(/<html([^>]*)>/i, `<html lang="en"$1>`)
   if (transformHtml) html = transformHtml(html)
