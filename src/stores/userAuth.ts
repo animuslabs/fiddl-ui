@@ -268,6 +268,10 @@ export const useUserAuth = defineStore("userAuth", {
       const { token, userId } = data
       // this.logout()
       await this.applyServerSession(userId, token)
+      // Improve pixel matching by forwarding any known identifiers prior to completion event
+      try {
+        events.identify({ external_id: userId })
+      } catch {}
       try { events.registrationCompleted({ status: true }) } catch {}
     },
     async attemptAutoLogin() {
@@ -313,6 +317,13 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {
       const result = await pkAuth.register(data)
+      // Set advanced matching (hashed identifiers) before firing registration-complete
+      try {
+        events.identify({
+          emailHash: data.email,
+          phoneHash: data.phone,
+        })
+      } catch {}
       try { events.registrationCompleted({ status: true }) } catch {}
       await this.pkLogin(result.registration.user.name)
       console.log(result.registration)

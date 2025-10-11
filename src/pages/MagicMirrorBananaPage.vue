@@ -290,6 +290,8 @@ const sessionCreatedIds = ref<string[]>([])
 const sessionExpectedTotal = ref<number>(0)
 const lastKnownIds = ref<string[]>([])
 const pendingBaselineIds = ref<string[]>([])
+// Track batch IDs initiated in this Magic Mirror Fast session
+const activeBatchIds = ref<string[]>([])
 
 // Upload state
 const uploadedIds = ref<string[]>([])
@@ -413,6 +415,7 @@ function saveSession() {
     sessionBaselineIds: sessionBaselineIds.value,
     sessionCreatedIds: sessionCreatedIds.value,
     sessionExpectedTotal: sessionExpectedTotal.value,
+    activeBatchIds: activeBatchIds.value,
   }
   localStorage.setItem(SESSION_KEY, JSON.stringify(data))
 }
@@ -441,6 +444,7 @@ async function loadSession() {
     if (Array.isArray(data.sessionBaselineIds)) sessionBaselineIds.value = data.sessionBaselineIds
     if (Array.isArray(data.sessionCreatedIds)) sessionCreatedIds.value = data.sessionCreatedIds
     if (typeof data.sessionExpectedTotal === "number") sessionExpectedTotal.value = data.sessionExpectedTotal
+    if (Array.isArray(data.activeBatchIds)) activeBatchIds.value = data.activeBatchIds
     const sessStep = data.step as Step | undefined
     if (sessStep) step.value = sessStep
 
@@ -680,6 +684,16 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
     const resSd4 = await createQueueAsyncBatch({ requests: sd4Requests, emailNotify: false })
 
     const batchId = resSd4.data?.batchId || resBanana.data?.batchId
+    // Track both batch ids (when present) for this session
+    const newBatches = [resBanana.data?.batchId, resSd4.data?.batchId].filter(Boolean) as string[]
+    if (newBatches.length) {
+      const merged = Array.from(new Set([...
+        activeBatchIds.value,
+        ...newBatches,
+      ]))
+      activeBatchIds.value = merged
+      saveSession()
+    }
     if (!creationsPollTimer) startCreationsPoll()
     if (batchId) startBatchStatusWatch(batchId)
     void userAuth.loadUserData()
@@ -690,6 +704,42 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
 }
 
 // Poll for new creations, collecting ids belonging to this user session
+// Return finished image request IDs for active batches and drop completed batches from the active list
+async function collectFinishedRequestIdsForActiveBatches(): Promise<Set<string>> {
+  const finished = new Set<string>()
+  if (!activeBatchIds.value.length) return finished
+  try {
+    const results = await Promise.all(
+      activeBatchIds.value.map(async (bid) => {
+        try {
+          const { data: batch } = await createBatchStatus({ batchId: bid })
+          return { bid, batch }
+        } catch {
+          return { bid, batch: null as any }
+        }
+      }),
+    )
+    const stillActive: string[] = []
+    for (const { bid, batch } of results) {
+      if (!batch) continue
+      for (const job of batch.jobs || []) {
+        if (job?.type === 'image' && job?.status === 'finished' && job?.imageRequestId) {
+          finished.add(job.imageRequestId)
+        }
+      }
+      const allDone = (batch.counts?.finished || 0) + (batch.counts?.failed || 0) >= (batch.counts?.total || 0)
+      if (!allDone && batch.status !== 'completed' && batch.status !== 'error') {
+        stillActive.push(bid)
+      }
+    }
+    if (stillActive.length !== activeBatchIds.value.length) {
+      activeBatchIds.value = stillActive
+      saveSession()
+    }
+  } catch {}
+  return finished
+}
+
 function startCreationsPoll() {
   stopCreationsPoll()
   const poll = async () => {
@@ -703,16 +753,19 @@ function startCreationsPoll() {
     } catch (e) {
       console.warn("failed to load creations", e)
     }
-    const allIds = imageCreations.allCreations.map((x) => x.id)
+    // Only consider images from requests whose jobs belong to our active session batches
+    const allowedReqIds = await collectFinishedRequestIdsForActiveBatches()
+    const allowedImages: string[] = (imageCreations.creations as any[])
+      .filter((c) => allowedReqIds.has(c.id))
+      .flatMap((c) => Array.isArray(c.mediaIds) ? c.mediaIds : [])
     const baseline = sessionBaselineIds.value.length ? sessionBaselineIds.value : lastKnownIds.value
-    // Session-new images = everything after the stored baseline minus ones we've already recorded
-    const sessionNew = allIds.filter((id) => !baseline.includes(id))
+    const sessionNew = allowedImages.filter((id) => !baseline.includes(id))
     const newlyAdded = sessionNew.filter((id) => !sessionCreatedIds.value.includes(id))
 
     if (newlyAdded.length > 0) {
       sessionCreatedIds.value.push(...newlyAdded)
       generatedImageIds.value = sessionCreatedIds.value.slice()
-      lastKnownIds.value = allIds.slice()
+      lastKnownIds.value = allowedImages.slice()
       pendingNewCount.value = Math.max(0, pendingNewCount.value - newlyAdded.length)
       saveSession()
     }
@@ -734,7 +787,7 @@ function startCreationsPoll() {
         const merged = new Set([...sessionBaselineIds.value, ...sessionCreatedIds.value])
         sessionBaselineIds.value = Array.from(merged)
       }
-      lastKnownIds.value = allIds.slice()
+      lastKnownIds.value = allowedImages.slice()
       saveSession()
       if (balanceRefreshPending.value) {
         balanceRefreshPending.value = false
@@ -794,6 +847,7 @@ function startAgain() {
   selectedTemplates.value = []
   generatedImageIds.value = []
   uploadedIds.value = []
+  activeBatchIds.value = []
   templatesConfirmed.value = false
   initialLoadingTemplates.value = []
   additionalLoadingTemplates.value = []
@@ -803,7 +857,9 @@ function startAgain() {
 }
 
 function goToCreatePage() {
-  void toCreatePage({ model: "seedream4", type: "image" }, router, { noCreateModal: true })
+  // Navigate to Create page with no model filter (show all models' creations)
+  // We bypass toCreatePage to avoid injecting a model param and explicitly set dynamicModel=false
+  void router.push({ name: 'create', params: { activeTab: 'image' }, query: { dynamicModel: 'false', noCreateModal: '1' } })
 }
 
 // share/download/animate: provided by useMagicMirrorResults

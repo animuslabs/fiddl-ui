@@ -335,6 +335,8 @@ let batchStatusTimer: number | null = null
 const scheduled = ref(false)
 const scheduledAt = ref<number | null>(null)
 const pendingBaselineIds = ref<string[]>([])
+// Track batch IDs started in this Magic Mirror Pro session
+const activeBatchIds = ref<string[]>([])
 
 watch(step, () => {
   void userAuth.loadUserData()
@@ -437,6 +439,7 @@ function saveSession() {
     trainingGender: trainingGender.value,
     subjectDescription,
     step: step.value,
+    activeBatchIds: activeBatchIds.value,
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
 }
@@ -455,6 +458,7 @@ async function loadSession() {
     const data = JSON.parse(raw)
     trainingSetId.value = data.trainingSetId || null
     customModelId.value = data.customModelId || null
+    if (Array.isArray(data.activeBatchIds)) activeBatchIds.value = data.activeBatchIds
     if (Array.isArray(data.selectedTemplates)) {
       selectedTemplates.value = data.selectedTemplates
       // Set initialLoadingTemplates if we haven't generated images yet
@@ -668,7 +672,12 @@ async function scheduleAndPollIfReady() {
     saveSession()
     void userAuth.loadUserData()
     startCreationsPoll()
-    if (batchId) startBatchStatusWatch(batchId)
+    if (batchId) {
+      // record this batch id for session filtering
+      activeBatchIds.value = Array.from(new Set([...(activeBatchIds.value || []), batchId]))
+      saveSession()
+      startBatchStatusWatch(batchId)
+    }
   } catch (e: any) {
     catchErr(e)
   } finally {
@@ -695,8 +704,13 @@ function startCreationsPoll() {
       console.warn("loadCreations failed", e)
     }
 
+    // Restrict to requests belonging to batches started in this session
+    const allowedReqIds = await collectFinishedRequestIdsForActiveBatches()
     const ids: string[] = []
-    for (const req of imageCreations.creations) for (const id of req.mediaIds) if (!ids.includes(id)) ids.push(id)
+    for (const req of imageCreations.creations) {
+      if (!allowedReqIds.has((req as any).id)) continue
+      for (const id of req.mediaIds) if (!ids.includes(id)) ids.push(id)
+    }
 
     const oldSet = new Set(lastKnownIds.value)
     const deltaNew = ids.filter((id) => !oldSet.has(id))
@@ -789,11 +803,48 @@ function stopBatchStatusWatch() {
   batchStatusTimer = null
 }
 
+// Gather finished image request ids for batches in this session and prune completed batches
+async function collectFinishedRequestIdsForActiveBatches(): Promise<Set<string>> {
+  const finished = new Set<string>()
+  if (!activeBatchIds.value.length) return finished
+  try {
+    const results = await Promise.all(
+      activeBatchIds.value.map(async (bid) => {
+        try {
+          const { data: batch } = await createBatchStatus({ batchId: bid })
+          return { bid, batch }
+        } catch {
+          return { bid, batch: null as any }
+        }
+      }),
+    )
+    const stillActive: string[] = []
+    for (const { bid, batch } of results) {
+      if (!batch) continue
+      for (const job of batch.jobs || []) {
+        if (job?.type === 'image' && job?.status === 'finished' && job?.imageRequestId) {
+          finished.add(job.imageRequestId)
+        }
+      }
+      const allDone = (batch.counts?.finished || 0) + (batch.counts?.failed || 0) >= (batch.counts?.total || 0)
+      if (!allDone && batch.status !== 'completed' && batch.status !== 'error') {
+        stillActive.push(bid)
+      }
+    }
+    if (stillActive.length !== activeBatchIds.value.length) {
+      activeBatchIds.value = stillActive
+      saveSession()
+    }
+  } catch {}
+  return finished
+}
+
 function startAgain() {
   stopTrainingPoll()
   stopCreationsPoll()
   selectedTemplates.value = []
   generatedImageIds.value = []
+  activeBatchIds.value = []
   trainingSetId.value = null
   customModelId.value = null
   trainingStatus.value = "processing"
@@ -862,7 +913,11 @@ async function onDialogConfirm() {
     const batchId = await scheduleMagicRenders({ customModelId: customModelId.value, templates, subjectDescription: subjectDescription ?? "" })
     quasar.notify({ color: "primary", message: `Rendering ${templates.length} new looks…` })
     if (!creationsPollTimer) startCreationsPoll()
-    if (batchId) startBatchStatusWatch(batchId)
+    if (batchId) {
+      activeBatchIds.value = Array.from(new Set([...(activeBatchIds.value || []), batchId]))
+      saveSession()
+      startBatchStatusWatch(batchId)
+    }
     void userAuth.loadUserData()
   } catch (e: any) {
     catchErr(e)
