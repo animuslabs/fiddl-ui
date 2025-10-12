@@ -169,6 +169,23 @@ class EventsManager {
     } catch {}
   }
 
+  /** Login to existing account */
+  login(data?: Record<string, Json>): void {
+    const payload = data || {}
+    if (this._debug) console.info("[Events] login", payload)
+    try {
+      // Meta/Facebook: use a custom event name
+      metaPixel.trackCustom("Login", payload as any)
+    } catch {}
+    try {
+      // TikTok: custom event also named "Login"
+      tiktokPixel.track("Login", payload as any)
+    } catch {}
+    try {
+      umami.track("login", payload)
+    } catch {}
+  }
+
   /** Registration completion */
   registrationCompleted(data?: Record<string, Json>): void {
     const payload = data || {}

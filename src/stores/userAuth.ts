@@ -144,6 +144,7 @@ export const useUserAuth = defineStore("userAuth", {
       this.loggedIn = true
       await this.loadUpvotesWallet()
       await this.loadUpvotesWallet()
+      try { events.login({ method: "passkey" }) } catch {}
     },
     async linkLogin(loginToken: string) {
       const token = extractLoginToken(loginToken)
@@ -346,6 +347,7 @@ export const useUserAuth = defineStore("userAuth", {
           avatar: avatarImg(this.userId!),
         })
       })
+      try { events.login() } catch {}
     },
     logout() {
       // Clear our JWT and app state
