@@ -189,9 +189,15 @@ export const useUserAuth = defineStore("userAuth", {
         this.loggedIn = true
         await this.loadUserData(authResult.userId)
         await this.loadUpvotesWallet()
-        void this.loadUserProfile().then(() => {
-          void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
-        })
+        // Load profile, then fire registration event if this looks like a fresh account
+        await this.loadUserProfile()
+        try {
+          const createdAt = this.userProfile?.createdAt ? new Date(this.userProfile.createdAt).getTime() : undefined
+          if (createdAt && Date.now() - createdAt < 5 * 60 * 1000) {
+            try { events.registrationCompleted({ status: true }) } catch {}
+          }
+        } catch {}
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       } catch (e: any) {
         this.logout()
         console.log(e)
@@ -216,9 +222,14 @@ export const useUserAuth = defineStore("userAuth", {
         this.loggedIn = true
         await this.loadUserData(data.userId)
         await this.loadUpvotesWallet()
-        void this.loadUserProfile().then(() => {
-          void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
-        })
+        await this.loadUserProfile()
+        try {
+          const createdAt = this.userProfile?.createdAt ? new Date(this.userProfile.createdAt).getTime() : undefined
+          if (createdAt && Date.now() - createdAt < 5 * 60 * 1000) {
+            try { events.registrationCompleted({ status: true }) } catch {}
+          }
+        } catch {}
+        void tawk.setVisitorInfo(this.userProfile?.username || this.userId || "anonymous", this.userProfile?.email || "noemail", { userId: this.userId, points: this.userData?.availablePoints, avatar: avatarImg(this.userId!) })
       } catch (e: any) {
         this.logout()
         console.error(e)
