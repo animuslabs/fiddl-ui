@@ -1546,6 +1546,9 @@ export type PointsFinishBuyPackageBody = {
   ttclid?: string;
   ttp?: string;
   userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
 };
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
@@ -4575,9 +4578,142 @@ export type TiktokCompleteRegistrationBody = {
   ttp?: string;
   userAgent?: string;
   eventId?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
 };
 
 export type TiktokCompleteRegistration200 = {
+  ok: boolean;
+};
+
+export type MarketingAddToCartBodyContentsItem = {
+  id: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  quantity?: number;
+  item_price?: number;
+  title?: string;
+};
+
+export type MarketingAddToCartBody = {
+  /**
+   * @minLength 3
+   * @maxLength 3
+   */
+  currency: string;
+  /** @minimum 0 */
+  value: number;
+  content_type?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  num_items?: number;
+  contents: MarketingAddToCartBodyContentsItem[];
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingAddToCart200 = {
+  ok: boolean;
+};
+
+export type MarketingInitiateCheckoutBodyContentsItem = {
+  id: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  quantity?: number;
+  item_price?: number;
+  title?: string;
+};
+
+export type MarketingInitiateCheckoutBody = {
+  /**
+   * @minLength 3
+   * @maxLength 3
+   */
+  currency: string;
+  /** @minimum 0 */
+  value: number;
+  content_type?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  num_items?: number;
+  contents: MarketingInitiateCheckoutBodyContentsItem[];
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingInitiateCheckout200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateImageStartBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateImageStart200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateImageSuccessBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateImageSuccess200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateVideoStartBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateVideoStart200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateVideoSuccessBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
 };
 
@@ -8478,5 +8614,137 @@ export const tiktokCompleteRegistration = async (tiktokCompleteRegistrationBody:
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       tiktokCompleteRegistrationBody,)
+  }
+);}
+
+
+
+export const getMarketingAddToCartUrl = () => {
+
+
+  
+
+  return `/marketing/addToCart`
+}
+
+export const marketingAddToCart = async (marketingAddToCartBody: MarketingAddToCartBody, options?: RequestInit): Promise<MarketingAddToCart200> => {
+  
+  return fetcher<MarketingAddToCart200>(getMarketingAddToCartUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingAddToCartBody,)
+  }
+);}
+
+
+
+export const getMarketingInitiateCheckoutUrl = () => {
+
+
+  
+
+  return `/marketing/initiateCheckout`
+}
+
+export const marketingInitiateCheckout = async (marketingInitiateCheckoutBody: MarketingInitiateCheckoutBody, options?: RequestInit): Promise<MarketingInitiateCheckout200> => {
+  
+  return fetcher<MarketingInitiateCheckout200>(getMarketingInitiateCheckoutUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingInitiateCheckoutBody,)
+  }
+);}
+
+
+
+export const getMarketingCreateImageStartUrl = () => {
+
+
+  
+
+  return `/marketing/createImageStart`
+}
+
+export const marketingCreateImageStart = async (marketingCreateImageStartBody: MarketingCreateImageStartBody, options?: RequestInit): Promise<MarketingCreateImageStart200> => {
+  
+  return fetcher<MarketingCreateImageStart200>(getMarketingCreateImageStartUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingCreateImageStartBody,)
+  }
+);}
+
+
+
+export const getMarketingCreateImageSuccessUrl = () => {
+
+
+  
+
+  return `/marketing/createImageSuccess`
+}
+
+export const marketingCreateImageSuccess = async (marketingCreateImageSuccessBody: MarketingCreateImageSuccessBody, options?: RequestInit): Promise<MarketingCreateImageSuccess200> => {
+  
+  return fetcher<MarketingCreateImageSuccess200>(getMarketingCreateImageSuccessUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingCreateImageSuccessBody,)
+  }
+);}
+
+
+
+export const getMarketingCreateVideoStartUrl = () => {
+
+
+  
+
+  return `/marketing/createVideoStart`
+}
+
+export const marketingCreateVideoStart = async (marketingCreateVideoStartBody: MarketingCreateVideoStartBody, options?: RequestInit): Promise<MarketingCreateVideoStart200> => {
+  
+  return fetcher<MarketingCreateVideoStart200>(getMarketingCreateVideoStartUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingCreateVideoStartBody,)
+  }
+);}
+
+
+
+export const getMarketingCreateVideoSuccessUrl = () => {
+
+
+  
+
+  return `/marketing/createVideoSuccess`
+}
+
+export const marketingCreateVideoSuccess = async (marketingCreateVideoSuccessBody: MarketingCreateVideoSuccessBody, options?: RequestInit): Promise<MarketingCreateVideoSuccess200> => {
+  
+  return fetcher<MarketingCreateVideoSuccess200>(getMarketingCreateVideoSuccessUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingCreateVideoSuccessBody,)
   }
 );}

@@ -160,6 +160,7 @@ import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
 import { events } from "lib/eventsManager"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
+import { getMetaAttribution, generateEventId } from "lib/metaAttribution"
 import tma from "src/lib/tmaAnalytics"
 
 const detectTma = (): boolean => {
@@ -541,6 +542,7 @@ export default defineComponent({
           const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode }).catch(catchErr)
           if (!res?.data) return ""
           try {
+            const event_id = generateEventId()
             events.purchaseInitiated({
               method: "payPal",
               currency: "USD",
@@ -549,7 +551,10 @@ export default defineComponent({
               content_type: "product",
               contents: [{ id: `points_${this.selectedPkg?.points || 0}`, quantity: 1, item_price: Number(this.finalUsd || this.selectedPkg?.usd || 0) }],
               content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
+              event_id,
             } as any)
+            // stash for purchaseCompleted pairing
+            ;(this as any)._metaEventId = event_id
           } catch {}
           return (res.data as any).id || ""
         },
@@ -557,6 +562,7 @@ export default defineComponent({
           try {
             const datafastVisitorId = getCookie("datafast_visitor_id")
             const { ttclid, ttp, userAgent } = getTikTokAttribution()
+            const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
             const res = await pointsFinishBuyPackage({
               method: "payPal",
               orderId: data.orderID,
@@ -564,6 +570,9 @@ export default defineComponent({
               ttclid,
               ttp,
               userAgent,
+              fbp,
+              fbc,
+              eventSourceUrl,
             })
             if (!res?.data) {
               throwErr("Failed to capture order")
@@ -578,6 +587,7 @@ export default defineComponent({
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPkg?.points || 0}`, quantity: 1, item_price: Number(this.finalUsd || this.selectedPkg?.usd || 0) }],
                 content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
+                event_id: (this as any)._metaEventId,
               } as any)
             } catch {}
             if (typeof umami.track === "function") {

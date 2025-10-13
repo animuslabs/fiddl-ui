@@ -1,6 +1,7 @@
 import { apiUrl } from "lib/api"
 import { jwt } from "lib/jwt"
 import { getReferredBy } from "lib/util"
+import { getMetaAttribution } from "./metaAttribution"
 import {
   loginLinkInitLoginLink,
   loginLinkLoginWithCode,
@@ -98,6 +99,14 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     requestUrl.searchParams.set("redirect", `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`)
     const referrer = getReferredBy()
     if (referrer) requestUrl.searchParams.set("referrer", referrer)
+    // Attach Meta attribution for reliability across domains
+    try {
+      const { fbp, fbc } = getMetaAttribution()
+      const fbclid = new URL(window.location.href).searchParams.get("fbclid") || undefined
+      if (fbp) requestUrl.searchParams.set("fbp", fbp)
+      if (fbc) requestUrl.searchParams.set("fbc", fbc)
+      if (fbclid) requestUrl.searchParams.set("fbclid", fbclid)
+    } catch {}
     try {
       const auth = jwt.read()
       if (auth?.token) {
@@ -134,6 +143,14 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
               u.searchParams.set("token", auth.token)
               u.searchParams.set("authorization", `Bearer ${auth.token}`)
               u.searchParams.set("userId", auth.userId)
+              // Attach Meta attribution parameters as well
+              try {
+                const { fbp, fbc } = getMetaAttribution()
+                const fbclid = new URL(window.location.href).searchParams.get("fbclid") || undefined
+                if (fbp && !u.searchParams.has("fbp")) u.searchParams.set("fbp", fbp)
+                if (fbc && !u.searchParams.has("fbc")) u.searchParams.set("fbc", fbc)
+                if (fbclid && !u.searchParams.has("fbclid")) u.searchParams.set("fbclid", fbclid)
+              } catch {}
               url = u.toString()
             }
           }
@@ -155,6 +172,14 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
   requestUrl.searchParams.set("redirect", `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`)
   const referrer = getReferredBy()
   if (referrer) requestUrl.searchParams.set("referrer", referrer)
+  // Attach Meta attribution parameters (best-effort)
+  try {
+    const { fbp, fbc } = getMetaAttribution()
+    const fbclid = new URL(window.location.href).searchParams.get("fbclid") || undefined
+    if (fbp) requestUrl.searchParams.set("fbp", fbp)
+    if (fbc) requestUrl.searchParams.set("fbc", fbc)
+    if (fbclid) requestUrl.searchParams.set("fbclid", fbclid)
+  } catch {}
 
   window.location.href = requestUrl.toString()
 }

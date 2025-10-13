@@ -255,6 +255,7 @@ import { Dialog, LocalStorage, Notify } from "quasar"
 import umami from "lib/umami"
 import { events } from "lib/eventsManager"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
+import { getMetaAttribution, generateEventId } from "lib/metaAttribution"
 import PointsTransfer from "src/components/PointsTransfer.vue"
 import CryptoPayment from "components/CryptoPayment.vue"
 import { usePricesStore } from "stores/pricesStore"
@@ -815,6 +816,7 @@ export default defineComponent({
             const datafastVisitorId = getCookie("datafast_visitor_id")
             const { ttclid, ttp, userAgent } = getTikTokAttribution()
 
+            const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
             const res = await pointsFinishBuyPackage({
               method: "payPal",
               orderId: data.orderID,
@@ -822,6 +824,9 @@ export default defineComponent({
               ttclid,
               ttp,
               userAgent,
+              fbp,
+              fbc,
+              eventSourceUrl,
             })
             if (!res?.data) {
               throwErr("Failed to capture order")

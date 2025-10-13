@@ -3,9 +3,10 @@ import umami from "lib/umami"
 import { tmaAnalytics } from "lib/tmaAnalytics"
 import { tiktokPixel } from "lib/tiktokPixel"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
-import { tiktokCompleteRegistration } from "lib/orval"
+import { tiktokCompleteRegistration, marketingAddToCart, marketingInitiateCheckout, marketingCreateImageStart, marketingCreateImageSuccess, marketingCreateVideoStart, marketingCreateVideoSuccess } from "lib/orval"
 import SHA256 from "crypto-js/sha256"
 import encHex from "crypto-js/enc-hex"
+import { getMetaAttribution, generateEventId } from "./metaAttribution"
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json }
 
@@ -57,15 +58,33 @@ class EventsManager {
     num_items?: number
   }): void {
     const payload = data || {}
+    const event_id = generateEventId()
     if (this._debug) console.info("[Events] addToCart", payload)
     try {
-      metaPixel.trackAddToCart(payload as any)
+      metaPixel.trackAddToCart({ ...(payload as any), event_id })
     } catch {}
     try {
       tiktokPixel.trackAddToCart(payload as any)
     } catch {}
     try {
       umami.track("addToCart", payload)
+    } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        void marketingAddToCart({
+          currency: (payload as any).currency,
+          value: (payload as any).value,
+          contents: (payload as any).contents,
+          content_type: (payload as any).content_type,
+          num_items: (payload as any).num_items,
+          fbp,
+          fbc,
+          eventId: event_id,
+          eventSourceUrl,
+          userAgent,
+        }).catch((err) => this._debug && console.warn("[Events] marketing.addToCart failed", err))
+      }
     } catch {}
   }
 
@@ -101,6 +120,7 @@ class EventsManager {
   /** Media creation lifecycle */
   createStart(kind: "image" | "video", meta?: Record<string, Json>): void {
     const payload = { kind, ...(meta || {}) }
+    const event_id = generateEventId()
     if (this._debug) console.info("[Events] createStart", payload)
     try {
       tmaAnalytics.createStart(kind, meta || {})
@@ -109,15 +129,31 @@ class EventsManager {
       umami.track(kind === "image" ? "createImageStart" : "createVideoStart", payload)
     } catch {}
     try {
-      metaPixel.trackCustom(kind === "image" ? "CreateImageStart" : "CreateVideoStart", payload)
+      metaPixel.trackCustom(kind === "image" ? "CreateImageStart" : "CreateVideoStart", { ...payload, event_id })
     } catch {}
     try {
       tiktokPixel.track(kind === "image" ? "CreateImageStart" : "CreateVideoStart", payload as any)
+    } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const model = (meta || {}).model as string | undefined
+        if (kind === "image") {
+          void marketingCreateImageStart({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+            this._debug && console.warn("[Events] marketing.createImageStart failed", err),
+          )
+        } else {
+          void marketingCreateVideoStart({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+            this._debug && console.warn("[Events] marketing.createVideoStart failed", err),
+          )
+        }
+      }
     } catch {}
   }
 
   createSuccess(kind: "image" | "video", meta?: Record<string, Json>): void {
     const payload = { kind, ...(meta || {}) }
+    const event_id = generateEventId()
     if (this._debug) console.info("[Events] createSuccess", payload)
     try {
       tmaAnalytics.createSuccess(kind, meta || {})
@@ -126,19 +162,35 @@ class EventsManager {
       umami.track(kind === "image" ? "createImageSuccess" : "createVideoSuccess", payload)
     } catch {}
     try {
-      metaPixel.trackCustom(kind === "image" ? "CreateImageSuccess" : "CreateVideoSuccess", payload)
+      metaPixel.trackCustom(kind === "image" ? "CreateImageSuccess" : "CreateVideoSuccess", { ...payload, event_id })
     } catch {}
     try {
       tiktokPixel.track(kind === "image" ? "CreateImageSuccess" : "CreateVideoSuccess", payload as any)
+    } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const model = (meta || {}).model as string | undefined
+        if (kind === "image") {
+          void marketingCreateImageSuccess({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+            this._debug && console.warn("[Events] marketing.createImageSuccess failed", err),
+          )
+        } else {
+          void marketingCreateVideoSuccess({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+            this._debug && console.warn("[Events] marketing.createVideoSuccess failed", err),
+          )
+        }
+      }
     } catch {}
   }
 
   /** Checkout lifecycle */
   purchaseInitiated(data?: Record<string, Json>): void {
     const payload = data || {}
+    const event_id = generateEventId()
     if (this._debug) console.info("[Events] purchaseInitiated", payload)
     try {
-      metaPixel.trackInitiateCheckout(payload as any)
+      metaPixel.trackInitiateCheckout({ ...(payload as any), event_id })
     } catch {}
     try {
       tiktokPixel.trackInitiateCheckout(payload as any)
@@ -148,6 +200,23 @@ class EventsManager {
     } catch {}
     try {
       umami.track("purchaseInitiated", payload)
+    } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        void marketingInitiateCheckout({
+          currency: (payload as any).currency,
+          value: (payload as any).value,
+          contents: (payload as any).contents,
+          content_type: (payload as any).content_type,
+          num_items: (payload as any).num_items,
+          fbp,
+          fbc,
+          eventId: event_id,
+          eventSourceUrl,
+          userAgent,
+        }).catch((err) => this._debug && console.warn("[Events] marketing.initiateCheckout failed", err))
+      }
     } catch {}
   }
 
@@ -201,7 +270,8 @@ class EventsManager {
         const { ttclid, ttp, userAgent } = getTikTokAttribution()
         const maybeEventId = (payload as Record<string, any>)?.event_id
         const eventId = typeof maybeEventId === "string" ? maybeEventId : undefined
-        void tiktokCompleteRegistration({ ttclid, ttp, userAgent, eventId }).catch((err) => {
+        const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
+        void tiktokCompleteRegistration({ ttclid, ttp, userAgent, eventId, fbp, fbc, eventSourceUrl }).catch((err) => {
           if (this._debug) console.warn("[Events] TikTok server registration fallback failed", err)
         })
       }

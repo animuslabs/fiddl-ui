@@ -1575,6 +1575,9 @@ export type PointsFinishBuyPackageBody = {
   ttclid?: string;
   ttp?: string;
   userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
 };
 
 export type PointsFinishBuyPackage200AnyOfPurchaseUnitsItemAmount = {
@@ -4604,9 +4607,142 @@ export type TiktokCompleteRegistrationBody = {
   ttp?: string;
   userAgent?: string;
   eventId?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
 };
 
 export type TiktokCompleteRegistration200 = {
+  ok: boolean;
+};
+
+export type MarketingAddToCartBodyContentsItem = {
+  id: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  quantity?: number;
+  item_price?: number;
+  title?: string;
+};
+
+export type MarketingAddToCartBody = {
+  /**
+   * @minLength 3
+   * @maxLength 3
+   */
+  currency: string;
+  /** @minimum 0 */
+  value: number;
+  content_type?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  num_items?: number;
+  contents: MarketingAddToCartBodyContentsItem[];
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingAddToCart200 = {
+  ok: boolean;
+};
+
+export type MarketingInitiateCheckoutBodyContentsItem = {
+  id: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  quantity?: number;
+  item_price?: number;
+  title?: string;
+};
+
+export type MarketingInitiateCheckoutBody = {
+  /**
+   * @minLength 3
+   * @maxLength 3
+   */
+  currency: string;
+  /** @minimum 0 */
+  value: number;
+  content_type?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  num_items?: number;
+  contents: MarketingInitiateCheckoutBodyContentsItem[];
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingInitiateCheckout200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateImageStartBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateImageStart200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateImageSuccessBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateImageSuccess200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateVideoStartBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateVideoStart200 = {
+  ok: boolean;
+};
+
+export type MarketingCreateVideoSuccessBody = {
+  /** @minLength 1 */
+  model: string;
+  eventId?: string;
+  userAgent?: string;
+  fbp?: string;
+  fbc?: string;
+  eventSourceUrl?: string;
+};
+
+export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
 };
 
@@ -13700,6 +13836,342 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getTiktokCompleteRegistrationMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingAddToCart = (
+    marketingAddToCartBody: MaybeRef<MarketingAddToCartBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingAddToCart200>> => {
+    marketingAddToCartBody = unref(marketingAddToCartBody);
+    
+    return axios.post(
+      `/marketing/addToCart`,
+      marketingAddToCartBody,options
+    );
+  }
+
+
+
+export const getMarketingAddToCartMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingAddToCart>>, TError,{data: MarketingAddToCartBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingAddToCart>>, TError,{data: MarketingAddToCartBody}, TContext> => {
+
+const mutationKey = ['marketingAddToCart'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingAddToCart>>, {data: MarketingAddToCartBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingAddToCart(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingAddToCartMutationResult = NonNullable<Awaited<ReturnType<typeof marketingAddToCart>>>
+    export type MarketingAddToCartMutationBody = MarketingAddToCartBody
+    export type MarketingAddToCartMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingAddToCart = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingAddToCart>>, TError,{data: MarketingAddToCartBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingAddToCart>>,
+        TError,
+        {data: MarketingAddToCartBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingAddToCartMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingInitiateCheckout = (
+    marketingInitiateCheckoutBody: MaybeRef<MarketingInitiateCheckoutBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingInitiateCheckout200>> => {
+    marketingInitiateCheckoutBody = unref(marketingInitiateCheckoutBody);
+    
+    return axios.post(
+      `/marketing/initiateCheckout`,
+      marketingInitiateCheckoutBody,options
+    );
+  }
+
+
+
+export const getMarketingInitiateCheckoutMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingInitiateCheckout>>, TError,{data: MarketingInitiateCheckoutBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingInitiateCheckout>>, TError,{data: MarketingInitiateCheckoutBody}, TContext> => {
+
+const mutationKey = ['marketingInitiateCheckout'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingInitiateCheckout>>, {data: MarketingInitiateCheckoutBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingInitiateCheckout(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingInitiateCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof marketingInitiateCheckout>>>
+    export type MarketingInitiateCheckoutMutationBody = MarketingInitiateCheckoutBody
+    export type MarketingInitiateCheckoutMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingInitiateCheckout = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingInitiateCheckout>>, TError,{data: MarketingInitiateCheckoutBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingInitiateCheckout>>,
+        TError,
+        {data: MarketingInitiateCheckoutBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingInitiateCheckoutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingCreateImageStart = (
+    marketingCreateImageStartBody: MaybeRef<MarketingCreateImageStartBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingCreateImageStart200>> => {
+    marketingCreateImageStartBody = unref(marketingCreateImageStartBody);
+    
+    return axios.post(
+      `/marketing/createImageStart`,
+      marketingCreateImageStartBody,options
+    );
+  }
+
+
+
+export const getMarketingCreateImageStartMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageStart>>, TError,{data: MarketingCreateImageStartBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageStart>>, TError,{data: MarketingCreateImageStartBody}, TContext> => {
+
+const mutationKey = ['marketingCreateImageStart'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingCreateImageStart>>, {data: MarketingCreateImageStartBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingCreateImageStart(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingCreateImageStartMutationResult = NonNullable<Awaited<ReturnType<typeof marketingCreateImageStart>>>
+    export type MarketingCreateImageStartMutationBody = MarketingCreateImageStartBody
+    export type MarketingCreateImageStartMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingCreateImageStart = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageStart>>, TError,{data: MarketingCreateImageStartBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingCreateImageStart>>,
+        TError,
+        {data: MarketingCreateImageStartBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingCreateImageStartMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingCreateImageSuccess = (
+    marketingCreateImageSuccessBody: MaybeRef<MarketingCreateImageSuccessBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingCreateImageSuccess200>> => {
+    marketingCreateImageSuccessBody = unref(marketingCreateImageSuccessBody);
+    
+    return axios.post(
+      `/marketing/createImageSuccess`,
+      marketingCreateImageSuccessBody,options
+    );
+  }
+
+
+
+export const getMarketingCreateImageSuccessMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageSuccess>>, TError,{data: MarketingCreateImageSuccessBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageSuccess>>, TError,{data: MarketingCreateImageSuccessBody}, TContext> => {
+
+const mutationKey = ['marketingCreateImageSuccess'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingCreateImageSuccess>>, {data: MarketingCreateImageSuccessBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingCreateImageSuccess(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingCreateImageSuccessMutationResult = NonNullable<Awaited<ReturnType<typeof marketingCreateImageSuccess>>>
+    export type MarketingCreateImageSuccessMutationBody = MarketingCreateImageSuccessBody
+    export type MarketingCreateImageSuccessMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingCreateImageSuccess = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateImageSuccess>>, TError,{data: MarketingCreateImageSuccessBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingCreateImageSuccess>>,
+        TError,
+        {data: MarketingCreateImageSuccessBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingCreateImageSuccessMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingCreateVideoStart = (
+    marketingCreateVideoStartBody: MaybeRef<MarketingCreateVideoStartBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingCreateVideoStart200>> => {
+    marketingCreateVideoStartBody = unref(marketingCreateVideoStartBody);
+    
+    return axios.post(
+      `/marketing/createVideoStart`,
+      marketingCreateVideoStartBody,options
+    );
+  }
+
+
+
+export const getMarketingCreateVideoStartMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoStart>>, TError,{data: MarketingCreateVideoStartBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoStart>>, TError,{data: MarketingCreateVideoStartBody}, TContext> => {
+
+const mutationKey = ['marketingCreateVideoStart'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingCreateVideoStart>>, {data: MarketingCreateVideoStartBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingCreateVideoStart(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingCreateVideoStartMutationResult = NonNullable<Awaited<ReturnType<typeof marketingCreateVideoStart>>>
+    export type MarketingCreateVideoStartMutationBody = MarketingCreateVideoStartBody
+    export type MarketingCreateVideoStartMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingCreateVideoStart = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoStart>>, TError,{data: MarketingCreateVideoStartBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingCreateVideoStart>>,
+        TError,
+        {data: MarketingCreateVideoStartBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingCreateVideoStartMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingCreateVideoSuccess = (
+    marketingCreateVideoSuccessBody: MaybeRef<MarketingCreateVideoSuccessBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingCreateVideoSuccess200>> => {
+    marketingCreateVideoSuccessBody = unref(marketingCreateVideoSuccessBody);
+    
+    return axios.post(
+      `/marketing/createVideoSuccess`,
+      marketingCreateVideoSuccessBody,options
+    );
+  }
+
+
+
+export const getMarketingCreateVideoSuccessMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoSuccess>>, TError,{data: MarketingCreateVideoSuccessBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoSuccess>>, TError,{data: MarketingCreateVideoSuccessBody}, TContext> => {
+
+const mutationKey = ['marketingCreateVideoSuccess'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingCreateVideoSuccess>>, {data: MarketingCreateVideoSuccessBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingCreateVideoSuccess(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingCreateVideoSuccessMutationResult = NonNullable<Awaited<ReturnType<typeof marketingCreateVideoSuccess>>>
+    export type MarketingCreateVideoSuccessMutationBody = MarketingCreateVideoSuccessBody
+    export type MarketingCreateVideoSuccessMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingCreateVideoSuccess = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingCreateVideoSuccess>>, TError,{data: MarketingCreateVideoSuccessBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingCreateVideoSuccess>>,
+        TError,
+        {data: MarketingCreateVideoSuccessBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingCreateVideoSuccessMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

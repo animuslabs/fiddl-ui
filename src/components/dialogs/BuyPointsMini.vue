@@ -28,6 +28,7 @@ import { catchErr, throwErr, getCookie } from "lib/util"
 import umami from "lib/umami"
 import { events } from "lib/eventsManager"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
+import { getMetaAttribution, generateEventId } from "lib/metaAttribution"
 
 export default defineComponent({
   name: "BuyPointsMini",
@@ -116,6 +117,7 @@ export default defineComponent({
               const res = await pointsInitBuyPackage({ method: "payPal", packageId: this.selectedPkgIndex, discountCode: this.discountCode || undefined }).catch(catchErr)
             if (!res?.data) return ""
             try {
+              const event_id = generateEventId()
               events.purchaseInitiated({
                 method: "payPal",
                 currency: "USD",
@@ -124,7 +126,9 @@ export default defineComponent({
                 content_type: "product",
                 contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
                 content_name: `Fiddl Points ${this.selectedPoints || 0}`,
+                event_id,
               } as any)
+              ;(this as any)._metaEventId = event_id
             } catch {}
             return (res.data as any).id || ""
           },
@@ -132,6 +136,7 @@ export default defineComponent({
             try {
               const datafastVisitorId = getCookie("datafast_visitor_id")
               const { ttclid, ttp, userAgent } = getTikTokAttribution()
+              const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
               const res = await pointsFinishBuyPackage({
                 method: "payPal",
                 orderId: data.orderID,
@@ -139,6 +144,9 @@ export default defineComponent({
                 ttclid,
                 ttp,
                 userAgent,
+                fbp,
+                fbc,
+                eventSourceUrl,
               })
               if (!res?.data) {
                 throwErr("Failed to capture order")
@@ -152,9 +160,10 @@ export default defineComponent({
                   value: Number(this.selectedUsd || 0),
                   num_items: 1,
                   content_type: "product",
-                  contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
-                  content_name: `Fiddl Points ${this.selectedPoints || 0}`,
-                } as any)
+                contents: [{ id: `points_${this.selectedPoints || 0}`, quantity: 1, item_price: Number(this.selectedUsd || 0) }],
+                content_name: `Fiddl Points ${this.selectedPoints || 0}`,
+                event_id: (this as any)._metaEventId,
+              } as any)
               } catch {}
             if (typeof umami.track === "function") {
               umami.track("buyPointsPkgSuccess", {

@@ -65,6 +65,7 @@ let interval: ReturnType<typeof setInterval> | null = null
 import ms from "ms"
 import { events } from "lib/eventsManager"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
+import { getMetaAttribution, generateEventId } from "lib/metaAttribution"
 export default defineComponent({
   name: "CryptoPayment",
   props: {
@@ -128,12 +129,16 @@ export default defineComponent({
       if (!this.cryptoOrder || !this.selectedMethod) return
       try {
         const { ttclid, ttp, userAgent } = getTikTokAttribution()
+        const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
         const response = await pointsFinishBuyPackage({
           method: this.selectedMethod,
           orderId: this.cryptoOrder?.id,
           ttclid,
           ttp,
           userAgent,
+          fbp,
+          fbc,
+          eventSourceUrl,
         })
         if (response?.data) {
           try {
@@ -190,6 +195,7 @@ export default defineComponent({
 
         // Track checkout initiation for crypto
         try {
+          const event_id = generateEventId()
           events.purchaseInitiated({
             method: "crypto",
             currency: this.purchaseUsd != null ? "USD" : undefined,
@@ -199,6 +205,7 @@ export default defineComponent({
             contents: [{ id: this.purchasePoints != null ? `points_${this.purchasePoints}` : "points_pkg", quantity: 1, item_price: this.purchaseUsd != null ? Number(this.purchaseUsd) : undefined }],
             content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package (crypto)",
             points: this.purchasePoints ?? null,
+            event_id,
           } as any)
         } catch {}
       } catch (error) {
