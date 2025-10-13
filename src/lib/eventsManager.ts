@@ -137,13 +137,18 @@ class EventsManager {
     try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const fbpS = (fbp || "") as string
+        const fbcS = (fbc || "") as string
+        const eventSourceUrlS = (eventSourceUrl || (typeof window !== "undefined" ? window.location.href : "")) as string
+        const userAgentS = (userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "")) as string
         const model = (meta || {}).model as string | undefined
+        const modelS = (model || "") as string
         if (kind === "image") {
-          void marketingCreateImageStart({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+          void marketingCreateImageStart({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
             this._debug && console.warn("[Events] marketing.createImageStart failed", err),
           )
         } else {
-          void marketingCreateVideoStart({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+          void marketingCreateVideoStart({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
             this._debug && console.warn("[Events] marketing.createVideoStart failed", err),
           )
         }
@@ -170,13 +175,18 @@ class EventsManager {
     try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const fbpS = (fbp || "") as string
+        const fbcS = (fbc || "") as string
+        const eventSourceUrlS = (eventSourceUrl || (typeof window !== "undefined" ? window.location.href : "")) as string
+        const userAgentS = (userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "")) as string
         const model = (meta || {}).model as string | undefined
+        const modelS = (model || "") as string
         if (kind === "image") {
-          void marketingCreateImageSuccess({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+          void marketingCreateImageSuccess({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
             this._debug && console.warn("[Events] marketing.createImageSuccess failed", err),
           )
         } else {
-          void marketingCreateVideoSuccess({ model, fbp, fbc, eventId: event_id, eventSourceUrl, userAgent }).catch((err) =>
+          void marketingCreateVideoSuccess({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
             this._debug && console.warn("[Events] marketing.createVideoSuccess failed", err),
           )
         }
