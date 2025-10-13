@@ -2,6 +2,7 @@ import { apiUrl } from "lib/api"
 import { jwt } from "lib/jwt"
 import { getReferredBy } from "lib/util"
 import { getMetaAttribution } from "./metaAttribution"
+import { getClientTracking } from "./tracking"
 import {
   loginLinkInitLoginLink,
   loginLinkLoginWithCode,
@@ -60,6 +61,7 @@ export async function requestEmailLoginCode(email: string): Promise<string> {
   const { data } = await loginLinkInitLoginLink({
     email,
     referredBy: getReferredBy(),
+    tracking: getClientTracking(),
   })
   return data
 }

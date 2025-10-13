@@ -85,10 +85,27 @@ export interface ErrorNOTFOUND {
   issues?: ErrorNOTFOUNDIssuesItem[];
 }
 
+export type PkAuthRegisterStartBodyTracking = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  referrerUrl?: string;
+  landingUrl?: string;
+  gclid?: string;
+  fbclid?: string;
+  ttclid?: string;
+  fbp?: string;
+  fbc?: string;
+  source?: string;
+};
+
 export type PkAuthRegisterStartBody = {
   email?: string;
   phone?: string;
   referredByUserName?: string;
+  tracking?: PkAuthRegisterStartBodyTracking;
 };
 
 export type PkAuthRegisterFinishBody = {
@@ -2222,10 +2239,27 @@ export type UserConfirmDeleteAccount200 = {
   ok: boolean;
 };
 
+export type LoginLinkInitLoginLinkBodyTracking = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  referrerUrl?: string;
+  landingUrl?: string;
+  gclid?: string;
+  fbclid?: string;
+  ttclid?: string;
+  fbp?: string;
+  fbc?: string;
+  source?: string;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
   referredBy?: string;
+  tracking?: LoginLinkInitLoginLinkBodyTracking;
 };
 
 export type LoginLinkLoginWithLinkBody = {
@@ -2345,6 +2379,32 @@ export type StatsHistory200SnapshotsItem = {
 
 export type StatsHistory200 = {
   snapshots: StatsHistory200SnapshotsItem[];
+};
+
+export type StatsWeeklyParams = {
+weeks?: number;
+endAt?: string;
+};
+
+export type StatsWeekly200BucketsItemPaymentsByMethod = {
+  payPal: number;
+  crypto: number;
+  stars: number;
+};
+
+export type StatsWeekly200BucketsItemPayments = {
+  totalUsd: number;
+  byMethod: StatsWeekly200BucketsItemPaymentsByMethod;
+};
+
+export type StatsWeekly200BucketsItem = {
+  weekStart: string;
+  activeUsers: number;
+  payments: StatsWeekly200BucketsItemPayments;
+};
+
+export type StatsWeekly200 = {
+  buckets: StatsWeekly200BucketsItem[];
 };
 
 export type CollectionsMediaInUsersCollectionParams = {
@@ -6503,6 +6563,34 @@ export const getStatsHistoryUrl = (params?: StatsHistoryParams,) => {
 export const statsHistory = async (params?: StatsHistoryParams, options?: RequestInit): Promise<StatsHistory200> => {
   
   return fetcher<StatsHistory200>(getStatsHistoryUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getStatsWeeklyUrl = (params?: StatsWeeklyParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/stats/weekly?${stringifiedParams}` : `/stats/weekly`
+}
+
+export const statsWeekly = async (params?: StatsWeeklyParams, options?: RequestInit): Promise<StatsWeekly200> => {
+  
+  return fetcher<StatsWeekly200>(getStatsWeeklyUrl(params),
   {      
     ...options,
     method: 'GET'

@@ -114,10 +114,27 @@ export interface ErrorNOTFOUND {
   issues?: ErrorNOTFOUNDIssuesItem[];
 }
 
+export type PkAuthRegisterStartBodyTracking = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  referrerUrl?: string;
+  landingUrl?: string;
+  gclid?: string;
+  fbclid?: string;
+  ttclid?: string;
+  fbp?: string;
+  fbc?: string;
+  source?: string;
+};
+
 export type PkAuthRegisterStartBody = {
   email?: string;
   phone?: string;
   referredByUserName?: string;
+  tracking?: PkAuthRegisterStartBodyTracking;
 };
 
 export type PkAuthRegisterFinishBody = {
@@ -2251,10 +2268,27 @@ export type UserConfirmDeleteAccount200 = {
   ok: boolean;
 };
 
+export type LoginLinkInitLoginLinkBodyTracking = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  referrerUrl?: string;
+  landingUrl?: string;
+  gclid?: string;
+  fbclid?: string;
+  ttclid?: string;
+  fbp?: string;
+  fbc?: string;
+  source?: string;
+};
+
 export type LoginLinkInitLoginLinkBody = {
   email?: string;
   phoneNumber?: string;
   referredBy?: string;
+  tracking?: LoginLinkInitLoginLinkBodyTracking;
 };
 
 export type LoginLinkLoginWithLinkBody = {
@@ -2374,6 +2408,32 @@ export type StatsHistory200SnapshotsItem = {
 
 export type StatsHistory200 = {
   snapshots: StatsHistory200SnapshotsItem[];
+};
+
+export type StatsWeeklyParams = {
+weeks?: number;
+endAt?: string;
+};
+
+export type StatsWeekly200BucketsItemPaymentsByMethod = {
+  payPal: number;
+  crypto: number;
+  stars: number;
+};
+
+export type StatsWeekly200BucketsItemPayments = {
+  totalUsd: number;
+  byMethod: StatsWeekly200BucketsItemPaymentsByMethod;
+};
+
+export type StatsWeekly200BucketsItem = {
+  weekStart: string;
+  activeUsers: number;
+  payments: StatsWeekly200BucketsItemPayments;
+};
+
+export type StatsWeekly200 = {
+  buckets: StatsWeekly200BucketsItem[];
 };
 
 export type CollectionsMediaInUsersCollectionParams = {
@@ -8939,6 +8999,64 @@ export function useStatsHistory<TData = Awaited<ReturnType<typeof statsHistory>>
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStatsHistoryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const statsWeekly = (
+    params?: MaybeRef<StatsWeeklyParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<StatsWeekly200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/stats/weekly`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getStatsWeeklyQueryKey = (params?: MaybeRef<StatsWeeklyParams>,) => {
+    return ['stats','weekly', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getStatsWeeklyQueryOptions = <TData = Awaited<ReturnType<typeof statsWeekly>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<StatsWeeklyParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsWeekly>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getStatsWeeklyQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof statsWeekly>>> = ({ signal }) => statsWeekly(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof statsWeekly>>, TError, TData> 
+}
+
+export type StatsWeeklyQueryResult = NonNullable<Awaited<ReturnType<typeof statsWeekly>>>
+export type StatsWeeklyQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useStatsWeekly<TData = Awaited<ReturnType<typeof statsWeekly>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<StatsWeeklyParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof statsWeekly>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStatsWeeklyQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

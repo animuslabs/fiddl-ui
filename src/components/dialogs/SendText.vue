@@ -25,6 +25,7 @@ import { loginLinkInitLoginLink } from "src/lib/orval"
 import { getReferredBy } from "lib/util"
 import { QDialog, Notify, Dialog, LocalStorage } from "quasar"
 import { useUserAuth } from "src/stores/userAuth"
+import { getClientTracking } from "lib/tracking"
 
 const loginMethods = [
   { label: "email", value: "email" },
@@ -72,6 +73,7 @@ export default {
           phoneNumber: phone,
           email,
           referredBy: getReferredBy(),
+          tracking: getClientTracking(),
         })
         const result = response?.data
         Dialog.create({

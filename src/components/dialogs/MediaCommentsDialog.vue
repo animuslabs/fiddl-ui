@@ -122,8 +122,11 @@ defineExpose({
 .media-comments-card--mobile {
   width: 100vw;
   max-width: 100vw;
+  /* Use dynamic viewport height on modern browsers to avoid cutoff under mobile address bars */
   height: 100vh;
+  height: 100dvh;
   max-height: 100vh;
+  max-height: 100dvh;
   border-radius: 0;
 }
 
@@ -135,13 +138,22 @@ defineExpose({
 }
 
 .media-comments-card--mobile .media-comments-header {
-  padding: 12px 16px;
+  /* Add safe-area top padding for notched devices */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
+}
+
+:deep(.media-comments-shell.q-dialog--maximized) {
+  /* Ensure the fixed dialog uses dynamic viewport height on mobile */
+  height: 100vh;
+  height: 100dvh;
 }
 
 :deep(.media-comments-shell.q-dialog--maximized .q-dialog__inner) {
   align-items: stretch;
   justify-content: stretch;
   padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 :deep(.media-comments-shell.q-dialog--maximized .q-dialog__inner > *) {
@@ -197,6 +209,7 @@ defineExpose({
 }
 
 .media-comments-card--mobile .media-comments-input {
-  padding: 0 12px 16px;
+  /* Respect safe-area (iOS) and ensure composer isn't hidden behind system UI */
+  padding: 0 12px calc(16px + env(safe-area-inset-bottom, 0px));
 }
 </style>

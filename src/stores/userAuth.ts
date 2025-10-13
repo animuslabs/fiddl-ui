@@ -327,8 +327,12 @@ export const useUserAuth = defineStore("userAuth", {
       const { data: userId } = await userFindByPhone({ phone: phoneNumber })
       await this.pkLogin(userId)
     },
-    async registerAndLogin(data: { email?: string; phone?: string; referredBy?: string }) {
-      const result = await pkAuth.register(data)
+    async registerAndLogin(data: { email?: string; phone?: string }) {
+      const result = await pkAuth.register({
+        email: data.email,
+        phone: data.phone,
+        referredByUserName: getReferredBy(),
+      })
       // Set advanced matching (hashed identifiers) before firing registration-complete
       try {
         events.identify({

@@ -5,6 +5,7 @@ import { events } from "lib/eventsManager"
 import { metaPixel } from "lib/metaPixel"
 import { jwt } from "lib/jwt"
 import { captureTikTokAttributionFromPage } from "lib/tiktokAttribution"
+import { captureFirstTouchAttributionFromPage } from "lib/tracking"
 
 export default boot(({ app }) => {
   console.log("quasar boot")
@@ -12,6 +13,9 @@ export default boot(({ app }) => {
 
   // Configure Tonomy ID SDK
   if (typeof window !== "undefined") {
+    try {
+      captureFirstTouchAttributionFromPage()
+    } catch {}
     try {
       captureTikTokAttributionFromPage()
     } catch {}

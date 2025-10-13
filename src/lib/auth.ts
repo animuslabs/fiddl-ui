@@ -1,10 +1,16 @@
 import * as webAuthN from "@simplewebauthn/browser"
 import { pkAuthRegisterStart, pkAuthRegisterFinish, pkAuthLoginStart, pkAuthLoginFinish, userFindByEmail, userFindByPhone } from "lib/orval"
+import { getClientTracking } from "lib/tracking"
 import { normalizePhoneNumber, throwErr } from "lib/util"
 
 export const passKeyAuth = {
-  async register(data: { phone?: string; email?: string; referredBy?: string }) {
-    const response = await pkAuthRegisterStart(data)
+  async register(data: { phone?: string; email?: string; referredByUserName?: string }) {
+    const response = await pkAuthRegisterStart({
+      email: data.email,
+      phone: data.phone,
+      referredByUserName: data.referredByUserName,
+      tracking: getClientTracking(),
+    })
     const registration = response.data as any
     console.log("registerResp", registration)
     const attResp = await webAuthN.startRegistration(registration)

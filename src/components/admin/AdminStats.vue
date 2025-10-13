@@ -22,7 +22,7 @@
     q-input(v-model="fromStr" type="datetime-local" label="From" dense outlined clearable style="min-width:220px")
     q-input(v-model="toStr" type="datetime-local" label="To" dense outlined clearable style="min-width:220px")
     q-input(v-model.number="limit" type="number" label="Limit" dense outlined clearable style="width:120px")
-    q-btn(icon="refresh" label="Load" color="primary" unelevated @click="refreshAll" :loading="loadingHistory || loadingPaymentsHistory")
+    q-btn(icon="refresh" label="Load" color="primary" unelevated @click="refreshAll" :loading="loadingHistory || loadingWeekly")
 
   .row.q-col-gutter-sm
     q-card.col-12.col-md-6.col-lg-4(v-for="m in metricsToShow" :key="m.key" flat bordered)
@@ -42,7 +42,19 @@
   .row.items-center.q-gutter-sm.q-mt-lg
     h6.q-my-none Payments by Method (Weekly)
     q-space
-    q-btn(icon="refresh" flat @click="refreshPaymentsHistory" :loading="loadingPaymentsHistory")
+    q-input(v-model.number="weeklyWeeks" type="number" label="Weeks" dense outlined clearable style="width:120px")
+    q-input(v-model="weeklyEndStr" type="datetime-local" label="End At" dense outlined clearable style="min-width:220px")
+    q-btn(icon="refresh" flat @click="refreshWeekly" :loading="loadingWeekly")
+
+  .row.q-col-gutter-sm
+    q-card.col-12.col-md-6.col-lg-4(flat bordered)
+      .q-pa-md
+        .row.items-center.q-mb-sm
+          .col
+            div.text-caption.text-grey-7 Weekly Active Users
+            div.text-h6 {{ formatNumber(latestValue(weeklyActiveUsersSeries)) }}
+          q-badge(v-if="weeklyActiveUsersSeries?.length" color="grey-5" text-color="black" :label="`${weeklyActiveUsersSeries?.length || 0} wks`")
+        SimpleLineChart(:values="weeklyActiveUsersSeries" :height="120" stroke-color="#1976d2" :show-area="true" :show-axis-labels="false")
 
   .row.q-col-gutter-sm
     q-card.col-12.col-md-6.col-lg-4(v-for="pm in paymentMethodSeries" :key="pm.key" flat bordered)
@@ -58,7 +70,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import SimpleLineChart from './SimpleLineChart.vue'
-import { statsUsers, statsImages, statsCollections, statsPayments, statsHistory, adminListPayments, type StatsUsers200, type StatsImages200, type StatsCollections200, type StatsPayments200, type AdminListPayments200ItemsItem } from 'src/lib/orval'
+import { statsUsers, statsImages, statsCollections, statsPayments, statsHistory, statsWeekly, type StatsUsers200, type StatsImages200, type StatsCollections200, type StatsPayments200 } from 'src/lib/orval'
 
 // Live stats state
 const loadingLive = ref(false)
@@ -132,9 +144,11 @@ async function refreshHistory() {
   }
 }
 
-// Payments history by method (weekly)
-const loadingPaymentsHistory = ref(false)
-const paymentsByMethodWeekly = ref<Record<string, Record<string, number>>>({})
+// Weekly metrics (WAU and payments by method)
+const loadingWeekly = ref(false)
+const weeklyWeeks = ref<number>(12)
+const weeklyEndStr = ref<string | null>(null)
+const weekly = ref<{ buckets: any[] }>({ buckets: [] })
 
 function weekStartKey(d: Date): string {
   const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
@@ -160,63 +174,26 @@ function buildWeekKeys(fromISO?: string | null, toISO?: string | null): string[]
   return keys
 }
 
-function isPaidStatus(status?: string | null): boolean {
-  if (!status) return false
-  const s = status.toLowerCase()
-  if (s.includes('fail') || s.includes('declin') || s.includes('error') || s.includes('cancel')) return false
-  if (s.includes('pend') || s.includes('incom')) return false
-  if (s.includes('succe') || s.includes('complet') || s.includes('paid')) return true
-  return false
-}
+// no-op left from older aggregation logic; kept helpers above for history grouping
 
-async function refreshPaymentsHistory() {
+async function refreshWeekly() {
   try {
-    loadingPaymentsHistory.value = true
-    const fromISO = fromStr.value ? new Date(fromStr.value).toISOString() : undefined
-    const toISO = toStr.value ? new Date(toStr.value).toISOString() : undefined
-    const methods = ['payPal', 'crypto', 'stars']
-    const result: Record<string, Record<string, number>> = {}
-    for (const m of methods) {
-      // page through results
-      let offset = 0
-      const pageLimit = 500
-      const totals: Record<string, number> = {}
-      // simple guard to avoid huge loops
-      let safety = 0
-      while (safety < 50) {
-        safety++
-        const res = await adminListPayments({
-          limit: pageLimit,
-          offset,
-          method: m as any,
-          startDateTime: fromISO,
-          endDateTime: toISO,
-        })
-        const items: AdminListPayments200ItemsItem[] = res?.data?.items || []
-        for (const it of items) {
-          if (!isPaidStatus(it?.status)) continue
-          const amt = Number(it?.amountUsd ?? 0)
-          if (!Number.isFinite(amt) || amt <= 0) continue
-          const d = new Date(it.createdAt)
-          const wk = weekStartKey(d)
-          totals[wk] = (totals[wk] || 0) + amt
-        }
-        if (items.length < pageLimit) break
-        offset += items.length
-      }
-      result[m] = totals
-    }
-    paymentsByMethodWeekly.value = result
+    loadingWeekly.value = true
+    const params: any = {}
+    if (weeklyWeeks.value && Number(weeklyWeeks.value) > 0) params.weeks = Number(weeklyWeeks.value)
+    if (weeklyEndStr.value) params.endAt = new Date(weeklyEndStr.value).toISOString()
+    const res = await statsWeekly(params)
+    weekly.value = res?.data || { buckets: [] }
   } catch (e) {
-    paymentsByMethodWeekly.value = {}
+    weekly.value = { buckets: [] }
   } finally {
-    loadingPaymentsHistory.value = false
+    loadingWeekly.value = false
   }
 }
 
 async function refreshAll() {
   await refreshHistory()
-  await refreshPaymentsHistory()
+  await refreshWeekly()
 }
 
 const metricsToShow = [
@@ -277,14 +254,16 @@ const paymentMethodColors: Record<string, string> = {
   stars: '#FF6D00',
 }
 
+const weeklyActiveUsersSeries = computed<number[]>(() => {
+  const buckets = Array.isArray(weekly.value?.buckets) ? weekly.value.buckets : []
+  return buckets.map((b: any) => Number(b?.activeUsers ?? 0))
+})
+
 const paymentMethodSeries = computed(() => {
-  const fromISO = fromStr.value ? new Date(fromStr.value).toISOString() : undefined
-  const toISO = toStr.value ? new Date(toStr.value).toISOString() : undefined
-  const weeks = buildWeekKeys(fromISO, toISO)
+  const buckets = Array.isArray(weekly.value?.buckets) ? weekly.value.buckets : []
   const methods = ['payPal', 'crypto', 'stars']
   return methods.map(m => {
-    const wkMap = paymentsByMethodWeekly.value?.[m] || {}
-    const values = weeks.map(wk => Number(wkMap[wk] || 0))
+    const values = buckets.map((b: any) => Number(b?.payments?.byMethod?.[m] ?? 0))
     return { key: m, label: `${m} (USD)`, values, color: paymentMethodColors[m] || '#1976d2' }
   })
 })

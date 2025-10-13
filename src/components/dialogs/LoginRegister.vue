@@ -107,7 +107,7 @@ export default {
       console.log({ phone, email })
       // const referredBy = LocalStorage.getItem("referredBy") as string | undefined
       await this.userAuth
-        .registerAndLogin({ phone, email, referredBy: getReferredBy() })
+        .registerAndLogin({ phone, email })
         .then(() => {
           Notify.create({ message: "Logged in", color: "positive", icon: "check" })
           umami.track("pkRegisterSuccess")
