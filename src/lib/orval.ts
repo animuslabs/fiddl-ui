@@ -4226,6 +4226,11 @@ export type MissionsList200Item = {
   id: string;
   description: string;
   rewards: MissionsList200ItemRewardsItem[];
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  activeUsersEarnedPct?: number;
 };
 
 export type MissionsProgressParams = {

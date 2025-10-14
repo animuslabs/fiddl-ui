@@ -119,9 +119,16 @@ export default defineComponent({
 <style scoped>
 .missions-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Desktop default: 3 columns */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
+}
+/* Tablet: 2 columns */
+@media (max-width: 1439px) {
+  .missions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 1023px) {
   .missions-grid {
