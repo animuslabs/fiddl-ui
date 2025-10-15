@@ -6,6 +6,21 @@
   command = "yarn dev --port 5173"
 
 [[edge_functions]]
+  function = "datafast"
+  path     = "/js/script.js"
+  cache    = "manual"
+
+[[edge_functions]]
+  function = "datafast"
+  path     = "/js/script.hash.js"
+  cache    = "manual"
+
+[[edge_functions]]
+  function = "datafast"
+  path     = "/api/events"
+  cache    = "manual"
+
+[[edge_functions]]
   function = "request"
   path = "/request/*"
   cache = "manual"

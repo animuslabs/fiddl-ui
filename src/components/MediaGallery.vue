@@ -1512,7 +1512,7 @@ function prefetchImage(url: string): Promise<void> {
                   q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
                     q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
             // Media area
-            .media-aspect(:style="mediaAspectBoxStyle")
+            .media-aspect(:style="[mediaAspectBoxStyle, { '--mg-media-bg': `url('${barBgUrlFor(m)}')` }]")
               // Only mount heavy content when visible
               template(v-if="isVisible(m.id)")
                 template(v-if="shouldMaskNsfw(m)")
@@ -1531,8 +1531,10 @@ function prefetchImage(url: string): Promise<void> {
                   q-img(
                     :src="m.url"
                     :key="imageReloadKey[m.id]"
+                    :placeholder-src="barBgUrlFor(m)"
                     position="top"
                     style="width:100%; height:100%; object-fit: cover; object-position: top; display:block; background-color:#000;"
+                    transition="none"
                     spinner-color="white"
                     :class="props.selectable ? 'cursor-pointer' : ''"
                     :img-attrs="{ 'data-id': m.id }"
@@ -1585,7 +1587,7 @@ function prefetchImage(url: string): Promise<void> {
           // Legacy overlay path (no reserved bars)
           template(v-else)
             // Stable inner wrapper so swapping preview/img does not trigger group transitions
-            .media-fill
+            .media-fill(:style="{ '--mg-media-bg': `url('${barBgUrlFor(m)}')` }")
               // Only mount heavy content when visible
               template(v-if="isVisible(m.id)")
                 template(v-if="shouldMaskNsfw(m)")
@@ -1603,6 +1605,7 @@ function prefetchImage(url: string): Promise<void> {
                   q-img(
                     :src="m.url"
                     :key="imageReloadKey[m.id]"
+                    :placeholder-src="barBgUrlFor(m)"
                     position="top"
                     style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
                     spinner-color="white"
@@ -1686,7 +1689,7 @@ function prefetchImage(url: string): Promise<void> {
                   q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
                     q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
             // Media area
-            .media-aspect(:style="mediaAspectBoxStyle")
+            .media-aspect(:style="[mediaAspectBoxStyle, { '--mg-media-bg': `url('${barBgUrlFor(m)}')` }]")
               // Only mount heavy content when visible
               template(v-if="isVisible(m.id)")
                 template(v-if="shouldMaskNsfw(m)")
@@ -1863,6 +1866,28 @@ function prefetchImage(url: string): Promise<void> {
 /* Inner aspect box used when reserved bars are enabled */
 .media-aspect {
   background: #000; /* black before image/video renders */
+}
+
+/* Blurred ambient backdrop behind media while loading
+   Uses the same source as the bar blur but slightly less blurred */
+.media-aspect::before,
+.media-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--mg-media-bg, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px); /* less than 14px used in bars */
+  transform: scale(1.18);
+  opacity: 0.3;
+  z-index: 0;
+}
+/* Ensure media content renders above the ambient backdrop */
+.media-aspect > *,
+.media-fill > * {
+  position: relative;
+  z-index: 1;
 }
 
 .media-placeholder {
