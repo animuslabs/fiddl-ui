@@ -323,6 +323,17 @@ const storedNsfwPref = LocalStorage.getItem<boolean>(NSFW_PREFERENCE_KEY)
 const showNsfwContent = ref(storedNsfwPref === true)
 let nsfwDialogPromise: Promise<boolean> | null = null
 
+// Helper: pick a lightweight background image for bar blur
+function barBgUrlFor(m: MediaGalleryMeta): string {
+  try {
+    // Prefer smaller assets for the blurred backdrop
+    if ((m.type ?? m.mediaType) === 'video') return s3Video(m.id, 'preview-sm')
+    return img(m.id, 'sm')
+  } catch {
+    return m.url || ''
+  }
+}
+
 const privateTaxPercent = computed(() => {
   const tax = prices.privateTax
   return typeof tax === "number" && Number.isFinite(tax) ? Math.max(0, tax) : 0
@@ -638,7 +649,10 @@ const effectiveBottomBarPx = computed(() => {
   // Account for text size (~12px) plus padding so controls don't feel cramped
   const minForText = isPhone.value ? 34 : 28
   const base = Math.max(bottomBarPx.value, minPad, minForText)
-  return Math.round(base * mobileBarScale.value)
+  // Make the bottom bar ~10% slimmer while keeping sensible minimums
+  const scaled = base * 0.9
+  const floorMin = Math.max(minForText * 0.9, 22) // never get comically tiny
+  return Math.round(Math.max(scaled, floorMin) * mobileBarScale.value)
 })
 
 // Wrapper style for each tile’s inner container that holds media and optional bars
@@ -1481,7 +1495,11 @@ function prefetchImage(url: string): Promise<void> {
           // Reserved top/bottom bars path
           template(v-if="useReservedBars")
             // Top bar (reserved space)
-            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
+            .mg-topbar(
+              v-if="effectiveTopBarPx > 0"
+              :style="{ minHeight: effectiveTopBarPx + 'px', '--mg-bar-bg': `url('${barBgUrlFor(m)}')` }"
+              :class="{ 'with-creator': showCreatorFor(m) }"
+            )
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
                 // Creator avatar + username (left)
                 .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
@@ -1540,7 +1558,10 @@ function prefetchImage(url: string): Promise<void> {
                 @click.stop="onModelChipClick(m)"
               ) {{ getModelLabel(m) }}
             // Bottom bar (reserved space)
-            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }")
+            .mg-bottombar(
+              v-if="effectiveBottomBarPx > 0"
+              :style="{ minHeight: effectiveBottomBarPx + 'px', '--mg-bar-bg': `url('${barBgUrlFor(m)}')` }"
+            )
               // Popularity controls
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
@@ -1649,7 +1670,11 @@ function prefetchImage(url: string): Promise<void> {
           // Reserved top/bottom bars path for videos
           template(v-if="useReservedBars")
             // Top bar
-            .mg-topbar(v-if="effectiveTopBarPx > 0" :style="{ minHeight: effectiveTopBarPx + 'px' }" :class="{ 'with-creator': showCreatorFor(m) }")
+            .mg-topbar(
+              v-if="effectiveTopBarPx > 0"
+              :style="{ minHeight: effectiveTopBarPx + 'px', '--mg-bar-bg': `url('${barBgUrlFor(m)}')` }"
+              :class="{ 'with-creator': showCreatorFor(m) }"
+            )
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
                 // Creator avatar + username (left)
                 .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
@@ -1703,7 +1728,10 @@ function prefetchImage(url: string): Promise<void> {
                 @click.stop="onModelChipClick(m)"
               ) {{ getModelLabel(m) }}
             // Bottom bar
-            .mg-bottombar(v-if="effectiveBottomBarPx > 0" :style="{ minHeight: effectiveBottomBarPx + 'px' }")
+            .mg-bottombar(
+              v-if="effectiveBottomBarPx > 0"
+              :style="{ minHeight: effectiveBottomBarPx + 'px', '--mg-bar-bg': `url('${barBgUrlFor(m)}')` }"
+            )
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                   .pop-item
@@ -1951,13 +1979,42 @@ function prefetchImage(url: string): Promise<void> {
   justify-content: center;
   gap: 10px;
   padding: 8px 10px; /* add breathing room so icons don't hug the image */
+  position: relative;
+  overflow: hidden;
 }
 .mg-topbar {
   /* dark background to visually connect with media */
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.8);
 }
 .mg-bottombar {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.8);
+}
+.mg-topbar::before,
+.mg-bottombar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--mg-bar-bg, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px);
+  transform: scale(1.25);
+  opacity: 0.35; /* subtle so content stays legible */
+  z-index: 0;
+}
+.mg-topbar::after,
+.mg-bottombar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* light vignette to improve contrast atop the blurred bg */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.65));
+  z-index: 0;
+}
+.mg-topbar > *,
+.mg-bottombar > * {
+  position: relative;
+  z-index: 1;
 }
 .mg-topbar.with-creator {
   justify-content: space-between;

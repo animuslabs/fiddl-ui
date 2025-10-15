@@ -4684,6 +4684,7 @@ export type MarketingAddToCartBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingAddToCart200 = {
@@ -4721,6 +4722,7 @@ export type MarketingInitiateCheckoutBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingInitiateCheckout200 = {
@@ -4735,6 +4737,7 @@ export type MarketingCreateImageStartBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingCreateImageStart200 = {
@@ -4749,6 +4752,7 @@ export type MarketingCreateImageSuccessBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingCreateImageSuccess200 = {
@@ -4763,6 +4767,7 @@ export type MarketingCreateVideoStartBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingCreateVideoStart200 = {
@@ -4777,6 +4782,7 @@ export type MarketingCreateVideoSuccessBody = {
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
+  trackingId?: string;
 };
 
 export type MarketingCreateVideoSuccess200 = {
