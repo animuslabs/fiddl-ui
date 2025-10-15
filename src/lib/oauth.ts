@@ -1,6 +1,6 @@
 import { apiUrl } from "lib/api"
 import { jwt } from "lib/jwt"
-import { getReferredBy } from "lib/util"
+import { getReferredBy, getCookie } from "lib/util"
 import { getMetaAttribution } from "./metaAttribution"
 import { getClientTracking } from "./tracking"
 import {
@@ -109,6 +109,11 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
       if (fbc) requestUrl.searchParams.set("fbc", fbc)
       if (fbclid) requestUrl.searchParams.set("fbclid", fbclid)
     } catch {}
+    // Attach DataFast visitor id for redundancy
+    try {
+      const trackingId = getCookie("datafast_visitor_id")
+      if (trackingId) requestUrl.searchParams.set("trackingId", trackingId)
+    } catch {}
     try {
       const auth = jwt.read()
       if (auth?.token) {
@@ -153,6 +158,11 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
                 if (fbc && !u.searchParams.has("fbc")) u.searchParams.set("fbc", fbc)
                 if (fbclid && !u.searchParams.has("fbclid")) u.searchParams.set("fbclid", fbclid)
               } catch {}
+              // Attach DataFast visitor id
+              try {
+                const trackingId = getCookie("datafast_visitor_id")
+                if (trackingId && !u.searchParams.has("trackingId")) u.searchParams.set("trackingId", trackingId)
+              } catch {}
               url = u.toString()
             }
           }
@@ -181,6 +191,11 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     if (fbp) requestUrl.searchParams.set("fbp", fbp)
     if (fbc) requestUrl.searchParams.set("fbc", fbc)
     if (fbclid) requestUrl.searchParams.set("fbclid", fbclid)
+  } catch {}
+  // Attach DataFast visitor id
+  try {
+    const trackingId = getCookie("datafast_visitor_id")
+    if (trackingId) requestUrl.searchParams.set("trackingId", trackingId)
   } catch {}
 
   window.location.href = requestUrl.toString()

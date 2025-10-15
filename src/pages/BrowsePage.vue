@@ -58,8 +58,8 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const browserStore = useBrowserStore()
-    // Default to grid on phones for better media visibility; keep mosaic elsewhere
-    const viewMode = ref<"grid" | "mosaic">($q.screen.lt.sm ? "grid" : "mosaic")
+    // Use mosaic by default on all screens; user toggle or saved preference may override
+    const viewMode = ref<"grid" | "mosaic">("mosaic")
     const searchBarRef = ref<any>(null)
     const searchBarHeight = ref(56)
     const isSmallScreen = computed(() => $q.screen.lt.md)

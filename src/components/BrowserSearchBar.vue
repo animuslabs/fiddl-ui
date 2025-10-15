@@ -56,15 +56,15 @@ import { events } from "lib/eventsManager"
 let interval: any = null
 // const gridModeOptions =
 export default defineComponent({
-  emits: {
-    setViewMode: (size: "grid" | "mosaic") => true,
-  },
   props: {
     // Parent-provided current view mode
     viewMode: {
       type: String as PropType<"grid" | "mosaic">,
       default: "mosaic",
     },
+  },
+  emits: {
+    setViewMode: (size: "grid" | "mosaic") => true,
   },
   data() {
     return {

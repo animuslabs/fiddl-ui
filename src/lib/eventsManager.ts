@@ -7,6 +7,8 @@ import { tiktokCompleteRegistration, marketingAddToCart, marketingInitiateChecko
 import SHA256 from "crypto-js/sha256"
 import encHex from "crypto-js/enc-hex"
 import { getMetaAttribution, generateEventId } from "./metaAttribution"
+import datafast from "lib/datafast"
+import { getCookie } from "lib/util"
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json }
 
@@ -70,8 +72,12 @@ class EventsManager {
       umami.track("addToCart", payload)
     } catch {}
     try {
+      datafast.goal("add_to_cart", payload as any)
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const trackingId = getCookie("datafast_visitor_id") || undefined
         void marketingAddToCart({
           currency: (payload as any).currency,
           value: (payload as any).value,
@@ -83,7 +89,8 @@ class EventsManager {
           eventId: event_id,
           eventSourceUrl,
           userAgent,
-        }).catch((err) => this._debug && console.warn("[Events] marketing.addToCart failed", err))
+          ...(trackingId ? ({ trackingId } as any) : {}),
+        } as any).catch((err) => this._debug && console.warn("[Events] marketing.addToCart failed", err))
       }
     } catch {}
   }
@@ -103,6 +110,9 @@ class EventsManager {
     try {
       umami.track("search", payload)
     } catch {}
+    try {
+      datafast.goal("search", payload)
+    } catch {}
   }
 
   /** SPA page navigation */
@@ -115,6 +125,7 @@ class EventsManager {
       tiktokPixel.trackPageView(extra as any)
     } catch {}
     // Umami generally auto-tracks pageviews; avoid double-counting.
+    // DataFast auto-tracks pageviews as well via the script.
   }
 
   /** Media creation lifecycle */
@@ -135,6 +146,10 @@ class EventsManager {
       tiktokPixel.track(kind === "image" ? "CreateImageStart" : "CreateVideoStart", payload as any)
     } catch {}
     try {
+      const ev = kind === "image" ? "create_image_start" : "create_video_start"
+      datafast.goal(ev, payload)
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
         const fbpS = (fbp || "") as string
@@ -144,13 +159,35 @@ class EventsManager {
         const model = (meta || {}).model as string | undefined
         const modelS = (model || "") as string
         if (kind === "image") {
-          void marketingCreateImageStart({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
+          {
+            const trackingId = getCookie("datafast_visitor_id") || undefined
+            void marketingCreateImageStart({
+              model: modelS,
+              fbp: fbpS,
+              fbc: fbcS,
+              eventId: event_id,
+              eventSourceUrl: eventSourceUrlS,
+              userAgent: userAgentS,
+              ...(trackingId ? ({ trackingId } as any) : {}),
+            } as any).catch((err) =>
             this._debug && console.warn("[Events] marketing.createImageStart failed", err),
-          )
+            )
+          }
         } else {
-          void marketingCreateVideoStart({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
+          {
+            const trackingId = getCookie("datafast_visitor_id") || undefined
+            void marketingCreateVideoStart({
+              model: modelS,
+              fbp: fbpS,
+              fbc: fbcS,
+              eventId: event_id,
+              eventSourceUrl: eventSourceUrlS,
+              userAgent: userAgentS,
+              ...(trackingId ? ({ trackingId } as any) : {}),
+            } as any).catch((err) =>
             this._debug && console.warn("[Events] marketing.createVideoStart failed", err),
-          )
+            )
+          }
         }
       }
     } catch {}
@@ -173,6 +210,10 @@ class EventsManager {
       tiktokPixel.track(kind === "image" ? "CreateImageSuccess" : "CreateVideoSuccess", payload as any)
     } catch {}
     try {
+      const ev = kind === "image" ? "create_image_success" : "create_video_success"
+      datafast.goal(ev, payload)
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
         const fbpS = (fbp || "") as string
@@ -182,13 +223,35 @@ class EventsManager {
         const model = (meta || {}).model as string | undefined
         const modelS = (model || "") as string
         if (kind === "image") {
-          void marketingCreateImageSuccess({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
+          {
+            const trackingId = getCookie("datafast_visitor_id") || undefined
+            void marketingCreateImageSuccess({
+              model: modelS,
+              fbp: fbpS,
+              fbc: fbcS,
+              eventId: event_id,
+              eventSourceUrl: eventSourceUrlS,
+              userAgent: userAgentS,
+              ...(trackingId ? ({ trackingId } as any) : {}),
+            } as any).catch((err) =>
             this._debug && console.warn("[Events] marketing.createImageSuccess failed", err),
-          )
+            )
+          }
         } else {
-          void marketingCreateVideoSuccess({ model: modelS, fbp: fbpS, fbc: fbcS, eventId: event_id, eventSourceUrl: eventSourceUrlS, userAgent: userAgentS }).catch((err) =>
+          {
+            const trackingId = getCookie("datafast_visitor_id") || undefined
+            void marketingCreateVideoSuccess({
+              model: modelS,
+              fbp: fbpS,
+              fbc: fbcS,
+              eventId: event_id,
+              eventSourceUrl: eventSourceUrlS,
+              userAgent: userAgentS,
+              ...(trackingId ? ({ trackingId } as any) : {}),
+            } as any).catch((err) =>
             this._debug && console.warn("[Events] marketing.createVideoSuccess failed", err),
-          )
+            )
+          }
         }
       }
     } catch {}
@@ -212,8 +275,12 @@ class EventsManager {
       umami.track("purchaseInitiated", payload)
     } catch {}
     try {
+      datafast.goal("checkout_initiated", payload as any)
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
+        const trackingId = getCookie("datafast_visitor_id") || undefined
         void marketingInitiateCheckout({
           currency: (payload as any).currency,
           value: (payload as any).value,
@@ -225,7 +292,8 @@ class EventsManager {
           eventId: event_id,
           eventSourceUrl,
           userAgent,
-        }).catch((err) => this._debug && console.warn("[Events] marketing.initiateCheckout failed", err))
+          ...(trackingId ? ({ trackingId } as any) : {}),
+        } as any).catch((err) => this._debug && console.warn("[Events] marketing.initiateCheckout failed", err))
       }
     } catch {}
   }
@@ -246,6 +314,9 @@ class EventsManager {
     try {
       umami.track("purchaseCompleted", payload as any)
     } catch {}
+    try {
+      datafast.goal("purchase_completed", payload as any)
+    } catch {}
   }
 
   /** Login to existing account */
@@ -262,6 +333,9 @@ class EventsManager {
     } catch {}
     try {
       umami.track("login", payload)
+    } catch {}
+    try {
+      datafast.goal("login", payload)
     } catch {}
   }
 
@@ -281,7 +355,8 @@ class EventsManager {
         const maybeEventId = (payload as Record<string, any>)?.event_id
         const eventId = typeof maybeEventId === "string" ? maybeEventId : undefined
         const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
-        void tiktokCompleteRegistration({ ttclid, ttp, userAgent, eventId, fbp, fbc, eventSourceUrl }).catch((err) => {
+        const trackingId = getCookie("datafast_visitor_id") || undefined
+        void tiktokCompleteRegistration({ ttclid, ttp, userAgent, eventId, trackingId, fbp, fbc, eventSourceUrl }).catch((err) => {
           if (this._debug) console.warn("[Events] TikTok server registration fallback failed", err)
         })
       }
@@ -291,6 +366,10 @@ class EventsManager {
     try {
       umami.track("registrationCompleted", payload)
     } catch {}
+    try {
+      // Align with DataFast docs: use `signup` for completed registration
+      datafast.goal("signup", payload)
+    } catch {}
   }
 
   /** Optional: propagate identifiers */
@@ -298,6 +377,11 @@ class EventsManager {
     if (this._debug) console.info("[Events] identify", user)
     try {
       if (user.userId || user.userName) umami.identify({ userId: String(user.userId || ""), userName: user.userName as any })
+    } catch {}
+    try {
+      if (user.userId) {
+        datafast.identify({ user_id: String(user.userId), name: user.userName ? String(user.userName) : undefined })
+      }
     } catch {}
     try {
       const am: Record<string, string> = {}

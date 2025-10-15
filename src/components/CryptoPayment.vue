@@ -66,6 +66,7 @@ import ms from "ms"
 import { events } from "lib/eventsManager"
 import { getTikTokAttribution } from "lib/tiktokAttribution"
 import { getMetaAttribution, generateEventId } from "lib/metaAttribution"
+import { getCookie } from "lib/util"
 export default defineComponent({
   name: "CryptoPayment",
   props: {
@@ -130,9 +131,11 @@ export default defineComponent({
       try {
         const { ttclid, ttp, userAgent } = getTikTokAttribution()
         const { fbp, fbc, eventSourceUrl } = getMetaAttribution()
+        const datafastVisitorId = getCookie("datafast_visitor_id")
         const response = await pointsFinishBuyPackage({
           method: this.selectedMethod,
           orderId: this.cryptoOrder?.id,
+          trackingId: datafastVisitorId || undefined,
           ttclid,
           ttp,
           userAgent,

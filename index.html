@@ -61,8 +61,16 @@
   <meta name="theme-color" content="#121212" />
 
   <!-- Analytics (deferred) -->
-  <script defer data-website-id="68693f3ca2628eec3e8f3a69" data-domain="fiddl.art"
-    src="https://datafa.st/js/script.js"></script>
+  <!-- DataFast early queue to capture events before main script loads -->
+  <script id="datafast-queue">
+    window.datafast = window.datafast || function () {
+      window.datafast.q = window.datafast.q || [];
+      window.datafast.q.push(arguments);
+    };
+  </script>
+  <script defer data-website-id="dfid_RD3lql9uH0ErDPlUcbhdN" data-domain="fiddl.art"
+    src="https://api.fiddl.art/js/script.js">
+    </script>
 
   <script defer src="https://umami.fiddl.animus.is/script.js"
     data-website-id="a6295092-8b12-42b8-ab4c-de684673248d"></script>

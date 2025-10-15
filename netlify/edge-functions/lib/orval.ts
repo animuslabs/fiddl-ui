@@ -4643,6 +4643,7 @@ export type TiktokCompleteRegistrationBody = {
   ttp?: string;
   userAgent?: string;
   eventId?: string;
+  trackingId?: string;
   fbp?: string;
   fbc?: string;
   eventSourceUrl?: string;
