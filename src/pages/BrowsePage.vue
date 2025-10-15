@@ -27,7 +27,7 @@ q-page.full-height.full-width.relative-position
         @select="handleSelect"
         :cols-desktop="8"
         :thumb-size-desktop="90"
-        :cols-mobile="3"
+        :cols-mobile="5"
         :thumb-size-mobile="60"
       )
   q-scroll-observer(@scroll="handleScroll")

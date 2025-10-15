@@ -162,14 +162,28 @@ export function buildModelSchema(data: ModelsGetModelByName200, fullUrl: string)
   const type: "video" | "image" = isVideo && !isImage ? "video" : "image"
 
   const mediaObjects =
-    media?.slice(0, 10).map((item: ModelsGetModelByName200MediaItem) => {
+    media?.slice(0, 10).map((item: ModelsGetModelByName200MediaItem, i: number) => {
       const contentUrl = type === "image" ? img(item.id, "lg") : s3Video(item.id, "preview-lg")
       const thumbnailUrl = s3Video(item.id, "thumbnail")
+
+      // Derive a concise, SEO-friendly name for media items.
+      // Google requires `name` on VideoObject; use the first few
+      // words of the meta/prompt, or fall back to the model name.
+      const buildName = (): string => {
+        const src = (item.meta || "").trim()
+        if (src) {
+          const words = src.split(/\s+/).slice(0, 12)
+          return words.join(" ")
+        }
+        return `${model.name} sample ${i + 1}`
+      }
 
       const base: Record<string, any> = {
         "@type": type === "image" ? "ImageObject" : "VideoObject",
         contentUrl,
         thumbnailUrl: type === "image" ? undefined : thumbnailUrl,
+        // Include a `name` for better video indexing
+        name: buildName(),
         caption: item.meta,
         description: item.meta,
       }

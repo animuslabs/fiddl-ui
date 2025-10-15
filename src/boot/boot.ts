@@ -19,6 +19,31 @@ export default boot(({ app }) => {
     try {
       captureTikTokAttributionFromPage()
     } catch {}
+    // Globally hide broken image icon/outline by tagging failed <img> elements
+    try {
+      // Mark images that fail to load so CSS can hide UA placeholder
+      window.addEventListener(
+        "error",
+        (evt: Event) => {
+          const target = evt.target as HTMLElement | null
+          if (target && target.tagName === "IMG") {
+            target.classList.add("img-load-error")
+          }
+        },
+        true // use capture since 'error' does not bubble on <img>
+      )
+      // If an image later loads successfully (e.g., src changes), remove the flag
+      window.addEventListener(
+        "load",
+        (evt: Event) => {
+          const target = evt.target as HTMLElement | null
+          if (target && target.tagName === "IMG") {
+            target.classList.remove("img-load-error")
+          }
+        },
+        true
+      )
+    } catch {}
     try {
       setFetch(window.fetch.bind(window))
     } catch (e) {

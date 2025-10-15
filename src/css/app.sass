@@ -198,6 +198,24 @@ input[type="number"]
   .q-item__label
     font-size: 18px
 
+// --- Global image fallback handling ---
+// Hide broken/missing image chrome and outlines without collapsing layout
+img
+  border: none !important
+  outline: none !important
+
+// When src is empty or missing, don't render UA broken icon
+img[src=""], img:not([src]), img[src=" "]
+  opacity: 0 !important
+  border: none !important
+  outline: none !important
+
+// Any image that failed to load (class set in boot script)
+img.img-load-error, .q-img__image.img-load-error
+  opacity: 0 !important
+  border: none !important
+  outline: none !important
+
 // Telegram Mini App mode tweaks
 // Note: the boot/tma.ts sets html.tma-mode when we positively detect TMA
 html.tma-mode

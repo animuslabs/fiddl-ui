@@ -2,101 +2,104 @@
 q-layout(view="lHh Lpr lFf" )
   q-header
     q-toolbar.bg-grey-10
-      .row.no-wrap.items-center
-        q-tabs
-          q-route-tab(href="https://fiddl.art" :target="isTMA ? '_blank' : undefined" :rel="isTMA ? 'noopener' : undefined" no-caps exact).text-white
-            .row.no-wrap.cursor-pointer(style="padding-top:5px; padding-bottom:5px;")
-              q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;").q-mr-sm
-              //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
-          //- q-route-tab(:to="{ name: 'search' }" exact)
-          //-   | Search
-          q-route-tab(:to="{ name: 'create' }" @mouseenter="prefetch('create')" @touchstart.passive="prefetch('create')").gt-xs.text-white
-            | create
-          q-route-tab(:to="{ name: 'browse' }" @mouseenter="prefetch('browse')" @touchstart.passive="prefetch('browse')").gt-xs.text-white
-            | browse
-          q-route-tab(:to="{ name: 'forge' }" @mouseenter="prefetch('forge')" @touchstart.passive="prefetch('forge')").gt-xs.text-white
-            | Forge
-          q-route-tab(:to="{ name: 'models' }" @mouseenter="prefetch('models')" @touchstart.passive="prefetch('models')").gt-xs.text-white
-            | Models
-          q-route-tab(:to="{ name: 'missions' }" @mouseenter="prefetch('missions')" @touchstart.passive="prefetch('missions')").gt-xs.text-white
-            .relative-position
-              | Missions
-              q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
-          q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
-            | Blog
-          //- q-route-tab(:to="{ name: 'vote' }")
-          //-   | vote
-          //- q-route-tab(:to="{ name: 'mint' }")
-          //-   | mint
-      .row.justify-end.full-width(v-if="!$userAuth.loggedIn")
-        q-btn(flat @click="login()" :label="isMobile ? 'login' : 'login / Register'" dense size="xs")
-        //- q-separator(color="white" vertical)
-        //- q-btn(flat @click="register()" label="register" size="sm")
-      .row.justify-end.full-width.items-center.q-gutter-sm(v-else)
-        q-btn(rounded padding="6px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
-          .row.items-center
-            div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
-            q-img.q-ml-sm.q-mr-sm(
-              :src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'"
-              :style="{ width: isMobile ? '22px' : '30px', height: isMobile ? '22px' : '30px' }"
-              alt="available upvotes" no-spinner)
-          q-tooltip
-            p Available Upvotes
-        q-btn(rounded padding="0px" dense size="xs" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
-          .row.items-center
-            div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.userData?.availablePoints || 0 }}
-            q-img.q-ml-sm(
-              src="/FiddlPointsLogo-sm.svg"
-              :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '34px' : '40px' }"
-              alt="fiddl points logo" no-spinner)
-          q-tooltip
-            p Add Fiddl Points
-        //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
-        NotificationsMenu(v-if="$userAuth.loggedIn")
-        q-btn(
-          round
-          dense
-          size="xs"
-          padding="1px"
-          no-spinner
-          @click="menu = true"
-        )
-          q-img(
-            slot="icon"
-            :src="displayAvatarSrc"
-            :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '32px' : '40px' }"
-            alt="avatar"
-            placeholder-src="/blankAvatar.webp"
-            :key="reloadAvatar"
-          )
-        q-menu(
-          v-if="menu"
-          anchor="bottom right"
-          self="top right"
-          @mouseleave="menu = false"
-          @click="menu = false"
-        )
-          q-list
-            q-item(clickable @click="$router.push({ name: 'settings' })" v-close-popup)
-              q-item-section
-                .row.items-center
-                  q-icon(name="settings" size="20px").q-mr-md
-                  div Settings
-            q-item(clickable @click="navToUserProfile" v-close-popup)
-              q-item-section
-                .row.items-center
-                  q-icon(name="photo_library" size="20px").q-mr-md
-                  div My Account
-            q-item(clickable @click="$userAuth.logout()" v-close-popup v-if="!isTMA")
-              q-item-section
-                .row.items-center
-                  q-icon(name="logout" size="20px").q-mr-md
-                  div  Logout
-            q-item(clickable v-if="isTMA" @click="confirmUnlink" v-close-popup)
-              q-item-section
-                .row.items-center
-                  q-icon(name="link_off" size="20px").q-mr-md
-                  div Unlink Telegram
+      // Keep everything on a single flex row: tabs on left, actions on right
+      .row.no-wrap.items-center.full-width
+        // Static logo on far left (does not scroll)
+        a(href="https://fiddl.art" :target="isTMA ? '_blank' : undefined" :rel="isTMA ? 'noopener' : undefined").row.no-wrap.items-center.q-mr-sm
+          q-icon(name="img:/fiddlLogo.svg" size="35px" style="padding-left:5px;")
+          //- .text-h5(style="font-family: gluten; font-weight: 200; padding-top:4px;") Fiddl.art
+        // Tabs area: flexes, shrinks, and allows internal scroll (logo excluded)
+        .col(style="min-width:0")
+          q-tabs(outside-arrows mobile-arrows align="left" content-class="q-pl-none q-pr-none")
+            //- q-route-tab(:to="{ name: 'search' }" exact)
+            //-   | Search
+            q-route-tab(:to="{ name: 'create' }" @mouseenter="prefetch('create')" @touchstart.passive="prefetch('create')").gt-xs.text-white
+              | create
+            q-route-tab(:to="{ name: 'browse' }" @mouseenter="prefetch('browse')" @touchstart.passive="prefetch('browse')").gt-xs.text-white
+              | browse
+            q-route-tab(:to="{ name: 'forge' }" @mouseenter="prefetch('forge')" @touchstart.passive="prefetch('forge')").gt-xs.text-white
+              | Forge
+            q-route-tab(:to="{ name: 'models' }" @mouseenter="prefetch('models')" @touchstart.passive="prefetch('models')").gt-xs.text-white
+              | Models
+            q-route-tab(:to="{ name: 'missions' }" @mouseenter="prefetch('missions')" @touchstart.passive="prefetch('missions')").gt-xs.text-white
+              .relative-position
+                | Missions
+                q-badge(v-if="hasClaimableMissions" color="primary" floating rounded style="width:8px;height:8px;padding:0")
+            q-route-tab(href="https://fiddl.art/blog").gt-xs.text-white
+              | Blog
+            //- q-route-tab(:to="{ name: 'vote' }")
+            //-   | vote
+            //- q-route-tab(:to="{ name: 'mint' }")
+            //-   | mint
+        // Right actions: never wrap
+        .row.items-center.no-wrap.q-gutter-sm
+          template(v-if="!$userAuth.loggedIn")
+            q-btn(flat @click="login()" :label="isMobile ? 'login' : 'login / Register'" dense size="xs")
+          template(v-else)
+            q-btn(rounded padding="6px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
+              .row.items-center
+                div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
+                q-img.q-ml-sm.q-mr-sm(
+                  :src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'"
+                  :style="{ width: isMobile ? '22px' : '30px', height: isMobile ? '22px' : '30px' }"
+                  alt="available upvotes" no-spinner)
+              q-tooltip
+                p Available Upvotes
+            q-btn(rounded padding="0px" dense size="xs" :color="pointsColor" v-if="$userAuth.userData" @click="$router.push({ name: 'addPoints' })" )
+              .row.items-center
+                div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.userData?.availablePoints || 0 }}
+                q-img.q-ml-sm(
+                  src="/FiddlPointsLogo-sm.svg"
+                  :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '34px' : '40px' }"
+                  alt="fiddl points logo" no-spinner)
+              q-tooltip
+                p Add Fiddl Points
+            //- q-btn(flat @click="userAuth.logout()" label="logout" size="sm" )
+            NotificationsMenu(v-if="$userAuth.loggedIn")
+            q-btn(
+              round
+              dense
+              size="xs"
+              padding="1px"
+              no-spinner
+              @click="menu = true"
+            )
+              q-img(
+                slot="icon"
+                :src="displayAvatarSrc"
+                :style="{ width: isMobile ? '32px' : '40px', height: isMobile ? '32px' : '40px' }"
+                alt="avatar"
+                placeholder-src="/blankAvatar.webp"
+                :key="reloadAvatar"
+              )
+            q-menu(
+              v-if="menu"
+              anchor="bottom right"
+              self="top right"
+              @mouseleave="menu = false"
+              @click="menu = false"
+            )
+              q-list
+                q-item(clickable @click="$router.push({ name: 'settings' })" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="settings" size="20px").q-mr-md
+                      div Settings
+                q-item(clickable @click="navToUserProfile" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="photo_library" size="20px").q-mr-md
+                      div My Account
+                q-item(clickable @click="$userAuth.logout()" v-close-popup v-if="!isTMA")
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="logout" size="20px").q-mr-md
+                      div  Logout
+                q-item(clickable v-if="isTMA" @click="confirmUnlink" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="link_off" size="20px").q-mr-md
+                      div Unlink Telegram
 
   q-dialog(v-model="showUpvoteInfo")
     q-card(style="min-width:320px;max-width:520px")

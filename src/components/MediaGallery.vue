@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onUnmounted } from "vue"
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { Dialog, Loading } from "quasar"
 // Import removed: unified flow uses route-based orchestrator to open quick-edit
@@ -290,6 +290,8 @@ const gridMinSize = computed(() => {
   return Math.min(Math.max(base, 120), 260)
 })
 const gapValue = computed(() => (typeof props.gap === "number" ? `${props.gap}px` : props.gap))
+// Numeric gap in px for calculations
+const gapPx = computed(() => toPxNumber(gapValue.value))
 const popularity = usePopularityStore()
 // Popularity button sizing: slightly reduced on phones (−20%)
 const popIconSize = computed(() => {
@@ -326,11 +328,23 @@ let nsfwDialogPromise: Promise<boolean> | null = null
 // Helper: pick a lightweight background image for bar blur
 function barBgUrlFor(m: MediaGalleryMeta): string {
   try {
+    // For pending placeholders, avoid fetching anything (use 1x1 transparent pixel)
+    if (isPendingItem(m)) return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
     // Prefer smaller assets for the blurred backdrop
-    if ((m.type ?? m.mediaType) === "video") return s3Video(m.id, "preview-sm")
+    // For videos, use the static thumbnail for stable/lightweight blur
+    if ((m.type ?? m.mediaType) === "video") return s3Video(m.id, "thumbnail")
     return img(m.id, "sm")
   } catch {
     return m.url || ""
+  }
+}
+
+// Treat items with a temporary id or explicit placeholder flag as "pending generation"
+function isPendingItem(m: MediaGalleryMeta): boolean {
+  try {
+    return (typeof m?.id === "string" && m.id.startsWith("pending-")) || m?.placeholder === true
+  } catch {
+    return false
   }
 }
 
@@ -653,6 +667,59 @@ const effectiveBottomBarPx = computed(() => {
   const scaled = base * 0.9
   const floorMin = Math.max(minForText * 0.9, 22) // never get comically tiny
   return Math.round(Math.max(scaled, floorMin) * mobileBarScale.value)
+})
+
+// ----- Actual column width measurement (fixes mosaic cropping on mobile) -----
+// We need the real column width in px to compute accurate row spans in mosaic
+// when template columns are fluid (1fr). Using thumbSize as a proxy underestimates
+// width on wide phones/tablets and leads to vertical cropping.
+const gridRef = ref<HTMLElement | null>(null)
+const containerWidthPx = ref(0)
+let ro: ResizeObserver | null = null
+
+function updateContainerWidth() {
+  try {
+    containerWidthPx.value = Math.max(0, Math.round(gridRef.value?.clientWidth || 0))
+  } catch {
+    containerWidthPx.value = 0
+  }
+}
+
+onMounted(() => {
+  nextTick(() => {
+    updateContainerWidth()
+    if (gridRef.value && typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        updateContainerWidth()
+        // Clear cached spans so items recompute with new measurements
+        layoutSpans.value = {}
+      })
+      ro.observe(gridRef.value)
+    }
+  })
+  window.addEventListener("orientationchange", updateContainerWidth)
+  window.addEventListener("resize", updateContainerWidth)
+})
+
+onUnmounted(() => {
+  try { ro?.disconnect() } catch {}
+  ro = null
+  window.removeEventListener("orientationchange", updateContainerWidth)
+  window.removeEventListener("resize", updateContainerWidth)
+})
+
+// Compute the actual single-column width of the mosaic grid, accounting for gaps.
+const mosaicColWidthPx = computed(() => {
+  if (layoutEffective.value !== "mosaic") return 0
+  const n = Math.max(1, Number(cols.value) || 1)
+  // When columns are fixed (centerAlign on desktop), use thumbSize directly
+  const usingFixedCols = !isPhone.value && props.centerAlign === true
+  if (usingFixedCols) return Number(thumbSize.value) || 0
+  const container = containerWidthPx.value
+  if (!container) return Number(thumbSize.value) || 0
+  const totalGaps = gapPx.value * (n - 1)
+  const available = Math.max(0, container - totalGaps)
+  return available / n
 })
 
 // Wrapper style for each tile’s inner container that holds media and optional bars
@@ -1112,13 +1179,22 @@ function getItemStyle(m: MediaGalleryMeta): Record<string, string | number | und
   const baseColSpan = aspect > 1.5 && cols.value > 1 ? Math.min(2, cols.value) : undefined
   const colFactor = baseColSpan ?? 1
 
-  // Base rows needed for the media area itself
-  let rows = Math.max(1, Math.ceil((colFactor / Math.max(0.01, aspect)) * props.rowHeightRatio))
+  // Calculate the mosaic tile width in px using the measured column width and
+  // add internal gap(s) when the item spans multiple columns.
+  const colWidth = mosaicColWidthPx.value || Number(thumbSize.value) || 0
+  const internalGaps = Math.max(0, colFactor - 1) * gapPx.value
+  const tileWidthPx = Math.max(0.01, colWidth * colFactor + internalGaps)
+
+  // Row size in px (as set on the grid container)
+  const gridAutoRowPx = Math.max(1, Number(thumbSize.value) * props.rowHeightRatio)
+
+  // Rows needed for the media area itself based on its aspect
+  const mediaHeightPx = tileWidthPx / Math.max(0.01, aspect)
+  let rows = Math.max(1, Math.ceil(mediaHeightPx / gridAutoRowPx))
 
   // When reserved bars are enabled, add extra rows to account for their height so
   // the item never overlaps neighbors.
   if (useReservedBars.value) {
-    const gridAutoRowPx = thumbSize.value * props.rowHeightRatio
     const extra = Math.ceil((effectiveTopBarPx.value + effectiveBottomBarPx.value) / Math.max(1, gridAutoRowPx))
     rows += extra
   }
@@ -1475,13 +1551,14 @@ function prefetchImage(url: string): Promise<void> {
       :style="pinchImageStyle"
     )
   // Initial skeleton shimmer when loading with no items
-  div(v-if="showSkeletons" :style="wrapperStyles" class="mg-grid")
+  div(v-if="showSkeletons" :style="wrapperStyles" class="mg-grid" ref="gridRef")
     div(v-for="i in skeletonCount" :key="'sk-'+i" class="mg-skel-cell")
       q-skeleton(type="rect" animation="wave" class="mg-skel-box")
 
   div.mg-group(
     v-else
     :style="wrapperStyles"
+    ref="gridRef"
   )
     div(
       v-for="(m, index) in filteredGalleryItems"
@@ -1528,26 +1605,30 @@ function prefetchImage(url: string): Promise<void> {
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
                   // Actual image (rendered underneath the overlay)
-                  q-img(
-                    :src="m.url"
-                    :key="imageReloadKey[m.id]"
-                    :placeholder-src="barBgUrlFor(m)"
-                    position="top"
-                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block;"
-                    transition="none"
-                    no-transition
-                    no-spinner
-                    :img-style="{ transition: 'none' }"
-                    :class="props.selectable ? 'cursor-pointer' : ''"
-                    :img-attrs="{ 'data-id': m.id }"
-                    @load="markImageLoaded(m.id)"
-                    @error="markImageErrored(m.id)"
-                    @click="onImageClick(m, index)"
-                    @touchstart="onPinchStart($event, m)"
-                    @touchmove="onPinchMove"
-                    @touchend="onPinchEnd"
-                    @touchcancel="onPinchEnd"
-                  )
+                  template(v-if="!isPendingItem(m)")
+                    q-img(
+                      :src="m.url"
+                      :key="imageReloadKey[m.id]"
+                      :placeholder-src="barBgUrlFor(m)"
+                      position="top"
+                      style="width:100%; height:100%; object-fit: cover; object-position: top; display:block;"
+                      transition="none"
+                      no-transition
+                      no-spinner
+                      :img-style="{ transition: 'none' }"
+                      :class="props.selectable ? 'cursor-pointer' : ''"
+                      :img-attrs="{ 'data-id': m.id }"
+                      @load="markImageLoaded(m.id)"
+                      @error="markImageErrored(m.id)"
+                      @click="onImageClick(m, index)"
+                      @touchstart="onPinchStart($event, m)"
+                      @touchmove="onPinchMove"
+                      @touchend="onPinchEnd"
+                      @touchcancel="onPinchEnd"
+                    )
+                  // Pending items: avoid mounting <img> to prevent UA broken-icon flicker
+                  template(v-else)
+                    div(style="width:100%; height:100%; background:#000;")
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
                 div(style="width:100%; height:100%; background: #000;")
@@ -1604,26 +1685,30 @@ function prefetchImage(url: string): Promise<void> {
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
                   // Actual image (rendered underneath the overlay)
-                  q-img(
-                    :src="m.url"
-                    :key="imageReloadKey[m.id]"
-                    :placeholder-src="barBgUrlFor(m)"
-                    position="top"
-                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
-                    transition="none"
-                    no-transition
-                    no-spinner
-                    :img-style="{ transition: 'none' }"
-                    :class="props.selectable ? 'cursor-pointer' : ''"
-                    :img-attrs="{ 'data-id': m.id }"
-                    @load="markImageLoaded(m.id)"
-                    @error="markImageErrored(m.id)"
-                    @click="onImageClick(m, index)"
-                    @touchstart="onPinchStart($event, m)"
-                    @touchmove="onPinchMove"
-                    @touchend="onPinchEnd"
-                    @touchcancel="onPinchEnd"
-                  )
+                  template(v-if="!isPendingItem(m)")
+                    q-img(
+                      :src="m.url"
+                      :key="imageReloadKey[m.id]"
+                      :placeholder-src="barBgUrlFor(m)"
+                      position="top"
+                      style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
+                      transition="none"
+                      no-transition
+                      no-spinner
+                      :img-style="{ transition: 'none' }"
+                      :class="props.selectable ? 'cursor-pointer' : ''"
+                      :img-attrs="{ 'data-id': m.id }"
+                      @load="markImageLoaded(m.id)"
+                      @error="markImageErrored(m.id)"
+                      @click="onImageClick(m, index)"
+                      @touchstart="onPinchStart($event, m)"
+                      @touchmove="onPinchMove"
+                      @touchend="onPinchEnd"
+                      @touchcancel="onPinchEnd"
+                    )
+                  // Pending items: avoid mounting <img> to prevent UA broken-icon flicker
+                  template(v-else)
+                    div.media-placeholder
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
                 div.media-placeholder
@@ -1758,35 +1843,37 @@ function prefetchImage(url: string): Promise<void> {
                     span.count.empty 0
           // Legacy overlay path (no reserved bars)
           template(v-else)
-            // Only mount heavy content when visible
-            template(v-if="isVisible(m.id)")
-              template(v-if="shouldMaskNsfw(m)")
-                div.nsfw-overlay(@click.stop="handleSelect(m, index)")
-                  q-icon(name="sym_o_visibility_off" size="36px")
-                  span.nsfw-label NSFW Content
-                  span.nsfw-helper Tap to confirm viewing
+            // Stable inner wrapper that also paints a blurred ambient backdrop
+            .media-fill(:style="{ '--mg-media-bg': `url('${barBgUrlFor(m)}')` }")
+              // Only mount heavy content when visible
+              template(v-if="isVisible(m.id)")
+                template(v-if="shouldMaskNsfw(m)")
+                  div.nsfw-overlay(@click.stop="handleSelect(m, index)")
+                    q-icon(name="sym_o_visibility_off" size="36px")
+                    span.nsfw-label NSFW Content
+                    span.nsfw-helper Tap to confirm viewing
+                template(v-else)
+                  div.loading-overlay(v-if="showVideoOverlay(m.id)")
+                    div.loading-overlay__stack
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      span.loading-overlay__label Loading
+                  div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                    video(
+                      :src="m.url"
+                      :key="videoReloadKey[m.id]"
+                      :data-id="m.id"
+                      loop autoplay muted playsinline
+                      @loadstart="markVideoLoadStart(m.id)"
+                      @canplay="markVideoLoaded(m.id)"
+                      @loadeddata="markVideoLoaded(m.id)"
+                      @error="markVideoErrored(m.id)"
+                      @click="handleSelect(m, index)"
+                      style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
+                      :class="videoClass(m)"
+                    )
               template(v-else)
-                div.loading-overlay(v-if="showVideoOverlay(m.id)")
-                  div.loading-overlay__stack
-                    q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
-                    span.loading-overlay__label Loading
-                div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
-                  video(
-                    :src="m.url"
-                    :key="videoReloadKey[m.id]"
-                    :data-id="m.id"
-                    loop autoplay muted playsinline
-                    @loadstart="markVideoLoadStart(m.id)"
-                    @canplay="markVideoLoaded(m.id)"
-                    @loadeddata="markVideoLoaded(m.id)"
-                    @error="markVideoErrored(m.id)"
-                    @click="handleSelect(m, index)"
-                    style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
-                    :class="videoClass(m)"
-                  )
-            template(v-else)
-              // Placeholder keeps layout without mounting the video element
-              div(style="width:100%; height:100%; background: rgba(0,0,0,0.06);")
+                // Placeholder keeps layout without mounting the video element
+                div.media-placeholder
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
@@ -1882,9 +1969,9 @@ function prefetchImage(url: string): Promise<void> {
   background-image: var(--mg-media-bg, none);
   background-size: cover;
   background-position: center;
-  filter: blur(10px); /* less than 14px used in bars */
-  transform: scale(1.18);
-  opacity: 0.3;
+  filter: blur(8px); /* reduced for a crisper look */
+  transform: scale(1.12);
+  opacity: 0.5; /* less dark so image reads more */
   z-index: 0;
 }
 /* Ensure media content renders above the ambient backdrop */
@@ -1936,7 +2023,7 @@ function prefetchImage(url: string): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.14); /* lighten so backdrop shows through */
   color: white;
   z-index: 2;
   pointer-events: none;
@@ -2013,10 +2100,10 @@ function prefetchImage(url: string): Promise<void> {
 }
 .mg-topbar {
   /* dark background to visually connect with media */
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.25); /* lighten bar */
 }
 .mg-bottombar {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.25); /* lighten bar */
 }
 .mg-topbar::before,
 .mg-bottombar::before {
@@ -2025,9 +2112,9 @@ function prefetchImage(url: string): Promise<void> {
   inset: 0;
   background-image: var(--mg-bar-bg, none);
   background-size: cover;
-  filter: blur(14px);
+  filter: blur(10px);
   transform: scale(1.25);
-  opacity: 0.35; /* subtle so content stays legible */
+  opacity: 0.5; /* show more image, reduce darkness */
   z-index: 0;
 }
 /* Make bars reflect the image edge they align to */
@@ -2039,7 +2126,7 @@ function prefetchImage(url: string): Promise<void> {
   position: absolute;
   inset: 0;
   /* light vignette to improve contrast atop the blurred bg */
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.06));
   z-index: 0;
 }
 .mg-topbar > *,
@@ -2047,7 +2134,7 @@ function prefetchImage(url: string): Promise<void> {
   position: relative;
   z-index: 1;
   /* Slightly fade bar content to blend with the image */
-  opacity: 0.8;
+  opacity: 0.9;
 }
 .mg-topbar.with-creator {
   justify-content: space-between;
