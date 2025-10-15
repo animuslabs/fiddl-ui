@@ -1533,9 +1533,11 @@ function prefetchImage(url: string): Promise<void> {
                     :key="imageReloadKey[m.id]"
                     :placeholder-src="barBgUrlFor(m)"
                     position="top"
-                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block; background-color:#000;"
+                    style="width:100%; height:100%; object-fit: cover; object-position: top; display:block;"
                     transition="none"
-                    spinner-color="white"
+                    no-transition
+                    no-spinner
+                    :img-style="{ transition: 'none' }"
                     :class="props.selectable ? 'cursor-pointer' : ''"
                     :img-attrs="{ 'data-id': m.id }"
                     @load="markImageLoaded(m.id)"
@@ -1608,8 +1610,10 @@ function prefetchImage(url: string): Promise<void> {
                     :placeholder-src="barBgUrlFor(m)"
                     position="top"
                     style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
-                    spinner-color="white"
                     transition="none"
+                    no-transition
+                    no-spinner
+                    :img-style="{ transition: 'none' }"
                     :class="props.selectable ? 'cursor-pointer' : ''"
                     :img-attrs="{ 'data-id': m.id }"
                     @load="markImageLoaded(m.id)"
