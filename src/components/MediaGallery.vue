@@ -327,10 +327,10 @@ let nsfwDialogPromise: Promise<boolean> | null = null
 function barBgUrlFor(m: MediaGalleryMeta): string {
   try {
     // Prefer smaller assets for the blurred backdrop
-    if ((m.type ?? m.mediaType) === 'video') return s3Video(m.id, 'preview-sm')
-    return img(m.id, 'sm')
+    if ((m.type ?? m.mediaType) === "video") return s3Video(m.id, "preview-sm")
+    return img(m.id, "sm")
   } catch {
-    return m.url || ''
+    return m.url || ""
   }
 }
 
@@ -1506,7 +1506,7 @@ function prefetchImage(url: string): Promise<void> {
                   q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
                   .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
                 // Actions (right)
-                div(style="display:flex; align-items:center; gap:10px;")
+                div.bar-actions(style="display:flex; align-items:center; gap:10px;")
                   q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
                   q-btn(v-if="props.showUseAsInput && !m.placeholder" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
                   q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
@@ -1681,7 +1681,7 @@ function prefetchImage(url: string): Promise<void> {
                   q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
                   .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
                 // Actions (right)
-                div(style="display:flex; align-items:center; gap:10px;")
+                div.bar-actions(style="display:flex; align-items:center; gap:10px;")
                   q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
                   q-btn(v-if="canTogglePrivacy(m)" :size="popIconSize" flat dense round color="white" :icon="m.isPublic ? 'public' : 'visibility_off'" @click.stop="handleVisibilityClick(m)" :loading="!!privacyLoading[m.requestId || '']" :disable="privacyLoading[m.requestId || ''] === true")
                     q-tooltip {{ m.isPublic ? 'Currently public. Click to make private.' : 'Currently private. Click to make public.' }}
@@ -1996,25 +1996,29 @@ function prefetchImage(url: string): Promise<void> {
   inset: 0;
   background-image: var(--mg-bar-bg, none);
   background-size: cover;
-  background-position: center;
   filter: blur(14px);
   transform: scale(1.25);
   opacity: 0.35; /* subtle so content stays legible */
   z-index: 0;
 }
+/* Make bars reflect the image edge they align to */
+.mg-topbar::before { background-position: center top; }
+.mg-bottombar::before { background-position: center bottom; }
 .mg-topbar::after,
 .mg-bottombar::after {
   content: "";
   position: absolute;
   inset: 0;
   /* light vignette to improve contrast atop the blurred bg */
-  background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.65));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
   z-index: 0;
 }
 .mg-topbar > *,
 .mg-bottombar > * {
   position: relative;
   z-index: 1;
+  /* Slightly fade bar content to blend with the image */
+  opacity: 0.8;
 }
 .mg-topbar.with-creator {
   justify-content: space-between;
@@ -2028,7 +2032,10 @@ function prefetchImage(url: string): Promise<void> {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  max-width: 50%;
+  flex: 1 1 auto; /* take remaining space */
+  min-width: 0;   /* allow text to ellipsis */
+  max-width: none;
+  overflow: hidden;
 }
 .mg-topbar .creator-meta .creator-name,
 .mg-bottombar .creator-meta .creator-name {
@@ -2037,7 +2044,10 @@ function prefetchImage(url: string): Promise<void> {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
 }
+.mg-topbar .bar-actions { flex: 0 0 auto; }
 .mg-bottombar .pop-row {
   display: flex;
   width: 100%;
