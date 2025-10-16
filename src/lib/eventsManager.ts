@@ -80,6 +80,54 @@ class EventsManager {
     }
   }
 
+  /** Section/page open tracking (e.g., magic mirror, forge, missions) */
+  sectionOpen(section: string, extra?: Record<string, Json>): void {
+    const sec = String(section || "").trim() || "unknown"
+    const payload: Record<string, Json> = { section: sec, ...(extra || {}) }
+    if (this._debug) console.info("[Events] sectionOpen", payload)
+    try { metaPixel.trackCustom("SectionOpen", payload as any) } catch {}
+    try { tiktokPixel.track("SectionOpen", payload as any) } catch {}
+    try { umami.track("sectionOpen", payload) } catch {}
+    try { datafast.goal(`${sec}_open`, payload) } catch {}
+    try { gtm.track("section_open", payload) } catch {}
+  }
+
+  /** Promo code successfully claimed */
+  promoClaimed(data: { code?: string; points?: number } = {}): void {
+    const payload: Record<string, Json> = { ...data }
+    if (this._debug) console.info("[Events] promoClaimed", payload)
+    try { metaPixel.trackCustom("PromoClaimed", payload as any) } catch {}
+    try { tiktokPixel.track("PromoClaimed", payload as any) } catch {}
+    try { umami.track("promoClaimed", payload) } catch {}
+    try { datafast.goal("promo_claimed", payload) } catch {}
+    try { gtm.track("promo_claimed", payload) } catch {}
+  }
+
+  /** Mission reward claimed */
+  missionClaimed(data: { missionId: string; rewards?: Array<{ type: string; amount?: number; badgeId?: string }> }): void {
+    const payload: Record<string, Json> = {
+      mission_id: data?.missionId,
+      rewards: Array.isArray(data?.rewards) ? data!.rewards : undefined,
+    }
+    if (this._debug) console.info("[Events] missionClaimed", payload)
+    try { metaPixel.trackCustom("MissionClaimed", payload as any) } catch {}
+    try { tiktokPixel.track("MissionClaimed", payload as any) } catch {}
+    try { umami.track("missionClaimed", payload) } catch {}
+    try { datafast.goal("mission_claimed", payload) } catch {}
+    try { gtm.track("mission_claimed", payload) } catch {}
+  }
+
+  /** Magic Mirror session completed (all expected images rendered) */
+  magicMirrorCompleted(mode: "fast" | "pro", data: { images?: number; templates?: number } = {}): void {
+    const payload: Record<string, Json> = { mode, ...data }
+    if (this._debug) console.info("[Events] magicMirrorCompleted", payload)
+    try { metaPixel.trackCustom("MagicMirrorCompleted", payload as any) } catch {}
+    try { tiktokPixel.track("MagicMirrorCompleted", payload as any) } catch {}
+    try { umami.track("magicMirrorCompleted", payload) } catch {}
+    try { datafast.goal("magic_mirror_completed", payload) } catch {}
+    try { gtm.track("magic_mirror_completed", payload) } catch {}
+  }
+
   init(options: { debug?: boolean } = {}): void {
     this._debug = !!options.debug
     // Initialize wrappers that benefit from explicit init without injecting scripts

@@ -247,6 +247,7 @@ import { createUploadImage, createQueueAsyncBatch, creationsDescribeUploadedImag
 import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
 import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
+import { events } from "lib/eventsManager"
 
 type Step = "init" | "capture" | "selectTemplates" | "results"
 
@@ -802,6 +803,7 @@ function startCreationsPoll() {
       maybeStartSignupNudge()
     }
     if (!expecting) {
+      try { events.magicMirrorCompleted("fast", { images: sessionCreatedIds.value.length, templates: (selectedTemplates.value || []).length }) } catch {}
       stopCreationsPoll()
       return
     }

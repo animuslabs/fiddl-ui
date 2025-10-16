@@ -42,6 +42,7 @@ import { jwt } from "lib/jwt"
 import { catchErr, longIdToShort, shortIdToLong } from "lib/util"
 import { copyToClipboard, Dialog } from "quasar"
 import { defineComponent } from "vue"
+import { events } from "lib/eventsManager"
 
 export default defineComponent({
   components: {},
@@ -81,6 +82,7 @@ export default defineComponent({
       const claimCode = shortIdToLong(this.promoCode)
       try {
         await promoClaimPromoCode({ id: claimCode })
+        try { events.promoClaimed({ code: this.promoCode }) } catch {}
         
         Dialog.create({
           title: "Success",

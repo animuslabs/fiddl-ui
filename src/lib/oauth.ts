@@ -90,6 +90,18 @@ export function startOAuthLogin(provider: OAuthProvider, options: StartOAuthOpti
     sessionStorage.removeItem("returnTo")
   }
 
+  // Record the initiating user when linking to detect conflicts on callback
+  try {
+    if ((options.mode ?? "login") === "link") {
+      const auth = jwt.read()
+      if (auth?.userId) {
+        sessionStorage.setItem("linkInitiatorUserId", auth.userId)
+        sessionStorage.setItem("linkInitiatorProvider", providerKey)
+        sessionStorage.setItem("linkInitiatorAt", String(Date.now()))
+      }
+    }
+  } catch {}
+
   // For Brave firewall / strict privacy browsers, prefer a direct navigation
   // to the API start endpoint so any server cookies are set in a first-party context.
   if ((options.mode ?? "login") === "link" && detectBraveSync()) {

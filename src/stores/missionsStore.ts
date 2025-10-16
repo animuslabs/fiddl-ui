@@ -13,6 +13,7 @@ import {
   type BadgesForUser200Item,
 } from "lib/orval"
 import { useUserAuth } from "stores/userAuth"
+import { events } from "lib/eventsManager"
 
 export type RewardView =
   | { type: "points"; amount: number; memo?: string }
@@ -140,6 +141,12 @@ export const useMissionsStore = defineStore("missionsStore", {
           }
           msg = `Reward claimed${parts.length ? ": " + parts.join(", ") : ""}`
           this.claimedMap[mission.id] = true
+          try {
+            events.missionClaimed({
+              missionId: mission.id,
+              rewards: (res.rewardsAwarded || []).map((rw: any) => ({ type: rw.type, amount: rw.amount, badgeId: rw.badgeId })),
+            })
+          } catch {}
           // refresh owned badges
           try {
             const { data: myBadges } = await badgesForUser()

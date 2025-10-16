@@ -89,10 +89,30 @@ Router.afterEach((to) => {
 
 // Track page views on SPA navigations (skip initial load)
 let hasTrackedInitialPageView = false
-Router.afterEach(() => {
+Router.afterEach((to) => {
   if (!import.meta.env.SSR) {
+    // Always emit section opens for key areas
+    const name = (to?.name as string) || ""
+    switch (name) {
+      case "magicMirror":
+        try { events.sectionOpen("magic_mirror") } catch {}
+        break
+      case "magicMirrorBanana":
+        try { events.sectionOpen("magic_mirror_fast") } catch {}
+        break
+      case "forge":
+        try { events.sectionOpen("forge") } catch {}
+        break
+      case "claim":
+        try { events.sectionOpen("claim") } catch {}
+        break
+      case "missions":
+        try { events.sectionOpen("missions") } catch {}
+        break
+    }
+
+    // Fan out SPA page view (skip on very first load to avoid double-counting)
     if (hasTrackedInitialPageView) {
-      // Fan out to all trackers via the unified manager
       events.pageView()
     } else {
       hasTrackedInitialPageView = true

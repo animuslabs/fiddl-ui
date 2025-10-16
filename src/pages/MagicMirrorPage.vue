@@ -287,6 +287,7 @@ import { toCreatePage } from "lib/routeHelpers"
 import { prices } from "src/stores/pricesStore"
 import { magicMirrorProTotalPoints, magicMirrorFastTotalPoints, applyPrivateTax } from "src/lib/magic/magicCosts"
 import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
+import { events } from "lib/eventsManager"
 
 type Step = "init" | "capture" | "training" | "selectTemplates" | "results"
 
@@ -756,6 +757,7 @@ function startCreationsPoll() {
     }
 
     if (!expecting) {
+      try { events.magicMirrorCompleted("pro", { images: generatedImageIds.value.length, templates: (selectedTemplates.value || []).length }) } catch {}
       stopCreationsPoll()
       return
     }
