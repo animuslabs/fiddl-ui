@@ -128,6 +128,28 @@ class EventsManager {
     try { gtm.track("magic_mirror_completed", payload) } catch {}
   }
 
+  /** Forge: training set created */
+  trainingSetCreated(data: { trainingSetId: string; name?: string; images?: number }): void {
+    const payload: Record<string, Json> = { ...data }
+    if (this._debug) console.info("[Events] trainingSetCreated", payload)
+    try { metaPixel.trackCustom("TrainingSetCreated", payload as any) } catch {}
+    try { tiktokPixel.track("TrainingSetCreated", payload as any) } catch {}
+    try { umami.track("trainingSetCreated", payload) } catch {}
+    try { datafast.goal("training_set_created", payload) } catch {}
+    try { gtm.track("training_set_created", payload) } catch {}
+  }
+
+  /** Forge: custom model created */
+  customModelCreated(data: { customModelId: string; trainingSetId?: string; baseModel?: string; fineTuneType?: string; modelMode?: string; name?: string }): void {
+    const payload: Record<string, Json> = { ...data }
+    if (this._debug) console.info("[Events] customModelCreated", payload)
+    try { metaPixel.trackCustom("CustomModelCreated", payload as any) } catch {}
+    try { tiktokPixel.track("CustomModelCreated", payload as any) } catch {}
+    try { umami.track("customModelCreated", payload) } catch {}
+    try { datafast.goal("custom_model_created", payload) } catch {}
+    try { gtm.track("custom_model_created", payload) } catch {}
+  }
+
   init(options: { debug?: boolean } = {}): void {
     this._debug = !!options.debug
     // Initialize wrappers that benefit from explicit init without injecting scripts

@@ -130,6 +130,7 @@ import { trainModelPrice, catchErr } from "lib/util"
 import { baseModels, fineTuneTypeData, trainingModes } from "lib/createModelConfigs"
 import { Loading } from "quasar"
 import { prices } from "src/stores/pricesStore"
+import { events } from "lib/eventsManager"
 
 const route = useRoute()
 const router = useRouter()
@@ -175,6 +176,16 @@ async function startTraining() {
       trainingSetId: state.trainingSet.id,
     })
     console.log(data)
+    try {
+      events.customModelCreated({
+        customModelId: String(data),
+        trainingSetId: state.trainingSet.id,
+        baseModel: state.baseModel.value,
+        fineTuneType: state.fineTuneType.value,
+        modelMode: state.modelMode.value,
+        name: state.name || undefined,
+      })
+    } catch {}
     void router.push({ name: "forge", params: { mode: "train" }, query: { customModelId: data } })
   } catch (err: any) {
     catchErr(err)

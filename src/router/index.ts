@@ -100,9 +100,6 @@ Router.afterEach((to) => {
       case "magicMirrorBanana":
         try { events.sectionOpen("magic_mirror_fast") } catch {}
         break
-      case "forge":
-        try { events.sectionOpen("forge") } catch {}
-        break
       case "claim":
         try { events.sectionOpen("claim") } catch {}
         break

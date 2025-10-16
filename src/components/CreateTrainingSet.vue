@@ -58,6 +58,7 @@ import { useForgeStore } from "src/stores/forgeStore"
 import { Dialog, Loading } from "quasar"
 import { uploadToPresignedPost, uploadWithProgress } from "lib/api"
 import { generateWebpThumbnails } from "../lib/imageUtils"
+import { events } from "lib/eventsManager"
 import { prices } from "src/stores/pricesStore"
 
 // const trainingSetTypes: {
@@ -174,6 +175,9 @@ export default defineComponent({
           trainingSetId: newTrainingSet.trainingSetId,
         })
         this.newTrainingSetId = newTrainingSet.trainingSetId
+        try {
+          events.trainingSetCreated({ trainingSetId: this.newTrainingSetId, name: String(this.setName || ''), images: files.length })
+        } catch {}
         this.finishModal = true
       } catch (error) {
         console.error("Error handling files:", error)
