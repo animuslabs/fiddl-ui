@@ -9,6 +9,7 @@ import encHex from "crypto-js/enc-hex"
 import { getMetaAttribution, generateEventId } from "./metaAttribution"
 import datafast from "lib/datafast"
 import { getCookie } from "lib/util"
+import { gtm } from "lib/googleTagManager"
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json }
 
@@ -43,10 +44,47 @@ export interface IdentifyEvent {
 class EventsManager {
   private _debug = false
 
+  // Map our common payload shape to GA4-friendly parameters for GTM
+  private ga4ify(eventName: string, payload: Record<string, Json> = {}): Record<string, Json> {
+    try {
+      const out: Record<string, Json> = { ...payload }
+      // Map contents -> items for GA4 ecommerce
+      const maybeContents = (payload as any)?.contents
+      const contentName = (payload as any)?.content_name
+      if (Array.isArray(maybeContents)) {
+        const items = maybeContents
+          .filter((it: any) => it && typeof it === "object")
+          .map((it: any) => {
+            const item: Record<string, Json> = {
+              item_id: it.id != null ? String(it.id) : undefined,
+            }
+            if (typeof it.quantity !== "undefined") item.quantity = Number(it.quantity)
+            if (typeof it.item_price !== "undefined") item.price = Number(it.item_price)
+            if (typeof contentName !== "undefined") item.item_name = String(contentName)
+            return item
+          })
+        if (items.length) out.items = items as any
+      }
+      // Add transaction_id for purchase when available (prefer explicit prop)
+      if (eventName === "purchase") {
+        const txId =
+          (payload as any)?.transaction_id ||
+          (payload as any)?.transactionId ||
+          (payload as any)?.orderId ||
+          (payload as any)?.orderID
+        if (txId) out.transaction_id = String(txId)
+      }
+      return out
+    } catch {
+      return payload
+    }
+  }
+
   init(options: { debug?: boolean } = {}): void {
     this._debug = !!options.debug
     // Initialize wrappers that benefit from explicit init without injecting scripts
     tiktokPixel.init({ debug: this._debug })
+    gtm.init({ debug: this._debug })
     // metaPixel: assumed loaded/initialized via index.html; wrapper is ready if fbq exists
   }
 
@@ -73,6 +111,9 @@ class EventsManager {
     } catch {}
     try {
       datafast.goal("add_to_cart", payload as any)
+    } catch {}
+    try {
+      gtm.track("add_to_cart", this.ga4ify("add_to_cart", payload))
     } catch {}
     try {
       if (typeof window !== "undefined") {
@@ -113,6 +154,9 @@ class EventsManager {
     try {
       datafast.goal("search", payload)
     } catch {}
+    try {
+      gtm.track("search", payload)
+    } catch {}
   }
 
   /** SPA page navigation */
@@ -123,6 +167,9 @@ class EventsManager {
     } catch {}
     try {
       tiktokPixel.trackPageView(extra as any)
+    } catch {}
+    try {
+      gtm.pageView(extra)
     } catch {}
     // Umami generally auto-tracks pageviews; avoid double-counting.
     // DataFast auto-tracks pageviews as well via the script.
@@ -148,6 +195,9 @@ class EventsManager {
     try {
       const ev = kind === "image" ? "create_image_start" : "create_video_start"
       datafast.goal(ev, payload)
+    } catch {}
+    try {
+      gtm.track(kind === "image" ? "create_image_start" : "create_video_start", payload)
     } catch {}
     try {
       if (typeof window !== "undefined") {
@@ -214,6 +264,9 @@ class EventsManager {
       datafast.goal(ev, payload)
     } catch {}
     try {
+      gtm.track(kind === "image" ? "create_image_success" : "create_video_success", payload)
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
         const fbpS = (fbp || "") as string
@@ -278,6 +331,9 @@ class EventsManager {
       datafast.goal("checkout_initiated", payload as any)
     } catch {}
     try {
+      gtm.track("begin_checkout", this.ga4ify("begin_checkout", payload))
+    } catch {}
+    try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
         const trackingId = getCookie("datafast_visitor_id") || undefined
@@ -317,6 +373,10 @@ class EventsManager {
     try {
       datafast.goal("purchase_completed", payload as any)
     } catch {}
+    try {
+      // Align to GA4 recommended payload (add items + transaction_id)
+      gtm.track("purchase", this.ga4ify("purchase", payload as any))
+    } catch {}
   }
 
   /** Login to existing account */
@@ -336,6 +396,9 @@ class EventsManager {
     } catch {}
     try {
       datafast.goal("login", payload)
+    } catch {}
+    try {
+      gtm.track("login", payload)
     } catch {}
   }
 
@@ -369,6 +432,10 @@ class EventsManager {
     try {
       // Align with DataFast docs: use `signup` for completed registration
       datafast.goal("signup", payload)
+    } catch {}
+    try {
+      // GA4 recommended name
+      gtm.track("sign_up", payload)
     } catch {}
   }
 

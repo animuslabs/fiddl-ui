@@ -327,6 +327,8 @@ export default defineComponent({
       manualApplyAttempted: false as boolean,
       discountDebounceTimer: null as any,
       discountValidationToken: 0 as number,
+      // Track last known gateway order id for analytics pairing
+      lastOrderId: null as string | null,
     }
   },
   computed: {
@@ -833,6 +835,9 @@ export default defineComponent({
               return
             }
 
+            // Stash for GA4 transaction_id mapping
+            this.lastOrderId = (data as any)?.orderID || null
+
             // Handle success case
             void this.userAuth.loadUserData()
             void this.userAuth.loadPointsHistory()
@@ -909,12 +914,14 @@ export default defineComponent({
             content_type: "product",
             contents: [{ id: `points_${this.selectedPkg.points}`, quantity: 1, item_price: Number(this.finalUsd) }],
             content_name: `Fiddl Points ${this.selectedPkg.points}`,
+            transaction_id: this.lastOrderId || undefined,
           } as any)
         }
       } catch {}
       umami.track("buyPointsPkgSuccess", { points: this.selectedPkg?.points, paid: this.finalUsd })
       LocalStorage.remove("orderDetails")
       this.selectedPkg = null
+      this.lastOrderId = null
       Dialog.create({
         title: "Success",
         message: "Points added successfully",

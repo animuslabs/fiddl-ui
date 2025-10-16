@@ -588,6 +588,7 @@ export default defineComponent({
                 contents: [{ id: `points_${this.selectedPkg?.points || 0}`, quantity: 1, item_price: Number(this.finalUsd || this.selectedPkg?.usd || 0) }],
                 content_name: `Fiddl Points ${this.selectedPkg?.points || 0}`,
                 event_id: (this as any)._metaEventId,
+                transaction_id: (data as any)?.orderID,
               } as any)
             } catch {}
             if (typeof umami.track === "function") {

@@ -155,6 +155,7 @@ export default defineComponent({
                 contents: [{ id: `points_${this.purchasePoints || 0}`, quantity: 1, item_price: Number(this.purchaseUsd) }],
                 content_name: this.purchasePoints != null ? `Fiddl Points ${this.purchasePoints}` : "Fiddl Points Package",
                 points: this.purchasePoints ?? null,
+                transaction_id: this.cryptoOrder?.id,
               } as any)
             }
           } catch {}
