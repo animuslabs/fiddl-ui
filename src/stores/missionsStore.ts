@@ -13,6 +13,7 @@ import {
   type BadgesForUser200Item,
 } from "lib/orval"
 import { useUserAuth } from "stores/userAuth"
+import { catchErr } from "lib/util"
 import { events } from "lib/eventsManager"
 
 export type RewardView =
@@ -166,8 +167,9 @@ export const useMissionsStore = defineStore("missionsStore", {
           color: (res as any).awarded ? "positive" : "warning",
           position: Platform.is.mobile ? "top" : void 0,
         })
-      } catch {
-        Notify.create({ message: "Failed to claim reward", color: "negative", position: Platform.is.mobile ? "top" : void 0 })
+      } catch (error) {
+        // Surface detailed error via shared handler
+        catchErr(error)
       } finally {
         this.claiming[mission.id] = false
       }
