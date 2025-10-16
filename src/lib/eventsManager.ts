@@ -430,8 +430,8 @@ class EventsManager {
       umami.track("registrationCompleted", payload)
     } catch {}
     try {
-      // Align with DataFast docs: use `signup` for completed registration
-      datafast.goal("signup", payload)
+      // DataFast: emit "complete_registration" to match expected reporting
+      datafast.goal("complete_registration", payload)
     } catch {}
     try {
       // GA4 recommended name
