@@ -29,10 +29,10 @@ q-card.mission-card
           .text-caption {{ rw.badge?.name || 'Badge' }}
           q-badge(v-if="rw.badge && userBadgeIdsSet?.has(rw.badge.id)" color="green-10" text-color="white" class="q-ml-xs" label="Owned" dense)
       // Community completion info placed inline with rewards
-      .row.items-center.q-gutter-xs(v-if="mission.activeUsersEarnedPct !== undefined")
+      .row.items-center.q-gutter-xs(v-if="communityClaimedPct !== undefined")
         q-icon(name="groups" size="18px" color="grey-6")
           q-tooltip(anchor="top middle" self="bottom middle") Percent of active users who have claimed this mission
-        .text-caption.text-grey-5 {{ Math.round(mission.activeUsersEarnedPct || 0) }}% claimed
+        .text-caption.text-grey-5 {{ Math.round(communityClaimedPct || 0) }}% claimed
   // Spacer pushes progress to the bottom in flexible height
   .mission-card__spacer
   q-separator
@@ -44,15 +44,17 @@ q-card.mission-card
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { defineComponent, computed, ref, onMounted, watch, onBeforeUnmount, type PropType } from 'vue'
+import type { MissionsList200Item } from 'lib/orval'
+import type { RewardView } from 'stores/missionsStore'
 
 export default defineComponent({
   name: 'MissionCard',
   props: {
-    mission: { type: Object, required: true },
+    mission: { type: Object as PropType<MissionsList200Item & { progress: number; rewardsNormalized: RewardView[] }>, required: true },
     claimed: { type: Boolean, default: false },
     claiming: { type: Boolean, default: false },
-    userBadgeIdsSet: { type: Object, default: null },
+    userBadgeIdsSet: { type: Object as PropType<Set<string> | null>, default: null },
   },
   emits: ['claim'],
   setup(props, { emit }) {
@@ -106,7 +108,15 @@ export default defineComponent({
       if (!canClaim.value) return
       emit('claim', props.mission)
     }
-    return { title, canClaim, onClaim, progressValue, progressAnimMs }
+
+    // Community claimed percent strictly per Orval type (0..100)
+    const communityClaimedPct = computed<number | undefined>(() => {
+      const raw = props.mission?.activeUsersEarnedPct
+      if (raw === undefined || raw === null) return undefined
+      return Math.max(0, Math.min(100, Number(raw)))
+    })
+
+    return { title, canClaim, onClaim, progressValue, progressAnimMs, communityClaimedPct }
   },
 })
 </script>

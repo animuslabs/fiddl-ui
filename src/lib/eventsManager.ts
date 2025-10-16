@@ -55,23 +55,18 @@ class EventsManager {
         const items = maybeContents
           .filter((it: any) => it && typeof it === "object")
           .map((it: any) => {
-            const item: Record<string, Json> = {
-              item_id: it.id != null ? String(it.id) : undefined,
-            }
-            if (typeof it.quantity !== "undefined") item.quantity = Number(it.quantity)
-            if (typeof it.item_price !== "undefined") item.price = Number(it.item_price)
-            if (typeof contentName !== "undefined") item.item_name = String(contentName)
+            const item: Record<string, Json> = {}
+            if (it.id != null) item["item_id"] = String(it.id)
+            if (typeof it.quantity !== "undefined") item["quantity"] = Number(it.quantity)
+            if (typeof it.item_price !== "undefined") item["price"] = Number(it.item_price)
+            if (typeof contentName !== "undefined") item["item_name"] = String(contentName)
             return item
           })
         if (items.length) out.items = items as any
       }
       // Add transaction_id for purchase when available (prefer explicit prop)
       if (eventName === "purchase") {
-        const txId =
-          (payload as any)?.transaction_id ||
-          (payload as any)?.transactionId ||
-          (payload as any)?.orderId ||
-          (payload as any)?.orderID
+        const txId = (payload as any)?.transaction_id || (payload as any)?.transactionId || (payload as any)?.orderId || (payload as any)?.orderID
         if (txId) out.transaction_id = String(txId)
       }
       return out
@@ -85,69 +80,134 @@ class EventsManager {
     const sec = String(section || "").trim() || "unknown"
     const payload: Record<string, Json> = { section: sec, ...(extra || {}) }
     if (this._debug) console.info("[Events] sectionOpen", payload)
-    try { metaPixel.trackCustom("SectionOpen", payload as any) } catch {}
-    try { tiktokPixel.track("SectionOpen", payload as any) } catch {}
-    try { umami.track("sectionOpen", payload) } catch {}
-    try { datafast.goal(`${sec}_open`, payload) } catch {}
-    try { gtm.track("section_open", payload) } catch {}
+    try {
+      metaPixel.trackCustom("SectionOpen", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("SectionOpen", payload as any)
+    } catch {}
+    try {
+      // umami.track("sectionOpen", payload) // not needed, we already track page views
+    } catch {}
+    try {
+      // datafast.goal(`${sec}_open`, payload) // not needed, we already track page views
+    } catch {}
+    try {
+      gtm.track("section_open", payload)
+    } catch {}
   }
 
   /** Promo code successfully claimed */
   promoClaimed(data: { code?: string; points?: number } = {}): void {
     const payload: Record<string, Json> = { ...data }
     if (this._debug) console.info("[Events] promoClaimed", payload)
-    try { metaPixel.trackCustom("PromoClaimed", payload as any) } catch {}
-    try { tiktokPixel.track("PromoClaimed", payload as any) } catch {}
-    try { umami.track("promoClaimed", payload) } catch {}
-    try { datafast.goal("promo_claimed", payload) } catch {}
-    try { gtm.track("promo_claimed", payload) } catch {}
+    try {
+      metaPixel.trackCustom("PromoClaimed", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("PromoClaimed", payload as any)
+    } catch {}
+    try {
+      umami.track("promoClaimed", payload)
+    } catch {}
+    try {
+      datafast.goal("promo_claimed", payload)
+    } catch {}
+    try {
+      gtm.track("promo_claimed", payload)
+    } catch {}
   }
 
   /** Mission reward claimed */
   missionClaimed(data: { missionId: string; rewards?: Array<{ type: string; amount?: number; badgeId?: string }> }): void {
-    const payload: Record<string, Json> = {
-      mission_id: data?.missionId,
-      rewards: Array.isArray(data?.rewards) ? data!.rewards : undefined,
+    const payload: Record<string, Json> = { mission_id: data.missionId }
+    if (Array.isArray(data?.rewards)) {
+      payload.rewards = data.rewards.map((r) => {
+        const o: Record<string, Json> = { type: String(r.type) }
+        if (typeof r.amount !== "undefined") o.amount = Number(r.amount)
+        if (typeof r.badgeId !== "undefined") o.badgeId = String(r.badgeId)
+        return o
+      })
     }
     if (this._debug) console.info("[Events] missionClaimed", payload)
-    try { metaPixel.trackCustom("MissionClaimed", payload as any) } catch {}
-    try { tiktokPixel.track("MissionClaimed", payload as any) } catch {}
-    try { umami.track("missionClaimed", payload) } catch {}
-    try { datafast.goal("mission_claimed", payload) } catch {}
-    try { gtm.track("mission_claimed", payload) } catch {}
+    try {
+      metaPixel.trackCustom("MissionClaimed", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("MissionClaimed", payload as any)
+    } catch {}
+    try {
+      umami.track("missionClaimed", payload)
+    } catch {}
+    try {
+      datafast.goal("mission_claimed", payload)
+    } catch {}
+    try {
+      gtm.track("mission_claimed", payload)
+    } catch {}
   }
 
   /** Magic Mirror session completed (all expected images rendered) */
   magicMirrorCompleted(mode: "fast" | "pro", data: { images?: number; templates?: number } = {}): void {
     const payload: Record<string, Json> = { mode, ...data }
     if (this._debug) console.info("[Events] magicMirrorCompleted", payload)
-    try { metaPixel.trackCustom("MagicMirrorCompleted", payload as any) } catch {}
-    try { tiktokPixel.track("MagicMirrorCompleted", payload as any) } catch {}
-    try { umami.track("magicMirrorCompleted", payload) } catch {}
-    try { datafast.goal("magic_mirror_completed", payload) } catch {}
-    try { gtm.track("magic_mirror_completed", payload) } catch {}
+    try {
+      metaPixel.trackCustom("MagicMirrorCompleted", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("MagicMirrorCompleted", payload as any)
+    } catch {}
+    try {
+      umami.track("magicMirrorCompleted", payload)
+    } catch {}
+    try {
+      datafast.goal("magic_mirror_completed", payload)
+    } catch {}
+    try {
+      gtm.track("magic_mirror_completed", payload)
+    } catch {}
   }
 
   /** Forge: training set created */
   trainingSetCreated(data: { trainingSetId: string; name?: string; images?: number }): void {
     const payload: Record<string, Json> = { ...data }
     if (this._debug) console.info("[Events] trainingSetCreated", payload)
-    try { metaPixel.trackCustom("TrainingSetCreated", payload as any) } catch {}
-    try { tiktokPixel.track("TrainingSetCreated", payload as any) } catch {}
-    try { umami.track("trainingSetCreated", payload) } catch {}
-    try { datafast.goal("training_set_created", payload) } catch {}
-    try { gtm.track("training_set_created", payload) } catch {}
+    try {
+      metaPixel.trackCustom("TrainingSetCreated", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("TrainingSetCreated", payload as any)
+    } catch {}
+    try {
+      umami.track("trainingSetCreated", payload)
+    } catch {}
+    try {
+      datafast.goal("training_set_created", payload)
+    } catch {}
+    try {
+      gtm.track("training_set_created", payload)
+    } catch {}
   }
 
   /** Forge: custom model created */
   customModelCreated(data: { customModelId: string; trainingSetId?: string; baseModel?: string; fineTuneType?: string; modelMode?: string; name?: string }): void {
     const payload: Record<string, Json> = { ...data }
     if (this._debug) console.info("[Events] customModelCreated", payload)
-    try { metaPixel.trackCustom("CustomModelCreated", payload as any) } catch {}
-    try { tiktokPixel.track("CustomModelCreated", payload as any) } catch {}
-    try { umami.track("customModelCreated", payload) } catch {}
-    try { datafast.goal("custom_model_created", payload) } catch {}
-    try { gtm.track("custom_model_created", payload) } catch {}
+    try {
+      metaPixel.trackCustom("CustomModelCreated", payload as any)
+    } catch {}
+    try {
+      tiktokPixel.track("CustomModelCreated", payload as any)
+    } catch {}
+    try {
+      umami.track("customModelCreated", payload)
+    } catch {}
+    try {
+      datafast.goal("custom_model_created", payload)
+    } catch {}
+    try {
+      gtm.track("custom_model_created", payload)
+    } catch {}
   }
 
   init(options: { debug?: boolean } = {}): void {
@@ -159,14 +219,7 @@ class EventsManager {
   }
 
   /** Item added to cart */
-  addToCart(data: {
-    contents?: Array<Record<string, Json>>
-    content_type?: string
-    currency?: string
-    value?: number
-    content_name?: string
-    num_items?: number
-  }): void {
+  addToCart(data: { contents?: Array<Record<string, Json>>; content_type?: string; currency?: string; value?: number; content_name?: string; num_items?: number }): void {
     const payload = data || {}
     const event_id = generateEventId()
     if (this._debug) console.info("[Events] addToCart", payload)
@@ -289,9 +342,7 @@ class EventsManager {
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
               ...(trackingId ? ({ trackingId } as any) : {}),
-            } as any).catch((err) =>
-            this._debug && console.warn("[Events] marketing.createImageStart failed", err),
-            )
+            } as any).catch((err) => this._debug && console.warn("[Events] marketing.createImageStart failed", err))
           }
         } else {
           {
@@ -304,9 +355,7 @@ class EventsManager {
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
               ...(trackingId ? ({ trackingId } as any) : {}),
-            } as any).catch((err) =>
-            this._debug && console.warn("[Events] marketing.createVideoStart failed", err),
-            )
+            } as any).catch((err) => this._debug && console.warn("[Events] marketing.createVideoStart failed", err))
           }
         }
       }
@@ -356,9 +405,7 @@ class EventsManager {
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
               ...(trackingId ? ({ trackingId } as any) : {}),
-            } as any).catch((err) =>
-            this._debug && console.warn("[Events] marketing.createImageSuccess failed", err),
-            )
+            } as any).catch((err) => this._debug && console.warn("[Events] marketing.createImageSuccess failed", err))
           }
         } else {
           {
@@ -371,9 +418,7 @@ class EventsManager {
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
               ...(trackingId ? ({ trackingId } as any) : {}),
-            } as any).catch((err) =>
-            this._debug && console.warn("[Events] marketing.createVideoSuccess failed", err),
-            )
+            } as any).catch((err) => this._debug && console.warn("[Events] marketing.createVideoSuccess failed", err))
           }
         }
       }
@@ -398,7 +443,7 @@ class EventsManager {
       umami.track("purchaseInitiated", payload)
     } catch {}
     try {
-      datafast.goal("checkout_initiated", payload as any)
+      // datafast.goal("checkout_initiated", payload as any) // handled on the server
     } catch {}
     try {
       gtm.track("begin_checkout", this.ga4ify("begin_checkout", payload))

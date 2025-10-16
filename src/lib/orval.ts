@@ -123,6 +123,8 @@ export type PkAuthRegisterStartBodyTracking = {
   referrerUrl?: string;
   landingUrl?: string;
   gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
   fbclid?: string;
   ttclid?: string;
   fbp?: string;
@@ -1591,6 +1593,11 @@ export type PointsFinishBuyPackageBody = {
   trackingId?: string;
   ttclid?: string;
   ttp?: string;
+  gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
+  adUserDataConsent?: boolean;
+  adPersonalizationConsent?: boolean;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -2277,6 +2284,8 @@ export type LoginLinkInitLoginLinkBodyTracking = {
   referrerUrl?: string;
   landingUrl?: string;
   gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
   fbclid?: string;
   ttclid?: string;
   fbp?: string;
@@ -4670,6 +4679,11 @@ export type CommentsDelete200 = {
 export type TiktokCompleteRegistrationBody = {
   ttclid?: string;
   ttp?: string;
+  gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
+  adUserDataConsent?: boolean;
+  adPersonalizationConsent?: boolean;
   userAgent?: string;
   eventId?: string;
   trackingId?: string;
@@ -4816,6 +4830,18 @@ export type MarketingCreateVideoSuccessBody = {
 
 export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
+};
+
+export type MarketingSendMissionReminderBody = {
+  userId?: string;
+};
+
+export type MarketingSendMissionReminder200 = {
+  ok: boolean;
+  sent: boolean;
+  /** @minimum 0 */
+  availableCount: number;
+  reason?: string;
 };
 
 export const pkAuthRegisterStart = (
@@ -14302,6 +14328,62 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getMarketingCreateVideoSuccessMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingSendMissionReminder = (
+    marketingSendMissionReminderBody: MaybeRef<MarketingSendMissionReminderBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingSendMissionReminder200>> => {
+    marketingSendMissionReminderBody = unref(marketingSendMissionReminderBody);
+    
+    return axios.post(
+      `/marketing/sendMissionReminder`,
+      marketingSendMissionReminderBody,options
+    );
+  }
+
+
+
+export const getMarketingSendMissionReminderMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingSendMissionReminder>>, TError,{data: MarketingSendMissionReminderBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingSendMissionReminder>>, TError,{data: MarketingSendMissionReminderBody}, TContext> => {
+
+const mutationKey = ['marketingSendMissionReminder'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingSendMissionReminder>>, {data: MarketingSendMissionReminderBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingSendMissionReminder(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingSendMissionReminderMutationResult = NonNullable<Awaited<ReturnType<typeof marketingSendMissionReminder>>>
+    export type MarketingSendMissionReminderMutationBody = MarketingSendMissionReminderBody
+    export type MarketingSendMissionReminderMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingSendMissionReminder = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingSendMissionReminder>>, TError,{data: MarketingSendMissionReminderBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingSendMissionReminder>>,
+        TError,
+        {data: MarketingSendMissionReminderBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingSendMissionReminderMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

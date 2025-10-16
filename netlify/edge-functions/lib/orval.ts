@@ -94,6 +94,8 @@ export type PkAuthRegisterStartBodyTracking = {
   referrerUrl?: string;
   landingUrl?: string;
   gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
   fbclid?: string;
   ttclid?: string;
   fbp?: string;
@@ -1562,6 +1564,11 @@ export type PointsFinishBuyPackageBody = {
   trackingId?: string;
   ttclid?: string;
   ttp?: string;
+  gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
+  adUserDataConsent?: boolean;
+  adPersonalizationConsent?: boolean;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -2248,6 +2255,8 @@ export type LoginLinkInitLoginLinkBodyTracking = {
   referrerUrl?: string;
   landingUrl?: string;
   gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
   fbclid?: string;
   ttclid?: string;
   fbp?: string;
@@ -4641,6 +4650,11 @@ export type CommentsDelete200 = {
 export type TiktokCompleteRegistrationBody = {
   ttclid?: string;
   ttp?: string;
+  gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
+  adUserDataConsent?: boolean;
+  adPersonalizationConsent?: boolean;
   userAgent?: string;
   eventId?: string;
   trackingId?: string;
@@ -4787,6 +4801,18 @@ export type MarketingCreateVideoSuccessBody = {
 
 export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
+};
+
+export type MarketingSendMissionReminderBody = {
+  userId?: string;
+};
+
+export type MarketingSendMissionReminder200 = {
+  ok: boolean;
+  sent: boolean;
+  /** @minimum 0 */
+  availableCount: number;
+  reason?: string;
 };
 
 export const getPkAuthRegisterStartUrl = () => {
@@ -8846,5 +8872,27 @@ export const marketingCreateVideoSuccess = async (marketingCreateVideoSuccessBod
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       marketingCreateVideoSuccessBody,)
+  }
+);}
+
+
+
+export const getMarketingSendMissionReminderUrl = () => {
+
+
+  
+
+  return `/marketing/sendMissionReminder`
+}
+
+export const marketingSendMissionReminder = async (marketingSendMissionReminderBody: MarketingSendMissionReminderBody, options?: RequestInit): Promise<MarketingSendMissionReminder200> => {
+  
+  return fetcher<MarketingSendMissionReminder200>(getMarketingSendMissionReminderUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingSendMissionReminderBody,)
   }
 );}
