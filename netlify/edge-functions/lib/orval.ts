@@ -2039,10 +2039,58 @@ export const UserGetNotificationConfig200TelegramFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserGetNotificationConfig200MissionsEmailFrequency = typeof UserGetNotificationConfig200MissionsEmailFrequency[keyof typeof UserGetNotificationConfig200MissionsEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200MissionsEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserGetNotificationConfig200MissionsTelegramFrequency = typeof UserGetNotificationConfig200MissionsTelegramFrequency[keyof typeof UserGetNotificationConfig200MissionsTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200MissionsTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserGetNotificationConfig200UpvotesEmailFrequency = typeof UserGetNotificationConfig200UpvotesEmailFrequency[keyof typeof UserGetNotificationConfig200UpvotesEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200UpvotesEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserGetNotificationConfig200UpvotesTelegramFrequency = typeof UserGetNotificationConfig200UpvotesTelegramFrequency[keyof typeof UserGetNotificationConfig200UpvotesTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserGetNotificationConfig200UpvotesTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserGetNotificationConfig200 = {
   emailFrequency: UserGetNotificationConfig200EmailFrequency;
   phoneFrequency: UserGetNotificationConfig200PhoneFrequency;
   telegramFrequency: UserGetNotificationConfig200TelegramFrequency;
+  missionsEmailFrequency: UserGetNotificationConfig200MissionsEmailFrequency;
+  missionsTelegramFrequency: UserGetNotificationConfig200MissionsTelegramFrequency;
+  upvotesEmailFrequency: UserGetNotificationConfig200UpvotesEmailFrequency;
+  upvotesTelegramFrequency: UserGetNotificationConfig200UpvotesTelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
@@ -2071,11 +2119,72 @@ export const UserSetNotificationConfigBodyPhoneFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserSetNotificationConfigBodyTelegramFrequency = typeof UserSetNotificationConfigBodyTelegramFrequency[keyof typeof UserSetNotificationConfigBodyTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfigBodyTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfigBodyMissionsEmailFrequency = typeof UserSetNotificationConfigBodyMissionsEmailFrequency[keyof typeof UserSetNotificationConfigBodyMissionsEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfigBodyMissionsEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfigBodyMissionsTelegramFrequency = typeof UserSetNotificationConfigBodyMissionsTelegramFrequency[keyof typeof UserSetNotificationConfigBodyMissionsTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfigBodyMissionsTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfigBodyUpvotesEmailFrequency = typeof UserSetNotificationConfigBodyUpvotesEmailFrequency[keyof typeof UserSetNotificationConfigBodyUpvotesEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfigBodyUpvotesEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfigBodyUpvotesTelegramFrequency = typeof UserSetNotificationConfigBodyUpvotesTelegramFrequency[keyof typeof UserSetNotificationConfigBodyUpvotesTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfigBodyUpvotesTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserSetNotificationConfigBody = {
   email?: boolean;
   phone?: boolean;
+  telegram?: boolean;
   emailFrequency?: UserSetNotificationConfigBodyEmailFrequency;
   phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency;
+  telegramFrequency?: UserSetNotificationConfigBodyTelegramFrequency;
+  missionsEmailFrequency?: UserSetNotificationConfigBodyMissionsEmailFrequency;
+  missionsTelegramFrequency?: UserSetNotificationConfigBodyMissionsTelegramFrequency;
+  upvotesEmailFrequency?: UserSetNotificationConfigBodyUpvotesEmailFrequency;
+  upvotesTelegramFrequency?: UserSetNotificationConfigBodyUpvotesTelegramFrequency;
 };
 
 export type UserSetNotificationConfig200EmailFrequency = typeof UserSetNotificationConfig200EmailFrequency[keyof typeof UserSetNotificationConfig200EmailFrequency];
@@ -2111,10 +2220,58 @@ export const UserSetNotificationConfig200TelegramFrequency = {
   monthly: 'monthly',
 } as const;
 
+export type UserSetNotificationConfig200MissionsEmailFrequency = typeof UserSetNotificationConfig200MissionsEmailFrequency[keyof typeof UserSetNotificationConfig200MissionsEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200MissionsEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfig200MissionsTelegramFrequency = typeof UserSetNotificationConfig200MissionsTelegramFrequency[keyof typeof UserSetNotificationConfig200MissionsTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200MissionsTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfig200UpvotesEmailFrequency = typeof UserSetNotificationConfig200UpvotesEmailFrequency[keyof typeof UserSetNotificationConfig200UpvotesEmailFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200UpvotesEmailFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UserSetNotificationConfig200UpvotesTelegramFrequency = typeof UserSetNotificationConfig200UpvotesTelegramFrequency[keyof typeof UserSetNotificationConfig200UpvotesTelegramFrequency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserSetNotificationConfig200UpvotesTelegramFrequency = {
+  instant: 'instant',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export type UserSetNotificationConfig200 = {
   emailFrequency: UserSetNotificationConfig200EmailFrequency;
   phoneFrequency: UserSetNotificationConfig200PhoneFrequency;
   telegramFrequency: UserSetNotificationConfig200TelegramFrequency;
+  missionsEmailFrequency: UserSetNotificationConfig200MissionsEmailFrequency;
+  missionsTelegramFrequency: UserSetNotificationConfig200MissionsTelegramFrequency;
+  upvotesEmailFrequency: UserSetNotificationConfig200UpvotesEmailFrequency;
+  upvotesTelegramFrequency: UserSetNotificationConfig200UpvotesTelegramFrequency;
   userId: string;
   email: boolean;
   phone: boolean;
@@ -4694,6 +4851,11 @@ export type MarketingAddToCartBody = {
   num_items?: number;
   contents: MarketingAddToCartBodyContentsItem[];
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4732,6 +4894,11 @@ export type MarketingInitiateCheckoutBody = {
   num_items?: number;
   contents: MarketingInitiateCheckoutBodyContentsItem[];
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4747,6 +4914,11 @@ export type MarketingCreateImageStartBody = {
   /** @minLength 1 */
   model: string;
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4762,6 +4934,11 @@ export type MarketingCreateImageSuccessBody = {
   /** @minLength 1 */
   model: string;
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4777,6 +4954,11 @@ export type MarketingCreateVideoStartBody = {
   /** @minLength 1 */
   model: string;
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4792,6 +4974,11 @@ export type MarketingCreateVideoSuccessBody = {
   /** @minLength 1 */
   model: string;
   eventId?: string;
+  /**
+   * @minimum 0
+   * @exclusiveMinimum
+   */
+  eventTime?: number;
   userAgent?: string;
   fbp?: string;
   fbc?: string;
@@ -4812,6 +4999,18 @@ export type MarketingSendMissionReminder200 = {
   sent: boolean;
   /** @minimum 0 */
   availableCount: number;
+  reason?: string;
+};
+
+export type MarketingSendUpvoteReminderBody = {
+  userId?: string;
+};
+
+export type MarketingSendUpvoteReminder200 = {
+  ok: boolean;
+  sent: boolean;
+  /** @minimum 0 */
+  remainingToday: number;
   reason?: string;
 };
 
@@ -8894,5 +9093,27 @@ export const marketingSendMissionReminder = async (marketingSendMissionReminderB
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       marketingSendMissionReminderBody,)
+  }
+);}
+
+
+
+export const getMarketingSendUpvoteReminderUrl = () => {
+
+
+  
+
+  return `/marketing/sendUpvoteReminder`
+}
+
+export const marketingSendUpvoteReminder = async (marketingSendUpvoteReminderBody: MarketingSendUpvoteReminderBody, options?: RequestInit): Promise<MarketingSendUpvoteReminder200> => {
+  
+  return fetcher<MarketingSendUpvoteReminder200>(getMarketingSendUpvoteReminderUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingSendUpvoteReminderBody,)
   }
 );}

@@ -196,11 +196,32 @@ q-page.full-height.full-width
             )
 
         h6.q-pt-md Notifications
-        .row(v-if="$userAuth.notificationConfig")
+        .column(v-if="$userAuth.notificationConfig")
           //- pre {{ $userAuth.notificationConfig }}
+          // Primary channels
           .row.items-center.q-gutter-md
             q-toggle(v-model="$userAuth.notificationConfig.email" label="Email Notifications" @click="updateNotificationConfig()")
-            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.emailFrequency" label="Email Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 140px; text-transform: capitalize;")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.emailFrequency" label="Email Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 160px; text-transform: capitalize;")
+          .row.items-center.q-gutter-md.q-mt-sm
+            q-toggle(v-model="$userAuth.notificationConfig.telegram" label="Telegram Notifications" @click="updateNotificationConfig()")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.telegramFrequency" label="Telegram Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.telegram == false" style="width: 160px; text-transform: capitalize;")
+          .row.items-center.q-gutter-md.q-mt-sm
+            q-toggle(v-model="$userAuth.notificationConfig.phone" label="SMS Notifications" @click="updateNotificationConfig()")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.phoneFrequency" label="SMS Frequency" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.phone == false" style="width: 160px; text-transform: capitalize;")
+
+          // Category-specific frequencies
+          .q-mt-md
+            h6.text-grey-4 Category Preferences
+          // Missions
+          .row.items-center.q-gutter-md.q-mt-xs
+            div.text-white(style="min-width: 80px;") Missions
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.missionsEmailFrequency" label="Email" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 140px; text-transform: capitalize;")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.missionsTelegramFrequency" label="Telegram" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.telegram == false" style="width: 140px; text-transform: capitalize;")
+          // Upvotes
+          .row.items-center.q-gutter-md.q-mt-sm
+            div.text-white(style="min-width: 80px;") Upvotes
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.upvotesEmailFrequency" label="Email" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.email == false" style="width: 140px; text-transform: capitalize;")
+            q-select(@popup-hide="updateNotificationConfig()" v-model="$userAuth.notificationConfig.upvotesTelegramFrequency" label="Telegram" :options="['instant', 'daily', 'weekly','monthly']" :disable="$userAuth.notificationConfig.telegram == false" style="width: 140px; text-transform: capitalize;")
         q-separator.q-my-lg(color="grey-8" inset)
         h6.text-negative Danger Zone
         q-card(flat bordered class="bg-dark-2 q-pa-md q-mt-sm")

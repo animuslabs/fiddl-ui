@@ -40,6 +40,11 @@
     "BrowsePage"
   ],
   [
+    "discover",
+    "/discover",
+    "BrowsePage"
+  ],
+  [
     "account",
     "/a",
     "ProfilePage"
