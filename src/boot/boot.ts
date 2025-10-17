@@ -82,7 +82,10 @@ export default boot(({ app }) => {
       const saved = jwt.read()
       const am: Record<string, string> = {}
       if (saved?.userId) am.external_id = String(saved.userId)
-      metaPixel.init(pixelId, { debug, advancedMatching: Object.keys(am).length ? (am as any) : undefined, skipScriptInject: true })
+      // Inject the script here and initialize using the same Pixel ID used server-side
+      metaPixel.init(pixelId, { debug, advancedMatching: Object.keys(am).length ? (am as any) : undefined, skipScriptInject: false })
+      // Fire initial page view (router will handle subsequent navigations)
+      try { events.pageView() } catch {}
     }
   } catch {}
 })

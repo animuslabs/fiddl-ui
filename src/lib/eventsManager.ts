@@ -44,6 +44,22 @@ export interface IdentifyEvent {
 class EventsManager {
   private _debug = false
 
+  // Remove undefined values and coerce to our Json union at runtime
+  private sanitize(input: Record<string, any>): Record<string, Json> {
+    const out: Record<string, Json> = {}
+    for (const [k, v] of Object.entries(input || {})) {
+      if (typeof v === "undefined") continue
+      if (v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+        out[k] = v as Json
+      } else if (Array.isArray(v)) {
+        out[k] = v.filter((x) => typeof x !== "undefined").map((x) => (typeof x === "object" && x ? this.sanitize(x as any) : (x as any))) as any
+      } else if (typeof v === "object") {
+        out[k] = this.sanitize(v as any)
+      }
+    }
+    return out
+  }
+
   // Map our common payload shape to GA4-friendly parameters for GTM
   private ga4ify(eventName: string, payload: Record<string, Json> = {}): Record<string, Json> {
     try {
@@ -81,10 +97,10 @@ class EventsManager {
     const payload: Record<string, Json> = { section: sec, ...(extra || {}) }
     if (this._debug) console.info("[Events] sectionOpen", payload)
     try {
-      metaPixel.trackCustom("SectionOpen", payload as any)
+      // metaPixel.trackCustom("SectionOpen", payload as any)
     } catch {}
     try {
-      tiktokPixel.track("SectionOpen", payload as any)
+      // tiktokPixel.track("SectionOpen", payload as any)
     } catch {}
     try {
       // umami.track("sectionOpen", payload) // not needed, we already track page views
@@ -93,7 +109,7 @@ class EventsManager {
       // datafast.goal(`${sec}_open`, payload) // not needed, we already track page views
     } catch {}
     try {
-      gtm.track("section_open", payload)
+      // gtm.track("section_open", payload)
     } catch {}
   }
 
@@ -325,8 +341,6 @@ class EventsManager {
     try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
-        const fbpS = (fbp || "") as string
-        const fbcS = (fbc || "") as string
         const eventSourceUrlS = (eventSourceUrl || (typeof window !== "undefined" ? window.location.href : "")) as string
         const userAgentS = (userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "")) as string
         const model = (meta || {}).model as string | undefined
@@ -336,8 +350,8 @@ class EventsManager {
             const trackingId = getCookie("datafast_visitor_id") || undefined
             void marketingCreateImageStart({
               model: modelS,
-              fbp: fbpS,
-              fbc: fbcS,
+              ...(fbp ? ({ fbp } as any) : {}),
+              ...(fbc ? ({ fbc } as any) : {}),
               eventId: event_id,
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
@@ -349,8 +363,8 @@ class EventsManager {
             const trackingId = getCookie("datafast_visitor_id") || undefined
             void marketingCreateVideoStart({
               model: modelS,
-              fbp: fbpS,
-              fbc: fbcS,
+              ...(fbp ? ({ fbp } as any) : {}),
+              ...(fbc ? ({ fbc } as any) : {}),
               eventId: event_id,
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
@@ -388,8 +402,6 @@ class EventsManager {
     try {
       if (typeof window !== "undefined") {
         const { fbp, fbc, eventSourceUrl, userAgent } = getMetaAttribution()
-        const fbpS = (fbp || "") as string
-        const fbcS = (fbc || "") as string
         const eventSourceUrlS = (eventSourceUrl || (typeof window !== "undefined" ? window.location.href : "")) as string
         const userAgentS = (userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "")) as string
         const model = (meta || {}).model as string | undefined
@@ -399,8 +411,8 @@ class EventsManager {
             const trackingId = getCookie("datafast_visitor_id") || undefined
             void marketingCreateImageSuccess({
               model: modelS,
-              fbp: fbpS,
-              fbc: fbcS,
+              ...(fbp ? ({ fbp } as any) : {}),
+              ...(fbc ? ({ fbc } as any) : {}),
               eventId: event_id,
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
@@ -412,8 +424,8 @@ class EventsManager {
             const trackingId = getCookie("datafast_visitor_id") || undefined
             void marketingCreateVideoSuccess({
               model: modelS,
-              fbp: fbpS,
-              fbc: fbcS,
+              ...(fbp ? ({ fbp } as any) : {}),
+              ...(fbc ? ({ fbc } as any) : {}),
               eventId: event_id,
               eventSourceUrl: eventSourceUrlS,
               userAgent: userAgentS,
@@ -470,7 +482,8 @@ class EventsManager {
   }
 
   purchaseCompleted(data: PurchaseEvent): void {
-    const payload = data
+    const maybeEventId = generateEventId()
+    const payload: PurchaseEvent = (maybeEventId ? { ...data, event_id: maybeEventId } : { ...data }) as any
     if (this._debug) console.info("[Events] purchaseCompleted", payload)
     try {
       metaPixel.trackPurchase(payload as any)
@@ -519,7 +532,8 @@ class EventsManager {
 
   /** Registration completion */
   registrationCompleted(data?: Record<string, Json>): void {
-    const payload = data || {}
+    const event_id = generateEventId()
+    const payload = { ...(data || {}), event_id }
     if (this._debug) console.info("[Events] registrationCompleted", payload)
     try {
       metaPixel.trackCompleteRegistration(payload as any)
@@ -550,7 +564,7 @@ class EventsManager {
     } catch {}
     try {
       // GA4 recommended name
-      gtm.track("sign_up", payload)
+      gtm.track("sign_up", this.sanitize(payload))
     } catch {}
   }
 

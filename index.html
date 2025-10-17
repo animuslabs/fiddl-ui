@@ -27,9 +27,26 @@
   <!-- Telegram Mini Apps SDK: required for WebApp detection and initData -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Meta Pixel Code -->
-  <script>!function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s) }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '686586947240581'); fbq('track', 'PageView');</script>
-  <!-- End Meta Pixel Code -->
+  <!-- Meta Pixel loader (script only; initialized in app boot) -->
+  <script>
+    (function (w, d) {
+      if (w.fbq) return; // stub already present
+      var n = (w.fbq = function () {
+        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      });
+      if (!w._fbq) w._fbq = n;
+      n.push = n;
+      n.loaded = !0;
+      n.version = '2.0';
+      n.queue = [];
+      var s = d.createElement('script');
+      s.async = true; s.defer = true;
+      s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+      var x = d.getElementsByTagName('script')[0];
+      x.parentNode.insertBefore(s, x);
+    })(window, document);
+  </script>
+  <!-- End Meta Pixel loader -->
 
   <!-- Structured data -->
   <script type="application/ld+json">
@@ -106,7 +123,7 @@
 </head>
 
 <body style="background:#121212;">
-  <!-- Meta Pixel noscript (moved to BODY) -->
+  <!-- Meta Pixel noscript (kept for no-JS fallback) -->
   <noscript>
     <img height="1" width="1" style="display:none"
       src="https://www.facebook.com/tr?id=686586947240581&ev=PageView&noscript=1" />

@@ -22,9 +22,20 @@ export function getMetaAttribution(): MetaAttributionPayload {
 
   try {
     const url = new URL(window.location.href)
-    const fbclid = url.searchParams.get("fbclid")?.trim()
-    // Prefer building from current fbclid when present; otherwise fall back to the _fbc cookie set by the Pixel.
-    let fbc = cached?.fbc ?? buildFbcFromFbclid(fbclid || undefined)
+    const fbclidFromUrl = url.searchParams.get("fbclid")?.trim()
+    // 1) Prefer building from current fbclid when present
+    // 2) Otherwise try first-touch storage (set by tracking.ts)
+    // 3) Finally, fall back to the _fbc cookie set by the Pixel
+    const storedFbclid = (() => {
+      try {
+        return window.localStorage?.getItem("ft_fbclid")?.trim() || undefined
+      } catch {
+        return undefined
+      }
+    })()
+    let fbc =
+      cached?.fbc ??
+      buildFbcFromFbclid(fbclidFromUrl || storedFbclid)
     if (!fbc) {
       const cookieFbc = readCookie("_fbc")
       if (cookieFbc && typeof cookieFbc === "string" && cookieFbc.startsWith("fb.1.")) {
