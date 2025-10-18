@@ -737,7 +737,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  try { ro?.disconnect() } catch {}
+  try {
+    ro?.disconnect()
+  } catch {}
   ro = null
   window.removeEventListener("orientationchange", updateContainerWidth)
   window.removeEventListener("resize", updateContainerWidth)
@@ -1656,7 +1658,6 @@ function prefetchImage(url: string): Promise<void> {
                     q-img(
                       :src="m.url"
                       :key="imageReloadKey[m.id]"
-                      :placeholder-src="barBgUrlFor(m)"
                       position="top"
                       style="width:100%; height:100%; object-fit: cover; object-position: top; display:block;"
                       transition="none"
@@ -1739,7 +1740,6 @@ function prefetchImage(url: string): Promise<void> {
                     q-img(
                       :src="m.url"
                       :key="imageReloadKey[m.id]"
-                      :placeholder-src="barBgUrlFor(m)"
                       position="top"
                       style="width:100%; height:100%; object-fit: cover; object-position: top; display:block"
                       transition="none"
@@ -2031,10 +2031,12 @@ function prefetchImage(url: string): Promise<void> {
   inset: 0;
   background-image: var(--mg-media-bg, none);
   background-size: cover;
-  background-position: center;
-  filter: blur(3px); /* lighter blur; further reduced */
-  transform: scale(1.12);
-  opacity: 0.5; /* less dark so image reads more */
+  /* Match actual media crop to avoid pop when swapping */
+  background-position: top;
+  filter: blur(1px);
+  /* Do not zoom or darken the preview to match final image framing */
+  transform: none;
+  opacity: 1;
   z-index: 0;
 }
 /* Ensure media content renders above the ambient backdrop */
@@ -2094,7 +2096,8 @@ function prefetchImage(url: string): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.14); /* lighten so backdrop shows through */
+  /* Do not darken the blurred preview during load */
+  background: transparent;
   color: white;
   z-index: 2;
   pointer-events: none;
@@ -2189,8 +2192,12 @@ function prefetchImage(url: string): Promise<void> {
   z-index: 0;
 }
 /* Make bars reflect the image edge they align to */
-.mg-topbar::before { background-position: center top; }
-.mg-bottombar::before { background-position: center bottom; }
+.mg-topbar::before {
+  background-position: center top;
+}
+.mg-bottombar::before {
+  background-position: center bottom;
+}
 .mg-topbar::after,
 .mg-bottombar::after {
   content: "";
@@ -2220,7 +2227,7 @@ function prefetchImage(url: string): Promise<void> {
   gap: 6px;
   cursor: pointer;
   flex: 1 1 auto; /* take remaining space */
-  min-width: 0;   /* allow text to ellipsis */
+  min-width: 0; /* allow text to ellipsis */
   max-width: none;
   overflow: hidden;
 }
@@ -2234,7 +2241,9 @@ function prefetchImage(url: string): Promise<void> {
   flex: 1 1 auto;
   min-width: 0;
 }
-.mg-topbar .bar-actions { flex: 0 0 auto; }
+.mg-topbar .bar-actions {
+  flex: 0 0 auto;
+}
 .mg-bottombar .pop-row {
   display: flex;
   width: 100%;
@@ -2390,7 +2399,9 @@ function prefetchImage(url: string): Promise<void> {
 }
 
 /* Reduce cross-tile invalidation during scroll */
-.media-wrapper { contain: paint; }
+.media-wrapper {
+  contain: paint;
+}
 
 /* Small chip in bottom-left for model name */
 .model-chip {
@@ -2581,9 +2592,4 @@ function prefetchImage(url: string): Promise<void> {
   }
 }
 </style>
-/* Soft culling: only apply content-visibility when items are far from viewport */
-.media-wrapper.is-cull .media-fill,
-.media-wrapper.is-cull .media-aspect {
-  content-visibility: auto;
-  contain-intrinsic-size: 320px; /* approximate tile size to avoid layout jump */
-}
+/* Soft culling: only apply content-visibility when items are far from viewport */ .media-wrapper.is-cull .media-fill, .media-wrapper.is-cull .media-aspect { content-visibility: auto; contain-intrinsic-size: 320px; /* approximate tile size to avoid layout jump */ }
