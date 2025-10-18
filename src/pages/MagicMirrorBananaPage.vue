@@ -248,6 +248,7 @@ import { uploadToPresignedPost } from "lib/api"
 import { generateWebpThumbnails } from "lib/imageUtils"
 import { useMagicMirrorResults } from "src/lib/magic/useMagicMirrorResults"
 import { events } from "lib/eventsManager"
+import { appendMagicMirrorAesthetic } from "src/lib/magic/magicPromptAppendix"
 
 type Step = "init" | "capture" | "selectTemplates" | "results"
 
@@ -658,8 +659,10 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
     // First batch: nano-banana (no explicit aspectRatio)
     const bananaRequests = templates.map((tpl) => {
       const resolved = promptFromTemplates([tpl])
+      const base = subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt
+      const finalPrompt = appendMagicMirrorAesthetic(base)
       return {
-        prompt: subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt,
+        prompt: finalPrompt,
         negativePrompt: resolved.negativePrompt,
         quantity: 1,
         model: "nano-banana" as const,
@@ -672,8 +675,10 @@ async function scheduleBananaRenders(templates: PromptTemplate[]) {
     // Second batch: seedream4 at 3:4
     const sd4Requests = templates.map((tpl) => {
       const resolved = promptFromTemplates([tpl])
+      const base = subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt
+      const finalPrompt = appendMagicMirrorAesthetic(base)
       return {
-        prompt: subjectDescription ? `${resolved.prompt} Subject Base Details: ${subjectDescription}` : resolved.prompt,
+        prompt: finalPrompt,
         negativePrompt: resolved.negativePrompt,
         quantity: 1,
         model: "seedream4" as const,

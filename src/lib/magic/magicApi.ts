@@ -7,6 +7,7 @@
  */
 import { createQueueAsyncBatch, type CreateImageBodyAspectRatio } from "lib/orval"
 import { promptFromTemplates, type PromptTemplate } from "src/lib/promptTemplates"
+import { appendMagicMirrorAesthetic } from "src/lib/magic/magicPromptAppendix"
 
 export type MagicScheduleParams = {
   customModelId: string
@@ -60,7 +61,10 @@ export async function scheduleMagicRenders({ customModelId, templates, subjectDe
   if (!requests.length) return null
   const res = await createQueueAsyncBatch({
     requests: requests.map((el) => {
-      el.prompt = `${el.prompt} Subject Base Details: ${subjectDescription}`
+      const withSubject = subjectDescription && subjectDescription.trim().length
+        ? `${el.prompt} Subject Base Details: ${subjectDescription}`
+        : el.prompt
+      el.prompt = appendMagicMirrorAesthetic(withSubject)
       return el
     }),
     emailNotify,

@@ -18,6 +18,7 @@ import type { MediaType } from "lib/types"
 import { creationsSetRequestPrivacy, creationsDeleteRequest, creationsDeleteMedia } from "lib/orval"
 import { prices } from "stores/pricesStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
+import { useCreateImageStore } from "src/stores/createImageStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 
 export interface MediaGalleryMeta {
@@ -351,6 +352,8 @@ function popularityLayoutClass(m: MediaGalleryMeta) {
 
 const imageCreations = useImageCreations()
 const videoCreations = useVideoCreations()
+// Access create-image flow to coordinate placeholder cleanup on errors/completion
+const createImageStore = useCreateImageStore()
 const privacyLoading = ref<Record<string, boolean>>({})
 const deleteLoading = ref<Record<string, boolean>>({})
 const addInputLoading = ref<Record<string, boolean>>({})
@@ -836,6 +839,18 @@ const stickyOrder = ref<string[]>([])
 const prevRealIds = ref<Set<string>>(new Set())
 const prevPlaceholderIds = ref<Set<string>>(new Set())
 
+// When create-image flow reports no more pending placeholders, drop any stickies
+watch(
+  () => (createImageStore?.state?.pendingPlaceholders as string[] | undefined)?.length || 0,
+  (len) => {
+    if (len === 0 && (stickyOrder.value.length || Object.keys(stickyPendingMap.value).length)) {
+      stickyPendingMap.value = {}
+      stickyOrder.value = []
+      void buildItems(props.mediaObjects)
+    }
+  },
+)
+
 const filteredGalleryItems = computed(() => {
   const list = Array.isArray(galleryItems.value) ? galleryItems.value : []
   // Filter out any undefined/null or items without id to keep template safe
@@ -917,18 +932,23 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
   // Detect placeholders that disappeared upstream (likely because the store removed them early)
   const disappeared = Array.from(prevPlaceholderIds.value).filter((id) => !placeholderIdsNow.has(id))
   const now = Date.now()
-  for (const id of disappeared) {
-    if (!stickyPendingMap.value[id]) {
-      // Recreate a minimal placeholder tile so the user sees continued loading feedback
-      stickyPendingMap.value[id] = {
-        id,
-        url: img(id, "lg"),
-        type: "image",
-        placeholder: true,
-        aspectRatio: layoutEffective.value === "grid" ? 1 : 1.6,
-        addedAt: now,
-      } as any
-      stickyOrder.value.push(id)
+  // Only recreate stickies while image creation flow still has pending placeholders.
+  // If the create flow has completed (success or error), do not keep orphan loading cards.
+  const allowStickies = ((createImageStore?.state?.pendingPlaceholders as string[] | undefined)?.length || 0) > 0
+  if (allowStickies) {
+    for (const id of disappeared) {
+      if (!stickyPendingMap.value[id]) {
+        // Recreate a minimal placeholder tile so the user sees continued loading feedback
+        stickyPendingMap.value[id] = {
+          id,
+          url: img(id, "lg"),
+          type: "image",
+          placeholder: true,
+          aspectRatio: layoutEffective.value === "grid" ? 1 : 1.6,
+          addedAt: now,
+        } as any
+        stickyOrder.value.push(id)
+      }
     }
   }
 
@@ -1006,7 +1026,8 @@ function markVideoLoaded(id: string) {
 }
 
 function markVideoErrored(id: string) {
-  videoLoading.value[id] = true
+  // Stop showing the loading overlay for hard failures
+  videoLoading.value[id] = false
 }
 
 function markImageLoaded(id: string) {
@@ -1050,8 +1071,8 @@ function markImageErrored(id: string) {
     // Ensure upgrade loop is running
     ensureImageUpgradeTimer()
   } else {
-    // Already at smallest; keep in loading state so periodic reloads can retry
-    imageLoading.value[id] = true
+    // Already at smallest; stop the spinner to avoid a stuck loading card
+    imageLoading.value[id] = false
   }
 }
 
