@@ -227,6 +227,8 @@ type ObserveBinding = string // media id
 
 // Preload/unmount buffer around viewport to avoid thrash
 const OBSERVER_ROOT_MARGIN = "800px"
+// Secondary IO for a wider "near viewport" band used to decide soft culling
+const NEAR_OBSERVER_ROOT_MARGIN = "1800px"
 
 // Local directive to observe an element and toggle visibility for its media id
 let sharedIO: IntersectionObserver | null = null
@@ -244,6 +246,39 @@ function getSharedIO(): IntersectionObserver {
     { root: null, rootMargin: OBSERVER_ROOT_MARGIN, threshold: 0 },
   )
   return sharedIO
+}
+// Wider-band observer to detect items near the viewport (avoid overzealous culling)
+const nearVisibleMap = ref<Record<string, boolean>>({})
+let nearIO: IntersectionObserver | null = null
+const nearTargets = new Map<Element, string>()
+function getNearIO(): IntersectionObserver {
+  if (nearIO) return nearIO
+  nearIO = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = nearTargets.get(entry.target)
+        if (!id) continue
+        // Mark true when within the larger margin band
+        nearVisibleMap.value[id] = entry.isIntersecting
+      }
+    },
+    { root: null, rootMargin: NEAR_OBSERVER_ROOT_MARGIN, threshold: 0 },
+  )
+  return nearIO
+}
+const vObserveNear: import("vue").Directive<HTMLElement, ObserveBinding> = {
+  mounted(el, binding) {
+    const id = binding.value
+    if (!id) return
+    nearTargets.set(el, id)
+    getNearIO().observe(el)
+  },
+  unmounted(el, binding) {
+    const id = binding.value
+    if (id) delete nearVisibleMap.value[id]
+    nearTargets.delete(el)
+    if (nearIO) nearIO.unobserve(el)
+  },
 }
 const vObserve: import("vue").Directive<HTMLElement, ObserveBinding> = {
   mounted(el, binding) {
@@ -1327,6 +1362,17 @@ function isVideoMedia(m?: MediaGalleryMeta): boolean {
   return t === "video"
 }
 
+// Near-viewport helper for soft culling logic
+function isNear(id: string): boolean {
+  if (!unloadingEnabled.value) return true
+  return !!nearVisibleMap.value[id]
+}
+
+// Apply content-visibility only for far items in large galleries
+function shouldCull(id: string): boolean {
+  return unloadingEnabled.value && !isNear(id)
+}
+
 function videoClass(media: MediaGalleryMeta) {
   return {
     "cursor-pointer": props.selectable && videoLoading.value[media.id] === false,
@@ -1566,9 +1612,10 @@ function prefetchImage(url: string): Promise<void> {
       :style="getItemStyle(m)"
       :class="{ 'media-cell': true, 'is-selected': props.selectable && selectedSet.has(m.id) }"
       v-observe="m.id"
+      v-observe-near="m.id"
     )
       template(v-if="!isVideoMedia(m)")
-        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic' }")
+        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic', 'is-cull': shouldCull(m.id) }")
           // Reserved top/bottom bars path
           template(v-if="useReservedBars")
             // Top bar (reserved space)
@@ -1628,10 +1675,13 @@ function prefetchImage(url: string): Promise<void> {
                     )
                   // Pending items: avoid mounting <img> to prevent UA broken-icon flicker
                   template(v-else)
-                    div(style="width:100%; height:100%; background:#000;")
+                    div.media-placeholder
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
-                div(style="width:100%; height:100%; background: #000;")
+                template(v-if="isPendingItem(m)")
+                  div.media-placeholder
+                template(v-else)
+                  div.media-spacer
               // Hidden overlay - keeps layout stable
               .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
                 .hidden-text Hidden
@@ -1711,7 +1761,10 @@ function prefetchImage(url: string): Promise<void> {
                     div.media-placeholder
               template(v-else)
                 // Placeholder keeps layout without mounting the image element
-                div.media-placeholder
+                template(v-if="isPendingItem(m)")
+                  div.media-placeholder
+                template(v-else)
+                  div.media-spacer
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
@@ -1758,7 +1811,7 @@ function prefetchImage(url: string): Promise<void> {
             slot(name="actions" :media="m" :index="index")
               // default empty
       template(v-else)
-        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic' }")
+        .media-wrapper(:style="mediaWrapperStyle" :class="{ 'mode-grid': layoutEffective === 'grid', 'mode-mosaic': layoutEffective === 'mosaic', 'is-cull': shouldCull(m.id) }")
           // Reserved top/bottom bars path for videos
           template(v-if="useReservedBars")
             // Top bar
@@ -1808,7 +1861,10 @@ function prefetchImage(url: string): Promise<void> {
                     )
               template(v-else)
                 // Placeholder keeps layout without mounting the video element
-                div(style="width:100%; height:100%; background: #000;")
+                template(v-if="isPendingItem(m)")
+                  div.media-placeholder
+                template(v-else)
+                  div.media-spacer
               // Hidden overlay - keeps layout stable
               .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
                 .hidden-text Hidden
@@ -1873,7 +1929,10 @@ function prefetchImage(url: string): Promise<void> {
                     )
               template(v-else)
                 // Placeholder keeps layout without mounting the video element
-                div.media-placeholder
+                template(v-if="isPendingItem(m)")
+                  div.media-placeholder
+                template(v-else)
+                  div.media-spacer
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
@@ -1952,15 +2011,15 @@ function prefetchImage(url: string): Promise<void> {
   height: 100%;
   overflow: hidden;
   background: #000; /* ensure offscreen/unmounted area is black */
-  /* Skip painting when far offscreen (supported browsers) */
-  content-visibility: auto;
+  /* Ensure preview remains paintable */
+  content-visibility: visible;
 }
 
 /* Inner aspect box used when reserved bars are enabled */
 .media-aspect {
   background: #000; /* black before image/video renders */
-  /* Skip painting when far offscreen (supported browsers) */
-  content-visibility: auto;
+  /* Ensure preview remains paintable */
+  content-visibility: visible;
 }
 
 /* Blurred ambient backdrop behind media while loading
@@ -1973,7 +2032,7 @@ function prefetchImage(url: string): Promise<void> {
   background-image: var(--mg-media-bg, none);
   background-size: cover;
   background-position: center;
-  filter: blur(8px); /* reduced for a crisper look */
+  filter: blur(3px); /* lighter blur; further reduced */
   transform: scale(1.12);
   opacity: 0.5; /* less dark so image reads more */
   z-index: 0;
@@ -1989,6 +2048,14 @@ function prefetchImage(url: string): Promise<void> {
   width: 100%;
   height: 100%;
   background: #000; /* black placeholder */
+}
+
+/* Transparent spacer used when offscreen but preview should remain visible */
+.media-spacer {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
 }
 
 .media-container img,
@@ -2514,3 +2581,9 @@ function prefetchImage(url: string): Promise<void> {
   }
 }
 </style>
+/* Soft culling: only apply content-visibility when items are far from viewport */
+.media-wrapper.is-cull .media-fill,
+.media-wrapper.is-cull .media-aspect {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px; /* approximate tile size to avoid layout jump */
+}
