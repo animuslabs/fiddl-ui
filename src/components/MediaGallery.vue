@@ -2033,7 +2033,7 @@ function prefetchImage(url: string): Promise<void> {
   background-size: cover;
   /* Match actual media crop to avoid pop when swapping */
   background-position: top;
-  filter: blur(1px);
+  filter: blur(5px);
   /* Do not zoom or darken the preview to match final image framing */
   transform: none;
   opacity: 1;
