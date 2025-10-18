@@ -19,7 +19,7 @@ div
       video(
         ref="mediaElement"
         :src="mediaViewerStore.getCurrentMediaUrl()"
-        class="image-darken"
+        :class="mediaClass"
         :style="{ width: '100%', maxHeight: viewportHeight(75), objectFit: 'contain', transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
         playsinline
         autoplay
@@ -145,8 +145,12 @@ const imageAttrs = computed(() => {
 })
 
 const mediaClass = computed(() => {
-  if (!mediaViewerStore.firstImageLoaded) return "image-darken"
-  return mediaViewerStore.loading || mediaViewerStore.imgLoading ? "image-darken active" : "image-darken"
+  // Before the first image ever loads, avoid dimming but animate blur.
+  if (!mediaViewerStore.firstImageLoaded) return "image-darken blur-anim-only"
+
+  // While loading (initial or during navigation), dim and animate blur.
+  const isLoading = mediaViewerStore.loading || mediaViewerStore.imgLoading
+  return isLoading ? "image-darken active blur-anim-dim" : "image-darken"
 })
 
 async function onMediaLoaded(event?: Event) {
@@ -273,16 +277,53 @@ watch(
 .image-darken {
   background-color: transparent;
   color: transparent;
-  transition:
-    filter 0.3s ease,
-    transform 0.3s ease;
+  /* Keep transform smooth; filter animation is handled via keyframes */
+  transition: transform 0.3s ease;
   will-change: transform;
 }
 .image-darken.hd-loaded {
   transform: scale(1.01);
 }
 .image-darken.active {
+  /* Fallback/static filter while not animating */
   filter: blur(3px) brightness(50%) saturate(50%);
+}
+
+/* Blur-out animations
+   - blur-anim-only: only animates blur from 5px to 0px (no dimming)
+   - blur-anim-dim: animates blur while keeping dimming constant */
+@keyframes mv-blur-out-only {
+  0% {
+    filter: blur(5px);
+  }
+  100% {
+    filter: blur(0);
+  }
+}
+
+@keyframes mv-blur-out-dim {
+  0% {
+    filter: blur(5px) brightness(50%) saturate(50%);
+  }
+  100% {
+    filter: blur(0) brightness(50%) saturate(50%);
+  }
+}
+
+.blur-anim-only {
+  animation: mv-blur-out-only 3s ease-out forwards;
+}
+
+.blur-anim-dim {
+  animation: mv-blur-out-dim 3s ease-out forwards;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .blur-anim-only,
+  .blur-anim-dim {
+    animation: none;
+  }
 }
 
 .indicator {

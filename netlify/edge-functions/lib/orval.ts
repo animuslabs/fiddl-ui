@@ -3381,6 +3381,7 @@ groupBy?: AdminAttributionGroupsGroupBy;
 startDateTime?: string;
 endDateTime?: string;
 includeUnknown?: boolean;
+search?: string;
 limit?: number;
 offset?: number;
 orderBy?: AdminAttributionGroupsOrderBy;
@@ -3398,6 +3399,8 @@ export const AdminAttributionGroupsGroupBy = {
   utmCampaign: 'utmCampaign',
   referrerDomain: 'referrerDomain',
   landingDomain: 'landingDomain',
+  surveyResult: 'surveyResult',
+  surveyResultOther: 'surveyResultOther',
 } as const;
 
 export type AdminAttributionGroupsOrderBy = typeof AdminAttributionGroupsOrderBy[keyof typeof AdminAttributionGroupsOrderBy];
@@ -3405,6 +3408,7 @@ export type AdminAttributionGroupsOrderBy = typeof AdminAttributionGroupsOrderBy
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdminAttributionGroupsOrderBy = {
+  key: 'key',
   users: 'users',
   paidUsers: 'paidUsers',
   spentPointsTotal: 'spentPointsTotal',

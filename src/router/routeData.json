@@ -5,6 +5,11 @@
     "BrowsePage"
   ],
   [
+    "home",
+    "/home",
+    "HomePage"
+  ],
+  [
     "newsletter",
     "/newsletter",
     "IndexPage"

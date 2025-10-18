@@ -6,6 +6,7 @@ q-page.full-height.full-width.admin-page
     q-tabs(v-model="tab" ).q-mb-md
       q-tab( name="promo-codes" label="Promo Codes")
       q-tab(name="users" label="Users")
+      q-tab(name="user-attributions" label="User Attributions")
       q-tab(name="payments" label="Payments")
       q-tab(name="uploaded-images" label="Uploaded Images")
       q-tab(name="training-images" label="Training Set Images")
@@ -239,6 +240,7 @@ q-page.full-height.full-width.admin-page
         flat
         bordered
         dense
+        :wrap-cells="false"
         :rows-per-page-options="[10,25,50,100,0]"
         :no-data-label="'No users found'"
       )
@@ -249,6 +251,26 @@ q-page.full-height.full-width.admin-page
               q-btn(size="sm" icon="block" color="negative" flat @click="confirmBan(props.row)" :disable="props.row.banned")
               q-avatar(size="28px" class="q-ml-sm")
                 q-img(:src="avatarImg(props.row.id)")
+        template(#body-cell-attribution="props")
+          q-td(:props="props" class="no-wrap" style="white-space: nowrap;")
+            .row.items-center.no-wrap.q-gutter-xs
+              q-chip(
+                size="sm"
+                color="grey-7"
+                text-color="white"
+                dense
+                v-if="attribSourceByUserId[props.row.id] && attribSourceByUserId[props.row.id] !== '-'"
+              ) {{ attribSourceByUserId[props.row.id] }}
+              q-badge(v-else color="grey-5" text-color="black" label="-")
+              q-btn(
+                size="sm"
+                icon="insights"
+                flat dense round
+                :disable="!canOpenAttrib(props.row.id)"
+                :loading="attribLoading[props.row.id] === true"
+                :title="canOpenAttrib(props.row.id) ? 'View attribution' : 'No attribution data'"
+                @click="openAttributionDialog(props.row)"
+              )
         template(#body-cell-username="props")
           q-td(:props="props")
             template(v-if="profileLinkForUser(props.row.profile)")
@@ -571,6 +593,10 @@ q-page.full-height.full-width.admin-page
   div(v-if="tab == 'stats'").q-pa-sm
     AdminStats
 
+  // User Attributions tab
+  div(v-if="tab == 'user-attributions'" class="q-pa-sm")
+    UserAttributionsTab
+
   // Show a spinner while user data is loading to avoid false "not admin" flash
   .centered.q-gutter-lg.q-ma-md(v-if="$userAuth.loggedIn && !$userAuth.userData")
     q-spinner(size="40px" color="primary")
@@ -632,6 +658,7 @@ import {
   adminAffiliatePayoutUser,
   adminAffiliatePayoutReceipts,
   adminAffiliatePayoutDetailsForUser,
+  adminAttributionGroups,
   type AdminListUsersSortBy,
   type AdminListUsersSortDir,
 } from "src/lib/orval"
@@ -642,9 +669,11 @@ type TablePagination = { sortBy: string; descending: boolean; page: number; rows
 type OnRequestProps = { pagination: TablePagination }
 
 import AdminStats from "components/admin/AdminStats.vue"
+import UserAttributionsTab from "components/admin/UserAttributionsTab.vue"
+import UserAttributionDetails from "components/dialogs/UserAttributionDetails.vue"
 
 export default defineComponent({
-  components: { AdminStats },
+  components: { AdminStats, UserAttributionsTab },
 
   setup() {
     const router = useRouter()
@@ -759,6 +788,35 @@ export default defineComponent({
       usersPagination.value = props.pagination
       refetchUsers()
     }
+    // Basic attribution source per user (lazy cached)
+    const attribSourceByUserId = ref<Record<string, string>>({})
+    const attribLoading = ref<Record<string, boolean>>({})
+    const canOpenAttrib = (userId: string) => {
+      const v = attribSourceByUserId.value[userId]
+      if (attribLoading.value[userId]) return false
+      if (!v) return false
+      if (v === '-') return false
+      return true
+    }
+    async function loadAttribForUser(userId: string) {
+      if (!userId) return
+      if (attribSourceByUserId.value[userId] || attribLoading.value[userId]) return
+      attribLoading.value[userId] = true
+      try {
+        const res = await adminAttributionGroups({ groupBy: 'source', search: userId, includeUnknown: true, limit: 5, offset: 0 })
+        const item = res?.data?.items?.[0]
+        attribSourceByUserId.value[userId] = (item?.key as any) || '-'
+      } catch {
+        attribSourceByUserId.value[userId] = '-'
+      } finally {
+        delete attribLoading.value[userId]
+      }
+    }
+    // Prefetch for current page rows
+    watch(usersRows, (rows) => {
+      const ids = (rows || []).slice(0, 50).map((r: any) => r.id).filter((x: any) => typeof x === 'string')
+      ids.forEach((id: string) => void loadAttribForUser(id))
+    }, { immediate: true })
     watch([userSearch, includeBanned], () => {
       usersPagination.value.page = 1
       refetchUsers()
@@ -1005,8 +1063,9 @@ export default defineComponent({
     const userColumns: QTableColumn<any>[] = [
       { name: "actions", label: "Actions", field: "id", align: "left", sortable: false },
       { name: "username", label: "Username", field: (row: any) => row.profile?.username || "", sortable: true },
-      { name: "email", label: "Email", field: (row: any) => row.profile?.email || "", sortable: true },
-      { name: "telegram", label: "Telegram", field: (row: any) => row.profile?.telegramName || row.profile?.telegramId || "", sortable: true },
+      { name: "email", label: "Email", field: (row: any) => row.profile?.email || "", sortable: true, classes: 'no-wrap' },
+      { name: "telegram", label: "Telegram", field: (row: any) => row.profile?.telegramName || row.profile?.telegramId || "", sortable: true, classes: 'no-wrap' },
+      { name: "attribution", label: "Attrib", field: "id", sortable: false },
       { name: "availablePoints", label: "Avail", field: "availablePoints", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
       { name: "spentPoints", label: "Spent", field: "spentPoints", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
       { name: "images", label: "Images", field: (row: any) => row.stats?.images || 0, align: "right", sortable: true },
@@ -1785,6 +1844,9 @@ export default defineComponent({
       refetchUsers,
       confirmBan,
       onUsersRequest,
+      attribSourceByUserId,
+      attribLoading,
+      canOpenAttrib,
 
       // payments
       paymentsUserId,
@@ -2060,7 +2122,7 @@ export default defineComponent({
       })
     },
     normalizeAdminTab(slug?: string): string {
-      const allowed = new Set(["promo-codes", "users", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
+      const allowed = new Set(["promo-codes", "users", "user-attributions", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
       return allowed.has(slug) ? slug : "promo-codes"
     },
@@ -2185,9 +2247,27 @@ export default defineComponent({
         catchErr(error)
       }
     },
+    openAttributionDialog(row: any) {
+      try {
+        Dialog.create({ component: UserAttributionDetails, componentProps: { userId: row?.id, username: row?.profile?.username || null } })
+      } catch (e) {}
+    },
   },
 })
 </script>
+
+<style lang="scss">
+.admin-page {
+  .q-table .q-td.no-wrap,
+  .q-table .q-th.no-wrap {
+    white-space: nowrap;
+  }
+  // prevent badge/button wrapping within small cells
+  .q-table .no-wrap .row.no-wrap {
+    flex-wrap: nowrap;
+  }
+}
+</style>
 
 <style lang="sass" scoped>
 .admin-page

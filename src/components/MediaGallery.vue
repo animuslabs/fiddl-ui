@@ -1678,11 +1678,8 @@ function prefetchImage(url: string): Promise<void> {
                   template(v-else)
                     div.media-placeholder
               template(v-else)
-                // Placeholder keeps layout without mounting the image element
-                template(v-if="isPendingItem(m)")
-                  div.media-placeholder
-                template(v-else)
-                  div.media-spacer
+                // Offscreen: render a lightweight black placeholder to avoid blank gaps
+                div.media-placeholder
               // Hidden overlay - keeps layout stable
               .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
                 .hidden-text Hidden
@@ -1760,11 +1757,8 @@ function prefetchImage(url: string): Promise<void> {
                   template(v-else)
                     div.media-placeholder
               template(v-else)
-                // Placeholder keeps layout without mounting the image element
-                template(v-if="isPendingItem(m)")
-                  div.media-placeholder
-                template(v-else)
-                  div.media-spacer
+                // Offscreen: render a lightweight black placeholder to avoid blank gaps
+                div.media-placeholder
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showImageOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
@@ -1860,11 +1854,8 @@ function prefetchImage(url: string): Promise<void> {
                       :class="videoClass(m)"
                     )
               template(v-else)
-                // Placeholder keeps layout without mounting the video element
-                template(v-if="isPendingItem(m)")
-                  div.media-placeholder
-                template(v-else)
-                  div.media-spacer
+                // Offscreen: render a lightweight black placeholder to avoid blank gaps
+                div.media-placeholder
               // Hidden overlay - keeps layout stable
               .hidden-overlay(v-if="popularity.get(m.id)?.hidden")
                 .hidden-text Hidden
@@ -1928,11 +1919,8 @@ function prefetchImage(url: string): Promise<void> {
                       :class="videoClass(m)"
                     )
               template(v-else)
-                // Placeholder keeps layout without mounting the video element
-                template(v-if="isPendingItem(m)")
-                  div.media-placeholder
-                template(v-else)
-                  div.media-spacer
+                // Offscreen: render a lightweight black placeholder to avoid blank gaps
+                div.media-placeholder
             // Top actions overlay (centered; matches bottom popularity row style)
             .top-actions-overlay(
               v-if="isVisible(m.id) && !shouldMaskNsfw(m) && !showVideoOverlay(m.id) && !(isPhone && layoutEffective === 'mosaic') && (canDelete(m) || canTogglePrivacy(m) || (props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')) || showCreatorFor(m))"
@@ -2033,7 +2021,7 @@ function prefetchImage(url: string): Promise<void> {
   background-size: cover;
   /* Match actual media crop to avoid pop when swapping */
   background-position: top;
-  filter: blur(5px);
+  /* filter: blur(5px); disable blur for now */
   /* Do not zoom or darken the preview to match final image framing */
   transform: none;
   opacity: 1;
@@ -2463,7 +2451,8 @@ function prefetchImage(url: string): Promise<void> {
   justify-content: center;
   gap: 6px;
   padding: 18px;
-  background: rgba(10, 10, 10, 0.88);
+  /* Fully opaque black to completely mask NSFW previews */
+  background: #000;
   color: white;
   text-align: center;
   cursor: pointer;
@@ -2591,5 +2580,10 @@ function prefetchImage(url: string): Promise<void> {
     padding: 0;
   }
 }
+/* Soft culling: only apply content-visibility when items are far from viewport */
+.media-wrapper.is-cull .media-fill,
+.media-wrapper.is-cull .media-aspect {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px; /* approximate tile size to avoid layout jump */
+}
 </style>
-/* Soft culling: only apply content-visibility when items are far from viewport */ .media-wrapper.is-cull .media-fill, .media-wrapper.is-cull .media-aspect { content-visibility: auto; contain-intrinsic-size: 320px; /* approximate tile size to avoid layout jump */ }

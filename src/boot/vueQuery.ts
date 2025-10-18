@@ -4,7 +4,7 @@ import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query"
 import axios from "axios"
 import { jwt } from "src/lib/jwt"
 import { useUserAuth } from "src/stores/userAuth"
-import { Notify } from "quasar"
+// import { Notify } from "quasar"
 
 // Set up the API URL (similar to your current api.ts)
 export let apiUrl = (import.meta.env.VITE_API_URL || "https://api.fiddl.art") + "/api"
@@ -17,8 +17,8 @@ if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
 axios.defaults.baseURL = apiUrl
 axios.defaults.timeout = 0
 
-// Track whether we've already notified about an expired session
-let hasNotifiedExpiry = false
+// Track whether we've already notified about an expired session (notification disabled)
+// let hasNotifiedExpiry = false
 
 // Add auth interceptor for JWT and handle pre-flight expiry
 axios.interceptors.request.use((config) => {
@@ -49,10 +49,7 @@ axios.interceptors.response.use(
     if (status === 401) {
       const auth = useUserAuth()
       if (auth.loggedIn) auth.logout()
-      if (!hasNotifiedExpiry) {
-        hasNotifiedExpiry = true
-        Notify.create({ message: "Your session has expired. Please log in again.", color: "warning", icon: "logout" })
-      }
+      // Notification removed per request
     }
     return Promise.reject(error)
   },
