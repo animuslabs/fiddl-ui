@@ -5,13 +5,13 @@ q-dialog(v-model="open" persistent :maximized="$q.screen.lt.md")
     .content-scroll(ref="contentRef")
       // Sticky header
       .header-sticky.q-px-lg.q-pt-lg.q-pb-sm
-        .row.no-wrap.items-start.q-gutter-md
-          q-icon(name="campaign" color="primary" size="lg" class="q-mt-xs")
+        .row.no-wrap.items-center.q-gutter-md
+          q-icon(name="campaign" color="primary" size="lg")
           .col
             .text-h6.q-mb-none How did you hear about Fiddl.art?
             .text-body2.text-grey-5.q-mt-xs Help us improve by selecting one option.
       // Grid of options
-      .row.q-col-gutter-sm.q-px-lg.q-pt-md
+      .row.q-col-gutter-sm.q-px-lg.q-pt-md.q-mt-md
         .col-6.col-sm-4(v-for="opt in options" :key="opt.value")
           q-card(
             class="opt-tile"
@@ -213,7 +213,8 @@ watch(choice, (val) => {
   background: linear-gradient(to top, rgba(18,18,18,0.95), rgba(18,18,18,0.7), rgba(18,18,18,0))
   backdrop-filter: blur(8px)
   border-top: 1px solid rgba(255,255,255,0.06)
-  padding-bottom: max(12px, env(safe-area-inset-bottom))
+  /* Extra breathing room below the button */
+  padding-bottom: calc(max(12px, env(safe-area-inset-bottom)) + 8px)
   box-shadow: 0 -6px 16px rgba(0,0,0,0.2)
 
 // Fullscreen adjustments when dialog is maximized

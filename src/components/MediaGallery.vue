@@ -1952,11 +1952,15 @@ function prefetchImage(url: string): Promise<void> {
   height: 100%;
   overflow: hidden;
   background: #000; /* ensure offscreen/unmounted area is black */
+  /* Skip painting when far offscreen (supported browsers) */
+  content-visibility: auto;
 }
 
 /* Inner aspect box used when reserved bars are enabled */
 .media-aspect {
   background: #000; /* black before image/video renders */
+  /* Skip painting when far offscreen (supported browsers) */
+  content-visibility: auto;
 }
 
 /* Blurred ambient backdrop behind media while loading
@@ -2214,7 +2218,9 @@ function prefetchImage(url: string): Promise<void> {
   gap: 6px;
   z-index: 3;
   pointer-events: none;
-  backdrop-filter: blur(10px);
+  /* Disable costly blur by default; enable on hover below */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-sizing: border-box;
 }
 .top-actions-overlay .q-btn {
@@ -2261,7 +2267,9 @@ function prefetchImage(url: string): Promise<void> {
   max-width: 80%;
   z-index: 3;
   pointer-events: none;
-  backdrop-filter: blur(10px);
+  /* Disable costly blur by default; enable on hover below */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-sizing: border-box;
 }
 .popularity-overlay .pop-row {
@@ -2299,8 +2307,23 @@ function prefetchImage(url: string): Promise<void> {
   .media-wrapper:focus-within .top-actions-overlay,
   .media-wrapper:focus-within .popularity-overlay {
     opacity: 1;
+    /* Turn on blur at hover start to keep idle scroll cheap */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
+
+/* Always keep blur off on touch-only devices to avoid paint cost */
+@media (hover: none), (pointer: coarse) {
+  .top-actions-overlay,
+  .popularity-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Reduce cross-tile invalidation during scroll */
+.media-wrapper { contain: paint; }
 
 /* Small chip in bottom-left for model name */
 .model-chip {
