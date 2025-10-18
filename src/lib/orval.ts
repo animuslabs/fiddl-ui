@@ -3405,6 +3405,78 @@ export type ModelsSetModelPrivacyBody = {
   public: boolean;
 };
 
+export type AdminAttributionGroupsParams = {
+groupBy?: AdminAttributionGroupsGroupBy;
+startDateTime?: string;
+endDateTime?: string;
+includeUnknown?: boolean;
+limit?: number;
+offset?: number;
+orderBy?: AdminAttributionGroupsOrderBy;
+sortDir?: AdminAttributionGroupsSortDir;
+};
+
+export type AdminAttributionGroupsGroupBy = typeof AdminAttributionGroupsGroupBy[keyof typeof AdminAttributionGroupsGroupBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsGroupBy = {
+  source: 'source',
+  utmSource: 'utmSource',
+  utmMedium: 'utmMedium',
+  utmCampaign: 'utmCampaign',
+  referrerDomain: 'referrerDomain',
+  landingDomain: 'landingDomain',
+} as const;
+
+export type AdminAttributionGroupsOrderBy = typeof AdminAttributionGroupsOrderBy[keyof typeof AdminAttributionGroupsOrderBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsOrderBy = {
+  users: 'users',
+  paidUsers: 'paidUsers',
+  spentPointsTotal: 'spentPointsTotal',
+  createdImageUsers: 'createdImageUsers',
+  usdTotal: 'usdTotal',
+  usdPayPal: 'usdPayPal',
+  usdCrypto: 'usdCrypto',
+  usdStars: 'usdStars',
+  firstSignup: 'firstSignup',
+  lastSignup: 'lastSignup',
+} as const;
+
+export type AdminAttributionGroupsSortDir = typeof AdminAttributionGroupsSortDir[keyof typeof AdminAttributionGroupsSortDir];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsSortDir = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type AdminAttributionGroups200ItemsItem = {
+  /** @nullable */
+  key: string | null;
+  users: number;
+  paidUsers: number;
+  spentPointsTotal: number;
+  createdImageUsers: number;
+  usdTotal: number;
+  usdPayPal: number;
+  usdCrypto: number;
+  usdStars: number;
+  /** @nullable */
+  firstSignup: string | null;
+  /** @nullable */
+  lastSignup: string | null;
+};
+
+export type AdminAttributionGroups200 = {
+  total: number;
+  items: AdminAttributionGroups200ItemsItem[];
+};
+
 export type AdminLoginAsUserBody = {
   id: string;
 };
@@ -5017,6 +5089,67 @@ export type MarketingCreateVideoSuccessBody = {
 
 export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
+};
+
+export type MarketingSetHowFoundBodySource = typeof MarketingSetHowFoundBodySource[keyof typeof MarketingSetHowFoundBodySource];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketingSetHowFoundBodySource = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+export type MarketingSetHowFoundBody = {
+  source: MarketingSetHowFoundBodySource;
+  /** @maxLength 200 */
+  otherText?: string;
+};
+
+export type MarketingSetHowFound200 = {
+  ok: boolean;
+};
+
+/**
+ * @nullable
+ */
+export type MarketingHowFoundStatus200SurveyResult = typeof MarketingHowFoundStatus200SurveyResult[keyof typeof MarketingHowFoundStatus200SurveyResult] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketingHowFoundStatus200SurveyResult = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+export type MarketingHowFoundStatus200 = {
+  set: boolean;
+  /** @nullable */
+  surveyResult: MarketingHowFoundStatus200SurveyResult;
+  /** @nullable */
+  source: string | null;
+  /** @nullable */
+  surveyResultOther: string | null;
 };
 
 export type MarketingSendMissionReminderBody = {
@@ -10675,6 +10808,64 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const adminAttributionGroups = (
+    params?: MaybeRef<AdminAttributionGroupsParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminAttributionGroups200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/attributionGroups`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminAttributionGroupsQueryKey = (params?: MaybeRef<AdminAttributionGroupsParams>,) => {
+    return ['admin','attributionGroups', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminAttributionGroupsQueryOptions = <TData = Awaited<ReturnType<typeof adminAttributionGroups>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<AdminAttributionGroupsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAttributionGroups>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminAttributionGroupsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAttributionGroups>>> = ({ signal }) => adminAttributionGroups(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminAttributionGroups>>, TError, TData> 
+}
+
+export type AdminAttributionGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof adminAttributionGroups>>>
+export type AdminAttributionGroupsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminAttributionGroups<TData = Awaited<ReturnType<typeof adminAttributionGroups>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<AdminAttributionGroupsParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminAttributionGroups>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminAttributionGroupsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const adminLoginAsUser = (
     adminLoginAsUserBody: MaybeRef<AdminLoginAsUserBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string>> => {
@@ -14531,6 +14722,118 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const marketingSetHowFound = (
+    marketingSetHowFoundBody: MaybeRef<MarketingSetHowFoundBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingSetHowFound200>> => {
+    marketingSetHowFoundBody = unref(marketingSetHowFoundBody);
+    
+    return axios.post(
+      `/marketing/setHowFound`,
+      marketingSetHowFoundBody,options
+    );
+  }
+
+
+
+export const getMarketingSetHowFoundMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingSetHowFound>>, TError,{data: MarketingSetHowFoundBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof marketingSetHowFound>>, TError,{data: MarketingSetHowFoundBody}, TContext> => {
+
+const mutationKey = ['marketingSetHowFound'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof marketingSetHowFound>>, {data: MarketingSetHowFoundBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  marketingSetHowFound(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarketingSetHowFoundMutationResult = NonNullable<Awaited<ReturnType<typeof marketingSetHowFound>>>
+    export type MarketingSetHowFoundMutationBody = MarketingSetHowFoundBody
+    export type MarketingSetHowFoundMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMarketingSetHowFound = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof marketingSetHowFound>>, TError,{data: MarketingSetHowFoundBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof marketingSetHowFound>>,
+        TError,
+        {data: MarketingSetHowFoundBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMarketingSetHowFoundMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const marketingHowFoundStatus = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MarketingHowFoundStatus200>> => {
+    
+    
+    return axios.get(
+      `/marketing/howFoundStatus`,options
+    );
+  }
+
+
+export const getMarketingHowFoundStatusQueryKey = () => {
+    return ['marketing','howFoundStatus'] as const;
+    }
+
+    
+export const getMarketingHowFoundStatusQueryOptions = <TData = Awaited<ReturnType<typeof marketingHowFoundStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketingHowFoundStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMarketingHowFoundStatusQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketingHowFoundStatus>>> = ({ signal }) => marketingHowFoundStatus({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketingHowFoundStatus>>, TError, TData> 
+}
+
+export type MarketingHowFoundStatusQueryResult = NonNullable<Awaited<ReturnType<typeof marketingHowFoundStatus>>>
+export type MarketingHowFoundStatusQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMarketingHowFoundStatus<TData = Awaited<ReturnType<typeof marketingHowFoundStatus>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketingHowFoundStatus>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketingHowFoundStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const marketingSendMissionReminder = (
     marketingSendMissionReminderBody: MaybeRef<MarketingSendMissionReminderBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MarketingSendMissionReminder200>> => {

@@ -3376,6 +3376,78 @@ export type ModelsSetModelPrivacyBody = {
   public: boolean;
 };
 
+export type AdminAttributionGroupsParams = {
+groupBy?: AdminAttributionGroupsGroupBy;
+startDateTime?: string;
+endDateTime?: string;
+includeUnknown?: boolean;
+limit?: number;
+offset?: number;
+orderBy?: AdminAttributionGroupsOrderBy;
+sortDir?: AdminAttributionGroupsSortDir;
+};
+
+export type AdminAttributionGroupsGroupBy = typeof AdminAttributionGroupsGroupBy[keyof typeof AdminAttributionGroupsGroupBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsGroupBy = {
+  source: 'source',
+  utmSource: 'utmSource',
+  utmMedium: 'utmMedium',
+  utmCampaign: 'utmCampaign',
+  referrerDomain: 'referrerDomain',
+  landingDomain: 'landingDomain',
+} as const;
+
+export type AdminAttributionGroupsOrderBy = typeof AdminAttributionGroupsOrderBy[keyof typeof AdminAttributionGroupsOrderBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsOrderBy = {
+  users: 'users',
+  paidUsers: 'paidUsers',
+  spentPointsTotal: 'spentPointsTotal',
+  createdImageUsers: 'createdImageUsers',
+  usdTotal: 'usdTotal',
+  usdPayPal: 'usdPayPal',
+  usdCrypto: 'usdCrypto',
+  usdStars: 'usdStars',
+  firstSignup: 'firstSignup',
+  lastSignup: 'lastSignup',
+} as const;
+
+export type AdminAttributionGroupsSortDir = typeof AdminAttributionGroupsSortDir[keyof typeof AdminAttributionGroupsSortDir];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminAttributionGroupsSortDir = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type AdminAttributionGroups200ItemsItem = {
+  /** @nullable */
+  key: string | null;
+  users: number;
+  paidUsers: number;
+  spentPointsTotal: number;
+  createdImageUsers: number;
+  usdTotal: number;
+  usdPayPal: number;
+  usdCrypto: number;
+  usdStars: number;
+  /** @nullable */
+  firstSignup: string | null;
+  /** @nullable */
+  lastSignup: string | null;
+};
+
+export type AdminAttributionGroups200 = {
+  total: number;
+  items: AdminAttributionGroups200ItemsItem[];
+};
+
 export type AdminLoginAsUserBody = {
   id: string;
 };
@@ -4988,6 +5060,67 @@ export type MarketingCreateVideoSuccessBody = {
 
 export type MarketingCreateVideoSuccess200 = {
   ok: boolean;
+};
+
+export type MarketingSetHowFoundBodySource = typeof MarketingSetHowFoundBodySource[keyof typeof MarketingSetHowFoundBodySource];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketingSetHowFoundBodySource = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+export type MarketingSetHowFoundBody = {
+  source: MarketingSetHowFoundBodySource;
+  /** @maxLength 200 */
+  otherText?: string;
+};
+
+export type MarketingSetHowFound200 = {
+  ok: boolean;
+};
+
+/**
+ * @nullable
+ */
+export type MarketingHowFoundStatus200SurveyResult = typeof MarketingHowFoundStatus200SurveyResult[keyof typeof MarketingHowFoundStatus200SurveyResult] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketingHowFoundStatus200SurveyResult = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+export type MarketingHowFoundStatus200 = {
+  set: boolean;
+  /** @nullable */
+  surveyResult: MarketingHowFoundStatus200SurveyResult;
+  /** @nullable */
+  source: string | null;
+  /** @nullable */
+  surveyResultOther: string | null;
 };
 
 export type MarketingSendMissionReminderBody = {
@@ -7443,6 +7576,34 @@ export const modelsSetModelPrivacy = async (modelsSetModelPrivacyBody: ModelsSet
 
 
 
+export const getAdminAttributionGroupsUrl = (params?: AdminAttributionGroupsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/attributionGroups?${stringifiedParams}` : `/admin/attributionGroups`
+}
+
+export const adminAttributionGroups = async (params?: AdminAttributionGroupsParams, options?: RequestInit): Promise<AdminAttributionGroups200> => {
+  
+  return fetcher<AdminAttributionGroups200>(getAdminAttributionGroupsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getAdminLoginAsUserUrl = () => {
 
 
@@ -9071,6 +9232,49 @@ export const marketingCreateVideoSuccess = async (marketingCreateVideoSuccessBod
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       marketingCreateVideoSuccessBody,)
+  }
+);}
+
+
+
+export const getMarketingSetHowFoundUrl = () => {
+
+
+  
+
+  return `/marketing/setHowFound`
+}
+
+export const marketingSetHowFound = async (marketingSetHowFoundBody: MarketingSetHowFoundBody, options?: RequestInit): Promise<MarketingSetHowFound200> => {
+  
+  return fetcher<MarketingSetHowFound200>(getMarketingSetHowFoundUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketingSetHowFoundBody,)
+  }
+);}
+
+
+
+export const getMarketingHowFoundStatusUrl = () => {
+
+
+  
+
+  return `/marketing/howFoundStatus`
+}
+
+export const marketingHowFoundStatus = async ( options?: RequestInit): Promise<MarketingHowFoundStatus200> => {
+  
+  return fetcher<MarketingHowFoundStatus200>(getMarketingHowFoundStatusUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
 
