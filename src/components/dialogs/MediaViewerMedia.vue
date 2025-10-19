@@ -16,25 +16,44 @@ div
       )
 
     div(v-if="mediaViewerStore.currentMediaType === 'video'" class="video-wrapper")
-      video(
-        ref="mediaElement"
-        :src="mediaViewerStore.getCurrentMediaUrl()"
-        :class="mediaClass"
-        :style="{ width: '100%', maxHeight: viewportHeight(75), objectFit: 'contain', transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
-        playsinline
-        autoplay
-        loop
-        :muted="mediaViewerStore.muted"
-        @canplay="onMediaLoaded"
-        @volumechange="onVolumeChange"
-        @click.stop="onMediaClick"
-        controls
+      //- Seamless preview->HD: stack two videos and crossfade when HD is buffered
+      .video-stack(
+        :style="{ maxHeight: viewportHeight(75), aspectRatio: aspectRatio || undefined, transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
       )
+        //- Preview layer (controls until HD is visible)
+        video.video-layer.preview(
+          ref="previewRef"
+          :src="previewVideoUrl"
+          playsinline
+          autoplay
+          loop
+          :muted="previewMuted"
+          :controls="!showHd"
+          @canplay="onMediaLoaded"
+          @loadedmetadata="onPreviewMetadata"
+          @timeupdate="onPreviewTimeUpdate"
+          @volumechange="onVolumeChange"
+          @click.stop="onMediaClick"
+        )
+        //- HD layer (fades in when synced)
+        video.video-layer.hd(
+          v-if="currentHdUrl"
+          ref="hdRef"
+          :src="currentHdUrl"
+          playsinline
+          loop
+          :muted="hdMuted"
+          :controls="showHd"
+          :class="{ visible: showHd }"
+          @loadedmetadata="onHdMetadata"
+          @volumechange="onVolumeChange"
+          @click.stop="onMediaClick"
+        )
 
     img(
       v-else
       v-bind="imageAttrs"
-      ref="mediaElement"
+      ref="imageRef"
     )
 
     .absolute-top.full-width(style="width:100vw")
@@ -76,13 +95,31 @@ const mediaViewerStore = useMediaViewerStore()
 // Load muted preference on initialization
 mediaViewerStore.loadMutedPreference()
 const currentHdUrl = computed(() => mediaViewerStore.hdVideoUrl[mediaViewerStore.currentMediaId])
-const mediaElement = ref<HTMLImageElement | HTMLVideoElement | null>(null)
 
+// Refs for layered videos and image
+const previewRef = ref<HTMLVideoElement | null>(null)
+const hdRef = ref<HTMLVideoElement | null>(null)
+const imageRef = ref<HTMLImageElement | null>(null)
+
+// Derived urls
+const previewVideoUrl = computed(() => s3Video(mediaViewerStore.currentMediaId, "preview-lg"))
+
+// Aspect ratio lock for container (prevents size pop)
+const aspectRatio = ref<string | null>(null)
+
+// Crossfade control
+const showHd = ref(false)
+
+// Muting strategy: preview follows store until switch; HD starts muted then adopts store on switch
+const previewMuted = computed(() => mediaViewerStore.muted)
+const hdMuted = computed(() => (showHd.value ? mediaViewerStore.muted : true))
+
+// Register currently active video with store for external controls
 function syncActiveVideoElement() {
   void nextTick(() => {
-    const el = mediaElement.value
-    if (mediaViewerStore.currentMediaType === "video" && el instanceof HTMLVideoElement) {
-      mediaViewerStore.registerVideoElement(el)
+    const active = showHd.value ? hdRef.value : previewRef.value
+    if (mediaViewerStore.currentMediaType === "video" && active instanceof HTMLVideoElement) {
+      mediaViewerStore.registerVideoElement(active)
     } else {
       mediaViewerStore.registerVideoElement(null)
     }
@@ -90,7 +127,7 @@ function syncActiveVideoElement() {
 }
 
 watch(
-  () => mediaViewerStore.currentMediaType,
+  () => [mediaViewerStore.currentMediaType, showHd.value],
   () => {
     syncActiveVideoElement()
   },
@@ -98,23 +135,15 @@ watch(
 )
 
 watch(
-  () => mediaElement.value,
+  () => [previewRef.value, hdRef.value],
   () => {
     syncActiveVideoElement()
   },
 )
 
 onBeforeUnmount(() => {
+  cancelSyncLoop()
   mediaViewerStore.registerVideoElement(null)
-})
-watch(currentHdUrl, (url) => {
-  if (!url || mediaViewerStore.currentMediaType !== "video") return
-  const el = mediaElement.value as HTMLVideoElement | null
-  if (el && el.src !== url) {
-    el.src = url
-    el.load()
-    el.play().catch(() => {})
-  }
 })
 
 const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.length > 0)
@@ -186,6 +215,80 @@ async function onMediaLoaded(event?: Event) {
   }
 }
 
+// Keep HD buffered and synced behind the preview; when ready, crossfade
+function onPreviewMetadata(e: Event) {
+  const v = e.target as HTMLVideoElement
+  if (v && v.videoWidth && v.videoHeight) {
+    aspectRatio.value = `${v.videoWidth} / ${v.videoHeight}`
+  }
+  void v.play().catch(() => {})
+}
+
+function onHdMetadata(e: Event) {
+  const hd = e.target as HTMLVideoElement
+  const preview = previewRef.value
+  if (!hd || !preview) return
+  try {
+    hd.currentTime = preview.currentTime || 0
+  } catch {}
+  void hd.play().catch(() => {})
+  requestNextFrameSync()
+}
+
+let syncRaf: number | null = null
+function cancelSyncLoop() {
+  if (syncRaf != null) {
+    cancelAnimationFrame(syncRaf)
+    syncRaf = null
+  }
+}
+
+function requestNextFrameSync() {
+  cancelSyncLoop()
+  syncRaf = requestAnimationFrame(syncAndMaybeSwap)
+}
+
+function syncAndMaybeSwap() {
+  const hd = hdRef.value
+  const preview = previewRef.value
+  if (!hd || !preview || showHd.value) return
+  const dt = Math.abs((hd.currentTime || 0) - (preview.currentTime || 0))
+  if (dt > 0.25) {
+    try {
+      hd.currentTime = preview.currentTime
+    } catch {}
+    requestNextFrameSync()
+    return
+  }
+  if (hd.readyState >= 3) {
+    try {
+      preview.muted = true
+    } catch {}
+    showHd.value = true
+    window.setTimeout(() => {
+      try {
+        preview.pause()
+      } catch {}
+      syncActiveVideoElement()
+    }, 180)
+  } else {
+    requestNextFrameSync()
+  }
+}
+
+function onPreviewTimeUpdate() {
+  if (showHd.value) return
+  const hd = hdRef.value
+  const preview = previewRef.value
+  if (!hd || !preview) return
+  const dt = Math.abs((hd.currentTime || 0) - (preview.currentTime || 0))
+  if (dt > 0.25) {
+    try {
+      hd.currentTime = preview.currentTime
+    } catch {}
+  }
+}
+
 function preloadMedia() {
   const preloadIndices = [mediaViewerStore.currentIndex - 1, mediaViewerStore.currentIndex + 1]
   preloadIndices.forEach((index) => {
@@ -193,7 +296,9 @@ function preloadMedia() {
       const mediaObj = mediaViewerStore.mediaObjects[index]
       if (!mediaObj) return
       const isVideo = mediaObj.type === "video"
-      const url = isVideo ? mediaViewerStore.hdVideoUrl[mediaObj.id] || s3Video(mediaObj.id, "preview-lg") : mediaViewerStore.hdImageSrc[mediaObj.id] || img(mediaObj.id, "lg")
+      const url = isVideo
+        ? mediaViewerStore.hdVideoUrl[mediaObj.id] || s3Video(mediaObj.id, "preview-lg")
+        : mediaViewerStore.hdImageSrc[mediaObj.id] || mediaViewerStore.lgImageSrc[mediaObj.id] || img(mediaObj.id, "lg")
       if (isVideo) {
         const video = document.createElement("video")
         video.preload = "auto"
@@ -257,8 +362,18 @@ watch(
     mediaViewerStore.creatorMeta = { userName: "", id: "" }
     mediaViewerStore.loadedRequestId = null
 
+    // Reset local crossfade state and aspect ratio
+    showHd.value = false
+    aspectRatio.value = null
+    cancelSyncLoop()
+
     // Check like status and load HD media only for navigation between media
-    await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadHdMedia(), mediaViewerStore.loadRequestId()])
+    await Promise.allSettled([
+      mediaViewerStore.checkUserLikedMedia(),
+      mediaViewerStore.loadLgImage(),
+      mediaViewerStore.loadHdMedia(),
+      mediaViewerStore.loadRequestId(),
+    ])
   },
   { immediate: false },
 )
@@ -348,14 +463,22 @@ watch(
   justify-content: center;
   margin: auto;
 }
-.video-wrapper video {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
-  max-height: 75vh;
-  max-height: 75dvh;
+.video-stack {
+  position: relative;
+  width: 100%;
   max-width: 100vw;
-  margin: auto;
-  display: block;
+  height: auto;
 }
+.video-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 180ms ease-in-out;
+}
+.video-layer.preview { opacity: 1; }
+.video-layer.hd { opacity: 0; }
+.video-layer.hd.visible { opacity: 1; }
 </style>

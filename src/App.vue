@@ -47,7 +47,7 @@ import { handleClaimCode } from "lib/promoCodeUtil"
 import { useMissionsStore } from "stores/missionsStore"
 import { useAsyncErrorStore } from "stores/asyncErrorStore"
 LoadingBar.setDefaults({
-  color: "primary",
+  color: "transparent",
   size: "1px",
   position: "top",
   reverse: false,
@@ -157,19 +157,19 @@ export default defineComponent({
               const choiceEnum = status.surveyResult || undefined
               const sourceRaw = (status as any)?.source as string | null
               const otherFromStatus = status.surveyResultOther || undefined
-              const allowed = ['reddit','facebook','instagram','tiktok','twitter','youtube','search','friend','blog','discord','newsletter','other']
+              const allowed = ["reddit", "facebook", "instagram", "tiktok", "twitter", "youtube", "search", "friend", "blog", "discord", "newsletter", "other"]
               let choice = choiceEnum || undefined
               let otherText = otherFromStatus || undefined
               if (!choice) {
                 const src = sourceRaw || undefined
                 if (src && allowed.includes(src)) choice = src as any
                 else if (src && !otherText) {
-                  choice = 'other'
+                  choice = "other"
                   otherText = src
                 }
               }
               LocalStorage.set(`referralSurveyCompleted:${uid}`, true)
-              LocalStorage.set(`referralSurveyAnswer:${uid}`, { choice: choice || (otherText ? 'other' : undefined), otherText })
+              LocalStorage.set(`referralSurveyAnswer:${uid}`, { choice: choice || (otherText ? "other" : undefined), otherText })
               this.referralSurveyChecking = false
               return
             }

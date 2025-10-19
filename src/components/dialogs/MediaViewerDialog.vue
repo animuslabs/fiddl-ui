@@ -56,7 +56,10 @@ onMounted(async () => {
   // Pass startId when provided to ensure the correct media opens
   // even if placeholder tiles are present or lists have shifted.
   await mediaViewerStore.initializeMediaViewer(props.mediaObjects, props.startIndex, props.startId)
-  if (userAuth.loggedIn) await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadHdMedia()])
+  // Kick off progressive loads: LG first (fast CDN), then HD if available/allowed
+  const tasks: Promise<any>[] = [mediaViewerStore.loadLgImage(), mediaViewerStore.loadHdMedia()]
+  if (userAuth.loggedIn) tasks.unshift(mediaViewerStore.checkUserLikedMedia())
+  await Promise.allSettled(tasks)
 })
 
 // Watch for current index changes to update route

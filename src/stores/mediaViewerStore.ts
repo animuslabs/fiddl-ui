@@ -33,6 +33,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     hdMediaLoaded: false,
     firstImageLoaded: false,
     hdImageSrc: {} as Record<string, string>,
+    // Progressive image loading: keep a mid-tier (lg) cache as a step-up from sm
+    lgImageSrc: {} as Record<string, string>,
     hdVideoUrl: {} as Record<string, string>,
 
     // User states
@@ -92,7 +94,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     getCurrentMediaUrl(): string {
       const id = this.currentMediaId
       if (this.currentMediaType === "image") {
-        return this.hdImageSrc[id] || img(id, "lg")
+        // Prefer HD if available, else previously loaded LG, else fast SM for instant display
+        return this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "sm")
       }
       return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
@@ -108,7 +111,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const mediaType = this.mediaObjects[nextIndex]?.type || "image"
 
       if (mediaType === "image") {
-        return this.hdImageSrc[id] || img(id, "lg")
+        return this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "lg")
       }
       return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
@@ -164,6 +167,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.triedHdLoad = false
       this.hdMediaLoaded = false
       this.firstImageLoaded = false
+      // Do not clear lg/hd caches globally here; they are keyed per-id and safe to persist between opens
       this.userOwnsMedia = false
       this.userLikedMedia = false
       this.loadingLike = false
@@ -306,6 +310,23 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         if (timer) clearTimeout(timer)
         this.loading = false
       }
+    },
+
+    // Progressive: load the LG image in the background and promote when ready
+    async loadLgImage(id?: string) {
+      const mediaId = id || this.currentMediaId
+      if (this.currentMediaType !== "image") return
+      if (this.hdImageSrc[mediaId] || this.lgImageSrc[mediaId]) return
+      const url = img(mediaId, "lg")
+      await new Promise<void>((resolve) => {
+        const im = new Image()
+        im.onload = () => {
+          this.lgImageSrc[mediaId] = url
+          resolve()
+        }
+        im.onerror = () => resolve()
+        im.src = url
+      })
     },
 
     async loadHdImage(id: string, timeoutPromise: Promise<null>) {

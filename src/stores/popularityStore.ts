@@ -25,6 +25,11 @@ interface PopularityState {
   _loaded: boolean
   _inFlight: Record<string, boolean>
   _mutating: Record<string, boolean>
+  /**
+   * Suppress applying incoming batch results for specific ids until a confirm-refresh runs
+   * or the suppression TTL expires. Stores expiry timestamps (ms since epoch).
+   */
+  _suppressUntil: Record<string, number>
 }
 
 const DB_NAME = "PopularityDB"
@@ -48,6 +53,7 @@ export const usePopularityStore = defineStore("popularityStore", {
     _loaded: false,
     _inFlight: {},
     _mutating: {},
+    _suppressUntil: {},
   }),
   getters: {
     get:
@@ -56,6 +62,23 @@ export const usePopularityStore = defineStore("popularityStore", {
         state.entries[id],
   },
   actions: {
+    _isSuppressed(id: string): boolean {
+      const until = this._suppressUntil[id]
+      if (!until) return false
+      if (Date.now() >= until) {
+        delete this._suppressUntil[id]
+        return false
+      }
+      return true
+    },
+    _suppress(id: string, ttlMs = 10000) {
+      const now = Date.now()
+      const cur = this._suppressUntil[id] || 0
+      this._suppressUntil[id] = Math.max(cur, now + Math.max(1000, ttlMs))
+    },
+    _clearSuppress(id: string) {
+      delete this._suppressUntil[id]
+    },
     async init() {
       if (this._db) return
       this._db = await getDB()
@@ -174,7 +197,9 @@ export const usePopularityStore = defineStore("popularityStore", {
             hidden: p.hidden ?? false,
             updatedAt: Date.now(),
           }))
-          await this._putMany(mapped)
+          // Skip applying entries currently suppressed (e.g., just upvoted optimistically)
+          const toApply = mapped.filter((e) => !this._isSuppressed(e.id))
+          if (toApply.length) await this._putMany(toApply)
         }
       } finally {
         // clear in-flight markers
@@ -234,7 +259,8 @@ export const usePopularityStore = defineStore("popularityStore", {
             hidden: p.hidden ?? false,
             updatedAt: Date.now(),
           }))
-          await this._putMany(mapped)
+          const toApply = mapped.filter((e) => !this._isSuppressed(e.id))
+          if (toApply.length) await this._putMany(toApply)
         }
       } finally {
         for (const it of toRequest) delete this._inFlight[it.id]
@@ -350,12 +376,23 @@ export const usePopularityStore = defineStore("popularityStore", {
       }
       const type = mediaType || e.mediaType || "image"
 
-      // Optimistic increment (per-call delta)
+      // Optimistic increment (per-call delta) and suppress batch overwrite
+      this._suppress(id, 12000)
       const prevIsUpvoted = !!e.isUpvotedByMe
       e.isUpvotedByMe = true
       e.upvotes = (e.upvotes ?? 0) + 1
       e.mediaType = type
       await this._put(e)
+
+      // Optimistically decrement the user's upvotes wallet so header updates instantly
+      let decrementedWallet = false
+      try {
+        const userAuth = useUserAuth()
+        if (userAuth.loggedIn && userAuth.upvotesWallet && userAuth.upvotesWallet.remainingToday > 0) {
+          userAuth.upvotesWallet.remainingToday = Math.max(0, userAuth.upvotesWallet.remainingToday - 1)
+          decrementedWallet = true
+        }
+      } catch {}
 
       try {
         await upvotesUpvote({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
@@ -367,13 +404,66 @@ export const usePopularityStore = defineStore("popularityStore", {
         } catch (e2) {
           console.error("[popularityStore] failed to refresh upvotes wallet", e2)
         }
+        // Confirm server truth for this id and lift suppression
+        void this._confirmFromServer(id, type)
       } catch (err) {
         // Per-call rollback: subtract only our optimistic +1 and restore prior state
         const cur = this.entries[id] || e
         cur.upvotes = Math.max(0, (cur.upvotes ?? 0) - 1)
         cur.isUpvotedByMe = prevIsUpvoted
         await this._put(cur)
+        this._clearSuppress(id)
+        // Roll back wallet optimistic decrement
+        try {
+          const userAuth = useUserAuth()
+          if (decrementedWallet && userAuth.upvotesWallet) {
+            userAuth.upvotesWallet.remainingToday += 1
+          }
+        } catch {}
         throw err
+      }
+    },
+    async _confirmFromServer(id: string, mediaType: "image" | "video", attempt = 0) {
+      try {
+        const body: PopularityBatchBody = { items: [{ id, mediaType }] }
+        const { data } = await popularityBatch(body)
+        const p = (Array.isArray(data) ? data.find((x) => x.id === id) : null) as PopularityBatch200Item | undefined
+        if (p) {
+          const cur = this.entries[id]
+          const serverUpvotes = p.upvotes ?? 0
+          const optimisticUpvotes = cur?.upvotes ?? 0
+          const hadLocalUpvote = !!cur?.isUpvotedByMe
+          const serverHasMyUpvote = !!p.isUpvotedByMe
+
+          // If server hasn't reflected the upvote yet, hold suppression and retry briefly
+          if ((serverUpvotes < optimisticUpvotes) || (hadLocalUpvote && !serverHasMyUpvote)) {
+            if (attempt < 3) {
+              this._suppress(id, 8000)
+              setTimeout(() => { try { void this._confirmFromServer(id, mediaType, attempt + 1) } catch {} }, 800)
+              return
+            }
+            // After a few attempts, let TTL handle eventual consistency
+            return
+          }
+
+          const entry: PopularityEntry = {
+            id: p.id,
+            mediaType,
+            favorites: p.favorites ?? 0,
+            upvotes: p.upvotes ?? 0,
+            downvotes: p.downvotes ?? 0,
+            commentsCount: p.commentsCount ?? 0,
+            isFavoritedByMe: p.isFavoritedByMe,
+            isUpvotedByMe: p.isUpvotedByMe,
+            hidden: p.hidden ?? false,
+            updatedAt: Date.now(),
+          }
+          await this._put(entry)
+          // Clear suppression only after applying confirmed server state
+          this._clearSuppress(id)
+        }
+      } catch {
+        // swallow; suppression will eventually expire and stale polling will refresh
       }
     },
     async downvoteAndHide(id: string, mediaType?: "image" | "video") {
