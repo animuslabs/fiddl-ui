@@ -36,7 +36,7 @@ router-view(style="z-index:1")
 <script lang="ts">
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
-import { Dialog, Loading, LoadingBar, LocalStorage, Notify, SessionStorage } from "quasar"
+import { Dialog, LocalStorage, Notify, SessionStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import ReferralSurveyDialog from "src/components/dialogs/ReferralSurvey.vue"
 import { shortIdToLong, toObject } from "lib/util"
@@ -46,12 +46,12 @@ import { promoClaimPromoCode, marketingHowFoundStatus } from "lib/orval"
 import { handleClaimCode } from "lib/promoCodeUtil"
 import { useMissionsStore } from "stores/missionsStore"
 import { useAsyncErrorStore } from "stores/asyncErrorStore"
-LoadingBar.setDefaults({
-  color: "transparent",
-  size: "1px",
-  position: "top",
-  reverse: false,
-})
+// LoadingBar.setDefaults({
+//   color: "transparent",
+//   size: "1px",
+//   position: "top",
+//   reverse: false,
+// })
 // import { useCreateImageStore } from "stores/createImageStore"
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {

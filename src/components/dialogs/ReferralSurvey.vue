@@ -15,9 +15,9 @@ q-dialog(v-model="open" persistent :maximized="$q.screen.lt.md")
         .col-6.col-sm-4(v-for="opt in options" :key="opt.value")
           q-card(
             class="opt-tile"
-            :class="{ selected: choice === opt.value }"
+            :class="{ selected: choice === opt.value, disabled: submitting }"
             clickable
-            @click="choice = opt.value"
+            @click="!submitting && (choice = opt.value)"
           )
             .row.items-center.q-gutter-sm.q-pa-md
               q-icon(:name="opt.icon" color="primary" size="md")
@@ -45,6 +45,7 @@ q-dialog(v-model="open" persistent :maximized="$q.screen.lt.md")
     .footer.q-pa-md
       .row.items-center.justify-end
         q-btn(
+          v-if="choice === 'other'"
           color="primary"
           unelevated
           label="Submit"
@@ -165,6 +166,11 @@ watch(choice, (val) => {
         }, 300)
       }
     })
+  } else if (val) {
+    // Auto-submit immediately for any non-"other" selection
+    nextTick(() => {
+      void submit()
+    })
   }
 })
 </script>
@@ -202,6 +208,9 @@ watch(choice, (val) => {
   &.selected
     border-color: var(--q-primary)
     background-color: rgba(56, 189, 248, 0.06)
+  &.disabled
+    pointer-events: none
+    opacity: 0.7
 
 .bottom-spacer
   height: 64px

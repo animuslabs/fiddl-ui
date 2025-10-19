@@ -59,6 +59,23 @@ let imageUpgradeTimer: number | null = null
 const UPGRADE_INTERVAL_MS = 2000
 const MAX_ATTEMPTS_PER_SIZE = 30
 
+function pruneInactiveState(activeIds: Set<string>) {
+  const pruneRecord = (record: Record<string, unknown>) => {
+    for (const key of Object.keys(record)) {
+      if (!activeIds.has(key)) {
+        delete record[key]
+      }
+    }
+  }
+  pruneRecord(imageCurrentUrl.value)
+  pruneRecord(imageReloadKey.value)
+  pruneRecord(imageTargetSize.value)
+  pruneRecord(imageCurrentSize.value)
+  pruneRecord(imageUpgradeQueue.value as Record<string, unknown>)
+  pruneRecord(imageUpgradeAttempts.value as Record<string, unknown>)
+  pruneRecord(imageUpgradeInFlight.value as Record<string, unknown>)
+}
+
 watch(
   () => props.media.map((m) => `${m.id}:${m.url}`).join(","),
   () => {
@@ -67,6 +84,7 @@ watch(
       if (!imageCurrentUrl.value[m.id]) imageCurrentUrl.value[m.id] = m.url
       initImageProgressState(m.id, (imageCurrentUrl.value[m.id] || m.url) as string)
     }
+    pruneInactiveState(new Set(props.media.map((m) => m.id)))
     ensureImageUpgradeTimer()
   },
   { immediate: true },
@@ -88,7 +106,7 @@ function onImgError(id: string) {
 }
 
 function ensureImageUpgradeTimer() {
-  if (imageUpgradeTimer) return
+  if (imageUpgradeTimer !== null) return
   imageUpgradeTimer = window.setInterval(runImageUpgradeTick, UPGRADE_INTERVAL_MS) as unknown as number
 }
 
@@ -97,17 +115,22 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (imageUpgradeTimer) window.clearInterval(imageUpgradeTimer)
+  if (imageUpgradeTimer !== null) {
+    window.clearInterval(imageUpgradeTimer)
+    imageUpgradeTimer = null
+  }
 })
 
 function runImageUpgradeTick() {
   try {
     if (typeof document !== "undefined" && document.hidden) return
     const now = Date.now()
+    let shouldKeepAlive = false
     for (const m of props.media) {
       const id = m.id
       const queue = imageUpgradeQueue.value[id]
       if (!queue || queue.length === 0) continue
+      shouldKeepAlive = true
       if (imageUpgradeInFlight.value[id]) continue
       const nextSize = queue[0] as ImageSize
       const attempts = (imageUpgradeAttempts.value[id]?.[nextSize] || 0) as number
@@ -132,6 +155,10 @@ function runImageUpgradeTick() {
         .finally(() => {
           imageUpgradeInFlight.value[id] = false
         })
+    }
+    if (!shouldKeepAlive && imageUpgradeTimer !== null) {
+      window.clearInterval(imageUpgradeTimer)
+      imageUpgradeTimer = null
     }
   } catch (e) {
     console.warn("simple-grid image upgrade tick error", e)

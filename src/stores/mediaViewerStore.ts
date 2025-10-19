@@ -6,6 +6,7 @@ import { img, s3Video } from "src/lib/netlifyImg"
 import { catchErr } from "src/lib/util"
 import { markOwned, isOwned } from "lib/ownedMediaCache"
 import { hdUrl } from "lib/imageCdn"
+import { useUserAuth } from "src/stores/userAuth"
 
 interface CreatorMeta {
   userName: string
@@ -17,6 +18,76 @@ interface TouchState {
   moveX: number
   isSwiping: boolean
   threshold: number
+}
+
+interface CachedRequestMeta {
+  requestId: string | null
+  creatorId: string
+  creatorName: string
+}
+
+interface CachedLikeMeta {
+  liked: boolean
+}
+
+const META_CACHE_LIMIT = 150
+const META_CACHE_TTL = 1000 * 60 * 5 // 5 minutes
+const LIKE_CACHE_LIMIT = 300
+const LIKE_CACHE_TTL = 1000 * 30 // 30 seconds
+
+const requestMetaCache = new Map<string, { data: CachedRequestMeta; ts: number }>()
+const requestMetaInFlight = new Map<string, Promise<CachedRequestMeta | null>>()
+const likeCache = new Map<string, { data: CachedLikeMeta; ts: number }>()
+const likeInFlight = new Map<string, Promise<CachedLikeMeta | null>>()
+
+function mediaKey(id: string, type: "image" | "video"): string {
+  return `${type}:${id}`
+}
+
+function getCachedRequestMeta(key: string): CachedRequestMeta | null {
+  const entry = requestMetaCache.get(key)
+  if (!entry) return null
+  if (Date.now() - entry.ts > META_CACHE_TTL) {
+    requestMetaCache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCachedRequestMeta(key: string, data: CachedRequestMeta) {
+  requestMetaCache.set(key, { data, ts: Date.now() })
+  if (requestMetaCache.size > META_CACHE_LIMIT) {
+    const iterator = requestMetaCache.keys()
+    const removeCount = requestMetaCache.size - META_CACHE_LIMIT
+    for (let i = 0; i < removeCount; i++) {
+      const next = iterator.next()
+      if (next.done) break
+      requestMetaCache.delete(next.value)
+    }
+  }
+}
+
+function getCachedLikeMeta(key: string): CachedLikeMeta | null {
+  const entry = likeCache.get(key)
+  if (!entry) return null
+  if (Date.now() - entry.ts > LIKE_CACHE_TTL) {
+    likeCache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCachedLikeMeta(key: string, data: CachedLikeMeta) {
+  likeCache.set(key, { data, ts: Date.now() })
+  if (likeCache.size > LIKE_CACHE_LIMIT) {
+    const iterator = likeCache.keys()
+    const removeCount = likeCache.size - LIKE_CACHE_LIMIT
+    for (let i = 0; i < removeCount; i++) {
+      const next = iterator.next()
+      if (next.done) break
+      likeCache.delete(next.value)
+    }
+  }
 }
 
 export const useMediaViewerStore = defineStore("mediaViewerStore", {
@@ -35,6 +106,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     hdImageSrc: {} as Record<string, string>,
     // Progressive image loading: keep a mid-tier (lg) cache as a step-up from sm
     lgImageSrc: {} as Record<string, string>,
+    // The URL currently displayed for each image id (sm -> lg -> hd)
+    displayImageSrc: {} as Record<string, string>,
+    // Track whether the HD asset has fully loaded per image id
+    hdReady: {} as Record<string, boolean>,
     hdVideoUrl: {} as Record<string, string>,
 
     // User states
@@ -63,6 +138,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     downloadMode: false,
     isPersistent: false,
     activeVideoElement: null as HTMLVideoElement | null,
+    loadSequence: 0,
   }),
 
   getters: {
@@ -94,8 +170,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     getCurrentMediaUrl(): string {
       const id = this.currentMediaId
       if (this.currentMediaType === "image") {
-        // Prefer HD if available, else previously loaded LG, else fast SM for instant display
-        return this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "sm")
+        // Drive UI from an explicit display url that we promote as loads complete
+        return this.displayImageSrc[id] || this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "sm")
       }
       return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
@@ -111,15 +187,20 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const mediaType = this.mediaObjects[nextIndex]?.type || "image"
 
       if (mediaType === "image") {
-        return this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "lg")
+        return this.displayImageSrc[id] || this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "lg")
       }
       return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
 
     // Get media params for API calls
-    getMediaParams(id?: string): any {
+    getMediaParams(id?: string, type?: "image" | "video"): any {
       const mediaId = id || this.currentMediaId
-      return this.currentMediaType === "video" ? { videoId: mediaId } : { imageId: mediaId }
+      const inferredType =
+        type ||
+        (id
+          ? (this.mediaObjects.find((m) => m.id === id)?.type as "image" | "video" | undefined) ?? this.currentMediaType
+          : this.currentMediaType)
+      return inferredType === "video" ? { videoId: mediaId } : { imageId: mediaId }
     },
 
     // Get dialog params
@@ -156,11 +237,13 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.resetStates()
       // Instant ownership from cache
       if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true
+      this.syncDisplaySource(this.currentMediaId)
       await this.loadRequestId()
     },
 
     // Reset all states
     resetStates() {
+      this.beginNewLoadSequence()
       this.imgLoading = true
       this.hdVideoLoading = false
       this.loading = false
@@ -195,6 +278,17 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.activeVideoElement = element
     },
 
+    beginNewLoadSequence() {
+      this.loadSequence = (this.loadSequence + 1) % Number.MAX_SAFE_INTEGER
+      return this.loadSequence
+    },
+
+    isActiveLoadSequence(seq: number, mediaId?: string) {
+      if (seq !== this.loadSequence) return false
+      if (!mediaId) return true
+      return this.currentMediaId === mediaId
+    },
+
     pauseActiveVideo() {
       const video = this.activeVideoElement
       if (!video) return
@@ -226,26 +320,49 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     // Navigation
     goToIndex(index: number) {
       if (index >= 0 && index < this.mediaObjects.length) {
+        if (index === this.currentIndex) return
+        this.beginNewLoadSequence()
+        this.imgLoading = true
         this.currentIndex = index
         this.touchState.moveX = 0
-        if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true
+        this.loadingLike = false
+        this.hdVideoLoading = false
+        this.hdMediaLoaded = false
+        this.triedHdLoad = false
+        this.userLikedMedia = false
+        this.userOwnsMedia = isOwned(this.currentMediaId, this.currentMediaType)
+        this.syncDisplaySource(this.currentMediaId)
       }
     },
 
     nextMedia() {
       if (this.mediaObjects.length === 1) return
-      if (this.loading || this.imgLoading) return
+      this.beginNewLoadSequence()
       this.imgLoading = true
+      this.loadingLike = false
       this.currentIndex = (this.currentIndex + 1) % this.mediaObjects.length
       this.touchState.moveX = 0
+      this.hdVideoLoading = false
+      this.hdMediaLoaded = false
+      this.triedHdLoad = false
+      this.userLikedMedia = false
+      this.userOwnsMedia = isOwned(this.currentMediaId, this.currentMediaType)
+      this.syncDisplaySource(this.currentMediaId)
     },
 
     prevMedia() {
       if (this.mediaObjects.length === 1) return
-      if (this.loading || this.imgLoading) return
+      this.beginNewLoadSequence()
       this.imgLoading = true
+      this.loadingLike = false
       this.currentIndex = (this.currentIndex - 1 + this.mediaObjects.length) % this.mediaObjects.length
       this.touchState.moveX = 0
+      this.hdVideoLoading = false
+      this.hdMediaLoaded = false
+      this.triedHdLoad = false
+      this.userLikedMedia = false
+      this.userOwnsMedia = isOwned(this.currentMediaId, this.currentMediaType)
+      this.syncDisplaySource(this.currentMediaId)
     },
 
     // Touch handling
@@ -284,6 +401,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     // Media loading
     async loadHdMedia(id?: string) {
       const mediaId = id || this.currentMediaId
+      if (!mediaId) return
+      const loadSeq = this.loadSequence
+      const mediaType =
+        id != null
+          ? (this.mediaObjects.find((m) => m.id === mediaId)?.type as "image" | "video" | undefined) ?? "image"
+          : this.currentMediaType
       if (this.triedHdLoad || this.hdMediaLoaded) return
       this.triedHdLoad = true
       // this.loading = true
@@ -293,22 +416,26 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const timeoutPromise = new Promise<null>((_, reject) => {
         timer = setTimeout(() => {
           reject(new Error("Media loading timed out"))
-          this.loading = false
-          this.imgLoading = false
+          if (this.isActiveLoadSequence(loadSeq, mediaId)) {
+            this.loading = false
+            this.imgLoading = false
+          }
         }, 6000)
       })
 
       try {
-        if (this.currentMediaType === "image") {
-          await this.loadHdImage(mediaId, timeoutPromise)
-        } else if (this.currentMediaType === "video") {
-          await this.loadHdVideo(mediaId)
+        if (mediaType === "image") {
+          await this.loadHdImage(mediaId, timeoutPromise, loadSeq)
+        } else if (mediaType === "video") {
+          await this.loadHdVideo(mediaId, loadSeq)
         }
       } catch (err) {
         console.error("Failed to load HD media:", err)
       } finally {
         if (timer) clearTimeout(timer)
-        this.loading = false
+        if (this.isActiveLoadSequence(loadSeq, mediaId)) {
+          this.loading = false
+        }
       }
     },
 
@@ -316,12 +443,13 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     async loadLgImage(id?: string) {
       const mediaId = id || this.currentMediaId
       if (this.currentMediaType !== "image") return
-      if (this.hdImageSrc[mediaId] || this.lgImageSrc[mediaId]) return
+      if (this.lgImageSrc[mediaId]) return
       const url = img(mediaId, "lg")
       await new Promise<void>((resolve) => {
         const im = new Image()
         im.onload = () => {
           this.lgImageSrc[mediaId] = url
+          this.syncDisplaySource(mediaId)
           resolve()
         }
         im.onerror = () => resolve()
@@ -329,10 +457,11 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       })
     },
 
-    async loadHdImage(id: string, timeoutPromise: Promise<null>) {
+    async loadHdImage(id: string, timeoutPromise: Promise<null>, loadSeq: number) {
       // If the user owns this media (optimistically or cached), do not block retries
       const owns = this.userOwnsMedia || isOwned(id, "image")
       if (!owns && SessionStorage.getItem(`noHdimage-${id}`)) return null
+      const isActive = () => this.isActiveLoadSequence(loadSeq, id)
       try {
         const url = (await Promise.race([
           hdUrl(id),
@@ -340,11 +469,38 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         ])) as string | null
         if (url) {
           this.hdImageSrc[id] = url
-          this.userOwnsMedia = true
-          this.hdMediaLoaded = true
           markOwned(id, "image")
+          this.hdReady[id] = false
           // Clear any previous block for this image now that HD is available
           SessionStorage.removeItem(`noHdimage-${id}`)
+
+          // If we are already displaying this HD URL (e.g., cached session), flag as loaded
+          if (this.displayImageSrc[id] === url) {
+            this.hdReady[id] = true
+            if (isActive()) {
+              this.hdMediaLoaded = true
+              this.userOwnsMedia = true
+              this.syncDisplaySource(id)
+            }
+            return url
+          }
+
+          await new Promise<void>((resolve) => {
+            const imgEl = new Image()
+            imgEl.onload = () => {
+              this.hdReady[id] = true
+              this.displayImageSrc[id] = url
+              if (isActive()) {
+                this.hdMediaLoaded = true
+                this.userOwnsMedia = true
+              }
+              resolve()
+            }
+            imgEl.onerror = () => resolve()
+            imgEl.src = url
+          })
+
+          this.syncDisplaySource(id)
           return url
         }
       } catch {
@@ -353,8 +509,11 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       return null
     },
 
-    async loadHdVideo(id: string) {
-      this.hdVideoLoading = true
+    async loadHdVideo(id: string, loadSeq: number) {
+      const isActive = () => this.isActiveLoadSequence(loadSeq, id)
+      if (isActive()) {
+        this.hdVideoLoading = true
+      }
       try {
         const { data: hdUrl } = await creationsHdVideo({ videoId: id })
         if (!hdUrl) return
@@ -363,44 +522,170 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         LocalStorage.setItem("hdVideoUrl-" + id, hdUrl)
 
         this.hdVideoUrl[id] = hdUrl
-        this.hdMediaLoaded = true
-        this.userOwnsMedia = true
+        if (isActive()) {
+          this.hdMediaLoaded = true
+          this.userOwnsMedia = true
+        }
         markOwned(id, "video")
         return hdUrl
       } finally {
-        this.hdVideoLoading = false
+        if (isActive()) {
+          this.hdVideoLoading = false
+        }
       }
     },
 
     // User interactions
     async checkUserLikedMedia() {
-      this.loadingLike = true
-      try {
-        const response = await collectionsMediaInUsersCollection({
-          ...this.getMediaParams(),
-          name: "likes",
-        })
-        this.userLikedMedia = response?.data || false
-      } catch (err) {
-        console.error("Failed to check like status:", err)
-      } finally {
-        this.loadingLike = false
+      const mediaId = this.currentMediaId
+      const mediaType = this.currentMediaType
+      if (!mediaId) return false
+      const loadSeq = this.loadSequence
+      const isActive = () => this.isActiveLoadSequence(loadSeq, mediaId)
+
+      const userAuth = useUserAuth()
+      if (!userAuth.loggedIn) {
+        if (isActive()) {
+          this.userLikedMedia = false
+          this.loadingLike = false
+        }
+        return false
       }
+
+      const key = mediaKey(mediaId, mediaType)
+      const cached = getCachedLikeMeta(key)
+      if (cached) {
+        if (isActive()) {
+          this.userLikedMedia = cached.liked
+          this.loadingLike = false
+        }
+        return cached.liked
+      }
+
+      const inFlight = likeInFlight.get(key)
+      if (inFlight) {
+        const result = await inFlight
+        if (isActive()) {
+          this.userLikedMedia = result?.liked ?? false
+          this.loadingLike = false
+        }
+        return result?.liked ?? false
+      }
+
+      if (isActive()) {
+        this.loadingLike = true
+      }
+      const promise = (async (): Promise<CachedLikeMeta | null> => {
+        try {
+          const response = await collectionsMediaInUsersCollection({
+            ...this.getMediaParams(mediaId, mediaType),
+            name: "likes",
+          })
+          const liked = response?.data || false
+          const payload: CachedLikeMeta = { liked }
+          setCachedLikeMeta(key, payload)
+          return payload
+        } catch (err) {
+          console.error("Failed to check like status:", err)
+          return null
+        } finally {
+          likeInFlight.delete(key)
+          if (isActive()) {
+            this.loadingLike = false
+          }
+        }
+      })()
+
+      likeInFlight.set(key, promise)
+      const payload = await promise
+      const liked = payload?.liked ?? false
+      if (isActive()) {
+        this.userLikedMedia = liked
+      }
+      return liked
     },
 
     async loadRequestId() {
-      try {
-        const imageResponse = await creationsGetCreationData(this.getMediaParams())
-        const imageMeta = imageResponse?.data
-        if (!imageMeta) return
-
-        this.loadedRequestId = imageMeta.requestId
-        const usernameResponse = await userGetUsername({ userId: imageMeta.creatorId })
-        const creatorName = usernameResponse?.data || ""
-        this.creatorMeta = { id: imageMeta.creatorId, userName: creatorName }
-      } catch (err) {
-        catchErr(err)
+      const mediaId = this.currentMediaId
+      const mediaType = this.currentMediaType
+      if (!mediaId) {
+        this.loadedRequestId = null
+        this.creatorMeta = { userName: "", id: "" }
+        return null
       }
+      const loadSeq = this.loadSequence
+      const isActive = () => this.isActiveLoadSequence(loadSeq, mediaId)
+
+      const key = mediaKey(mediaId, mediaType)
+      const cached = getCachedRequestMeta(key)
+      if (cached) {
+        if (isActive()) {
+          this.loadedRequestId = cached.requestId
+          this.creatorMeta = { id: cached.creatorId, userName: cached.creatorName }
+        }
+        return cached.requestId
+      }
+
+      const inflight = requestMetaInFlight.get(key)
+      if (inflight) {
+        const meta = await inflight
+        if (meta) {
+          if (isActive()) {
+            this.loadedRequestId = meta.requestId
+            this.creatorMeta = { id: meta.creatorId, userName: meta.creatorName }
+          }
+          return meta.requestId
+        }
+        return null
+      }
+
+      const promise = (async (): Promise<CachedRequestMeta | null> => {
+        try {
+          const response = await creationsGetCreationData(this.getMediaParams(mediaId, mediaType))
+          const imageMeta = response?.data
+          if (!imageMeta) return null
+
+          const creatorId = imageMeta.creatorId
+          let creatorName = ""
+          if (creatorId) {
+            try {
+              const usernameResponse = await userGetUsername({ userId: creatorId })
+              creatorName = usernameResponse?.data || ""
+            } catch (err) {
+              catchErr(err)
+            }
+          }
+
+          const payload: CachedRequestMeta = {
+            requestId: imageMeta.requestId,
+            creatorId: creatorId || "",
+            creatorName,
+          }
+          setCachedRequestMeta(key, payload)
+          return payload
+        } catch (err) {
+          catchErr(err)
+          return null
+        } finally {
+          requestMetaInFlight.delete(key)
+        }
+      })()
+
+      requestMetaInFlight.set(key, promise)
+      const payload = await promise
+      if (payload) {
+        if (isActive()) {
+          this.loadedRequestId = payload.requestId
+          this.creatorMeta = { id: payload.creatorId, userName: payload.creatorName }
+        }
+        return payload.requestId
+      }
+
+      if (isActive()) {
+        this.loadedRequestId = null
+        this.creatorMeta = { userName: "", id: "" }
+      }
+      return null
     },
 
     // Media removal (for delete functionality)
@@ -419,7 +704,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     // Media loaded event
-    onMediaLoaded() {
+    onMediaLoaded(mediaId?: string) {
+      if (mediaId && mediaId !== this.currentMediaId) return
       this.imgLoading = false
       this.firstImageLoaded = true
     },
@@ -428,6 +714,26 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     onHdMediaLoaded() {
       this.hdVideoLoading = false
       this.hdMediaLoaded = true
+    },
+
+    syncDisplaySource(mediaId: string | undefined) {
+      if (!mediaId) return
+      const media = this.mediaObjects.find((m) => m.id === mediaId)
+      if (!media || media.type !== "image") return
+
+      const hdUrl = this.hdImageSrc[mediaId]
+      if (hdUrl && this.hdReady[mediaId]) {
+        this.displayImageSrc[mediaId] = hdUrl
+        return
+      }
+
+      const lgUrl = this.lgImageSrc[mediaId]
+      if (lgUrl) {
+        this.displayImageSrc[mediaId] = lgUrl
+        return
+      }
+
+      this.displayImageSrc[mediaId] = img(mediaId, "sm")
     },
   },
 })

@@ -177,7 +177,7 @@ export default configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Dialog", "LocalStorage", "SessionStorage", "Loading", "Notify", "LoadingBar"],
+      plugins: ["Dialog", "LocalStorage", "SessionStorage", "Loading", "Notify"],
     },
 
     // animations: 'all', // --- includes all animations

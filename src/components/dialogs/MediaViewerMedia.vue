@@ -1,24 +1,23 @@
 <template lang="pug">
-div
+div.viewer-root
   //- Main media display area
-  div.relative-position(
+  div.relative-position.full-width(
     @touchstart="handleTouchStart"
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
   )
     transition(name="fade")
-      q-linear-progress.absolute-top.full-width.image-darken(
-        style="top:-2px;"
-        indeterminate
-        v-if=" mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading"
-        color="primary"
-        track-color="transparent"
+      .absolute-top.full-width.loading-indicator-container(
+        v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading"
+        role="status"
+        aria-label="Loading additional media"
       )
+        span.loading-indicator-circle
 
     div(v-if="mediaViewerStore.currentMediaType === 'video'" class="video-wrapper")
-      //- Seamless preview->HD: stack two videos and crossfade when HD is buffered
+      //- Seamless preview->LG/HD: stack preview-sm under lg/hd and crossfade
       .video-stack(
-        :style="{ maxHeight: viewportHeight(75), aspectRatio: aspectRatio || undefined, transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
+        :style="{ height: viewportHeight(75), transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
       )
         //- Preview layer (controls until HD is visible)
         video.video-layer.preview(
@@ -37,9 +36,9 @@ div
         )
         //- HD layer (fades in when synced)
         video.video-layer.hd(
-          v-if="currentHdUrl"
+          v-if="hdCandidateUrl"
           ref="hdRef"
-          :src="currentHdUrl"
+          :src="hdCandidateUrl"
           playsinline
           loop
           :muted="hdMuted"
@@ -50,11 +49,12 @@ div
           @click.stop="onMediaClick"
         )
 
-    img(
-      v-else
-      v-bind="imageAttrs"
-      ref="imageRef"
-    )
+    // Image path mirrors video wrapper so preview fills same area
+    div(v-else :class="['image-wrapper', isSmPreview ? 'sm-soft' : '']" :style="{ transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }")
+      img(
+        v-bind="imageAttrs"
+        ref="imageRef"
+      )
 
     .absolute-top.full-width(style="width:100vw")
       .centered(v-if="mediaViewerStore.hdVideoLoading")
@@ -102,7 +102,10 @@ const hdRef = ref<HTMLVideoElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 
 // Derived urls
-const previewVideoUrl = computed(() => s3Video(mediaViewerStore.currentMediaId, "preview-lg"))
+// Use the fastest preview first for responsiveness
+const previewVideoUrl = computed(() => s3Video(mediaViewerStore.currentMediaId, "preview-sm"))
+// Promote to HD when available, otherwise LG preview
+const hdCandidateUrl = computed(() => currentHdUrl.value || s3Video(mediaViewerStore.currentMediaId, "preview-lg"))
 
 // Aspect ratio lock for container (prevents size pop)
 const aspectRatio = ref<string | null>(null)
@@ -150,14 +153,18 @@ const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.len
 
 const showIndicators = computed(() => mediaViewerStore.mediaObjects.length > 1 && !props.downloadMode && mediaViewerStore.mediaObjects.length < 11)
 
+// Detect if the currently bound image URL is the small preview
+const currentImageUrl = computed(() => (mediaViewerStore.currentMediaType === "image" ? mediaViewerStore.getCurrentMediaUrl() : ""))
+const isSmPreview = computed(() => /-sm\.webp(\?|$)/.test(currentImageUrl.value))
+
 const imageAttrs = computed(() => {
   const base = {
-    class: mediaClass.value,
+    class: mediaClass.value + (isSmPreview.value ? " sm-img" : ""),
     style: {
-      width: "100%",
+      // Fill area; image sizing handled by wrapper CSS
       "max-height": viewportHeight(75),
+      "max-width": "100%",
       "object-fit": "contain",
-      transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
     } as Record<string, string>,
     onClick: (e: MouseEvent) => {
       e.stopPropagation()
@@ -183,30 +190,37 @@ const mediaClass = computed(() => {
 })
 
 async function onMediaLoaded(event?: Event) {
-  const isImage = mediaViewerStore.currentMediaType === "image"
+  const target = event?.target as HTMLImageElement | HTMLVideoElement | null
+  const isImageEvent = target instanceof HTMLImageElement
+  const isVideoEvent = target instanceof HTMLVideoElement
+  const currentType = mediaViewerStore.currentMediaType
+  const isTypeMatch = (isImageEvent && currentType === "image") || (isVideoEvent && currentType === "video") || (!event && currentType === "image")
+  const initialLoad = !mediaViewerStore.firstImageLoaded
+  if (event && !isTypeMatch) return
 
   // Instant ownership from local cache
   if (isOwned(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)) {
     mediaViewerStore.userOwnsMedia = true
   }
 
-  if (isImage && event) {
-    const imgEl = event.target as HTMLImageElement
+  if (isImageEvent) {
+    const imgEl = target
+    if (!imgEl) return
     if (imgEl.src.startsWith("data:image/")) {
       mediaViewerStore.hdMediaLoaded = true
     } else if (!mediaViewerStore.triedHdLoad) {
       // Only load HD if not already tried (prevents duplicate calls)
       await mediaViewerStore.loadHdMedia()
     }
-  } else if (!isImage && !mediaViewerStore.hdMediaLoaded && !mediaViewerStore.triedHdLoad) {
+  } else if (isVideoEvent && !mediaViewerStore.hdMediaLoaded && !mediaViewerStore.triedHdLoad) {
     // Only load HD if not already tried (prevents duplicate calls)
     await mediaViewerStore.loadHdMedia()
   }
 
-  mediaViewerStore.onMediaLoaded()
+  mediaViewerStore.onMediaLoaded(mediaViewerStore.currentMediaId)
 
   // Preload and load metadata on first load only
-  if (!mediaViewerStore.firstImageLoaded) {
+  if (initialLoad) {
     preloadMedia()
     // Only load request ID if not already loaded
     if (!mediaViewerStore.loadedRequestId) {
@@ -296,9 +310,7 @@ function preloadMedia() {
       const mediaObj = mediaViewerStore.mediaObjects[index]
       if (!mediaObj) return
       const isVideo = mediaObj.type === "video"
-      const url = isVideo
-        ? mediaViewerStore.hdVideoUrl[mediaObj.id] || s3Video(mediaObj.id, "preview-lg")
-        : mediaViewerStore.hdImageSrc[mediaObj.id] || mediaViewerStore.lgImageSrc[mediaObj.id] || img(mediaObj.id, "lg")
+      const url = isVideo ? mediaViewerStore.hdVideoUrl[mediaObj.id] || s3Video(mediaObj.id, "preview-lg") : mediaViewerStore.hdImageSrc[mediaObj.id] || mediaViewerStore.lgImageSrc[mediaObj.id] || img(mediaObj.id, "lg")
       if (isVideo) {
         const video = document.createElement("video")
         video.preload = "auto"
@@ -368,18 +380,18 @@ watch(
     cancelSyncLoop()
 
     // Check like status and load HD media only for navigation between media
-    await Promise.allSettled([
-      mediaViewerStore.checkUserLikedMedia(),
-      mediaViewerStore.loadLgImage(),
-      mediaViewerStore.loadHdMedia(),
-      mediaViewerStore.loadRequestId(),
-    ])
+    await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadLgImage(), mediaViewerStore.loadHdMedia(), mediaViewerStore.loadRequestId()])
   },
   { immediate: false },
 )
 </script>
 
 <style scoped>
+/* Ensure the viewer expands to the full width of its flex container */
+.viewer-root {
+  width: 100%;
+  flex: 1 1 100%;
+}
 .fade-enter-active {
   transition: opacity 0.5s ease 0.5s;
 }
@@ -388,6 +400,42 @@ watch(
 }
 .fade-enter-to {
   opacity: 1;
+}
+.loading-indicator-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+}
+.loading-indicator-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+  animation: mv-loading-pulse 1s ease-in-out infinite;
+}
+@keyframes mv-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator-circle {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .image-darken {
   background-color: transparent;
@@ -455,6 +503,7 @@ watch(
 }
 
 .video-wrapper {
+  width: 100%;
   max-height: 75vh;
   max-height: 75dvh;
   height: 100%;
@@ -466,8 +515,10 @@ watch(
 .video-stack {
   position: relative;
   width: 100%;
+  height: 75vh;
+  height: 75dvh;
   max-width: 100vw;
-  height: auto;
+  margin: auto;
 }
 .video-layer {
   position: absolute;
@@ -478,7 +529,46 @@ watch(
   object-fit: contain;
   transition: opacity 180ms ease-in-out;
 }
-.video-layer.preview { opacity: 1; }
-.video-layer.hd { opacity: 0; }
-.video-layer.hd.visible { opacity: 1; }
+.video-layer.preview {
+  opacity: 1;
+}
+.video-layer.hd {
+  opacity: 0;
+}
+.video-layer.hd.visible {
+  opacity: 1;
+}
+
+/* Image wrapper to provide consistent viewport area like videos */
+.image-wrapper {
+  width: 100%;
+  max-height: 75vh;
+  max-height: 75dvh;
+  height: 75vh;
+  height: 75dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+.image-wrapper img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  max-height: 75vh;
+  max-height: 75dvh;
+  max-width: 100%;
+  margin: auto;
+  display: block;
+}
+
+/* While showing a small, low-res preview, soften pixels */
+/* Apply blur on the wrapper and the image for robustness */
+.sm-soft {
+  filter: blur(1px) !important;
+}
+.sm-img {
+  filter: blur(1px) !important;
+  transition: filter 180ms ease;
+}
 </style>

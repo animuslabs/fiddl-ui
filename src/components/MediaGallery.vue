@@ -857,6 +857,39 @@ const filteredGalleryItems = computed(() => {
   return list.filter((el) => !!el && (typeof (el as any).id === "string" || typeof (el as any).id === "number"))
 })
 
+function pruneInactiveState(activeIds: Set<string>) {
+  const pruneRecord = (record: Record<string, unknown>) => {
+    for (const key of Object.keys(record)) {
+      if (!activeIds.has(key)) {
+        delete record[key]
+      }
+    }
+  }
+
+  pruneRecord(videoLoading.value)
+  pruneRecord(videoReloadKey.value)
+  pruneRecord(imageLoading.value)
+  pruneRecord(imageReloadKey.value)
+  pruneRecord(imageTargetSize.value)
+  pruneRecord(imageCurrentSize.value)
+  pruneRecord(imageUpgradeQueue.value as Record<string, unknown>)
+  pruneRecord(imageUpgradeAttempts.value as Record<string, unknown>)
+  pruneRecord(imageUpgradeInFlight.value as Record<string, unknown>)
+  pruneRecord(layoutSpans.value as Record<string, unknown>)
+  pruneRecord(visibleMap.value)
+  pruneRecord(nearVisibleMap.value)
+  pruneRecord(privacyLoading.value)
+  pruneRecord(deleteLoading.value)
+  pruneRecord(addInputLoading.value)
+
+  for (const [key, burst] of Object.entries(upvoteBursts.value)) {
+    if (!activeIds.has(key)) {
+      if (burst?.timer) window.clearTimeout(burst.timer)
+      delete upvoteBursts.value[key]
+    }
+  }
+}
+
 // Note: We intentionally avoid any TransitionGroup move animations for the
 // gallery to keep item updates snappy and avoid re-order jank.
 
@@ -902,6 +935,7 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
     galleryItems.value = []
     prevRealIds.value = new Set()
     prevPlaceholderIds.value = new Set()
+    pruneInactiveState(new Set())
     return
   }
   // IMPORTANT: avoid preloading image/video metadata for offscreen items to keep memory low.
@@ -972,7 +1006,10 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
     .map((id) => stickyPendingMap.value[id])
     .filter(Boolean) as MediaGalleryMeta[]
 
-  galleryItems.value = [...stickyList, ...normalized]
+  const combined = [...stickyList, ...normalized]
+  galleryItems.value = combined
+
+  pruneInactiveState(new Set(combined.map((item) => item.id)))
 
   // Update snapshots for next build
   prevRealIds.value = realIdsNow
@@ -1373,9 +1410,15 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (videoReloadTimer) window.clearInterval(videoReloadTimer)
+  if (videoReloadTimer !== null) {
+    window.clearInterval(videoReloadTimer)
+    videoReloadTimer = null
+  }
   stopPopularityPolling()
-  if (imageUpgradeTimer) window.clearInterval(imageUpgradeTimer)
+  if (imageUpgradeTimer !== null) {
+    window.clearInterval(imageUpgradeTimer)
+    imageUpgradeTimer = null
+  }
 })
 
 function isVideoMedia(m?: MediaGalleryMeta): boolean {
@@ -1537,7 +1580,7 @@ function initImageProgressState(id: string, url: string) {
 }
 
 function ensureImageUpgradeTimer() {
-  if (imageUpgradeTimer) return
+  if (imageUpgradeTimer !== null) return
   imageUpgradeTimer = window.setInterval(runImageUpgradeTick, UPGRADE_INTERVAL_MS) as unknown as number
 }
 
@@ -1545,11 +1588,13 @@ function runImageUpgradeTick() {
   try {
     if (typeof document !== "undefined" && document.hidden) return
     const now = Date.now()
+    let shouldKeepAlive = false
     for (const item of galleryItems.value) {
       if (item.type !== "image") continue
       const id = item.id
       const queue = imageUpgradeQueue.value[id]
       if (!queue || queue.length === 0) continue
+      shouldKeepAlive = true
       if (!isVisible(id)) continue
       if (imageUpgradeInFlight.value[id]) continue
       const nextSize = queue[0] as ImageSize
@@ -1579,6 +1624,10 @@ function runImageUpgradeTick() {
         .finally(() => {
           imageUpgradeInFlight.value[id] = false
         })
+    }
+    if (!shouldKeepAlive && imageUpgradeTimer !== null) {
+      window.clearInterval(imageUpgradeTimer)
+      imageUpgradeTimer = null
     }
   } catch (e) {
     // best-effort; never throw
