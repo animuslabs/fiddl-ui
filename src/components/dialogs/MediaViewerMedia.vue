@@ -27,6 +27,10 @@ MediaViewerControls(
           ref="mediaStageRef"
           :style="videoStageStyle"
         )
+          div.video-placeholder(v-if="showVideoPlaceholder" :style="videoPlaceholderStyle" @click.stop="onMediaClick")
+            div.video-placeholder-overlay
+              q-icon(name="play_arrow" size="48px" color="white")
+              span.video-placeholder-spinner
           //- Preview layer (controls until HD is visible)
           video.video-layer.preview(
             ref="previewRef"
@@ -101,6 +105,7 @@ const $q = useQuasar()
 
 const MAX_FRAME_WIDTH = 1100
 const MIN_FRAME_WIDTH = 320
+const MIN_STAGE_SIZE = 300
 const FRAME_MAX_WIDTH_CSS = `min(95vw, ${MAX_FRAME_WIDTH}px)`
 
 function handleClose() {
@@ -120,6 +125,7 @@ const mediaWidth = ref(0)
 let stageObserver: ResizeObserver | null = null
 const naturalDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const displayDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const previewReady = ref(false)
 const METADATA_RETRY_LIMIT = 5
 const METADATA_RETRY_DELAY_MS = 120
 let metadataRetryHandle: number | null = null
@@ -157,6 +163,8 @@ const videoStageStyle = computed(() => {
     transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
     overflow: "hidden",
   }
+  style.minWidth = `${Math.min(frameMaxWidth.value, MIN_STAGE_SIZE)}px`
+  style.minHeight = `${MIN_STAGE_SIZE}px`
   if (aspectRatio.value) {
     style.aspectRatio = aspectRatio.value
   } else if (displayDimensions.value.height > 0) {
@@ -170,6 +178,11 @@ const basePreviewUrl = computed(() => {
   if (mediaViewerStore.currentMediaType !== "image") return ""
   const id = mediaViewerStore.currentMediaId
   return id ? img(id, "sm") : ""
+})
+const videoThumbnailUrl = computed(() => {
+  if (mediaViewerStore.currentMediaType !== "video") return ""
+  const id = mediaViewerStore.currentMediaId
+  return id ? s3Video(id, "thumbnail") : ""
 })
 const imageBackdropStyle = computed(() => {
   const url = basePreviewUrl.value
@@ -204,6 +217,23 @@ const showHd = ref(false)
 const previewMuted = computed(() => mediaViewerStore.muted)
 const hdMuted = computed(() => (showHd.value ? mediaViewerStore.muted : true))
 
+const showVideoPlaceholder = computed(() => mediaViewerStore.currentMediaType === "video" && !previewReady.value)
+const videoPlaceholderStyle = computed(() => {
+  const url = videoThumbnailUrl.value
+  if (!url) {
+    return {
+      background: "radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0.65) 100%)",
+      backgroundColor: "#1e1e1e",
+    } as Record<string, string>
+  }
+  return {
+    backgroundImage: `url('${url}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundColor: "#1e1e1e",
+  } as Record<string, string>
+})
+
 // Register currently active video with store for external controls
 function syncActiveVideoElement() {
   void nextTick(() => {
@@ -225,6 +255,7 @@ function clearMetadataRetry() {
 
 function applyVideoDimensions(width: number, height: number): boolean {
   if (!width || !height) return false
+  previewReady.value = true
   aspectRatio.value = `${width} / ${height}`
   updateNaturalDimensions(width, height)
   return true
@@ -529,6 +560,7 @@ watch(
     if (!newId) return
     clearMetadataRetry()
     resetMeasurementRetry()
+    previewReady.value = false
     // Reset measured width so the frame can grow to fallback size before new media measures
     mediaWidth.value = 0
     naturalDimensions.value = { width: 0, height: 0 }
@@ -859,6 +891,8 @@ function primeDimensionsFromMetadata(media: any) {
   max-width: min(95vw, 1100px);
   margin: 0 auto;
   overflow: hidden;
+  min-height: 300px;
+  min-width: 300px;
 }
 .video-layer {
   position: absolute;
@@ -877,6 +911,47 @@ function primeDimensionsFromMetadata(media: any) {
 }
 .video-layer.hd.visible {
   opacity: 1;
+}
+
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+.video-placeholder-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.65) 100%);
+  pointer-events: none;
+}
+.video-placeholder-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  animation: mv-video-spinner 0.9s linear infinite;
+}
+@keyframes mv-video-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Image wrapper to provide consistent viewport area like videos */

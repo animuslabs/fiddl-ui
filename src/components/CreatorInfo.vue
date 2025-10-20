@@ -8,6 +8,8 @@
     placeholder-src="/blankAvatar.webp"
     :src="avatarImg(creatorMeta.id||'')"
     :style="avatarStyle"
+    no-transition
+    no-spinner
   ).q-mr-sm
   .row
     div
