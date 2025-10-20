@@ -5180,6 +5180,165 @@ export type MarketingSendUpvoteReminder200 = {
   reason?: string;
 };
 
+export type MotdPublishBody = {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  title: string;
+  /**
+   * @maxLength 300
+   * @nullable
+   */
+  subheading?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20000
+   */
+  body: string;
+  startsAt?: string;
+  /** @nullable */
+  expiresAt?: string | null;
+};
+
+export type MotdPublish200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+};
+
+export type MotdUpdateBody = {
+  id: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  title?: string;
+  /**
+   * @maxLength 300
+   * @nullable
+   */
+  subheading?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20000
+   */
+  body?: string;
+  startsAt?: string;
+  /** @nullable */
+  expiresAt?: string | null;
+};
+
+export type MotdUpdate200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+};
+
+export type MotdDeleteBody = {
+  id: string;
+};
+
+export type MotdDelete200 = {
+  success: boolean;
+};
+
+export type MotdListParams = {
+includeInactive?: boolean;
+};
+
+export type MotdList200ItemsItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+  active: boolean;
+  readCount: number;
+};
+
+export type MotdList200 = {
+  items: MotdList200ItemsItem[];
+};
+
+export type MotdAvailableParams = {
+includeRead?: boolean;
+};
+
+export type MotdAvailable200Item = {
+  id: string;
+  startsAt: string;
+  updatedAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  readAt: string | null;
+  unread: boolean;
+};
+
+export type MotdGetParams = {
+id: string;
+};
+
+export type MotdGet200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+  /** @nullable */
+  readAt: string | null;
+  unread: boolean;
+};
+
+export type MotdMarkReadBody = {
+  id: string;
+};
+
+export type MotdMarkRead200 = {
+  readAt: string;
+};
+
 export const pkAuthRegisterStart = (
     pkAuthRegisterStartBody: MaybeRef<PkAuthRegisterStartBody>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<unknown>> => {
@@ -14946,6 +15105,404 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getMarketingSendUpvoteReminderMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const motdPublish = (
+    motdPublishBody: MaybeRef<MotdPublishBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdPublish200>> => {
+    motdPublishBody = unref(motdPublishBody);
+    
+    return axios.post(
+      `/motd/publish`,
+      motdPublishBody,options
+    );
+  }
+
+
+
+export const getMotdPublishMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdPublish>>, TError,{data: MotdPublishBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof motdPublish>>, TError,{data: MotdPublishBody}, TContext> => {
+
+const mutationKey = ['motdPublish'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof motdPublish>>, {data: MotdPublishBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  motdPublish(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MotdPublishMutationResult = NonNullable<Awaited<ReturnType<typeof motdPublish>>>
+    export type MotdPublishMutationBody = MotdPublishBody
+    export type MotdPublishMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMotdPublish = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdPublish>>, TError,{data: MotdPublishBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof motdPublish>>,
+        TError,
+        {data: MotdPublishBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMotdPublishMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const motdUpdate = (
+    motdUpdateBody: MaybeRef<MotdUpdateBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdUpdate200>> => {
+    motdUpdateBody = unref(motdUpdateBody);
+    
+    return axios.post(
+      `/motd/update`,
+      motdUpdateBody,options
+    );
+  }
+
+
+
+export const getMotdUpdateMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdUpdate>>, TError,{data: MotdUpdateBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof motdUpdate>>, TError,{data: MotdUpdateBody}, TContext> => {
+
+const mutationKey = ['motdUpdate'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof motdUpdate>>, {data: MotdUpdateBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  motdUpdate(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MotdUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof motdUpdate>>>
+    export type MotdUpdateMutationBody = MotdUpdateBody
+    export type MotdUpdateMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMotdUpdate = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdUpdate>>, TError,{data: MotdUpdateBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof motdUpdate>>,
+        TError,
+        {data: MotdUpdateBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMotdUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const motdDelete = (
+    motdDeleteBody: MaybeRef<MotdDeleteBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdDelete200>> => {
+    motdDeleteBody = unref(motdDeleteBody);
+    
+    return axios.post(
+      `/motd/delete`,
+      motdDeleteBody,options
+    );
+  }
+
+
+
+export const getMotdDeleteMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdDelete>>, TError,{data: MotdDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof motdDelete>>, TError,{data: MotdDeleteBody}, TContext> => {
+
+const mutationKey = ['motdDelete'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof motdDelete>>, {data: MotdDeleteBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  motdDelete(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MotdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof motdDelete>>>
+    export type MotdDeleteMutationBody = MotdDeleteBody
+    export type MotdDeleteMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMotdDelete = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdDelete>>, TError,{data: MotdDeleteBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof motdDelete>>,
+        TError,
+        {data: MotdDeleteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMotdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const motdList = (
+    params?: MaybeRef<MotdListParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdList200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/motd/list`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMotdListQueryKey = (params?: MaybeRef<MotdListParams>,) => {
+    return ['motd','list', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMotdListQueryOptions = <TData = Awaited<ReturnType<typeof motdList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<MotdListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdList>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMotdListQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof motdList>>> = ({ signal }) => motdList(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof motdList>>, TError, TData> 
+}
+
+export type MotdListQueryResult = NonNullable<Awaited<ReturnType<typeof motdList>>>
+export type MotdListQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMotdList<TData = Awaited<ReturnType<typeof motdList>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<MotdListParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdList>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMotdListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const motdAvailable = (
+    params?: MaybeRef<MotdAvailableParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdAvailable200Item[]>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/motd/available`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMotdAvailableQueryKey = (params?: MaybeRef<MotdAvailableParams>,) => {
+    return ['motd','available', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMotdAvailableQueryOptions = <TData = Awaited<ReturnType<typeof motdAvailable>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params?: MaybeRef<MotdAvailableParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdAvailable>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMotdAvailableQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof motdAvailable>>> = ({ signal }) => motdAvailable(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof motdAvailable>>, TError, TData> 
+}
+
+export type MotdAvailableQueryResult = NonNullable<Awaited<ReturnType<typeof motdAvailable>>>
+export type MotdAvailableQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMotdAvailable<TData = Awaited<ReturnType<typeof motdAvailable>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params?: MaybeRef<MotdAvailableParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdAvailable>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMotdAvailableQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const motdGet = (
+    params: MaybeRef<MotdGetParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdGet200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/motd/get`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getMotdGetQueryKey = (params: MaybeRef<MotdGetParams>,) => {
+    return ['motd','get', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getMotdGetQueryOptions = <TData = Awaited<ReturnType<typeof motdGet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<MotdGetParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdGet>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMotdGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof motdGet>>> = ({ signal }) => motdGet(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof motdGet>>, TError, TData> 
+}
+
+export type MotdGetQueryResult = NonNullable<Awaited<ReturnType<typeof motdGet>>>
+export type MotdGetQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMotdGet<TData = Awaited<ReturnType<typeof motdGet>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<MotdGetParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdGet>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMotdGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const motdMarkRead = (
+    motdMarkReadBody: MaybeRef<MotdMarkReadBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdMarkRead200>> => {
+    motdMarkReadBody = unref(motdMarkReadBody);
+    
+    return axios.post(
+      `/motd/markRead`,
+      motdMarkReadBody,options
+    );
+  }
+
+
+
+export const getMotdMarkReadMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdMarkRead>>, TError,{data: MotdMarkReadBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof motdMarkRead>>, TError,{data: MotdMarkReadBody}, TContext> => {
+
+const mutationKey = ['motdMarkRead'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof motdMarkRead>>, {data: MotdMarkReadBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  motdMarkRead(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MotdMarkReadMutationResult = NonNullable<Awaited<ReturnType<typeof motdMarkRead>>>
+    export type MotdMarkReadMutationBody = MotdMarkReadBody
+    export type MotdMarkReadMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMotdMarkRead = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdMarkRead>>, TError,{data: MotdMarkReadBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof motdMarkRead>>,
+        TError,
+        {data: MotdMarkReadBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMotdMarkReadMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

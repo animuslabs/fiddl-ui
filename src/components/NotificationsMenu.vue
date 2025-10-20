@@ -6,8 +6,8 @@ div.relative-position.self-center
     dense
     padding="1px"
     size="md"
-    :color="unreadCount > 0 ? 'accent' : 'grey-4'"
-    icon="notifications"
+    :color="activatorColor"
+    :icon="activatorIcon"
     @click="onActivatorClick"
   )
     q-badge(v-if="unreadCount > 0" floating color="red" :label="unreadCount > 99 ? '99+' : String(unreadCount)")
@@ -28,6 +28,15 @@ div.relative-position.self-center
             q-tooltip Mark all as seen
         q-separator
         q-scroll-area(:style="menuScrollStyle")
+          q-list(v-if="motdShouldRender" :dense="isMobile" class="motd-container")
+            q-item(clickable class="items-start notif-item motd-notif" @click.stop="openMotdFromMenu")
+              q-item-section(avatar)
+                q-avatar(:size="avatarSize")
+                  q-icon(name="campaign" :color="motdUnread ? 'primary' : 'grey-5'")
+              q-item-section(:style="{ minWidth: 0 }")
+                .text-body2.text-weight-medium(:class="{ 'text-primary': motdUnread }") {{ motdTitle }}
+                .text-body2.text-grey-3.q-mt-xs {{ motdSummary }}
+                .text-caption.text-grey-6(v-if="motdCreatedAt") {{ timeAgo(motdCreatedAt) }}
           q-list(v-if="recentEvents.length > 0" :dense="isMobile")
             q-item(v-for="ev in recentEvents" :key="ev.id" clickable @click.stop="handleClick(ev)" class="items-start notif-item")
               q-item-section(avatar)
@@ -64,6 +73,15 @@ div.relative-position.self-center
               q-tooltip Close
         q-separator
         q-scroll-area(:style="menuScrollStyle")
+          q-list(v-if="motdShouldRender" class="motd-container")
+            q-item(clickable class="items-start notif-item motd-notif" @click.stop="openMotdFromMenu")
+              q-item-section(avatar)
+                q-avatar(:size="avatarSize")
+                  q-icon(name="campaign" :color="motdUnread ? 'primary' : 'grey-5'")
+              q-item-section(:style="{ minWidth: 0 }")
+                .text-body2.text-weight-medium(:class="{ 'text-primary': motdUnread }") {{ motdTitle }}
+                .text-body2.text-grey-3.q-mt-xs {{ motdSummary }}
+                .text-caption.text-grey-6(v-if="motdCreatedAt") {{ timeAgo(motdCreatedAt) }}
           q-list(v-if="recentEvents.length > 0")
             q-item(v-for="ev in recentEvents" :key="ev.id" clickable @click.stop="handleClick(ev)" class="items-start notif-item")
               q-item-section(avatar)
@@ -96,6 +114,8 @@ import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
 import { decodeHtmlEntities } from "../lib/util"
 import { viewportHeight } from "src/lib/viewport"
+import { useMotdStore } from "stores/motdStore"
+import type { MotdMessage } from "stores/motdStore"
 
 export default defineComponent({
   name: "NotificationsMenu",
@@ -106,6 +126,7 @@ export default defineComponent({
       events: [] as EventsPrivateEvents200Item[],
       pollId: null as any,
       seenCleanup: null as null | (() => void),
+      motd: useMotdStore(),
     }
   },
   computed: {
@@ -114,7 +135,9 @@ export default defineComponent({
       return window.matchMedia("(max-width: 1023px)").matches
     },
     unreadCount(): number {
-      return this.events.filter((e) => !e.seen).length
+      const eventUnread = this.events.filter((e) => !e.seen).length
+      const motdUnread = this.motd?.unreadCount || 0
+      return eventUnread + motdUnread
     },
     recentEvents(): EventsPrivateEvents200Item[] {
       return [...this.events].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)
@@ -177,6 +200,31 @@ export default defineComponent({
     avatarSize(): string {
       return this.isMobile ? "32px" : "48px"
     },
+    motdRawMessage(): MotdMessage | null {
+      return this.motd?.latest || null
+    },
+    motdUnread(): boolean {
+      return (this.motd?.unreadCount || 0) > 0
+    },
+    activatorIcon(): string {
+      return this.motdUnread ? "campaign" : "notifications"
+    },
+    activatorColor(): string {
+      if (this.motdUnread) return "primary"
+      return this.unreadCount > 0 ? "accent" : "grey-4"
+    },
+    motdShouldRender(): boolean {
+      return Boolean(this.motdRawMessage)
+    },
+    motdTitle(): string {
+      return this.motdRawMessage?.title || "Message of the Day"
+    },
+    motdSummary(): string {
+      return this.motdRawMessage?.subheading || "Open to read the latest announcement."
+    },
+    motdCreatedAt(): string | null {
+      return this.motdRawMessage?.startsAt || null
+    },
   },
   watch: {
     "$userAuth.loggedIn": {
@@ -234,14 +282,24 @@ export default defineComponent({
         this.startPolling()
       }
     },
+    openMotdFromMenu() {
+      if (!this.motdRawMessage) return
+      this.open = false
+      this.motd.showDialog(true)
+    },
     onActivatorClick(evt: Event) {
+      if (this.motdUnread) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        this.open = false
+        this.motd.showDialog(true)
+        return
+      }
       if (this.isMobile) {
-        // Only programmatically open on mobile
         evt.stopPropagation()
         this.open = true
         this.onMenuClick(evt)
       }
-      // On desktop, let QMenu handle toggle via parent click
     },
     onBeforeShow() {
       void this.refresh()
@@ -376,7 +434,8 @@ export default defineComponent({
     },
     async markAllSeen() {
       const unseen = this.events.filter((e) => !e.seen)
-      if (unseen.length === 0) return
+      const hadMotdUnread = this.motdUnread
+      if (unseen.length === 0 && !hadMotdUnread) return
       const seenIds: string[] = []
       await Promise.all(
         unseen.map(async (e) => {
@@ -389,6 +448,7 @@ export default defineComponent({
           }
         }),
       )
+      if (hadMotdUnread) this.motd.acknowledgeCurrent()
       if (seenIds.length > 0) emitNotificationsSeen(seenIds)
     },
     handleClick(ev: EventsPrivateEvents200Item) {
@@ -589,6 +649,19 @@ export default defineComponent({
   display: flex !important
   flex-direction: column !important
   overflow: hidden !important
+
+.motd-notif
+  background: rgba(130, 233, 222, 0.08)
+  border: 1px solid rgba(130, 233, 222, 0.25)
+  border-radius: 12px
+
+.motd-container
+  position: sticky
+  top: 0
+  z-index: 2
+  padding: 4px 0
+  margin: 0
+  background: rgba(6, 12, 18, 0.92)
 
 .notif-dialog-card
   width: 100vw

@@ -47,6 +47,7 @@
     "fflate": "^0.8.2",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.0",
+    "markdown-it": "^14.1.0",
     "jsencrypt": "^3.5.4",
     "minimatch": "^10.0.1",
     "ms": "^2.1.3",

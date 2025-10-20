@@ -5151,6 +5151,165 @@ export type MarketingSendUpvoteReminder200 = {
   reason?: string;
 };
 
+export type MotdPublishBody = {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  title: string;
+  /**
+   * @maxLength 300
+   * @nullable
+   */
+  subheading?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20000
+   */
+  body: string;
+  startsAt?: string;
+  /** @nullable */
+  expiresAt?: string | null;
+};
+
+export type MotdPublish200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+};
+
+export type MotdUpdateBody = {
+  id: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  title?: string;
+  /**
+   * @maxLength 300
+   * @nullable
+   */
+  subheading?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20000
+   */
+  body?: string;
+  startsAt?: string;
+  /** @nullable */
+  expiresAt?: string | null;
+};
+
+export type MotdUpdate200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+};
+
+export type MotdDeleteBody = {
+  id: string;
+};
+
+export type MotdDelete200 = {
+  success: boolean;
+};
+
+export type MotdListParams = {
+includeInactive?: boolean;
+};
+
+export type MotdList200ItemsItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+  active: boolean;
+  readCount: number;
+};
+
+export type MotdList200 = {
+  items: MotdList200ItemsItem[];
+};
+
+export type MotdAvailableParams = {
+includeRead?: boolean;
+};
+
+export type MotdAvailable200Item = {
+  id: string;
+  startsAt: string;
+  updatedAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  readAt: string | null;
+  unread: boolean;
+};
+
+export type MotdGetParams = {
+id: string;
+};
+
+export type MotdGet200 = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  /** @nullable */
+  subheading: string | null;
+  body: string;
+  startsAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
+  createdById: string | null;
+  /** @nullable */
+  updatedById: string | null;
+  /** @nullable */
+  readAt: string | null;
+  unread: boolean;
+};
+
+export type MotdMarkReadBody = {
+  id: string;
+};
+
+export type MotdMarkRead200 = {
+  readAt: string;
+};
+
 export const getPkAuthRegisterStartUrl = () => {
 
 
@@ -9323,5 +9482,177 @@ export const marketingSendUpvoteReminder = async (marketingSendUpvoteReminderBod
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       marketingSendUpvoteReminderBody,)
+  }
+);}
+
+
+
+export const getMotdPublishUrl = () => {
+
+
+  
+
+  return `/motd/publish`
+}
+
+export const motdPublish = async (motdPublishBody: MotdPublishBody, options?: RequestInit): Promise<MotdPublish200> => {
+  
+  return fetcher<MotdPublish200>(getMotdPublishUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdPublishBody,)
+  }
+);}
+
+
+
+export const getMotdUpdateUrl = () => {
+
+
+  
+
+  return `/motd/update`
+}
+
+export const motdUpdate = async (motdUpdateBody: MotdUpdateBody, options?: RequestInit): Promise<MotdUpdate200> => {
+  
+  return fetcher<MotdUpdate200>(getMotdUpdateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdUpdateBody,)
+  }
+);}
+
+
+
+export const getMotdDeleteUrl = () => {
+
+
+  
+
+  return `/motd/delete`
+}
+
+export const motdDelete = async (motdDeleteBody: MotdDeleteBody, options?: RequestInit): Promise<MotdDelete200> => {
+  
+  return fetcher<MotdDelete200>(getMotdDeleteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdDeleteBody,)
+  }
+);}
+
+
+
+export const getMotdListUrl = (params?: MotdListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/motd/list?${stringifiedParams}` : `/motd/list`
+}
+
+export const motdList = async (params?: MotdListParams, options?: RequestInit): Promise<MotdList200> => {
+  
+  return fetcher<MotdList200>(getMotdListUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMotdAvailableUrl = (params?: MotdAvailableParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/motd/available?${stringifiedParams}` : `/motd/available`
+}
+
+export const motdAvailable = async (params?: MotdAvailableParams, options?: RequestInit): Promise<MotdAvailable200Item[]> => {
+  
+  return fetcher<MotdAvailable200Item[]>(getMotdAvailableUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMotdGetUrl = (params: MotdGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/motd/get?${stringifiedParams}` : `/motd/get`
+}
+
+export const motdGet = async (params: MotdGetParams, options?: RequestInit): Promise<MotdGet200> => {
+  
+  return fetcher<MotdGet200>(getMotdGetUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getMotdMarkReadUrl = () => {
+
+
+  
+
+  return `/motd/markRead`
+}
+
+export const motdMarkRead = async (motdMarkReadBody: MotdMarkReadBody, options?: RequestInit): Promise<MotdMarkRead200> => {
+  
+  return fetcher<MotdMarkRead200>(getMotdMarkReadUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdMarkReadBody,)
   }
 );}

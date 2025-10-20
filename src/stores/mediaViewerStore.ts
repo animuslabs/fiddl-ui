@@ -45,6 +45,10 @@ function mediaKey(id: string, type: "image" | "video"): string {
   return `${type}:${id}`
 }
 
+function cleanString(value?: string | null): string {
+  return typeof value === "string" ? value.trim() : ""
+}
+
 function getCachedRequestMeta(key: string): CachedRequestMeta | null {
   const entry = requestMetaCache.get(key)
   if (!entry) return null
@@ -235,6 +239,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.mediaObjects = filtered
       this.currentIndex = mappedIndex
       this.resetStates()
+      this.hydrateMetaFromCurrentMedia()
       // Instant ownership from cache
       if (isOwned(this.currentMediaId, this.currentMediaType)) this.userOwnsMedia = true
       this.syncDisplaySource(this.currentMediaId)
@@ -271,6 +276,47 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       }
       this.rateLimitActive = false
       this.rateLimitUntil = 0
+    },
+
+    hydrateMetaFromCurrentMedia() {
+      const media = this.mediaObjects[this.currentIndex]
+      const creatorStore = useCreatorStore()
+
+      const mediaId = media?.id ?? this.currentMediaId
+      const mediaType = (media?.type ?? media?.mediaType ?? this.currentMediaType) as "image" | "video"
+
+      const creatorId = cleanString(media?.creatorId)
+      let creatorName = cleanString(media?.creatorUsername)
+      const requestIdRaw = cleanString(media?.requestId)
+      const requestId = requestIdRaw.length ? requestIdRaw : null
+
+      if (creatorId && !creatorName) {
+        creatorName = cleanString(creatorStore.getUsername(creatorId))
+      }
+
+      this.creatorMeta = {
+        id: creatorId || "",
+        userName: creatorName || "",
+      }
+      this.loadedRequestId = requestId
+
+      if (creatorId && creatorName) {
+        void creatorStore.rememberOne(creatorId, creatorName)
+      }
+
+      if (mediaId && requestId && creatorId && creatorName) {
+        setCachedRequestMeta(mediaKey(mediaId, mediaType), {
+          requestId,
+          creatorId,
+          creatorName,
+        })
+      }
+
+      return {
+        requestId,
+        creatorId,
+        creatorName,
+      }
     },
 
     // Update muted state and optionally persist it
@@ -367,6 +413,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         this.beginNewLoadSequence()
         this.imgLoading = true
         this.currentIndex = index
+        this.hydrateMetaFromCurrentMedia()
         this.touchState.moveX = 0
         this.loadingLike = false
         this.hdVideoLoading = false
@@ -388,6 +435,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.imgLoading = true
       this.loadingLike = false
       this.currentIndex = (this.currentIndex + 1) % this.mediaObjects.length
+      this.hydrateMetaFromCurrentMedia()
       this.touchState.moveX = 0
       this.hdVideoLoading = false
       this.hdMediaLoaded = false
@@ -407,6 +455,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.imgLoading = true
       this.loadingLike = false
       this.currentIndex = (this.currentIndex - 1 + this.mediaObjects.length) % this.mediaObjects.length
+      this.hydrateMetaFromCurrentMedia()
       this.touchState.moveX = 0
       this.hdVideoLoading = false
       this.hdMediaLoaded = false
@@ -697,6 +746,20 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
       const key = mediaKey(mediaId, mediaType)
       const creatorStore = useCreatorStore()
+
+      const seededRequestId = cleanString(this.loadedRequestId)
+      const seededCreatorId = cleanString(this.creatorMeta.id)
+      const seededCreatorName = cleanString(this.creatorMeta.userName)
+      if (seededRequestId && seededCreatorId && seededCreatorName) {
+        void creatorStore.rememberOne(seededCreatorId, seededCreatorName)
+        setCachedRequestMeta(key, {
+          requestId: seededRequestId,
+          creatorId: seededCreatorId,
+          creatorName: seededCreatorName,
+        })
+        return seededRequestId
+      }
+
       const cached = getCachedRequestMeta(key)
       if (cached) {
         if (cached.creatorId && cached.creatorName) {
@@ -800,6 +863,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (this.currentIndex >= this.mediaObjects.length) {
         this.currentIndex = this.mediaObjects.length - 1
       }
+
+      this.hydrateMetaFromCurrentMedia()
 
       return false
     },

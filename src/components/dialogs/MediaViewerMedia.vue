@@ -129,7 +129,7 @@ const previewReady = ref(false)
 const METADATA_RETRY_LIMIT = 5
 const METADATA_RETRY_DELAY_MS = 120
 let metadataRetryHandle: number | null = null
-const MEASUREMENT_RETRY_LIMIT = 4
+const MEASUREMENT_RETRY_LIMIT = 6
 const MEASUREMENT_RETRY_DELAY_MS = 120
 let measurementRetryHandle: number | null = null
 let measurementRetryAttempts = 0
@@ -578,10 +578,7 @@ watch(
     mediaViewerStore.triedHdLoad = false
     mediaViewerStore.userLikedMedia = false
     mediaViewerStore.userOwnsMedia = isOwned(newId, mediaViewerStore.currentMediaType)
-
-    // Reset creator info for new media
-    mediaViewerStore.creatorMeta = { userName: "", id: "" }
-    mediaViewerStore.loadedRequestId = null
+    mediaViewerStore.hydrateMetaFromCurrentMedia()
 
     // Reset local crossfade state and aspect ratio
     showHd.value = false
@@ -610,12 +607,20 @@ function scheduleStageMeasurement() {
 
 function runStageMeasurement() {
   void nextTick(() => {
-    const width = updateStageWidth()
-    if (shouldRetryMeasurement(width)) {
-      queueMeasurementRetry()
+    const performMeasurement = () => {
+      const width = updateStageWidth()
+      if (shouldRetryMeasurement(width)) {
+        queueMeasurementRetry()
+      } else {
+        measurementRetryAttempts = 0
+        measurementRetryHandle = null
+      }
+    }
+
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(performMeasurement)
     } else {
-      measurementRetryAttempts = 0
-      measurementRetryHandle = null
+      performMeasurement()
     }
   })
 }
@@ -634,12 +639,14 @@ function queueMeasurementRetry() {
 }
 
 function shouldRetryMeasurement(measuredWidth: number): boolean {
-  if (mediaViewerStore.currentMediaType !== "video") return false
   if (measurementRetryAttempts >= MEASUREMENT_RETRY_LIMIT) return false
   if (measuredWidth <= 0) return true
+
   const expectedWidth = displayDimensions.value.width > 0 ? displayDimensions.value.width : frameMaxWidth.value
   if (expectedWidth <= 0) return false
-  return measuredWidth < expectedWidth - 1
+
+  const tolerance = Math.max(2, expectedWidth * 0.015)
+  return Math.abs(expectedWidth - measuredWidth) > tolerance
 }
 
 function updateStageWidth(rect?: DOMRectReadOnly | null): number {

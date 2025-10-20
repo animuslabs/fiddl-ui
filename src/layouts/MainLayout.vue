@@ -138,6 +138,10 @@ q-layout(view="lHh Lpr lFf" )
         q-btn(flat label="Close" v-close-popup)
 
   q-page-container.centered.bg-transparent
+    MotdBanner.q-pa-sm.q-pt-sm(
+      v-if="$userAuth.loggedIn && isMotdAllowedRoute"
+      style="max-width:1650px;margin:0 auto;"
+    )
     //- .centered(style="width:100vw; height:100%" )
       //- h4.text-white {{ create.state.req.customModelName }} {{ create.state.req.customModelId}}
     router-view.full-width(style="max-width:1650px;")
@@ -182,13 +186,14 @@ import reloadAvatar from "lib/reloadAvatar"
 // import RegisterDialog from "components/dialogs/Register.vue"
 import { useCreateImageStore } from "stores/createImageStore"
 import NotificationsMenu from "src/components/NotificationsMenu.vue"
+import MotdBanner from "src/components/MotdBanner.vue"
 import { useMissionsStore } from "stores/missionsStore"
 import { telegramUnlink } from "lib/orval"
 import { prefetchRoute } from "src/lib/routePreloader"
 import { getTelegramProfilePhoto } from "lib/tmaProfile"
 
 export default defineComponent({
-  components: { NotificationsMenu },
+  components: { NotificationsMenu, MotdBanner },
   data() {
     return {
       create: useCreateImageStore(),
@@ -233,6 +238,12 @@ export default defineComponent({
       } catch {
         return false
       }
+    },
+    isMotdAllowedRoute(): boolean {
+      const allowed = ["index", "browse", "create", "forge"]
+      const name = this.$route?.name
+      if (!name) return false
+      return allowed.includes(String(name))
     },
     displayAvatarSrc(): string {
       try {

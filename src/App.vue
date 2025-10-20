@@ -5,6 +5,7 @@
 router-view(style="z-index:1")
 .z-top
   ReferralSurveyDialog(v-model="showReferralSurvey" :user-id="$userAuth.userId" @submitted="onReferralSubmitted")
+  MotdDialog
 .bg-grid-overlay
 .bg-color-base
 </template>
@@ -39,6 +40,7 @@ import { useUserAuth } from "stores/userAuth"
 import { Dialog, LocalStorage, Notify, SessionStorage } from "quasar"
 import ImageGallery from "src/components/dialogs/MediaViewer.vue"
 import ReferralSurveyDialog from "src/components/dialogs/ReferralSurvey.vue"
+import MotdDialog from "src/components/dialogs/MotdDialog.vue"
 import { shortIdToLong, toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
 import { tawk } from "lib/tawk"
@@ -46,6 +48,7 @@ import { promoClaimPromoCode, marketingHowFoundStatus } from "lib/orval"
 import { handleClaimCode } from "lib/promoCodeUtil"
 import { useMissionsStore } from "stores/missionsStore"
 import { useAsyncErrorStore } from "stores/asyncErrorStore"
+import { useMotdStore } from "stores/motdStore"
 // LoadingBar.setDefaults({
 //   color: "transparent",
 //   size: "1px",
@@ -66,6 +69,14 @@ export default defineComponent({
   components: {
     ImageGallery,
     ReferralSurveyDialog,
+    MotdDialog,
+  },
+  computed: {
+    isMotdAllowedRoute(): boolean {
+      const name = this.$route?.name
+      if (!name) return false
+      return this.motdAllowedRoutes.includes(String(name))
+    },
   },
   data() {
     return {
@@ -73,6 +84,9 @@ export default defineComponent({
       // req: createStore.state.req,
       showReferralSurvey: false as boolean,
       referralSurveyChecking: false as boolean,
+      motd: useMotdStore(),
+      motdSuppressed: false as boolean,
+      motdAllowedRoutes: ["index", "browse", "create", "forge"] as string[],
     }
   },
   watch: {
@@ -88,6 +102,7 @@ export default defineComponent({
       handler() {
         // Only attempt if user is logged in; respects session one-time key
         if (this.$userAuth?.loggedIn) this.maybeNotifyClaimables()
+        this.handleMotdRouteChange(this.isMotdAllowedRoute)
       },
     },
     "$userAuth.loggedIn": {
@@ -102,9 +117,15 @@ export default defineComponent({
           // Check if we should prompt referral survey on login
           this.$nextTick(() => this.maybeShowReferralSurvey())
           asyncErrors.startPolling()
+          void this.motd.refreshLatest()
+          this.motd.startPolling()
+          this.handleMotdRouteChange(this.isMotdAllowedRoute)
         } else {
           missions.stopPolling()
           asyncErrors.stopPolling()
+          this.motd.stopPolling()
+          this.motd.closeDialog(false)
+          this.motdSuppressed = false
         }
       },
     },
@@ -113,6 +134,27 @@ export default defineComponent({
       deep: false,
       handler() {
         this.maybeShowReferralSurvey()
+      },
+    },
+    isMotdAllowedRoute: {
+      immediate: true,
+      handler(val: boolean) {
+        this.handleMotdRouteChange(val)
+      },
+    },
+    "motd.dialogVisible"(visible: boolean) {
+      if (visible && !this.isMotdAllowedRoute && !this.motd.dialogBypassGuard) {
+        this.motdSuppressed = true
+        this.motd.dialogVisible = false
+        this.motd.clearDialogBypass()
+      } else if (!visible && this.motd.dialogBypassGuard) {
+        this.motd.clearDialogBypass()
+      }
+    },
+    "motd.latest": {
+      deep: false,
+      handler() {
+        if (this.isMotdAllowedRoute) this.maybeRestoreMotdDialog()
       },
     },
   },
@@ -205,6 +247,34 @@ export default defineComponent({
       }).onOk(() => {
         this.$router.push({ name: "missions" }).catch(() => {})
       })
+    },
+    handleMotdRouteChange(isAllowed: boolean) {
+      if (!this.$userAuth?.loggedIn) return
+      if (!this.motd.hasMessage) return
+      if (isAllowed) {
+        if (this.motdSuppressed) this.maybeRestoreMotdDialog()
+      } else if (this.motd.dialogVisible && !this.motd.dialogBypassGuard) {
+        this.motdSuppressed = true
+        this.motd.dialogVisible = false
+        this.motd.clearDialogBypass()
+      } else if (!isAllowed) {
+        this.motdSuppressed = !this.motd.dialogBypassGuard
+      }
+    },
+    maybeRestoreMotdDialog() {
+      const current = this.motd.latest
+      if (!current) {
+        this.motdSuppressed = false
+        return
+      }
+      if (this.motd.isAcknowledged?.(current.id) || current.readAt) {
+        this.motdSuppressed = false
+        return
+      }
+      if (!this.motd.dialogVisible && this.isMotdAllowedRoute) {
+        this.motd.showDialog()
+      }
+      this.motdSuppressed = false
     },
     openDialog(startingIndex = 0, images: string[]) {
       this.images = toObject(images)

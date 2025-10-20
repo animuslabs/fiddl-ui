@@ -196,6 +196,8 @@ export const useBrowserStore = defineStore("browserStore", {
             // Pass-through creator metadata from the nested user object
             creatorId,
             creatorUsername,
+            requestId: (row as any)?.id,
+            requestType: t,
           }
 
           if (prepend) {

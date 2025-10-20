@@ -5,6 +5,7 @@ q-page.full-height.full-width.admin-page
   div(v-if="$userAuth.loggedIn && $userAuth.userData?.admin").q-pt-md
     q-tabs(v-model="tab" ).q-mb-md
       q-tab( name="promo-codes" label="Promo Codes")
+      q-tab(name="motd" label="MOTD")
       q-tab(name="users" label="Users")
       q-tab(name="user-attributions" label="User Attributions")
       q-tab(name="payments" label="Payments")
@@ -86,6 +87,10 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props") {{ props.row.createdAt ? new Date(props.row.createdAt).toLocaleString() : '' }}
         template(#body-cell-claimedAt="props")
           q-td(:props="props") {{ props.row.claimedAt ? new Date(props.row.claimedAt).toLocaleString() : '' }}
+
+    // MOTD tab
+    div(v-if="tab == 'motd'" class="q-pa-sm")
+      MotdTab
 
     // Discount Codes tab
     div(v-if="tab == 'discount-codes'" class="q-pa-sm")
@@ -669,11 +674,12 @@ type TablePagination = { sortBy: string; descending: boolean; page: number; rows
 type OnRequestProps = { pagination: TablePagination }
 
 import AdminStats from "components/admin/AdminStats.vue"
+import MotdTab from "components/admin/MotdTab.vue"
 import UserAttributionsTab from "components/admin/UserAttributionsTab.vue"
 import UserAttributionDetails from "components/dialogs/UserAttributionDetails.vue"
 
 export default defineComponent({
-  components: { AdminStats, UserAttributionsTab },
+  components: { AdminStats, MotdTab, UserAttributionsTab },
 
   setup() {
     const router = useRouter()
@@ -2122,7 +2128,7 @@ export default defineComponent({
       })
     },
     normalizeAdminTab(slug?: string): string {
-      const allowed = new Set(["promo-codes", "users", "user-attributions", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
+      const allowed = new Set(["promo-codes", "motd", "users", "user-attributions", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
       return allowed.has(slug) ? slug : "promo-codes"
     },

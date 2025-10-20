@@ -1,8 +1,8 @@
 <template lang="pug">
-.row.items-center.cursor-pointer(
+.row.items-center.cursor-pointer.no-wrap(
   @click.stop="goToCreator()"
   v-if="creatorMeta.userName"
-  :class="wrapperClass"
+  :class="['creator-info-root', wrapperClass]"
 )
   q-img(
     placeholder-src="/blankAvatar.webp"
@@ -11,8 +11,8 @@
     no-transition
     no-spinner
   ).q-mr-sm
-  .row
-    div
+  .row.username-container.no-wrap
+    div.username-text
       component.no-margin(:is="usernameTag" :class="usernameClass") @{{creatorMeta.userName}}
 </template>
 
@@ -73,5 +73,27 @@ function goToCreator() {
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+.creator-info-root {
+  min-width: 0;
+}
+.no-wrap {
+  flex-wrap: nowrap;
+}
+.username-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 4px;
+}
+.username-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.username-text > * {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
