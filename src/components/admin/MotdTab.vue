@@ -47,8 +47,8 @@
         .row.items-center.q-gutter-xs
           q-btn(size="sm" icon="visibility" flat :title="'Preview'" @click="openPreviewRow(props.row)")
           q-btn(size="sm" icon="edit" color="primary" flat :title="'Edit'" @click="openEdit(props.row)")
-  q-dialog(v-model="formDialogOpen" persistent @hide="onFormDialogHide" :maximized="isXs")
-    q-card(style="min-width: min(640px, 92vw)")
+  q-dialog(v-model="formDialogOpen" persistent @hide="onFormDialogHide" :maximized="$q.screen.lt.md")
+    q-card(class="motd-form-card")
       q-card-section
         .row.items-center.no-wrap.q-col-gutter-sm
           q-icon(:name="dialogMode === 'create' ? 'campaign' : 'edit'" color="primary" size="28px")
@@ -56,35 +56,31 @@
             div.text-h6 {{ dialogMode === 'create' ? 'Create MOTD' : 'Edit MOTD' }}
             div.text-caption.text-grey-6 Auto-saves locally until published
       q-separator
-      q-form(@submit.prevent="submitForm")
-        q-card-section(class="column q-gutter-md")
+      q-form(@submit.prevent="submitForm" class="motd-form")
+        q-card-section(class="column q-gutter-md motd-form-body")
           q-input(v-model="form.title" label="Title" dense outlined :maxlength="200" counter)
           q-input(v-model="form.subheading" label="Subheading (optional)" dense outlined :maxlength="300" counter)
           q-input(v-model="form.body" type="textarea" autogrow outlined label="Markdown Body" :maxlength="20000" counter)
-          .row.q-col-gutter-sm
-            q-input.col-12.col-md-6(v-model="form.startsAt" type="datetime-local" label="Starts At (optional)" dense outlined clearable)
-            q-input.col-12.col-md-6(v-model="form.expiresAt" type="datetime-local" label="Expires At (optional)" dense outlined clearable)
         q-separator
-        q-card-actions(align="right")
+        q-card-actions(align="right" class="motd-form-actions")
           q-btn(flat label="Cancel" @click="closeForm" :disable="saving")
           q-btn(flat icon="visibility" label="Preview" @click="openPreviewForm" :disable="!form.body")
           q-btn(color="primary" :label="dialogMode === 'create' ? 'Publish' : 'Save Changes'" :loading="saving" :disable="saving" type="submit")
-  q-dialog(v-model="previewOpen" :maximized="isXs")
-    q-card(style="min-width: min(620px, 94vw)")
+  q-dialog(v-model="previewOpen" transition-show="scale" transition-hide="scale" :maximized="$q.screen.lt.md")
+    q-card(:class="previewCardClass" flat bordered)
       q-card-section
         .row.items-start.no-wrap.q-col-gutter-md
-          q-icon(name="campaign" size="32px" color="primary" class="q-mt-xs")
+          q-icon(name="campaign" size="36px" color="primary" class="q-mt-xs")
           .column.q-gutter-xs(style="min-width:0")
-            .text-subtitle1.text-weight-bold {{ previewContent?.title || 'Message of the Day' }}
-            .text-caption.text-grey-5 {{ previewDate }}
-            .text-caption.text-grey-6(v-if="previewExpires") Expires: {{ previewExpires }}
+            .text-h6.text-weight-bold.motd-preview-title {{ previewContent?.title || 'Message of the Day' }}
+            .text-caption.text-grey-5.text-uppercase(v-if="previewDay") {{ previewDay }}
             .text-body2.text-grey-4(v-if="previewContent?.subheading") {{ previewContent?.subheading }}
       q-separator
-      q-card-section(style="max-height:55vh;overflow:auto")
-        div.motd-markdown(v-html="previewHtml")
+      q-card-section(:class="previewBodyClass")
+        div.motd-preview-markdown(v-html="previewHtml")
       q-separator
-      q-card-actions(align="right")
-        q-btn(flat label="Close" color="primary" v-close-popup)
+      q-card-actions(align="right" class="motd-preview-actions")
+        q-btn(flat icon="close" color="primary" label="Close" v-close-popup)
 </template>
 
 <script lang="ts" setup>
@@ -101,22 +97,23 @@ interface MotdFormState {
   title: string
   subheading: string
   body: string
-  startsAt: string | null
-  expiresAt: string | null
 }
 
 interface DraftPayload {
   title: string
   subheading: string
   body: string
-  startsAt: string | null
-  expiresAt: string | null
 }
 
 interface PreviewContent {
   title: string
   subheading: string | null
   body: string
+  startsAt: string | null
+  expiresAt: string | null
+}
+
+interface MotdSchedule {
   startsAt: string | null
   expiresAt: string | null
 }
@@ -137,7 +134,6 @@ const isLoading = motdQuery.isLoading
 const isFetching = motdQuery.isFetching
 const rows = computed<MotdList200ItemsItem[]>(() => motdQuery.data?.value?.data?.items || [])
 
-const isXs = computed(() => $q.screen.lt.md)
 const filteredRows = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return rows.value
@@ -172,6 +168,9 @@ const form = reactive<MotdFormState>({
   title: '',
   subheading: '',
   body: '',
+})
+
+const schedule = reactive<MotdSchedule>({
   startsAt: null,
   expiresAt: null,
 })
@@ -184,24 +183,24 @@ const previewOpen = ref(false)
 const previewContent = ref<PreviewContent | null>(null)
 
 const previewHtml = computed(() => renderMarkdown(previewContent.value?.body || ''))
-const previewDate = computed(() => {
+const previewDay = computed(() => {
   const iso = previewContent.value?.startsAt
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleString()
+    const date = new Date(iso)
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
   } catch {
     return ''
   }
 })
-const previewExpires = computed(() => {
-  const iso = previewContent.value?.expiresAt
-  if (!iso) return ''
-  try {
-    return new Date(iso).toLocaleString()
-  } catch {
-    return ''
-  }
-})
+const previewCardClass = computed(() => ({
+  'motd-preview-card': true,
+  'motd-preview-card--xs': $q.screen.lt.md,
+}))
+const previewBodyClass = computed(() => ({
+  'motd-preview-body': true,
+  'motd-preview-body--xs': $q.screen.lt.md,
+}))
 
 const publishMutation = useMotdPublish()
 const updateMutation = useMotdUpdate()
@@ -211,22 +210,8 @@ function resetForm() {
   form.title = ''
   form.subheading = ''
   form.body = ''
-  form.startsAt = null
-  form.expiresAt = null
-}
-
-function toInputValue(iso?: string | null): string | null {
-  if (!iso) return null
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toISOString().slice(0, 16)
-}
-
-function inputToIso(input: string | null): string | null {
-  if (!input) return null
-  const date = new Date(input)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toISOString()
+  schedule.startsAt = null
+  schedule.expiresAt = null
 }
 
 function loadDraft() {
@@ -245,8 +230,6 @@ function loadDraft() {
     form.title = parsed.title || ''
     form.subheading = parsed.subheading || ''
     form.body = parsed.body || ''
-    form.startsAt = parsed.startsAt || null
-    form.expiresAt = parsed.expiresAt || null
   } catch {
     resetForm()
   }
@@ -257,9 +240,7 @@ function persistDraft(payload: DraftPayload) {
   const hasContent =
     payload.title.trim() ||
     payload.subheading.trim() ||
-    payload.body.trim() ||
-    (payload.startsAt && payload.startsAt.trim()) ||
-    (payload.expiresAt && payload.expiresAt.trim())
+    payload.body.trim()
   if (!hasContent) {
     window.localStorage.removeItem(DRAFT_STORAGE_KEY)
     return
@@ -277,8 +258,6 @@ watch(
     title: form.title,
     subheading: form.subheading,
     body: form.body,
-    startsAt: form.startsAt,
-    expiresAt: form.expiresAt,
   }),
   (val) => {
     if (!formDialogOpen.value || dialogMode.value !== 'create') return
@@ -286,11 +265,8 @@ watch(
       title: val.title,
       subheading: val.subheading,
       body: val.body,
-      startsAt: val.startsAt,
-      expiresAt: val.expiresAt,
     })
-  },
-  { deep: true }
+  }
 )
 
 function openCreate() {
@@ -306,8 +282,8 @@ function openEdit(row: MotdList200ItemsItem) {
   form.title = row.title || ''
   form.subheading = row.subheading || ''
   form.body = row.body || ''
-  form.startsAt = toInputValue(row.startsAt)
-  form.expiresAt = toInputValue(row.expiresAt)
+  schedule.startsAt = row.startsAt || null
+  schedule.expiresAt = row.expiresAt || null
   formDialogOpen.value = true
 }
 
@@ -327,8 +303,8 @@ function openPreviewForm() {
     title: form.title || 'Message of the Day',
     subheading: form.subheading ? form.subheading : null,
     body: form.body || '',
-    startsAt: inputToIso(form.startsAt),
-    expiresAt: inputToIso(form.expiresAt),
+    startsAt: schedule.startsAt,
+    expiresAt: schedule.expiresAt,
   }
   previewOpen.value = true
 }
@@ -359,12 +335,25 @@ async function submitForm() {
     Notify.create({ type: 'warning', message: 'Body markdown is required' })
     return
   }
-  const payload = {
+  const payload: {
+    title: string
+    body: string
+    subheading?: string
+    startsAt?: string
+    expiresAt?: string | null
+  } = {
     title,
     body: rawBody,
-    subheading: form.subheading.trim() ? form.subheading.trim() : undefined,
-    startsAt: inputToIso(form.startsAt) || undefined,
-    expiresAt: inputToIso(form.expiresAt) || undefined,
+  }
+  const trimmedSubheading = form.subheading.trim()
+  if (trimmedSubheading) {
+    payload.subheading = trimmedSubheading
+  }
+  if (schedule.startsAt) {
+    payload.startsAt = schedule.startsAt
+  }
+  if (schedule.expiresAt) {
+    payload.expiresAt = schedule.expiresAt
   }
   try {
     saving.value = true
@@ -400,48 +389,100 @@ function toLocalDisplay(value?: string | null): string {
 </script>
 
 <style lang="sass" scoped>
-.motd-markdown
+.motd-preview-card
+  width: min(720px, 92vw)
+  display: flex
+  flex-direction: column
+
+.motd-preview-title
+  font-size: clamp(22px, 3.2vw, 28px)
+  line-height: 1.2
+
+.motd-preview-card--xs
+  width: 100%
+  height: 100%
+  max-width: 100%
+  max-height: 100%
+  border-radius: 0
+  flex: 1
+
+.motd-preview-markdown
   color: #eceff1
   font-size: 16px
   line-height: 1.5
   word-break: break-word
-  a
+  :deep(a)
     color: #82e9de
     text-decoration: none
     &:hover
       text-decoration: underline
-  img
+  :deep(img)
     display: block
-    width: 100%
+    width: auto
     height: auto
     max-width: 100%
-    max-height: 50vh
+    max-height: 500px
     object-fit: contain
     border-radius: 6px
     margin: 12px auto
-  h1
+  :deep(h1)
     font-size: 22px
     line-height: 1.3
-  h2
+  :deep(h2)
     font-size: 19px
     line-height: 1.3
-  h3
+  :deep(h3)
     font-size: 18px
     line-height: 1.3
-  h4, h5, h6
+  :deep(h4), :deep(h5), :deep(h6)
     font-size: 17px
     line-height: 1.3
-  h1, h2, h3, h4, h5, h6
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6)
     margin-top: 20px
     margin-bottom: 10px
-  pre
+  :deep(pre)
     background: rgba(255,255,255,0.05)
     padding: 12px
     border-radius: 6px
     overflow: auto
     font-family: var(--q-code-font-family)
-  code
+  :deep(code)
     background: rgba(255,255,255,0.08)
     padding: 2px 4px
     border-radius: 4px
+
+.motd-preview-body
+  max-height: 55vh
+  overflow: auto
+
+.motd-preview-body--xs
+  flex: 1
+  max-height: none
+  overflow: auto
+
+.motd-preview-actions
+  margin-top: auto
+
+.motd-form-card
+  min-width: min(640px, 92vw)
+  max-height: min(90vh, 720px)
+  display: flex
+  flex-direction: column
+
+.motd-form
+  display: flex
+  flex-direction: column
+  flex: 1 1 auto
+  overflow: hidden
+
+.motd-form-body
+  flex: 1 1 auto
+  overflow-y: auto
+
+.motd-form-actions
+  position: sticky
+  bottom: 0
+  background: var(--q-surface, #fff)
+  z-index: 1
+  box-shadow: 0 -1px 0 var(--q-separator-color, rgba(0, 0, 0, 0.12))
 </style>
