@@ -54,9 +54,9 @@
                 :rowHeightRatio="1.2"
                 :show-loading="true"
                 gap="8px"
-                :cols-desktop="quasar.screen.gt.lg ? 8 : 5"
+                :cols-desktop="galleryColsDesktop"
                 :thumb-size-desktop="90"
-                :cols-mobile="5"
+                :cols-mobile="galleryColsMobile"
                 :thumb-size-mobile="60"
                 :disable-nsfw-mask="true"
                 :show-visibility-toggle="true"
@@ -70,8 +70,10 @@
                 @select="showDetailsBySelect"
                 @model-select="handleModelSelect"
                 selectable
-                :cols-desktop="5"
-                :thumb-size-desktop="190"
+                :cols-desktop="galleryColsDesktop"
+                :cols-mobile="galleryColsMobile"
+                :thumb-size-desktop="gridThumbSizeDesktop"
+                :thumb-size-mobile="gridThumbSizeMobile"
                 :rowHeightRatio="1"
                 layout="grid"
                 :mediaObjects="allMediaObjects"
@@ -208,6 +210,27 @@ export default defineComponent({
       const empty = !Array.isArray(store?.creations) || store.creations.length === 0
       const notLoadedYet = !this.createContext?.state?.hasLoaded?.[this.currentTab]
       return empty && (loading || notLoadedYet)
+    },
+    galleryColsDesktop(): number {
+      const screen = this.quasar?.screen
+      if (!screen) return 6
+      if (screen.gt.lg) return 8
+      if (screen.gt.md) return 6
+      if (screen.gt.sm) return 4
+      return 3
+    },
+    galleryColsMobile(): number {
+      const screen = this.quasar?.screen
+      if (!screen) return 5
+      if (screen.gt.sm) return 6
+      if (screen.gt.xs) return 5
+      return 3
+    },
+    gridThumbSizeDesktop(): number {
+      return 120
+    },
+    gridThumbSizeMobile(): number {
+      return 90
     },
     imageMediaObjects(): MediaGalleryMeta[] {
       const base = this.buildMediaGalleryItems(this.imageCreations.creations, "image")

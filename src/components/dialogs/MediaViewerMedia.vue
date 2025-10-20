@@ -61,7 +61,7 @@ MediaViewerControls(
       div(
         v-else
         ref="mediaStageRef"
-        :class="['image-wrapper', isSmPreview ? 'sm-soft' : '']"
+        :class="imageWrapperClass"
         :style="[touchMoveStyle, imageBackdropStyle, imageStageStyle]"
       )
         img(
@@ -228,9 +228,23 @@ watch(
 const currentImageUrl = computed(() => (mediaViewerStore.currentMediaType === "image" ? mediaViewerStore.getCurrentMediaUrl() : ""))
 const isSmPreview = computed(() => /-sm\.webp(\?|$)/.test(currentImageUrl.value))
 
+const shouldDimDuringLoad = computed(() => {
+  if (!mediaViewerStore.firstImageLoaded) return false
+  if (mediaViewerStore.loading) return true
+  if (mediaViewerStore.imgLoading && !isSmPreview.value) return true
+  return false
+})
+
+const imageWrapperClass = computed(() => ["image-wrapper"])
+
+const imageClassList = computed(() => {
+  if (!mediaViewerStore.firstImageLoaded) return "image-darken blur-anim-only"
+  return shouldDimDuringLoad.value ? "image-darken active blur-anim-dim" : "image-darken"
+})
+
 const imageAttrs = computed(() => {
   const base = {
-    class: mediaClass.value + (isSmPreview.value ? " sm-img" : ""),
+    class: imageClassList.value,
     style: {
       // Fill area; image sizing handled by wrapper CSS
       "max-height": viewportHeight(75),
@@ -252,15 +266,6 @@ const imageAttrs = computed(() => {
     onLoad: (e: Event) => onMediaLoaded(e),
     alt: "user created image",
   }
-})
-
-const mediaClass = computed(() => {
-  // Before the first image ever loads, avoid dimming but animate blur.
-  if (!mediaViewerStore.firstImageLoaded) return "image-darken blur-anim-only"
-
-  // While loading (initial or during navigation), dim and animate blur.
-  const isLoading = mediaViewerStore.loading || mediaViewerStore.imgLoading
-  return isLoading ? "image-darken active blur-anim-dim" : "image-darken"
 })
 
 async function onMediaLoaded(event?: Event) {
@@ -777,13 +782,4 @@ function primeDimensionsFromMetadata(media: any) {
   margin: 0 auto;
 }
 
-/* While showing a small, low-res preview, soften pixels */
-/* Apply blur on the wrapper and the image for robustness */
-.sm-soft {
-  filter: blur(1px) !important;
-}
-.sm-img {
-  filter: blur(1px) !important;
-  transition: filter 180ms ease;
-}
 </style>
