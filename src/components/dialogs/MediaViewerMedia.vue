@@ -120,6 +120,13 @@ const mediaWidth = ref(0)
 let stageObserver: ResizeObserver | null = null
 const naturalDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const displayDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const METADATA_RETRY_LIMIT = 5
+const METADATA_RETRY_DELAY_MS = 120
+let metadataRetryHandle: number | null = null
+const MEASUREMENT_RETRY_LIMIT = 4
+const MEASUREMENT_RETRY_DELAY_MS = 120
+let measurementRetryHandle: number | null = null
+let measurementRetryAttempts = 0
 const frameMaxWidth = computed(() => {
   const available = Math.max(MIN_FRAME_WIDTH, $q.screen.width - 32)
   return Math.min(available, MAX_FRAME_WIDTH)
@@ -207,6 +214,42 @@ function syncActiveVideoElement() {
       mediaViewerStore.registerVideoElement(null)
     }
   })
+}
+
+function clearMetadataRetry() {
+  if (metadataRetryHandle !== null) {
+    window.clearTimeout(metadataRetryHandle)
+    metadataRetryHandle = null
+  }
+}
+
+function applyVideoDimensions(width: number, height: number): boolean {
+  if (!width || !height) return false
+  aspectRatio.value = `${width} / ${height}`
+  updateNaturalDimensions(width, height)
+  return true
+}
+
+function captureVideoDimensionsFrom(video: HTMLVideoElement | null): boolean {
+  if (!video) return false
+  const width = Math.round(video.videoWidth || 0)
+  const height = Math.round(video.videoHeight || 0)
+  return applyVideoDimensions(width, height)
+}
+
+function ensureVideoDimensions(video: HTMLVideoElement | null, attempt = 0): void {
+  if (!video) return
+  if (captureVideoDimensionsFrom(video)) {
+    clearMetadataRetry()
+    scheduleStageMeasurement()
+    return
+  }
+  if (attempt >= METADATA_RETRY_LIMIT) return
+  clearMetadataRetry()
+  const delay = METADATA_RETRY_DELAY_MS * (attempt + 1)
+  metadataRetryHandle = window.setTimeout(() => {
+    ensureVideoDimensions(video, attempt + 1)
+  }, delay)
 }
 
 watch(
@@ -331,6 +374,9 @@ async function onMediaLoaded(event?: Event) {
     // Only load HD if not already tried (prevents duplicate calls)
     await mediaViewerStore.loadHdMedia()
   }
+  if (isVideoEvent) {
+    ensureVideoDimensions((target as HTMLVideoElement | null) ?? previewRef.value)
+  }
 
   mediaViewerStore.onMediaLoaded(mediaViewerStore.currentMediaId)
 
@@ -347,22 +393,17 @@ async function onMediaLoaded(event?: Event) {
 
 // Keep HD buffered and synced behind the preview; when ready, crossfade
 function onPreviewMetadata(e: Event) {
-  const v = e.target as HTMLVideoElement
-  if (v && v.videoWidth && v.videoHeight) {
-    aspectRatio.value = `${v.videoWidth} / ${v.videoHeight}`
-    updateNaturalDimensions(v.videoWidth, v.videoHeight)
-  }
-  void v.play().catch(() => {})
+  const v = (e.target as HTMLVideoElement) ?? null
+  ensureVideoDimensions(v)
+  void v?.play().catch(() => {})
   scheduleStageMeasurement()
 }
 
 function onHdMetadata(e: Event) {
-  const hd = e.target as HTMLVideoElement
+  const hd = (e.target as HTMLVideoElement) ?? null
   const preview = previewRef.value
   if (!hd || !preview) return
-  if (hd.videoWidth && hd.videoHeight) {
-    updateNaturalDimensions(hd.videoWidth, hd.videoHeight)
-  }
+  ensureVideoDimensions(hd)
   try {
     hd.currentTime = preview.currentTime || 0
   } catch {}
@@ -486,6 +527,8 @@ watch(
   () => mediaViewerStore.currentMediaId,
   async (newId, oldId) => {
     if (!newId) return
+    clearMetadataRetry()
+    resetMeasurementRetry()
     // Reset measured width so the frame can grow to fallback size before new media measures
     mediaWidth.value = 0
     naturalDimensions.value = { width: 0, height: 0 }
@@ -520,13 +563,54 @@ watch(
   { immediate: true },
 )
 
+function resetMeasurementRetry() {
+  if (measurementRetryHandle !== null) {
+    window.clearTimeout(measurementRetryHandle)
+    measurementRetryHandle = null
+  }
+  measurementRetryAttempts = 0
+}
+
 function scheduleStageMeasurement() {
+  resetMeasurementRetry()
+  runStageMeasurement()
+}
+
+function runStageMeasurement() {
   void nextTick(() => {
-    updateStageWidth()
+    const width = updateStageWidth()
+    if (shouldRetryMeasurement(width)) {
+      queueMeasurementRetry()
+    } else {
+      measurementRetryAttempts = 0
+      measurementRetryHandle = null
+    }
   })
 }
 
-function updateStageWidth(rect?: DOMRectReadOnly | null) {
+function queueMeasurementRetry() {
+  if (measurementRetryAttempts >= MEASUREMENT_RETRY_LIMIT) {
+    measurementRetryHandle = null
+    return
+  }
+  const delay = MEASUREMENT_RETRY_DELAY_MS * (measurementRetryAttempts + 1)
+  measurementRetryAttempts += 1
+  measurementRetryHandle = window.setTimeout(() => {
+    measurementRetryHandle = null
+    runStageMeasurement()
+  }, delay)
+}
+
+function shouldRetryMeasurement(measuredWidth: number): boolean {
+  if (mediaViewerStore.currentMediaType !== "video") return false
+  if (measurementRetryAttempts >= MEASUREMENT_RETRY_LIMIT) return false
+  if (measuredWidth <= 0) return true
+  const expectedWidth = displayDimensions.value.width > 0 ? displayDimensions.value.width : frameMaxWidth.value
+  if (expectedWidth <= 0) return false
+  return measuredWidth < expectedWidth - 1
+}
+
+function updateStageWidth(rect?: DOMRectReadOnly | null): number {
   let width = displayDimensions.value.width
   if (mediaViewerStore.currentMediaType === "image" && imageRef.value) {
     width = imageRef.value.getBoundingClientRect().width
@@ -540,6 +624,7 @@ function updateStageWidth(rect?: DOMRectReadOnly | null) {
   if (width > 0) {
     mediaWidth.value = width
   }
+  return width
 }
 
 onMounted(() => {
@@ -587,6 +672,8 @@ watch(
 onBeforeUnmount(() => {
   cancelSyncLoop()
   mediaViewerStore.registerVideoElement(null)
+  clearMetadataRetry()
+  resetMeasurementRetry()
   if (removeViewportResizeListeners) {
     removeViewportResizeListeners()
   }
