@@ -1,12 +1,13 @@
 import { defineStore } from "pinia"
 import { LocalStorage, SessionStorage } from "quasar"
 import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
-import { collectionsMediaInUsersCollection, creationsGetCreationData, userGetUsername, creationsHdVideo } from "src/lib/orval"
+import { collectionsMediaInUsersCollection, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
 import { img, s3Video } from "src/lib/netlifyImg"
-import { catchErr } from "src/lib/util"
+import { catchErr, isRateLimitError } from "src/lib/util"
 import { markOwned, isOwned } from "lib/ownedMediaCache"
 import { hdUrl } from "lib/imageCdn"
 import { useUserAuth } from "src/stores/userAuth"
+import { useCreatorStore } from "src/stores/creatorStore"
 
 interface CreatorMeta {
   userName: string
@@ -294,6 +295,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         window.clearTimeout(this.rateLimitTimer)
       }
       this.rateLimitActive = true
+      this.triedHdLoad = false
       this.rateLimitUntil = resumeAt
       this.touchState.isSwiping = false
       this.touchState.moveX = 0
@@ -316,6 +318,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (hasMedia) {
         void this.checkUserLikedMedia()
         void this.loadRequestId()
+        void this.loadHdMedia()
       }
     },
 
@@ -558,8 +561,13 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           this.syncDisplaySource(id)
           return url
         }
-      } catch {
-        SessionStorage.setItem(`noHdimage-${id}`, true)
+      } catch (err) {
+        if (isRateLimitError(err)) {
+          this.startRateLimitCooldown()
+        } else {
+          SessionStorage.setItem(`noHdimage-${id}`, true)
+          console.error("Failed to load HD image:", err)
+        }
       }
       return null
     },
@@ -585,8 +593,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         markOwned(id, "video")
         return hdUrl
       } catch (err) {
-        const status = (err as any)?.response?.status
-        if (status === 503) {
+        if (isRateLimitError(err)) {
           this.startRateLimitCooldown()
         } else {
           console.error("Failed to load HD video:", err)
@@ -651,8 +658,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           setCachedLikeMeta(key, payload)
           return payload
         } catch (err) {
-          const status = (err as any)?.response?.status
-          if (status === 503) {
+          if (isRateLimitError(err)) {
             this.startRateLimitCooldown()
           } else {
             console.error("Failed to check like status:", err)
@@ -690,8 +696,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const isActive = () => this.isActiveLoadSequence(loadSeq, mediaId)
 
       const key = mediaKey(mediaId, mediaType)
+      const creatorStore = useCreatorStore()
       const cached = getCachedRequestMeta(key)
       if (cached) {
+        if (cached.creatorId && cached.creatorName) {
+          void creatorStore.rememberOne(cached.creatorId, cached.creatorName)
+        }
         if (isActive()) {
           this.loadedRequestId = cached.requestId
           this.creatorMeta = { id: cached.creatorId, userName: cached.creatorName }
@@ -702,6 +712,9 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const inflight = requestMetaInFlight.get(key)
       if (inflight) {
         const meta = await inflight
+        if (meta?.creatorId && meta.creatorName) {
+          void creatorStore.rememberOne(meta.creatorId, meta.creatorName)
+        }
         if (meta) {
           if (isActive()) {
             this.loadedRequestId = meta.requestId
@@ -718,32 +731,37 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           const imageMeta = response?.data
           if (!imageMeta) return null
 
-          const creatorId = imageMeta.creatorId
+          const creatorId = imageMeta.creatorId || ""
           let creatorName = ""
           if (creatorId) {
-            try {
-              const usernameResponse = await userGetUsername({ userId: creatorId })
-              creatorName = usernameResponse?.data || ""
-            } catch (err) {
-              const status = (err as any)?.response?.status
-              if (status === 503) {
-                this.startRateLimitCooldown()
-              } else {
-                catchErr(err)
+            const cachedName = creatorStore.getUsername(creatorId)
+            if (cachedName) {
+              creatorName = cachedName
+            } else {
+              try {
+                creatorName = await creatorStore.ensureUsername(creatorId)
+              } catch (err) {
+                if (isRateLimitError(err)) {
+                  this.startRateLimitCooldown()
+                } else {
+                  catchErr(err)
+                }
               }
             }
+          }
+          if (creatorId && creatorName) {
+            void creatorStore.rememberOne(creatorId, creatorName)
           }
 
           const payload: CachedRequestMeta = {
             requestId: imageMeta.requestId,
-            creatorId: creatorId || "",
+            creatorId,
             creatorName,
           }
           setCachedRequestMeta(key, payload)
           return payload
         } catch (err) {
-          const status = (err as any)?.response?.status
-          if (status === 503) {
+          if (isRateLimitError(err)) {
             this.startRateLimitCooldown()
           } else {
             catchErr(err)

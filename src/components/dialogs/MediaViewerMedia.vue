@@ -228,11 +228,44 @@ watch(
 const currentImageUrl = computed(() => (mediaViewerStore.currentMediaType === "image" ? mediaViewerStore.getCurrentMediaUrl() : ""))
 const isSmPreview = computed(() => /-sm\.webp(\?|$)/.test(currentImageUrl.value))
 
-const shouldDimDuringLoad = computed(() => {
+const shouldDimDuringLoadRaw = computed(() => {
   if (!mediaViewerStore.firstImageLoaded) return false
   if (mediaViewerStore.loading) return true
   if (mediaViewerStore.imgLoading && !isSmPreview.value) return true
   return false
+})
+
+const BLUR_DELAY_MS = 500
+const shouldDimDuringLoad = ref(false)
+let blurDelayTimer: number | null = null
+
+watch(
+  shouldDimDuringLoadRaw,
+  (shouldActivate) => {
+    if (shouldActivate) {
+      if (blurDelayTimer !== null || shouldDimDuringLoad.value) return
+      blurDelayTimer = window.setTimeout(() => {
+        shouldDimDuringLoad.value = true
+        blurDelayTimer = null
+      }, BLUR_DELAY_MS)
+    } else {
+      if (blurDelayTimer !== null) {
+        clearTimeout(blurDelayTimer)
+        blurDelayTimer = null
+      }
+      if (shouldDimDuringLoad.value) {
+        shouldDimDuringLoad.value = false
+      }
+    }
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  if (blurDelayTimer !== null) {
+    clearTimeout(blurDelayTimer)
+    blurDelayTimer = null
+  }
 })
 
 const imageWrapperClass = computed(() => ["image-wrapper"])

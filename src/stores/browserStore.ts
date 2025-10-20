@@ -4,6 +4,7 @@ import { img, s3Video } from "lib/netlifyImg"
 import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
 import type { MediaGalleryMeta } from "components/MediaGallery.vue"
 import type { MediaType } from "lib/types"
+import { useCreatorStore } from "src/stores/creatorStore"
 
 function aspectRatioToNumber(raw?: string | null): number | undefined {
   if (!raw) return undefined
@@ -152,6 +153,8 @@ export const useBrowserStore = defineStore("browserStore", {
     /* ---------- internal util ---------- */
     addBatch(rows: BrowseRow[], prepend = false) {
       const MAX_ITEMS = 1500 // soft cap to prevent unbounded memory growth
+      const creatorStore = useCreatorStore()
+      const creatorsToRemember: { id?: string | null; username?: string | null }[] = []
       for (const row of rows) {
         // Normalize media to a proper array
         let medias: { id: string; nsfw?: boolean }[] = []
@@ -171,6 +174,14 @@ export const useBrowserStore = defineStore("browserStore", {
         if (medias.length === 0) continue
 
         const t = row.mediaType
+        const creatorId = (row as any)?.user?.id
+        let creatorUsername = (row as any)?.user?.username as string | undefined
+        if (creatorId && !creatorUsername) {
+          creatorUsername = creatorStore.getUsername(creatorId)
+        }
+        if (creatorId && creatorUsername) {
+          creatorsToRemember.push({ id: creatorId, username: creatorUsername })
+        }
 
         for (const m of medias) {
           if (this.media.find((e) => e.id === m.id)) continue
@@ -183,8 +194,8 @@ export const useBrowserStore = defineStore("browserStore", {
             createdAt: new Date(row.createdAt),
             nsfw: m.nsfw === true,
             // Pass-through creator metadata from the nested user object
-            creatorId: (row as any)?.user?.id,
-            creatorUsername: (row as any)?.user?.username,
+            creatorId,
+            creatorUsername,
           }
 
           if (prepend) {
@@ -193,6 +204,9 @@ export const useBrowserStore = defineStore("browserStore", {
             this.media.push(item)
           }
         }
+      }
+      if (creatorsToRemember.length) {
+        void creatorStore.rememberMany(creatorsToRemember)
       }
       // Trim to cap to avoid DOM and memory blow-up on extremely long sessions
       if (this.media.length > MAX_ITEMS) {

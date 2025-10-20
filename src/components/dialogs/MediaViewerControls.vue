@@ -217,7 +217,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { creationsDeleteMedia, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
-import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
+import { catchErr, copyToClipboard, getCreationRequest, isRateLimitError, longIdToShort, shareMedia, shareLink } from "src/lib/util"
 import { originalDownloadUrl } from "lib/imageCdn"
 import { img, s3Video } from "lib/netlifyImg"
 import { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
@@ -413,7 +413,11 @@ async function share() {
       position: "top",
     })
   } catch (err: any) {
-    catchErr(err)
+    if (isRateLimitError(err)) {
+      mediaViewerStore.startRateLimitCooldown()
+    } else {
+      catchErr(err)
+    }
   }
 }
 

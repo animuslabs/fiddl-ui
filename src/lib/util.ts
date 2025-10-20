@@ -101,6 +101,19 @@ export const catchErr = (err: TRPCClientError<AppRouter> | any) => {
     ok: true,
   })
 }
+
+export function getHttpStatus(err: unknown): number | null {
+  if (!err || typeof err !== "object") return null
+  const fromResponse = (err as any)?.response?.status
+  if (typeof fromResponse === "number") return fromResponse
+  const directStatus = (err as any)?.status
+  if (typeof directStatus === "number") return directStatus
+  return null
+}
+
+export function isRateLimitError(err: unknown): boolean {
+  return getHttpStatus(err) === 503
+}
 export function getReferredBy(): string | undefined {
   return (LocalStorage.getItem("referredBy") as string) || undefined
 }
