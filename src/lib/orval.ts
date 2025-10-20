@@ -2124,6 +2124,8 @@ export type UserGetNotificationConfig200 = {
   email: boolean;
   phone: boolean;
   telegram: boolean;
+  motdEmail: boolean;
+  motdTelegram: boolean;
 };
 
 export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
@@ -2207,6 +2209,8 @@ export type UserSetNotificationConfigBody = {
   email?: boolean;
   phone?: boolean;
   telegram?: boolean;
+  motdEmail?: boolean;
+  motdTelegram?: boolean;
   emailFrequency?: UserSetNotificationConfigBodyEmailFrequency;
   phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency;
   telegramFrequency?: UserSetNotificationConfigBodyTelegramFrequency;
@@ -2305,6 +2309,8 @@ export type UserSetNotificationConfig200 = {
   email: boolean;
   phone: boolean;
   telegram: boolean;
+  motdEmail: boolean;
+  motdTelegram: boolean;
 };
 
 export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
@@ -5212,6 +5218,7 @@ export type MotdPublish200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5251,6 +5258,7 @@ export type MotdUpdate200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5263,6 +5271,50 @@ export type MotdDeleteBody = {
 
 export type MotdDelete200 = {
   success: boolean;
+};
+
+export type MotdSendEmailBody = {
+  id: string;
+};
+
+export type MotdSendEmail200FailuresItem = {
+  email: string;
+  reason: string;
+};
+
+export type MotdSendEmail200 = {
+  success: boolean;
+  sent: number;
+  failedCount: number;
+  failures: MotdSendEmail200FailuresItem[];
+};
+
+export type MotdEmailStats200ItemsItemMetrics = {
+  processed: number;
+  delivered: number;
+  opens: number;
+  uniqueOpens: number;
+  clicks: number;
+  uniqueClicks: number;
+  bounces: number;
+  spamReports: number;
+  unsubscribes: number;
+};
+
+export type MotdEmailStats200ItemsItem = {
+  id: string;
+  title: string;
+  startsAt: string;
+  emailed: boolean;
+  metrics: MotdEmailStats200ItemsItemMetrics;
+  /** @nullable */
+  lastEventAt: string | null;
+  /** @nullable */
+  error: string | null;
+};
+
+export type MotdEmailStats200 = {
+  items: MotdEmailStats200ItemsItem[];
 };
 
 export type MotdListParams = {
@@ -5280,6 +5332,7 @@ export type MotdList200ItemsItem = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5322,6 +5375,7 @@ export type MotdGet200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -15277,6 +15331,118 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       return useMutation(mutationOptions , queryClient);
     }
     
+export const motdSendEmail = (
+    motdSendEmailBody: MaybeRef<MotdSendEmailBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdSendEmail200>> => {
+    motdSendEmailBody = unref(motdSendEmailBody);
+    
+    return axios.post(
+      `/motd/sendEmail`,
+      motdSendEmailBody,options
+    );
+  }
+
+
+
+export const getMotdSendEmailMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdSendEmail>>, TError,{data: MotdSendEmailBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof motdSendEmail>>, TError,{data: MotdSendEmailBody}, TContext> => {
+
+const mutationKey = ['motdSendEmail'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof motdSendEmail>>, {data: MotdSendEmailBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  motdSendEmail(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MotdSendEmailMutationResult = NonNullable<Awaited<ReturnType<typeof motdSendEmail>>>
+    export type MotdSendEmailMutationBody = MotdSendEmailBody
+    export type MotdSendEmailMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useMotdSendEmail = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof motdSendEmail>>, TError,{data: MotdSendEmailBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof motdSendEmail>>,
+        TError,
+        {data: MotdSendEmailBody},
+        TContext
+      > => {
+
+      const mutationOptions = getMotdSendEmailMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const motdEmailStats = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<MotdEmailStats200>> => {
+    
+    
+    return axios.get(
+      `/motd/emailStats`,options
+    );
+  }
+
+
+export const getMotdEmailStatsQueryKey = () => {
+    return ['motd','emailStats'] as const;
+    }
+
+    
+export const getMotdEmailStatsQueryOptions = <TData = Awaited<ReturnType<typeof motdEmailStats>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdEmailStats>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getMotdEmailStatsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof motdEmailStats>>> = ({ signal }) => motdEmailStats({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof motdEmailStats>>, TError, TData> 
+}
+
+export type MotdEmailStatsQueryResult = NonNullable<Awaited<ReturnType<typeof motdEmailStats>>>
+export type MotdEmailStatsQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useMotdEmailStats<TData = Awaited<ReturnType<typeof motdEmailStats>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof motdEmailStats>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMotdEmailStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
 export const motdList = (
     params?: MaybeRef<MotdListParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MotdList200>> => {

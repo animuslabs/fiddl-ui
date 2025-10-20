@@ -2095,6 +2095,8 @@ export type UserGetNotificationConfig200 = {
   email: boolean;
   phone: boolean;
   telegram: boolean;
+  motdEmail: boolean;
+  motdTelegram: boolean;
 };
 
 export type UserSetNotificationConfigBodyEmailFrequency = typeof UserSetNotificationConfigBodyEmailFrequency[keyof typeof UserSetNotificationConfigBodyEmailFrequency];
@@ -2178,6 +2180,8 @@ export type UserSetNotificationConfigBody = {
   email?: boolean;
   phone?: boolean;
   telegram?: boolean;
+  motdEmail?: boolean;
+  motdTelegram?: boolean;
   emailFrequency?: UserSetNotificationConfigBodyEmailFrequency;
   phoneFrequency?: UserSetNotificationConfigBodyPhoneFrequency;
   telegramFrequency?: UserSetNotificationConfigBodyTelegramFrequency;
@@ -2276,6 +2280,8 @@ export type UserSetNotificationConfig200 = {
   email: boolean;
   phone: boolean;
   telegram: boolean;
+  motdEmail: boolean;
+  motdTelegram: boolean;
 };
 
 export type UserUnsubscribeEmailNotificationsBody = { [key: string]: unknown };
@@ -5183,6 +5189,7 @@ export type MotdPublish200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5222,6 +5229,7 @@ export type MotdUpdate200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5234,6 +5242,50 @@ export type MotdDeleteBody = {
 
 export type MotdDelete200 = {
   success: boolean;
+};
+
+export type MotdSendEmailBody = {
+  id: string;
+};
+
+export type MotdSendEmail200FailuresItem = {
+  email: string;
+  reason: string;
+};
+
+export type MotdSendEmail200 = {
+  success: boolean;
+  sent: number;
+  failedCount: number;
+  failures: MotdSendEmail200FailuresItem[];
+};
+
+export type MotdEmailStats200ItemsItemMetrics = {
+  processed: number;
+  delivered: number;
+  opens: number;
+  uniqueOpens: number;
+  clicks: number;
+  uniqueClicks: number;
+  bounces: number;
+  spamReports: number;
+  unsubscribes: number;
+};
+
+export type MotdEmailStats200ItemsItem = {
+  id: string;
+  title: string;
+  startsAt: string;
+  emailed: boolean;
+  metrics: MotdEmailStats200ItemsItemMetrics;
+  /** @nullable */
+  lastEventAt: string | null;
+  /** @nullable */
+  error: string | null;
+};
+
+export type MotdEmailStats200 = {
+  items: MotdEmailStats200ItemsItem[];
 };
 
 export type MotdListParams = {
@@ -5251,6 +5303,7 @@ export type MotdList200ItemsItem = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5293,6 +5346,7 @@ export type MotdGet200 = {
   startsAt: string;
   /** @nullable */
   expiresAt: string | null;
+  emailed: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -9548,6 +9602,49 @@ export const motdDelete = async (motdDeleteBody: MotdDeleteBody, options?: Reque
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       motdDeleteBody,)
+  }
+);}
+
+
+
+export const getMotdSendEmailUrl = () => {
+
+
+  
+
+  return `/motd/sendEmail`
+}
+
+export const motdSendEmail = async (motdSendEmailBody: MotdSendEmailBody, options?: RequestInit): Promise<MotdSendEmail200> => {
+  
+  return fetcher<MotdSendEmail200>(getMotdSendEmailUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdSendEmailBody,)
+  }
+);}
+
+
+
+export const getMotdEmailStatsUrl = () => {
+
+
+  
+
+  return `/motd/emailStats`
+}
+
+export const motdEmailStats = async ( options?: RequestInit): Promise<MotdEmailStats200> => {
+  
+  return fetcher<MotdEmailStats200>(getMotdEmailStatsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
   }
 );}
 

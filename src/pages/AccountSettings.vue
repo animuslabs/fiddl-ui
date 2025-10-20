@@ -235,6 +235,23 @@ q-page.full-height.full-width
                 @update:model-value="updateNotificationConfig()"
                 style="width: 200px; text-transform: capitalize;"
               )
+          // MOTD delivery preferences (uses global frequencies)
+          .row.items-center.no-wrap.q-gutter-md.q-mt-sm
+            .col-auto
+              q-toggle(
+                v-model="$userAuth.notificationConfig.motdEmail"
+                label="MOTD via Email"
+                :disable="$userAuth.notificationConfig.email == false"
+                @update:model-value="updateNotificationConfig()"
+              )
+            .col-grow
+            .col-auto
+              q-toggle(
+                v-model="$userAuth.notificationConfig.motdTelegram"
+                label="MOTD via Telegram"
+                :disable="!tgLinked || $userAuth.notificationConfig.telegram == false"
+                @update:model-value="updateNotificationConfig()"
+              )
           div(v-if="!tgLinked" class="text-grey-5 q-ml-md q-mt-xs")
             small Link your Telegram account to enable Telegram notifications.
 

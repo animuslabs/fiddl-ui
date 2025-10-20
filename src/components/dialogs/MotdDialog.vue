@@ -104,10 +104,10 @@ function onClose() {
     border-radius: 6px
     margin: 12px auto
   :deep(h1)
-    font-size: 22px
+    font-size: 26px
     line-height: 1.3
   :deep(h2)
-    font-size: 19px
+    font-size: 22px
     line-height: 1.3
   :deep(h3)
     font-size: 18px

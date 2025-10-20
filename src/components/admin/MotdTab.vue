@@ -14,6 +14,7 @@
     )
     q-toggle(v-model="includeInactive" label="Include inactive" dense)
     q-btn(icon="refresh" flat @click="refetch" :loading="isFetching")
+    q-btn(icon="insights" flat label="Email Stats" @click="openStats")
     q-btn(color="primary" icon="add" label="New MOTD" unelevated @click="openCreate")
   q-table(
     :rows="filteredRows"
@@ -47,37 +48,55 @@
         .row.items-center.q-gutter-xs
           q-btn(size="sm" icon="visibility" flat :title="'Preview'" @click="openPreviewRow(props.row)")
           q-btn(size="sm" icon="edit" color="primary" flat :title="'Edit'" @click="openEdit(props.row)")
-  q-dialog(v-model="formDialogOpen" persistent @hide="onFormDialogHide" :maximized="$q.screen.lt.md")
-    q-card(class="motd-form-card")
-      q-card-section
-        .row.items-center.no-wrap.q-col-gutter-sm
-          q-icon(:name="dialogMode === 'create' ? 'campaign' : 'edit'" color="primary" size="28px")
-          .column
-            div.text-h6 {{ dialogMode === 'create' ? 'Create MOTD' : 'Edit MOTD' }}
-            div.text-caption.text-grey-6 Auto-saves locally until published
+          q-btn(size="sm" icon="mail" color="warning" flat :disable="props.row.emailed || sending" :title="props.row.emailed ? 'Already emailed' : 'Send mass email'" @click="openSendConfirm(props.row)")
+  // Inline create/edit form (simple + reliable)
+  q-card(v-if="formOpen" class="motd-form-card" flat bordered)
+    q-card-section
+      .row.items-center.no-wrap.q-col-gutter-sm
+        q-icon(:name="dialogMode === 'create' ? 'campaign' : 'edit'" color="primary" size="28px")
+        .column
+          div.text-h6 {{ dialogMode === 'create' ? 'Create MOTD' : 'Edit MOTD' }}
+          div.text-caption.text-grey-6 Auto-saves locally until published
+        q-space
+        q-btn(flat dense icon="close" :label="$q.screen.gt.sm ? 'Close' : undefined" @click="closeForm")
+    q-separator
+    q-form(@submit.prevent="submitForm" class="motd-form")
+      q-card-section(class="motd-form-body column q-gutter-y-md")
+        q-input(
+          v-model="form.title"
+          label="Title"
+          dense
+          outlined
+          :maxlength="200"
+          counter
+          :autofocus="true"
+        )
+        q-input(
+          v-model="form.subheading"
+          label="Subheading (optional)"
+          dense
+          outlined
+          :maxlength="300"
+          counter
+        )
+        q-input(
+          v-model="form.body"
+          type="textarea"
+          outlined
+          label="Markdown Body"
+          hint="Supports Markdown"
+          :hide-hint="false"
+          :maxlength="20000"
+          counter
+          autogrow
+          :rows="$q.screen.lt.md ? 10 : 18"
+          class="motd-body-input"
+        )
       q-separator
-      q-form(@submit.prevent="submitForm" class="motd-form")
-        q-card-section(class="motd-form-body")
-          .motd-form-grid
-            .motd-form-main
-              q-input(v-model="form.title" label="Title" dense outlined :maxlength="200" counter)
-              q-input(v-model="form.subheading" label="Subheading (optional)" dense outlined :maxlength="300" counter)
-            .motd-form-editor
-              q-input(
-                v-model="form.body"
-                type="textarea"
-                outlined
-                label="Markdown Body"
-                :maxlength="20000"
-                counter
-                autogrow
-                :input-style="{ minHeight: '100%' }"
-              )
-        q-separator
-        q-card-actions(align="right" class="motd-form-actions")
-          q-btn(flat label="Cancel" @click="closeForm" :disable="saving")
-          q-btn(flat icon="visibility" label="Preview" @click="openPreviewForm" :disable="!form.body")
-          q-btn(color="primary" :label="dialogMode === 'create' ? 'Publish' : 'Save Changes'" :loading="saving" :disable="saving" type="submit")
+      q-card-actions(align="right" class="motd-form-actions")
+        q-btn(flat label="Cancel" @click="closeForm" :disable="saving")
+        q-btn(flat icon="visibility" label="Preview" @click="openPreviewForm" :disable="!form.body")
+        q-btn(color="primary" :label="dialogMode === 'create' ? 'Publish' : 'Save Changes'" :loading="saving" :disable="saving" type="submit")
   q-dialog(v-model="previewOpen" transition-show="scale" transition-hide="scale" :maximized="$q.screen.lt.md")
     q-card(:class="previewCardClass" flat bordered)
       q-card-section
@@ -93,6 +112,80 @@
       q-separator
       q-card-actions(align="right" class="motd-preview-actions")
         q-btn(flat icon="close" color="primary" label="Close" v-close-popup)
+
+  // Confirm send-email dialog
+  q-dialog(v-model="confirmSendOpen" :maximized="$q.screen.lt.md")
+    q-card(flat bordered style="min-width: min(560px, 96vw)")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="mail" size="28px" color="warning" class="q-mt-xs")
+          .column
+            .text-h6 Send MOTD via Email
+            .text-caption.text-grey-6(v-if="sendTarget?.title") {{ sendTarget?.title }}
+            .text-body2.q-mt-sm This will send this MOTD as an email to opted-in recipients.
+            .text-negative.text-caption.q-mt-xs(v-if="sendTarget?.emailed") This MOTD has already been emailed.
+      q-card-actions(align="right")
+        q-btn(flat label="Cancel" v-close-popup :disable="sending")
+        q-btn(color="warning" label="Send Emails" :loading="sending" :disable="sending || sendTarget?.emailed" @click="confirmSend")
+
+  // Send results dialog
+  q-dialog(v-model="sendResultOpen" :maximized="$q.screen.lt.md")
+    q-card(flat bordered style="min-width: min(720px, 96vw); max-width: 96vw")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="outgoing_mail" size="28px" color="primary" class="q-mt-xs")
+          .column
+            .text-h6 Email Send Results
+            .text-caption.text-grey-6(v-if="sendTarget?.title") {{ sendTarget?.title }}
+      q-separator
+      q-card-section
+        .row.q-col-gutter-md
+          .col-auto
+            .text-body1.text-weight-medium Sent
+            .text-h6 {{ sendResult?.sent || 0 }}
+          .col-auto
+            .text-body1.text-weight-medium Failed
+            .text-h6(:class="(sendResult?.failedCount||0) > 0 ? 'text-negative' : ''") {{ sendResult?.failedCount || 0 }}
+        div(v-if="(sendResult?.failures?.length || 0) > 0" class="q-mt-md")
+          .text-subtitle2.text-negative.q-mb-sm Failures
+          q-table(
+            :rows="sendResult?.failures || []"
+            :columns="failureColumns"
+            row-key="email"
+            flat
+            bordered
+            dense
+            :rows-per-page-options="[10,25,50,0]"
+            :no-data-label="'No failures'"
+          )
+      q-card-actions(align="right")
+        q-btn(flat label="Close" v-close-popup)
+
+  // Email stats dialog
+  q-dialog(v-model="statsOpen" :maximized="$q.screen.lt.md")
+    q-card(flat bordered style="min-width: min(960px, 98vw); max-width: 98vw; max-height: 96vh; display:flex; flex-direction:column")
+      q-card-section
+        .row.items-center
+          .text-h6 Email Delivery Stats
+          q-space
+          q-btn(flat icon="refresh" :loading="statsIsFetching" @click="refetchStats")
+          q-btn(flat icon="close" v-close-popup)
+      q-separator
+      q-card-section(style="flex:1; overflow:auto")
+        template(v-if="statsIsLoading")
+          .row.items-center.justify-center.q-my-xl
+            q-spinner(color="primary" size="2em")
+        template(v-else)
+          q-table(
+            :rows="statsRows"
+            :columns="statsColumns"
+            row-key="id"
+            flat
+            bordered
+            dense
+            :rows-per-page-options="[10,25,50,0]"
+            :no-data-label="'No email stats available'"
+          )
 </template>
 
 <script lang="ts" setup>
@@ -100,7 +193,16 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Notify, type QTableColumn, useQuasar } from 'quasar'
 import { renderMarkdown } from 'src/lib/markdown'
 import { catchErr } from 'src/lib/util'
-import { useMotdList, useMotdPublish, useMotdUpdate, type MotdList200ItemsItem } from 'src/lib/orval'
+import {
+  useMotdList,
+  useMotdPublish,
+  useMotdUpdate,
+  useMotdSendEmail,
+  useMotdEmailStats,
+  type MotdList200ItemsItem,
+  type MotdEmailStats200ItemsItem,
+  type MotdSendEmail200,
+} from 'src/lib/orval'
 
 type DialogMode = 'create' | 'edit'
 
@@ -187,7 +289,7 @@ const schedule = reactive<MotdSchedule>({
   expiresAt: null,
 })
 
-const formDialogOpen = ref(false)
+const formOpen = ref(false)
 const dialogMode = ref<DialogMode>('create')
 const saving = ref(false)
 
@@ -214,8 +316,11 @@ const previewBodyClass = computed(() => ({
   'motd-preview-body--xs': $q.screen.lt.md,
 }))
 
+// No computed style required; height is handled by rows+autogrow
+
 const publishMutation = useMotdPublish()
 const updateMutation = useMotdUpdate()
+const sendEmailMutation = useMotdSendEmail()
 
 function resetForm() {
   form.id = null
@@ -272,7 +377,7 @@ watch(
     body: form.body,
   }),
   (val) => {
-    if (!formDialogOpen.value || dialogMode.value !== 'create') return
+    if (!formOpen.value || dialogMode.value !== 'create') return
     persistDraft({
       title: val.title,
       subheading: val.subheading,
@@ -284,7 +389,7 @@ watch(
 function openCreate() {
   dialogMode.value = 'create'
   loadDraft()
-  formDialogOpen.value = true
+  formOpen.value = true
 }
 
 function openEdit(row: MotdList200ItemsItem) {
@@ -296,7 +401,7 @@ function openEdit(row: MotdList200ItemsItem) {
   form.body = row.body || ''
   schedule.startsAt = row.startsAt || null
   schedule.expiresAt = row.expiresAt || null
-  formDialogOpen.value = true
+  formOpen.value = true
 }
 
 function openPreviewRow(row: MotdList200ItemsItem) {
@@ -322,16 +427,9 @@ function openPreviewForm() {
 }
 
 function closeForm() {
-  formDialogOpen.value = false
-}
-
-function onFormDialogHide() {
-  if (dialogMode.value === 'create') {
-    // keep draft persisted; just reset in-memory state
-    resetForm()
-  } else {
-    resetForm()
-  }
+  formOpen.value = false
+  // Reset fields when closing the inline form
+  resetForm()
   dialogMode.value = 'create'
 }
 
@@ -377,7 +475,7 @@ async function submitForm() {
       await updateMutation.mutateAsync({ data: { id: form.id, ...payload } })
       Notify.create({ type: 'positive', message: 'MOTD updated' })
     }
-    formDialogOpen.value = false
+    formOpen.value = false
     await motdQuery.refetch()
   } catch (error) {
     catchErr(error)
@@ -398,6 +496,75 @@ function toLocalDisplay(value?: string | null): string {
     return '-'
   }
 }
+
+// --- Send Email flow ---
+const confirmSendOpen = ref(false)
+const sendTarget = ref<MotdList200ItemsItem | null>(null)
+const sending = ref(false)
+const sendResultOpen = ref(false)
+const sendResult = ref<MotdSendEmail200 | null>(null)
+
+const failureColumns = [
+  { name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true },
+  { name: 'reason', label: 'Reason', field: 'reason', align: 'left', sortable: true },
+] as const
+
+function openSendConfirm(row: MotdList200ItemsItem) {
+  sendTarget.value = row
+  confirmSendOpen.value = true
+}
+
+async function confirmSend() {
+  if (!sendTarget.value) return
+  try {
+    sending.value = true
+    const res = await sendEmailMutation.mutateAsync({ data: { id: sendTarget.value.id } })
+    const payload = res?.data
+    sendResult.value = payload || null
+    confirmSendOpen.value = false
+    sendResultOpen.value = true
+    Notify.create({ type: 'positive', message: `Emails sent: ${payload?.sent ?? 0}` })
+    await motdQuery.refetch()
+  } catch (error) {
+    catchErr(error)
+  } finally {
+    sending.value = false
+  }
+}
+
+// --- Email stats dialog ---
+const statsOpen = ref(false)
+const statsQuery = useMotdEmailStats()
+const statsIsLoading = statsQuery.isLoading
+const statsIsFetching = statsQuery.isFetching
+const statsRows = computed<MotdEmailStats200ItemsItem[]>(() => statsQuery.data?.value?.data?.items || [])
+
+function openStats() {
+  statsOpen.value = true
+  // ensure fresh when opening
+  void statsQuery.refetch()
+}
+
+function refetchStats() {
+  void statsQuery.refetch()
+}
+
+const statsColumns = [
+  { name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true },
+  { name: 'startsAt', label: 'Starts', field: (row: MotdEmailStats200ItemsItem) => toLocalDisplay(row.startsAt), align: 'left', sortable: true },
+  { name: 'emailed', label: 'Emailed', field: (row: MotdEmailStats200ItemsItem) => (row.emailed ? 'Yes' : 'No'), align: 'left', sortable: true },
+  { name: 'processed', label: 'Processed', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.processed ?? 0, align: 'right', sortable: true },
+  { name: 'delivered', label: 'Delivered', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.delivered ?? 0, align: 'right', sortable: true },
+  { name: 'opens', label: 'Opens', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.opens ?? 0, align: 'right', sortable: true },
+  { name: 'uniqueOpens', label: 'Unique Opens', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.uniqueOpens ?? 0, align: 'right', sortable: true },
+  { name: 'clicks', label: 'Clicks', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.clicks ?? 0, align: 'right', sortable: true },
+  { name: 'uniqueClicks', label: 'Unique Clicks', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.uniqueClicks ?? 0, align: 'right', sortable: true },
+  { name: 'bounces', label: 'Bounces', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.bounces ?? 0, align: 'right', sortable: true },
+  { name: 'spamReports', label: 'Spam', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.spamReports ?? 0, align: 'right', sortable: true },
+  { name: 'unsubscribes', label: 'Unsubs', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.unsubscribes ?? 0, align: 'right', sortable: true },
+  { name: 'lastEventAt', label: 'Last Event', field: (row: MotdEmailStats200ItemsItem) => (row.lastEventAt ? toLocalDisplay(row.lastEventAt) : '-'), align: 'left', sortable: true },
+  { name: 'error', label: 'Error', field: 'error', align: 'left', sortable: false },
+] as const
 </script>
 
 <style lang="sass" scoped>
@@ -438,10 +605,10 @@ function toLocalDisplay(value?: string | null): string {
     border-radius: 6px
     margin: 12px auto
   :deep(h1)
-    font-size: 22px
+    font-size: 26px
     line-height: 1.3
   :deep(h2)
-    font-size: 19px
+    font-size: 22px
     line-height: 1.3
   :deep(h3)
     font-size: 18px
@@ -476,63 +643,44 @@ function toLocalDisplay(value?: string | null): string {
   margin-top: auto
 
 .motd-form-card
-  min-width: min(900px, 96vw)
-  max-height: min(95vh, 880px)
+  /* inline form takes full tab width, no horizontal scroll */
+  width: 100%
+  max-width: 100%
   display: flex
   flex-direction: column
+
+// Ensure the outlined border expands with the textarea
+.motd-body-input
+  :deep(.q-field__control)
+    min-height: 44vh
+  :deep(textarea)
+    line-height: 1.5
+    resize: vertical
 
 .motd-form
   display: flex
   flex-direction: column
   flex: 1 1 auto
   overflow: hidden
+  min-height: 0
 
 .motd-form-body
   flex: 1 1 auto
-  overflow: hidden
-
-.motd-form-grid
-  display: flex
-  flex-direction: column
-  gap: 20px
-  height: 100%
-
-@media (min-width: 900px)
-  .motd-form-grid
-    flex-direction: row
-
-.motd-form-main
-  display: flex
-  flex-direction: column
-  gap: 20px
-  width: 100%
-  flex: 1 1 auto
-
-@media (min-width: 900px)
-  .motd-form-main
-    flex: 0 0 340px
-    max-width: 360px
-
-.motd-form-editor
-  flex: 1 1 auto
-  display: flex
+  overflow-y: auto
+  overflow-x: hidden
   min-height: 0
-
-.motd-form-editor :deep(.q-field)
-  flex: 1 1 auto
   display: flex
   flex-direction: column
 
-.motd-form-editor :deep(.q-field__control)
-  height: 100%
+.motd-form-body > *
+  flex: 0 0 auto
 
-.motd-form-editor :deep(.q-field__native)
-  flex: 1 1 auto
-  min-height: 100%
+.motd-form-body :deep(.q-field)
+  width: 100%
 
-.motd-form-editor :deep(textarea)
-  flex: 1 1 auto
-  resize: vertical
+// stacked layout; no grid wrappers needed
+
+// keep default Quasar textarea behavior
 
 .motd-form-actions
   position: sticky
