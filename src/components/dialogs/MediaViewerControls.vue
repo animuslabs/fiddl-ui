@@ -1,145 +1,216 @@
 <template lang="pug">
-.centered.media-viewer-controls.q-mb-md.q-mt-lg.relative-position.items-center(:style="{visibility: downloadMode ? 'hidden' : 'visible'}")
-  div.relative-position
-    q-btn(
-      icon="share"
-      round
-      flat
-      color="grey-5"
-      :dense="$q.screen.lt.md"
-      @click.stop="shareMenuOpen = true"
+div.media-viewer-shell
+  div.media-viewer-frame(:style="frameStyle")
+    div.viewer-top-bar(
+      v-if="!downloadMode"
+      :class="{ 'with-creator': showCreatorInfo }"
+      :style="barVisualStyle"
     )
-      q-menu(
-        v-if="shareMenuOpen"
-        anchor="bottom left"
-        self="top left"
-        @click.stop="shareMenuOpen = false"
-      )
-        q-list
-          q-item(clickable @click.stop="mobileShare()" v-close-popup)
-            q-item-section
-              .row.items-center
-                q-icon(:name="mediaViewerStore.currentMediaType==='image'?'image':'smart_display'" size="20px").q-mr-md
-                div Share Creation
-          q-item(clickable @click="share()" v-close-popup)
-            q-item-section
-              .row.items-center
-                q-icon(name="content_copy" size="20px").q-mr-md
-                div Copy Link
-
-  // Telegram share button removed per request
-
-  q-btn(
-    icon="sym_o_info"
-    flat
-    round
-    @click.stop="showRequestInfoDialog()"
-    color="grey-5"
-    :dense="$q.screen.lt.md"
-    v-if="mediaViewerStore.loadedRequestId"
-  )
-
-  q-btn(
-    icon="chat_bubble"
-    flat
-    round
-    color="grey-5"
-    :dense="$q.screen.lt.md"
-    @click.stop="showCommentsDialog()"
-  )
-  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.commentsCount") {{ popularity.get(mediaViewerStore.currentMediaId)?.commentsCount ?? 0 }}
-
-  div
-    q-btn(
-      icon="download"
-      flat
-      @click.stop="showDownloadWindow()"
-      round
-      :class="mediaViewerStore.downloadClass"
-      :dense="$q.screen.lt.md"    )
-      q-tooltip
-        p(v-if="mediaViewerStore.userOwnsMedia") Download full resolution original and upscaled versions
-        p(v-else).text-capitalize Download {{ mediaViewerStore.currentMediaType }}
-
-  q-btn(
-    icon="edit"
-    flat
-    round
-    @click.stop="editMedia()"
-    :color="mediaViewerStore.editBtnColor"
-    :dense="$q.screen.lt.md"
-  )
-
-  q-btn(
-    icon="favorite"
-    flat
-    round
-    @click.stop="toggleFavorite()"
-    :color="popularity.get(mediaViewerStore.currentMediaId)?.isFavoritedByMe ? 'red-5' : 'grey-5'"
-    :dense="$q.screen.lt.md"
-  )
-  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.favorites") {{ popularity.get(mediaViewerStore.currentMediaId)?.favorites ?? 0 }}
-  q-btn(
-    flat
-    round
-    :icon="popularity.get(mediaViewerStore.currentMediaId)?.isUpvotedByMe ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
-    v-if="currentIsPublic !== false"
-    @click.stop="onUpvote()"
-    :dense="$q.screen.lt.md"
-  )
-  span.count(v-if="popularity.get(mediaViewerStore.currentMediaId)?.upvotes") {{ popularity.get(mediaViewerStore.currentMediaId)?.upvotes ?? 0 }}
-
-  div.relative-position
-    q-btn(
-      icon="more_vert"
-      round
-      flat
-      color="grey-5"
-      :dense="$q.screen.lt.md"
-      @click.stop="moreMenuOpen = true"
-    )
-      q-menu(
-        v-if="moreMenuOpen"
-        anchor="bottom right"
-        self="top right"
-        @click.stop="moreMenuOpen = false"
-      )
-        q-list
-          q-item(
-            v-if="mediaViewerStore.currentMediaType==='image'"
-            clickable
-            @click="setProfileImage()"
-            v-close-popup
+      div.viewer-top-left
+        CreatorInfo(
+          v-if="showCreatorInfo"
+          :creatorMeta="mediaViewerStore.creatorMeta"
+          avatarSize="28px"
+          usernameClass="text-white text-body2"
+          wrapperClass="viewer-creator"
+        )
+      div.viewer-top-actions
+        q-btn(
+          v-if="!isCompact"
+          icon="share"
+          round
+          flat
+          color="white"
+          size="sm"
+          :dense="$q.screen.lt.md"
+          @click.stop="shareMenuOpen = true"
+        )
+          q-menu(
+            v-model:show="shareMenuOpen"
+            anchor="bottom left"
+            self="top left"
+            class="viewer-menu"
+            @click.stop
           )
-            q-item-section
-              .row.items-center
-                q-icon(name="account_circle" size="20px").q-mr-md
-                div Use as Profile Image
-          q-item(
-            clickable
-            @click="deleteMedia()"
-            v-close-popup
-            v-if="userCreatedImage && allowDelete"
+            q-list
+              q-item(clickable @click.stop="mobileShare()" v-close-popup)
+                q-item-section
+                  .row.items-center
+                    q-icon(:name="shareIcon" size="20px").q-mr-md
+                    div Share Creation
+              q-item(clickable @click="share()" v-close-popup)
+                q-item-section
+                  .row.items-center
+                    q-icon(name="content_copy" size="20px").q-mr-md
+                    div Copy Link
+        q-btn(
+          v-if="mediaViewerStore.loadedRequestId"
+          icon="sym_o_info"
+          round
+          flat
+          color="white"
+          size="sm"
+          :dense="$q.screen.lt.md"
+          @click.stop="showRequestInfoDialog()"
+        )
+        q-btn(
+          v-if="!isCompact"
+          icon="download"
+          round
+          flat
+          :class="mediaViewerStore.downloadClass"
+          color="white"
+          size="sm"
+          :dense="$q.screen.lt.md"
+          @click.stop="showDownloadWindow()"
+        )
+          q-tooltip
+            p(v-if="mediaViewerStore.userOwnsMedia") Download full resolution original and upscaled versions
+            p(v-else).text-capitalize Download {{ mediaViewerStore.currentMediaType }}
+        q-btn(
+          icon="edit"
+          round
+          flat
+          size="sm"
+          :dense="$q.screen.lt.md"
+          :color="mediaViewerStore.editBtnColor"
+          @click.stop="editMedia()"
+        )
+        q-btn(
+          icon="more_vert"
+          round
+          flat
+          color="white"
+          size="sm"
+          :dense="$q.screen.lt.md"
+          @click.stop="moreMenuOpen = true"
+        )
+          q-menu(
+            v-model:show="moreMenuOpen"
+            anchor="bottom right"
+            self="top right"
+            class="viewer-menu"
+            @click.stop
           )
-            q-item-section
-              .row.items-center
-                q-icon(name="delete" size="20px").q-mr-md
-                div Delete
-
-  div
-    q-btn(
-      icon="close"
-      flat
-      @click.stop="$emit('close')"
-      round
-      color="grey-5"
-      :dense="$q.screen.lt.md"
+            q-list
+              q-item(
+                v-if="isCompact"
+                clickable
+                @click.stop="mobileShare()"
+                v-close-popup
+              )
+                q-item-section
+                  .row.items-center
+                    q-icon(:name="shareIcon" size="20px").q-mr-md
+                    div Share Creation
+              q-item(
+                v-if="isCompact"
+                clickable
+                @click.stop="share()"
+                v-close-popup
+              )
+                q-item-section
+                  .row.items-center
+                    q-icon(name="content_copy" size="20px").q-mr-md
+                    div Copy Link
+              q-item(
+                v-if="isCompact"
+                clickable
+                @click.stop="showDownloadWindow()"
+                v-close-popup
+              )
+                q-item-section
+                  .row.items-center
+                    q-icon(name="download" size="20px").q-mr-md
+                    div Download
+              q-item(
+                v-if="mediaViewerStore.currentMediaType === 'image'"
+                clickable
+                @click="setProfileImage()"
+                v-close-popup
+              )
+                q-item-section
+                  .row.items-center
+                    q-icon(name="account_circle" size="20px").q-mr-md
+                    div Use as Profile Image
+              q-item(
+                clickable
+                v-if="userCreatedImage && allowDelete"
+                @click="deleteMedia()"
+                v-close-popup
+              )
+                q-item-section
+                  .row.items-center
+                    q-icon(name="delete" size="20px").q-mr-md
+                    div Delete
+        q-btn(
+          icon="close"
+          round
+          flat
+          color="white"
+          size="sm"
+          :dense="$q.screen.lt.md"
+          @click.stop="$emit('close')"
+        )
+    div.viewer-media-slot
+      slot
+    div.viewer-bottom-bar(
+      v-if="!downloadMode"
+      :style="barVisualStyle"
+      :class="{ 'has-counts': hasAnyCounts }"
     )
+      div.pop-row(:class="{ 'has-any-counts': hasAnyCounts }")
+        div.pop-item
+          q-btn(
+            icon="favorite"
+            round
+            flat
+            size="sm"
+            :dense="$q.screen.lt.md"
+            :color="isFavorited ? 'red-5' : 'white'"
+            @click.stop="toggleFavorite()"
+          )
+          span.count(:class="{ empty: !favoriteCount }") {{ favoriteCount }}
+        div.pop-item
+          q-btn(
+            icon="chat_bubble"
+            round
+            flat
+            size="sm"
+            :dense="$q.screen.lt.md"
+            color="white"
+            @click.stop="showCommentsDialog()"
+          )
+          span.count(:class="{ empty: !commentCount }") {{ commentCount }}
+        div.pop-item
+          q-btn(
+            :icon="isUpvoted ? 'img:/upvote-fire.png' : 'img:/upvote-fire-dull.png'"
+            round
+            flat
+            size="sm"
+            :dense="$q.screen.lt.md"
+            color="white"
+            v-if="currentIsPublic !== false"
+            @click.stop="onUpvote()"
+          )
+          span.count(:class="{ empty: !upvoteCount }") {{ upvoteCount }}
+        div.pop-item
+          q-btn(
+            icon="thumb_down"
+            round
+            flat
+            size="sm"
+            :dense="$q.screen.lt.md"
+            color="white"
+            @click.stop="onDownvote()"
+          )
+          span.count.empty 0
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from "vue"
 import { Dialog, useQuasar } from "quasar"
+import CreatorInfo from "src/components/CreatorInfo.vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useImageCreations } from "src/stores/imageCreationsStore"
@@ -148,7 +219,7 @@ import { useBrowserStore } from "src/stores/browserStore"
 import { creationsDeleteMedia, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
 import { catchErr, copyToClipboard, getCreationRequest, longIdToShort, shareMedia, shareLink } from "src/lib/util"
 import { originalDownloadUrl } from "lib/imageCdn"
-import { img } from "lib/netlifyImg"
+import { img, s3Video } from "lib/netlifyImg"
 import { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
 import DownloadMedia from "./DownloadMedia.vue"
 import CreateAvatar from "./CreateAvatar.vue"
@@ -163,37 +234,104 @@ interface Props {
   allowDelete?: boolean
   downloadMode?: boolean
   initialCommentId?: string | null
+  mediaWidth?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   allowDelete: true,
   downloadMode: false,
   initialCommentId: null,
+  mediaWidth: 0,
 })
 
 const emit = defineEmits<{
   close: []
 }>()
 
+const MAX_FRAME_WIDTH = 1100
+
 const mediaViewerStore = useMediaViewerStore()
 const $q = useQuasar()
 const userAuth = useUserAuth()
 const router = useRouter()
-const shareMenuOpen = ref(true)
-const moreMenuOpen = ref(true)
 const popularity = usePopularityStore()
+
+const shareMenuOpen = ref(false)
+const moreMenuOpen = ref(false)
 const pendingCommentId = ref<string | null>(props.initialCommentId)
 const autoOpenedInitialComment = ref(false)
-// Removed isTma since Telegram button was removed
 
-// Optional privacy knowledge propagated via mediaObjects entries
-// const currentIsPublic = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]?.isPublic)
 const currentIsPublic = computed(() => true)
 
 const userCreatedImage = computed(() => {
   if (!mediaViewerStore.creatorMeta) return false
   return mediaViewerStore.creatorMeta.id === userAuth.userId
 })
+
+const favoriteCount = computed(() => popularity.get(mediaViewerStore.currentMediaId)?.favorites ?? 0)
+const commentCount = computed(() => popularity.get(mediaViewerStore.currentMediaId)?.commentsCount ?? 0)
+const upvoteCount = computed(() => popularity.get(mediaViewerStore.currentMediaId)?.upvotes ?? 0)
+const isFavorited = computed(() => popularity.get(mediaViewerStore.currentMediaId)?.isFavoritedByMe === true)
+const isUpvoted = computed(() => popularity.get(mediaViewerStore.currentMediaId)?.isUpvotedByMe === true)
+
+const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.length > 0)
+const shareIcon = computed(() => (mediaViewerStore.currentMediaType === "image" ? "image" : "smart_display"))
+const isCompact = computed(() => frameWidthValue.value < 520 || $q.screen.lt.sm)
+const hasAnyCounts = computed(() => favoriteCount.value > 0 || commentCount.value > 0 || upvoteCount.value > 0)
+
+const fallbackFrameWidth = computed(() => {
+  const available = Math.max(320, $q.screen.width - 32)
+  return Math.min(available, MAX_FRAME_WIDTH)
+})
+
+const frameWidthValue = computed(() => {
+  const width = props.mediaWidth ?? 0
+  if (width > 0) return Math.min(width, fallbackFrameWidth.value)
+  return fallbackFrameWidth.value
+})
+
+const frameStyle = computed(() => {
+  const width = Math.max(0, Math.round(frameWidthValue.value))
+  const style: Record<string, string> = {
+    maxWidth: `min(95vw, ${MAX_FRAME_WIDTH}px)`,
+  }
+  if (width > 0) style.width = `${width}px`
+  return style
+})
+
+const currentMedia = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex])
+
+const barBgUrl = computed(() => {
+  const media = currentMedia.value
+  if (!media) return ""
+  if (media.placeholder) return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+  const type = media.type ?? media.mediaType ?? mediaViewerStore.currentMediaType
+  if (type === "video") return s3Video(media.id, "thumbnail")
+  return img(media.id, "sm")
+})
+
+const barVisualStyle = computed(() => {
+  const url = barBgUrl.value
+  if (!url) return { "--mv-bar-bg": "none" }
+  return { "--mv-bar-bg": `url('${url}')` }
+})
+
+watch(
+  () => props.downloadMode,
+  (hidden) => {
+    if (!hidden) return
+    shareMenuOpen.value = false
+    moreMenuOpen.value = false
+  },
+)
+
+watch(
+  isCompact,
+  (compact) => {
+    if (compact) shareMenuOpen.value = false
+  },
+  { immediate: true },
+)
 
 async function mobileShare() {
   const url =
@@ -208,12 +346,10 @@ async function mobileShare() {
       query: userAuth.userProfile?.username ? { referredBy: userAuth.userProfile.username } : {},
     }).href
 
-  // Prefer Telegram Mini App share when inside TMA
   try {
     const tg: any = (window as any)?.Telegram?.WebApp
     const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
     if (inTma) {
-      // Try sharing to Story for images (PNG/JPG), else fall back to share link
       if (mediaViewerStore.currentMediaType === "image") {
         try {
           const orig = await originalDownloadUrl(mediaViewerStore.currentMediaId).catch(() => "")
@@ -227,7 +363,6 @@ async function mobileShare() {
           }
         } catch {}
       }
-      // Fallback inside Telegram: open share url
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out this creation on Fiddl.art")}`
       if (typeof tg?.openTelegramLink === "function") {
         tg.openTelegramLink(shareUrl)
@@ -236,7 +371,6 @@ async function mobileShare() {
     }
   } catch {}
 
-  // Outside Telegram (or fallback): use Web Share if available with files, else share link
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
   const fileName = `${mediaViewerStore.currentMediaId}-fiddl-art.${mediaViewerStore.currentMediaType === "video" ? "mp4" : "webp"}`
   const file = new File([], fileName)
@@ -282,8 +416,6 @@ async function share() {
     catchErr(err)
   }
 }
-
-// shareToTelegram removed
 
 function showRequestInfoDialog() {
   if (!mediaViewerStore.loadedRequestId || mediaViewerStore.loadedRequestId.length === 0) return
@@ -341,7 +473,6 @@ async function toggleFavorite() {
   const type = mediaViewerStore.currentMediaType
   const isFav = !!popularity.get(id)?.isFavoritedByMe
 
-  // If attempting to favorite and media is not owned/unlocked, show unlock dialog instantly
   if (!mediaViewerStore.userOwnsMedia && !isFav) {
     Dialog.create({
       component: LikeMedia,
@@ -352,7 +483,6 @@ async function toggleFavorite() {
     return
   }
 
-  // Unfavorite or already owned -> proceed
   void popularity.toggleFavorite(id, type)
 }
 
@@ -368,27 +498,14 @@ function onUpvote() {
     })
     return
   }
-  // If we explicitly know the media is private, block with a friendly message
-  if (currentIsPublic.value === false) {
-    Dialog.create({
-      title: "Private Media",
-      message: "This media is private and cannot be upvoted.",
-      ok: { label: "OK", flat: true, color: "primary" },
-    })
-    return
-  }
+  const id = mediaViewerStore.currentMediaId
+  const type = mediaViewerStore.currentMediaType
+  void popularity.addUpvote(id, type)
+}
 
-  void (async () => {
-    try {
-      await popularity.addUpvote(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
-    } catch (e) {
-      Dialog.create({
-        title: "Unable to Upvote",
-        message: "This media may be private and cannot be upvoted.",
-        ok: { label: "OK", flat: true, color: "primary" },
-      })
-    }
-  })()
+function onDownvote() {
+  if (!mediaViewerStore.currentMediaId) return
+  void popularity.downvoteAndHide(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)
 }
 
 function editMedia() {
@@ -408,7 +525,6 @@ async function tmaDownloadCurrent(): Promise<boolean> {
     const inTma = Boolean((window as any)?.__TMA__?.enabled && tg && typeof tg.downloadFile === "function")
     if (!inTma) return false
 
-    // If user doesn't own media, let the dialog handle unlock/purchase
     if (!mediaViewerStore.userOwnsMedia) return false
 
     const id = mediaViewerStore.currentMediaId
@@ -434,7 +550,6 @@ async function tmaDownloadCurrent(): Promise<boolean> {
 }
 
 function showDownloadWindow() {
-  // In Telegram Mini App, prefer using the native download prompt when possible
   void (async () => {
     const handled = await tmaDownloadCurrent()
     if (handled) return
@@ -533,16 +648,171 @@ function deleteMedia() {
 }
 </script>
 
-<style>
-/* Keep controls compact on small screens */
-.media-viewer-controls {
-  gap: 6px;
+<style scoped>
+.media-viewer-shell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 16px 18px 32px;
+  box-sizing: border-box;
+}
+
+.media-viewer-frame {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: auto;
+  gap: 0;
+  background: none;
+}
+
+.viewer-top-bar,
+.viewer-bottom-bar {
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  min-height: 48px;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+}
+
+.viewer-top-bar::before,
+.viewer-bottom-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--mv-bar-bg, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px);
+  transform: scale(1.25);
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.viewer-top-bar::before {
+  background-position: center top;
+}
+
+.viewer-bottom-bar::before {
+  background-position: center bottom;
+}
+
+.viewer-top-bar::after,
+.viewer-bottom-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.18));
+  z-index: 0;
+}
+
+.viewer-top-bar > *,
+.viewer-bottom-bar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.viewer-top-bar {
+  justify-content: flex-end;
+}
+
+.viewer-top-bar.with-creator {
+  justify-content: space-between;
+}
+
+.viewer-top-left {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 10px;
+}
+
+.viewer-top-bar:not(.with-creator) .viewer-top-left {
+  display: none;
+}
+
+.viewer-creator {
+  color: #fff;
+  min-width: 0;
+}
+
+.viewer-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
   flex-wrap: wrap;
+  min-width: 0;
+}
+
+.viewer-top-actions .q-btn {
+  min-width: 0;
+}
+
+.viewer-media-slot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+}
+
+.viewer-bottom-bar {
+  justify-content: center;
+}
+
+.pop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 12px;
+  width: 100%;
+}
+
+.pop-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  justify-content: center;
+  min-width: 0;
+}
+
+.pop-item .q-btn {
+  min-width: 0;
+}
+
+.pop-item .count {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.pop-item .count.empty {
+  display: none;
 }
 
 @media (max-width: 600px) {
-  .media-viewer-controls .count {
-    display: none;
+  .viewer-top-actions {
+    gap: 8px;
+  }
+  .pop-row {
+    column-gap: 10px;
+  }
+  .pop-item {
+    gap: 6px;
+  }
+  .pop-item .count {
+    font-size: 11px;
   }
 }
 </style>

@@ -1,96 +1,111 @@
 <template lang="pug">
-div.viewer-root
-  //- Main media display area
-  div.relative-position.full-width(
-    @touchstart="handleTouchStart"
-    @touchmove="handleTouchMove"
-    @touchend="handleTouchEnd"
-  )
-    transition(name="fade")
-      .absolute-top.full-width.loading-indicator-container(
-        v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading || mediaViewerStore.rateLimitActive"
-        role="status"
-        aria-label="Loading additional media"
-      )
-        span.loading-indicator-circle
-
-    div(v-if="mediaViewerStore.currentMediaType === 'video'" class="video-wrapper")
-      //- Seamless preview->LG/HD: stack preview-sm under lg/hd and crossfade
-      .video-stack(
-        :style="{ height: viewportHeight(75), transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }"
-      )
-        //- Preview layer (controls until HD is visible)
-        video.video-layer.preview(
-          ref="previewRef"
-          :src="previewVideoUrl"
-          playsinline
-          autoplay
-          loop
-          :muted="previewMuted"
-          :controls="!showHd"
-          @canplay="onMediaLoaded"
-          @loadedmetadata="onPreviewMetadata"
-          @timeupdate="onPreviewTimeUpdate"
-          @volumechange="onVolumeChange"
-          @click.stop="onMediaClick"
+MediaViewerControls(
+  :allowDelete="allowDelete"
+  :downloadMode="downloadMode"
+  :initialCommentId="initialCommentId"
+  :mediaWidth="mediaWidth"
+  @close="handleClose"
+)
+  div.viewer-root(@click.stop)
+    //- Main media display area
+    div.relative-position.full-width(
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
+    )
+      transition(name="fade")
+        .absolute-top.full-width.loading-indicator-container(
+          v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading || mediaViewerStore.rateLimitActive"
+          role="status"
+          aria-label="Loading additional media"
         )
-        //- HD layer (fades in when synced)
-        video.video-layer.hd(
-          v-if="hdCandidateUrl"
-          ref="hdRef"
-          :src="hdCandidateUrl"
-          playsinline
-          loop
-          :muted="hdMuted"
-          :controls="showHd"
-          :class="{ visible: showHd }"
-          @loadedmetadata="onHdMetadata"
-          @volumechange="onVolumeChange"
-          @click.stop="onMediaClick"
+          span.loading-indicator-circle
+
+      div(v-if="mediaViewerStore.currentMediaType === 'video'" class="video-wrapper")
+        //- Seamless preview->LG/HD: stack preview-sm under lg/hd and crossfade
+        .video-stack(
+          ref="mediaStageRef"
+          :style="videoStageStyle"
+        )
+          //- Preview layer (controls until HD is visible)
+          video.video-layer.preview(
+            ref="previewRef"
+            :src="previewVideoUrl"
+            playsinline
+            autoplay
+            loop
+            :muted="previewMuted"
+            :controls="!showHd"
+            @canplay="onMediaLoaded"
+            @loadedmetadata="onPreviewMetadata"
+            @timeupdate="onPreviewTimeUpdate"
+            @volumechange="onVolumeChange"
+            @click.stop="onMediaClick"
+          )
+          //- HD layer (fades in when synced)
+          video.video-layer.hd(
+            v-if="hdCandidateUrl"
+            ref="hdRef"
+            :src="hdCandidateUrl"
+            playsinline
+            loop
+            :muted="hdMuted"
+            :controls="showHd"
+            :class="{ visible: showHd }"
+            @loadedmetadata="onHdMetadata"
+            @volumechange="onVolumeChange"
+            @click.stop="onMediaClick"
+          )
+
+      // Image path mirrors video wrapper so preview fills same area
+      div(
+        v-else
+        ref="mediaStageRef"
+        :class="['image-wrapper', isSmPreview ? 'sm-soft' : '']"
+        :style="[touchMoveStyle, imageBackdropStyle, imageStageStyle]"
+      )
+        img(
+          v-bind="imageAttrs"
+          ref="imageRef"
         )
 
-    // Image path mirrors video wrapper so preview fills same area
-    div(v-else :class="['image-wrapper', isSmPreview ? 'sm-soft' : '']" :style="{ transform: `translateX(${mediaViewerStore.touchState.moveX}px)` }")
-      img(
-        v-bind="imageAttrs"
-        ref="imageRef"
-      )
-
-    .absolute-top.full-width(style="width:100vw")
-      .centered(v-if="mediaViewerStore.hdVideoLoading")
-        h6.text-white HD Loading
-  .centered.q-mt-md(v-if="showCreatorInfo")
-    .q-pa-sm.r-xl.bg-blur(@click.stop)
-      CreatorInfo(
-        :creatorMeta="mediaViewerStore.creatorMeta"
-        usernameClass="text-white q-mr-sm"
-        avatarSize="30px"
-        wrapperClass=""
-      )
-  //- .centered.q-mt-md(v-if="showIndicators")
-  //-   span.indicator(
-  //-     v-for="(media, index) in mediaViewerStore.mediaObjects"
-  //-     :key="index"
-  //-     :class="{ active: index === mediaViewerStore.currentIndex }"
-  //-     @click.stop="mediaViewerStore.goToIndex(index)"
-  //-   )
+      .absolute-top.full-width(style="width:100vw")
+        .centered(v-if="mediaViewerStore.hdVideoLoading")
+          h6.text-white HD Loading
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onBeforeUnmount } from "vue"
+import { ref, computed, nextTick, watch, onBeforeUnmount, onMounted } from "vue"
+import { useQuasar } from "quasar"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
-import CreatorInfo from "src/components/CreatorInfo.vue"
+import MediaViewerControls from "./MediaViewerControls.vue"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { isOwned } from "lib/ownedMediaCache"
 import { viewportHeight } from "src/lib/viewport"
 interface Props {
   downloadMode?: boolean
+  allowDelete?: boolean
+  initialCommentId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   downloadMode: false,
+  allowDelete: true,
+  initialCommentId: null,
 })
+const emit = defineEmits<{
+  close: []
+}>()
 const mediaViewerStore = useMediaViewerStore()
+const $q = useQuasar()
+
+const MAX_FRAME_WIDTH = 1100
+const MIN_FRAME_WIDTH = 320
+const FRAME_MAX_WIDTH_CSS = `min(95vw, ${MAX_FRAME_WIDTH}px)`
+
+function handleClose() {
+  emit("close")
+}
 
 // Load muted preference on initialization
 mediaViewerStore.loadMutedPreference()
@@ -100,6 +115,70 @@ const currentHdUrl = computed(() => mediaViewerStore.hdVideoUrl[mediaViewerStore
 const previewRef = ref<HTMLVideoElement | null>(null)
 const hdRef = ref<HTMLVideoElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
+const mediaStageRef = ref<HTMLElement | null>(null)
+const mediaWidth = ref(0)
+let stageObserver: ResizeObserver | null = null
+const naturalDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const displayDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const frameMaxWidth = computed(() => {
+  const available = Math.max(MIN_FRAME_WIDTH, $q.screen.width - 32)
+  return Math.min(available, MAX_FRAME_WIDTH)
+})
+let removeViewportResizeListeners: (() => void) | null = null
+
+const stageHeight = computed(() => viewportHeight(75))
+const touchMoveStyle = computed(() => ({
+  transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
+}))
+const stageSizeStyle = computed(() => {
+  const style: Record<string, string> = {
+    maxHeight: stageHeight.value,
+    maxWidth: FRAME_MAX_WIDTH_CSS,
+    margin: "0 auto",
+  }
+  const width = displayDimensions.value.width
+  style.width = `${width > 0 ? width : frameMaxWidth.value}px`
+  return style
+})
+const imageStageStyle = computed(() => ({
+  ...stageSizeStyle.value,
+}))
+const videoStageStyle = computed(() => {
+  const style: Record<string, string> = {
+    ...stageSizeStyle.value,
+    transform: `translateX(${mediaViewerStore.touchState.moveX}px)`,
+    overflow: "hidden",
+  }
+  if (aspectRatio.value) {
+    style.aspectRatio = aspectRatio.value
+  } else if (displayDimensions.value.height > 0) {
+    style.height = `${displayDimensions.value.height}px`
+  } else {
+    style.height = stageHeight.value
+  }
+  return style
+})
+const basePreviewUrl = computed(() => {
+  if (mediaViewerStore.currentMediaType !== "image") return ""
+  const id = mediaViewerStore.currentMediaId
+  return id ? img(id, "sm") : ""
+})
+const imageBackdropStyle = computed(() => {
+  const url = basePreviewUrl.value
+  if (!url) {
+    return {
+      background: "none",
+      backgroundColor: "transparent",
+    } as Record<string, string>
+  }
+  return {
+    backgroundImage: `url('${url}')`,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "contain",
+    backgroundPosition: "center",
+    backgroundColor: "transparent",
+  } as Record<string, string>
+})
 
 // Derived urls
 // Use the fastest preview first for responsiveness
@@ -144,15 +223,6 @@ watch(
   },
 )
 
-onBeforeUnmount(() => {
-  cancelSyncLoop()
-  mediaViewerStore.registerVideoElement(null)
-})
-
-const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.length > 0)
-
-const showIndicators = computed(() => mediaViewerStore.mediaObjects.length > 1 && !props.downloadMode && mediaViewerStore.mediaObjects.length < 11)
-
 // Detect if the currently bound image URL is the small preview
 const currentImageUrl = computed(() => (mediaViewerStore.currentMediaType === "image" ? mediaViewerStore.getCurrentMediaUrl() : ""))
 const isSmPreview = computed(() => /-sm\.webp(\?|$)/.test(currentImageUrl.value))
@@ -165,6 +235,8 @@ const imageAttrs = computed(() => {
       "max-height": viewportHeight(75),
       "max-width": "100%",
       "object-fit": "contain",
+      "background-color": "transparent",
+      "background-image": "none",
     } as Record<string, string>,
     onClick: (e: MouseEvent) => {
       e.stopPropagation()
@@ -206,6 +278,9 @@ async function onMediaLoaded(event?: Event) {
   if (isImageEvent) {
     const imgEl = target
     if (!imgEl) return
+    if (imgEl.naturalWidth && imgEl.naturalHeight) {
+      updateNaturalDimensions(imgEl.naturalWidth, imgEl.naturalHeight)
+    }
     if (imgEl.src.startsWith("data:image/")) {
       mediaViewerStore.hdMediaLoaded = true
     } else if (!mediaViewerStore.triedHdLoad) {
@@ -227,6 +302,7 @@ async function onMediaLoaded(event?: Event) {
       await mediaViewerStore.loadRequestId()
     }
   }
+  scheduleStageMeasurement()
 }
 
 // Keep HD buffered and synced behind the preview; when ready, crossfade
@@ -234,19 +310,25 @@ function onPreviewMetadata(e: Event) {
   const v = e.target as HTMLVideoElement
   if (v && v.videoWidth && v.videoHeight) {
     aspectRatio.value = `${v.videoWidth} / ${v.videoHeight}`
+    updateNaturalDimensions(v.videoWidth, v.videoHeight)
   }
   void v.play().catch(() => {})
+  scheduleStageMeasurement()
 }
 
 function onHdMetadata(e: Event) {
   const hd = e.target as HTMLVideoElement
   const preview = previewRef.value
   if (!hd || !preview) return
+  if (hd.videoWidth && hd.videoHeight) {
+    updateNaturalDimensions(hd.videoWidth, hd.videoHeight)
+  }
   try {
     hd.currentTime = preview.currentTime || 0
   } catch {}
   void hd.play().catch(() => {})
   requestNextFrameSync()
+  scheduleStageMeasurement()
 }
 
 let syncRaf: number | null = null
@@ -279,6 +361,7 @@ function syncAndMaybeSwap() {
       preview.muted = true
     } catch {}
     showHd.value = true
+    scheduleStageMeasurement()
     window.setTimeout(() => {
       try {
         preview.pause()
@@ -362,7 +445,16 @@ function handleTouchEnd(e: TouchEvent) {
 watch(
   () => mediaViewerStore.currentMediaId,
   async (newId, oldId) => {
-    if (!newId || !oldId) return // Skip initial load (handled by parent)
+    if (!newId) return
+    // Reset measured width so the frame can grow to fallback size before new media measures
+    mediaWidth.value = 0
+    naturalDimensions.value = { width: 0, height: 0 }
+    displayDimensions.value = { width: 0, height: 0 }
+
+    if (!oldId) {
+      scheduleStageMeasurement()
+      return // Skip initial load (handled by parent)
+    }
 
     // Reset states for new media
     mediaViewerStore.hdVideoLoading = false
@@ -382,9 +474,117 @@ watch(
 
     // Check like status and load HD media only for navigation between media
     await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadLgImage(), mediaViewerStore.loadHdMedia(), mediaViewerStore.loadRequestId()])
+    scheduleStageMeasurement()
   },
   { immediate: false },
 )
+
+function scheduleStageMeasurement() {
+  void nextTick(() => {
+    updateStageWidth()
+  })
+}
+
+function updateStageWidth(rect?: DOMRectReadOnly | null) {
+  let width = displayDimensions.value.width
+  if (mediaViewerStore.currentMediaType === "image" && imageRef.value) {
+    width = imageRef.value.getBoundingClientRect().width
+  } else if (mediaViewerStore.currentMediaType === "video") {
+    const active = showHd.value ? hdRef.value : previewRef.value
+    width = (active && active.getBoundingClientRect().width) || 0
+  }
+  if (!width) {
+    width = rect?.width ?? mediaStageRef.value?.getBoundingClientRect().width ?? 0
+  }
+  if (width > 0) {
+    mediaWidth.value = width
+  }
+}
+
+onMounted(() => {
+  if (typeof window !== "undefined") {
+    const handleViewportResize = () => {
+      recalculateDisplayDimensions()
+      scheduleStageMeasurement()
+    }
+    window.addEventListener("resize", handleViewportResize)
+    const visualViewport = window.visualViewport
+    visualViewport?.addEventListener("resize", handleViewportResize)
+    removeViewportResizeListeners = () => {
+      window.removeEventListener("resize", handleViewportResize)
+      visualViewport?.removeEventListener("resize", handleViewportResize)
+      removeViewportResizeListeners = null
+    }
+  }
+  if (typeof ResizeObserver === "undefined") return
+  stageObserver = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    if (!entry) return
+    updateStageWidth(entry.contentRect)
+  })
+  if (mediaStageRef.value) stageObserver.observe(mediaStageRef.value)
+})
+
+watch(
+  () => mediaStageRef.value,
+  (current, previous) => {
+    if (typeof ResizeObserver === "undefined") return
+    if (!stageObserver) {
+      stageObserver = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (!entry) return
+        updateStageWidth(entry.contentRect)
+      })
+    }
+    if (previous) stageObserver.unobserve(previous)
+    if (current) stageObserver.observe(current)
+    scheduleStageMeasurement()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  cancelSyncLoop()
+  mediaViewerStore.registerVideoElement(null)
+  if (removeViewportResizeListeners) {
+    removeViewportResizeListeners()
+  }
+  if (stageObserver) {
+    stageObserver.disconnect()
+    stageObserver = null
+  }
+})
+
+function updateNaturalDimensions(width: number, height: number) {
+  if (!width || !height) return
+  naturalDimensions.value = { width, height }
+  recalculateDisplayDimensions()
+}
+
+function recalculateDisplayDimensions() {
+  const { width, height } = naturalDimensions.value
+  if (!width || !height) return
+  if (typeof window === "undefined") {
+    displayDimensions.value = { width, height }
+    mediaWidth.value = width
+    return
+  }
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+  const maxHeight = Math.max(0, Math.round(viewportHeight * 0.75))
+  const maxWidth = frameMaxWidth.value
+  const widthScale = maxWidth > 0 ? maxWidth / width : 1
+  const heightScale = maxHeight > 0 ? maxHeight / height : 1
+  const scale = Math.min(1, widthScale, heightScale)
+  const displayWidth = Math.max(1, Math.round(width * scale))
+  const displayHeight = Math.max(1, Math.round(height * scale))
+  displayDimensions.value = { width: displayWidth, height: displayHeight }
+  mediaWidth.value = displayWidth
+  scheduleStageMeasurement()
+}
+
+watch(frameMaxWidth, () => {
+  recalculateDisplayDimensions()
+})
 </script>
 
 <style scoped>
@@ -504,22 +704,23 @@ watch(
 }
 
 .video-wrapper {
-  width: 100%;
+  width: auto;
+  max-width: min(95vw, 1100px);
   max-height: 75vh;
   max-height: 75dvh;
-  height: 100%;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: auto;
+  flex: 0 1 auto;
+  margin: 0 auto;
 }
 .video-stack {
   position: relative;
   width: 100%;
-  height: 75vh;
-  height: 75dvh;
-  max-width: 100vw;
-  margin: auto;
+  max-width: min(95vw, 1100px);
+  margin: 0 auto;
+  overflow: hidden;
 }
 .video-layer {
   position: absolute;
@@ -542,25 +743,25 @@ watch(
 
 /* Image wrapper to provide consistent viewport area like videos */
 .image-wrapper {
-  width: 100%;
+  width: auto;
+  max-width: min(95vw, 1100px);
   max-height: 75vh;
   max-height: 75dvh;
-  height: 75vh;
-  height: 75dvh;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: auto;
+  margin: 0 auto;
 }
 .image-wrapper img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  max-width: 100%;
   max-height: 75vh;
   max-height: 75dvh;
-  max-width: 100%;
-  margin: auto;
-  display: block;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
 }
 
 /* While showing a small, low-res preview, soften pixels */

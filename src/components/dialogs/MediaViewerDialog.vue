@@ -1,18 +1,12 @@
 <template lang="pug">
 q-dialog(ref="dialog" @hide="onDialogHide" maximized :persistent="mediaViewerStore.isPersistent")
   q-card.bg-transparent(style="width:100vw; max-width:100vw;" @click.self="hide()")
-    .centered
-      .col-auto
-        .full-width
-          .relative-position
-            MediaViewerControls(
-              :allowDelete="allowDelete"
-              :initialCommentId="initialCommentId"
-              @close="hide"
-            )
-
     .centered.full-width(@click="hide")
-      MediaViewerMedia.full-width
+      MediaViewerMedia.full-width(
+        :allowDelete="allowDelete"
+        :initialCommentId="initialCommentId"
+        @close="hide"
+      )
 </template>
 
 <script setup lang="ts">
@@ -22,7 +16,6 @@ import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useMediaNavigation } from "src/lib/composables/useMediaNavigation"
 import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
-import MediaViewerControls from "./MediaViewerControls.vue"
 import MediaViewerMedia from "./MediaViewerMedia.vue"
 
 interface Props {

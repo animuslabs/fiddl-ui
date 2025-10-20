@@ -12749,12 +12749,12 @@ export function useEventsPublicEvents<TData = Awaited<ReturnType<typeof eventsPu
 export const eventsPrivateEvents = (
     params?: MaybeRef<EventsPrivateEventsParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<EventsPrivateEvents200Item[]>> => {
-    params = unref(params);
-    
-    return axios.get(
-      `/events/privateEvents`,{
-    ...options,
-        params: {...unref(params), ...options?.params},}
+    const body = unref(params) ?? {};
+
+    return axios.post(
+      `/events/privateEvents`,
+      body,
+      options
     );
   }
 
