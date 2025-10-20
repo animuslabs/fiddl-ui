@@ -57,10 +57,22 @@
             div.text-caption.text-grey-6 Auto-saves locally until published
       q-separator
       q-form(@submit.prevent="submitForm" class="motd-form")
-        q-card-section(class="column q-gutter-md motd-form-body")
-          q-input(v-model="form.title" label="Title" dense outlined :maxlength="200" counter)
-          q-input(v-model="form.subheading" label="Subheading (optional)" dense outlined :maxlength="300" counter)
-          q-input(v-model="form.body" type="textarea" autogrow outlined label="Markdown Body" :maxlength="20000" counter)
+        q-card-section(class="motd-form-body")
+          .motd-form-grid
+            .motd-form-main
+              q-input(v-model="form.title" label="Title" dense outlined :maxlength="200" counter)
+              q-input(v-model="form.subheading" label="Subheading (optional)" dense outlined :maxlength="300" counter)
+            .motd-form-editor
+              q-input(
+                v-model="form.body"
+                type="textarea"
+                outlined
+                label="Markdown Body"
+                :maxlength="20000"
+                counter
+                autogrow
+                :input-style="{ minHeight: '100%' }"
+              )
         q-separator
         q-card-actions(align="right" class="motd-form-actions")
           q-btn(flat label="Cancel" @click="closeForm" :disable="saving")
@@ -464,8 +476,8 @@ function toLocalDisplay(value?: string | null): string {
   margin-top: auto
 
 .motd-form-card
-  min-width: min(640px, 92vw)
-  max-height: min(90vh, 720px)
+  min-width: min(900px, 96vw)
+  max-height: min(95vh, 880px)
   display: flex
   flex-direction: column
 
@@ -477,12 +489,57 @@ function toLocalDisplay(value?: string | null): string {
 
 .motd-form-body
   flex: 1 1 auto
-  overflow-y: auto
+  overflow: hidden
+
+.motd-form-grid
+  display: flex
+  flex-direction: column
+  gap: 20px
+  height: 100%
+
+@media (min-width: 900px)
+  .motd-form-grid
+    flex-direction: row
+
+.motd-form-main
+  display: flex
+  flex-direction: column
+  gap: 20px
+  width: 100%
+  flex: 1 1 auto
+
+@media (min-width: 900px)
+  .motd-form-main
+    flex: 0 0 340px
+    max-width: 360px
+
+.motd-form-editor
+  flex: 1 1 auto
+  display: flex
+  min-height: 0
+
+.motd-form-editor :deep(.q-field)
+  flex: 1 1 auto
+  display: flex
+  flex-direction: column
+
+.motd-form-editor :deep(.q-field__control)
+  height: 100%
+
+.motd-form-editor :deep(.q-field__native)
+  flex: 1 1 auto
+  min-height: 100%
+
+.motd-form-editor :deep(textarea)
+  flex: 1 1 auto
+  resize: vertical
 
 .motd-form-actions
   position: sticky
   bottom: 0
-  background: var(--q-surface, #fff)
+  background: inherit
   z-index: 1
-  box-shadow: 0 -1px 0 var(--q-separator-color, rgba(0, 0, 0, 0.12))
+  border-top: 1px solid var(--q-separator-color, rgba(255, 255, 255, 0.16))
+  padding-top: 16px
+  padding-bottom: 16px
 </style>
