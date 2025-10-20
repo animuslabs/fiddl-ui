@@ -139,6 +139,9 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     isPersistent: false,
     activeVideoElement: null as HTMLVideoElement | null,
     loadSequence: 0,
+    rateLimitActive: false,
+    rateLimitUntil: 0,
+    rateLimitTimer: null as number | null,
   }),
 
   getters: {
@@ -265,6 +268,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       this.shareMenu = false
       this.moreOptionsMenu = false
       this.downloadMode = false
+      if (this.rateLimitTimer != null) {
+        window.clearTimeout(this.rateLimitTimer)
+        this.rateLimitTimer = null
+      }
+      this.rateLimitActive = false
+      this.rateLimitUntil = 0
     },
 
     // Update muted state and optionally persist it
@@ -281,6 +290,37 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     beginNewLoadSequence() {
       this.loadSequence = (this.loadSequence + 1) % Number.MAX_SAFE_INTEGER
       return this.loadSequence
+    },
+
+    startRateLimitCooldown(durationMs = 5000) {
+      const resumeAt = Date.now() + durationMs
+      if (this.rateLimitTimer != null) {
+        window.clearTimeout(this.rateLimitTimer)
+      }
+      this.rateLimitActive = true
+      this.rateLimitUntil = resumeAt
+      this.touchState.isSwiping = false
+      this.touchState.moveX = 0
+      this.touchState.startX = 0
+      this.rateLimitTimer = window.setTimeout(() => {
+        if (Date.now() >= this.rateLimitUntil) {
+          this.endRateLimitCooldown()
+        }
+      }, durationMs)
+    },
+
+    endRateLimitCooldown() {
+      if (this.rateLimitTimer != null) {
+        window.clearTimeout(this.rateLimitTimer)
+        this.rateLimitTimer = null
+      }
+      this.rateLimitActive = false
+      this.rateLimitUntil = 0
+      const hasMedia = this.mediaObjects.length > 0 && this.currentMediaId
+      if (hasMedia) {
+        void this.checkUserLikedMedia()
+        void this.loadRequestId()
+      }
     },
 
     isActiveLoadSequence(seq: number, mediaId?: string) {
@@ -319,6 +359,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // Navigation
     goToIndex(index: number) {
+      if (this.rateLimitActive) {
+        this.touchState.moveX = 0
+        return
+      }
       if (index >= 0 && index < this.mediaObjects.length) {
         if (index === this.currentIndex) return
         this.beginNewLoadSequence()
@@ -336,6 +380,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     nextMedia() {
+      if (this.rateLimitActive) {
+        this.touchState.moveX = 0
+        return
+      }
       if (this.mediaObjects.length === 1) return
       this.beginNewLoadSequence()
       this.imgLoading = true
@@ -351,6 +399,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     prevMedia() {
+      if (this.rateLimitActive) {
+        this.touchState.moveX = 0
+        return
+      }
       if (this.mediaObjects.length === 1) return
       this.beginNewLoadSequence()
       this.imgLoading = true
@@ -367,12 +419,17 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // Touch handling
     handleTouchStart(clientX: number) {
+      if (this.rateLimitActive) return
       this.touchState.startX = clientX
       this.touchState.isSwiping = true
       this.touchState.moveX = 0
     },
 
     handleTouchMove(clientX: number) {
+      if (this.rateLimitActive) {
+        this.touchState.moveX = 0
+        return
+      }
       if (!this.touchState.isSwiping) return
       if (this.mediaObjects.length === 1) {
         this.touchState.moveX = 0
@@ -383,6 +440,11 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     handleTouchEnd() {
+      if (this.rateLimitActive) {
+        this.touchState.isSwiping = false
+        this.touchState.moveX = 0
+        return
+      }
       if (!this.touchState.isSwiping) return
       this.touchState.isSwiping = false
       const deltaX = this.touchState.moveX
@@ -400,6 +462,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // Media loading
     async loadHdMedia(id?: string) {
+      if (this.rateLimitActive) return
       const mediaId = id || this.currentMediaId
       if (!mediaId) return
       const loadSeq = this.loadSequence
@@ -441,6 +504,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // Progressive: load the LG image in the background and promote when ready
     async loadLgImage(id?: string) {
+      if (this.rateLimitActive) return
       const mediaId = id || this.currentMediaId
       if (this.currentMediaType !== "image") return
       if (this.lgImageSrc[mediaId]) return
@@ -458,6 +522,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     async loadHdImage(id: string, timeoutPromise: Promise<null>, loadSeq: number) {
+      if (this.rateLimitActive) return null
       // If the user owns this media (optimistically or cached), do not block retries
       const owns = this.userOwnsMedia || isOwned(id, "image")
       if (!owns && SessionStorage.getItem(`noHdimage-${id}`)) return null
@@ -510,6 +575,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     async loadHdVideo(id: string, loadSeq: number) {
+      if (this.rateLimitActive) return
       const isActive = () => this.isActiveLoadSequence(loadSeq, id)
       if (isActive()) {
         this.hdVideoLoading = true
@@ -528,6 +594,14 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         }
         markOwned(id, "video")
         return hdUrl
+      } catch (err) {
+        const status = (err as any)?.response?.status
+        if (status === 503) {
+          this.startRateLimitCooldown()
+        } else {
+          console.error("Failed to load HD video:", err)
+        }
+        return undefined
       } finally {
         if (isActive()) {
           this.hdVideoLoading = false
@@ -537,6 +611,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
 
     // User interactions
     async checkUserLikedMedia() {
+      if (this.rateLimitActive) return false
       const mediaId = this.currentMediaId
       const mediaType = this.currentMediaType
       if (!mediaId) return false
@@ -586,7 +661,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           setCachedLikeMeta(key, payload)
           return payload
         } catch (err) {
-          console.error("Failed to check like status:", err)
+          const status = (err as any)?.response?.status
+          if (status === 503) {
+            this.startRateLimitCooldown()
+          } else {
+            console.error("Failed to check like status:", err)
+          }
           return null
         } finally {
           likeInFlight.delete(key)
@@ -606,6 +686,9 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     },
 
     async loadRequestId() {
+      if (this.rateLimitActive) {
+        return null
+      }
       const mediaId = this.currentMediaId
       const mediaType = this.currentMediaType
       if (!mediaId) {
@@ -652,7 +735,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
               const usernameResponse = await userGetUsername({ userId: creatorId })
               creatorName = usernameResponse?.data || ""
             } catch (err) {
-              catchErr(err)
+              const status = (err as any)?.response?.status
+              if (status === 503) {
+                this.startRateLimitCooldown()
+              } else {
+                catchErr(err)
+              }
             }
           }
 
@@ -664,7 +752,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           setCachedRequestMeta(key, payload)
           return payload
         } catch (err) {
-          catchErr(err)
+          const status = (err as any)?.response?.status
+          if (status === 503) {
+            this.startRateLimitCooldown()
+          } else {
+            catchErr(err)
+          }
           return null
         } finally {
           requestMetaInFlight.delete(key)

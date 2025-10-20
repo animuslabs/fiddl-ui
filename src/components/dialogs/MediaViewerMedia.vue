@@ -8,7 +8,7 @@ div.viewer-root
   )
     transition(name="fade")
       .absolute-top.full-width.loading-indicator-container(
-        v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading"
+        v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading || mediaViewerStore.rateLimitActive"
         role="status"
         aria-label="Loading additional media"
       )
@@ -325,6 +325,7 @@ function preloadMedia() {
 }
 
 function onMediaClick(event: MouseEvent) {
+  if (mediaViewerStore.rateLimitActive) return
   const target = event.target as HTMLElement
   const rect = target.getBoundingClientRect()
   const clickX = event.clientX - rect.left
