@@ -174,7 +174,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const id = this.currentMediaId
       if (this.currentMediaType === "image") {
         // Drive UI from an explicit display url that we promote as loads complete
-        return this.displayImageSrc[id] || this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "sm")
+        return this.displayImageSrc[id] || this.hdImageSrc[id] || this.lgImageSrc[id] || img(id, "md")
       }
       return this.hdVideoUrl[id] || s3Video(id, "preview-lg")
     },
@@ -198,11 +198,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
     // Get media params for API calls
     getMediaParams(id?: string, type?: "image" | "video"): any {
       const mediaId = id || this.currentMediaId
-      const inferredType =
-        type ||
-        (id
-          ? (this.mediaObjects.find((m) => m.id === id)?.type as "image" | "video" | undefined) ?? this.currentMediaType
-          : this.currentMediaType)
+      const inferredType = type || (id ? ((this.mediaObjects.find((m) => m.id === id)?.type as "image" | "video" | undefined) ?? this.currentMediaType) : this.currentMediaType)
       return inferredType === "video" ? { videoId: mediaId } : { imageId: mediaId }
     },
 
@@ -466,10 +462,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const mediaId = id || this.currentMediaId
       if (!mediaId) return
       const loadSeq = this.loadSequence
-      const mediaType =
-        id != null
-          ? (this.mediaObjects.find((m) => m.id === mediaId)?.type as "image" | "video" | undefined) ?? "image"
-          : this.currentMediaType
+      const mediaType = id != null ? ((this.mediaObjects.find((m) => m.id === mediaId)?.type as "image" | "video" | undefined) ?? "image") : this.currentMediaType
       if (this.triedHdLoad || this.hdMediaLoaded) return
       this.triedHdLoad = true
       // this.loading = true
@@ -528,10 +521,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (!owns && SessionStorage.getItem(`noHdimage-${id}`)) return null
       const isActive = () => this.isActiveLoadSequence(loadSeq, id)
       try {
-        const url = (await Promise.race([
-          hdUrl(id),
-          timeoutPromise,
-        ])) as string | null
+        const url = (await Promise.race([hdUrl(id), timeoutPromise])) as string | null
         if (url) {
           this.hdImageSrc[id] = url
           markOwned(id, "image")
@@ -826,7 +816,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         return
       }
 
-      this.displayImageSrc[mediaId] = img(mediaId, "sm")
+      this.displayImageSrc[mediaId] = img(mediaId, "md")
     },
   },
 })
