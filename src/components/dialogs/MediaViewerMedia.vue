@@ -125,6 +125,7 @@ const frameMaxWidth = computed(() => {
   return Math.min(available, MAX_FRAME_WIDTH)
 })
 let removeViewportResizeListeners: (() => void) | null = null
+const currentMedia = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex] ?? null)
 
 const stageHeight = computed(() => viewportHeight(75))
 const touchMoveStyle = computed(() => ({
@@ -234,6 +235,7 @@ const imageAttrs = computed(() => {
       // Fill area; image sizing handled by wrapper CSS
       "max-height": viewportHeight(75),
       "max-width": "100%",
+      width: "100%",
       "object-fit": "contain",
       "background-color": "transparent",
       "background-image": "none",
@@ -450,6 +452,7 @@ watch(
     mediaWidth.value = 0
     naturalDimensions.value = { width: 0, height: 0 }
     displayDimensions.value = { width: 0, height: 0 }
+    primeDimensionsFromMetadata(currentMedia.value)
 
     if (!oldId) {
       scheduleStageMeasurement()
@@ -476,7 +479,7 @@ watch(
     await Promise.allSettled([mediaViewerStore.checkUserLikedMedia(), mediaViewerStore.loadLgImage(), mediaViewerStore.loadHdMedia(), mediaViewerStore.loadRequestId()])
     scheduleStageMeasurement()
   },
-  { immediate: false },
+  { immediate: true },
 )
 
 function scheduleStageMeasurement() {
@@ -572,9 +575,10 @@ function recalculateDisplayDimensions() {
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight
   const maxHeight = Math.max(0, Math.round(viewportHeight * 0.75))
   const maxWidth = frameMaxWidth.value
-  const widthScale = maxWidth > 0 ? maxWidth / width : 1
-  const heightScale = maxHeight > 0 ? maxHeight / height : 1
-  const scale = Math.min(1, widthScale, heightScale)
+  const widthScale = maxWidth > 0 && width > 0 ? maxWidth / width : Number.POSITIVE_INFINITY
+  const heightScale = maxHeight > 0 && height > 0 ? maxHeight / height : Number.POSITIVE_INFINITY
+  const scaleCandidate = Math.min(widthScale, heightScale)
+  const scale = Number.isFinite(scaleCandidate) && scaleCandidate > 0 ? scaleCandidate : 1
   const displayWidth = Math.max(1, Math.round(width * scale))
   const displayHeight = Math.max(1, Math.round(height * scale))
   displayDimensions.value = { width: displayWidth, height: displayHeight }
@@ -585,6 +589,15 @@ function recalculateDisplayDimensions() {
 watch(frameMaxWidth, () => {
   recalculateDisplayDimensions()
 })
+
+function primeDimensionsFromMetadata(media: any) {
+  const aspect = typeof media?.aspectRatio === "number" && media.aspectRatio > 0 ? media.aspectRatio : null
+  if (!aspect) return
+  const baseHeight = 1000
+  const baseWidth = Math.max(1, aspect * baseHeight)
+  naturalDimensions.value = { width: baseWidth, height: baseHeight }
+  recalculateDisplayDimensions()
+}
 </script>
 
 <style scoped>

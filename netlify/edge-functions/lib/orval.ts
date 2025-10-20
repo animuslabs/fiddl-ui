@@ -8416,19 +8416,29 @@ export const eventsPublicEvents = async (params?: EventsPublicEventsParams, opti
 
 
 
-export const getEventsPrivateEventsUrl = () => {
-  return `/events/privateEvents`
+export const getEventsPrivateEventsUrl = (params?: EventsPrivateEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/events/privateEvents?${stringifiedParams}` : `/events/privateEvents`
 }
 
 export const eventsPrivateEvents = async (params?: EventsPrivateEventsParams, options?: RequestInit): Promise<EventsPrivateEvents200Item[]> => {
   
-  return fetcher<EventsPrivateEvents200Item[]>(getEventsPrivateEventsUrl(),
+  return fetcher<EventsPrivateEvents200Item[]>(getEventsPrivateEventsUrl(params),
   {      
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: options?.body ?? JSON.stringify(
-      params ?? {},)
+    method: 'GET'
+    
+    
   }
 );}
 
