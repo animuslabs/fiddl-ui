@@ -11,6 +11,7 @@ import type { AspectRatio, ImageModel, VideoModel, VideoModelData } from "lib/im
 import type { VideoPurchase, Image, Video } from "lib/api"
 import { catchErr } from "lib/util"
 import type { UnifiedRequest } from "lib/types"
+import { useCreatorStore } from "src/stores/creatorStore"
 
 interface SceneConfig {
   number: number
@@ -92,14 +93,32 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
       if (index === -1) return
       creation.mediaIds.splice(index, 1)
     },
+    _normalizeCreation(creation) {
+      const creatorStore = useCreatorStore()
+      const creatorId = creation?.creatorId || ""
+      let creatorUsername = creation?.creatorUsername || ""
+      if (creatorId && !creatorUsername) {
+        creatorUsername = creatorStore.getUsername(creatorId) || ""
+      }
+      if (creatorId && creatorUsername) {
+        void creatorStore.rememberOne(creatorId, creatorUsername)
+      }
+      return {
+        ...creation,
+        creatorId,
+        creatorUsername,
+      }
+    },
     addItem(item: CreateVideoRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return
-      this.creations.push({
-        ...item,
-        type: "video",
-        mediaIds: item.videoIds,
-      })
+      this.creations.push(
+        this._normalizeCreation({
+          ...item,
+          type: "video",
+          mediaIds: item.videoIds,
+        })
+      )
     },
     reset() {
       this.creations = []
@@ -142,19 +161,21 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
         const creations = response.data
         if (!creations) return
 
-        if (opts?.replace) {
-          this.creations = creations.map((creation: any) => ({
+        const normalized = creations.map((creation: any) =>
+          this._normalizeCreation({
             ...creation,
             type: "video",
             mediaIds: creation.videoIds,
             createdAt: new Date(creation.createdAt),
-          }))
+          })
+        )
+        if (opts?.replace) {
+          this.creations = normalized
         } else {
-          for (const creation of creations) {
-            this.addItem({
-              ...creation,
-              createdAt: new Date(creation.createdAt),
-            })
+          for (const creation of normalized) {
+            if (!this.creations.some((existing) => existing.id === creation.id)) {
+              this.creations.push(creation)
+            }
           }
         }
       } catch (err: any) {
@@ -183,11 +204,18 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
         const response = await creationsCreateVideoRequests(params)
         const creations = response.data
         if (!creations) return
-        for (const creation of creations) {
-          this.addItem({
+        const normalized = creations.map((creation: any) =>
+          this._normalizeCreation({
             ...creation,
+            type: "video",
+            mediaIds: creation.videoIds,
             createdAt: new Date(creation.createdAt),
           })
+        )
+        for (const creation of normalized) {
+          if (!this.creations.some((existing) => existing.id === creation.id)) {
+            this.creations.push(creation)
+          }
         }
       } finally {
         this.loadingCreations = false
@@ -274,6 +302,9 @@ export const useVideoCreations = defineStore("videoCreationsStore", {
         type: "video",
       }
 
+      if (createdItem.creatorUsername) {
+        void useCreatorStore().rememberOne(createdItem.creatorId, createdItem.creatorUsername)
+      }
       this.creations.unshift(createdItem)
     },
   },

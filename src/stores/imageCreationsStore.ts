@@ -9,6 +9,7 @@ import type { CreateImageRequestWithCustomModel } from "src/stores/createImageSt
 import type { AspectRatio, ImageModel } from "lib/imageModels"
 import type { ImagePurchase, Image } from "lib/api"
 import type { UnifiedRequest } from "lib/types"
+import { useCreatorStore } from "src/stores/creatorStore"
 
 interface SceneConfig {
   number: number
@@ -61,6 +62,22 @@ export const useImageCreations = defineStore("imageCreationsStore", {
       model: undefined as ImageModel | undefined,
       customModelId: undefined as string | undefined,
     },
+    _normalizeCreation<T extends Record<string, any>>(creation: T): T {
+      const creatorStore = useCreatorStore()
+      const creatorId: string = (creation as any)?.creatorId || ""
+      let creatorUsername: string = (creation as any)?.creatorUsername || ""
+      if (creatorId && !creatorUsername) {
+        creatorUsername = creatorStore.getUsername(creatorId) || ""
+      }
+      if (creatorId && creatorUsername) {
+        void creatorStore.rememberOne(creatorId, creatorUsername)
+      }
+      return {
+        ...creation,
+        creatorId,
+        creatorUsername,
+      }
+    },
   }),
   getters: {
     filterActive(): boolean {
@@ -104,11 +121,13 @@ export const useImageCreations = defineStore("imageCreationsStore", {
     addItem(item: CreateImageRequestData) {
       const idExists = this.creations.some((i) => i.id === item.id)
       if (idExists) return
-      this.creations.push({
-        ...item,
-        type: "image",
-        mediaIds: item.imageIds,
-      })
+      this.creations.push(
+        this._normalizeCreation({
+          ...item,
+          type: "image",
+          mediaIds: item.imageIds,
+        })
+      )
     },
     // Prepend a newly finished request so it appears at the top (under any placeholders)
     addItemToFront(item: CreateImageRequestData) {
@@ -175,20 +194,23 @@ export const useImageCreations = defineStore("imageCreationsStore", {
 
         const creations = response.data
         if (!creations) return
-        if (opts?.replace) {
-          // Replace the current list in one shot to avoid empty state between requests
-          this.creations = creations.map((creation: any) => ({
+        const normalized = creations.map((creation: any) => {
+          const data = {
             ...creation,
-            type: "image",
+            type: "image" as const,
             mediaIds: creation.imageIds,
             createdAt: new Date(creation.createdAt),
-          }))
+          }
+          return this._normalizeCreation(data)
+        })
+        if (opts?.replace) {
+          // Replace the current list in one shot to avoid empty state between requests
+          this.creations = normalized
         } else {
-          for (const creation of creations) {
-            this.addItem({
-              ...creation,
-              createdAt: new Date(creation.createdAt),
-            })
+          for (const creation of normalized) {
+            if (!this.creations.some((existing) => existing.id === creation.id)) {
+              this.creations.push(creation)
+            }
           }
         }
       } catch (err: any) {
@@ -216,13 +238,20 @@ export const useImageCreations = defineStore("imageCreationsStore", {
           customModelId: this.filter.customModelId,
         }
         const response = await creationsCreateImageRequests(params)
-        const creations = response.data
-        if (!creations) return
-        for (const creation of creations) {
-          this.addItem({
+        const rawCreations = response.data
+        if (!rawCreations) return
+        const normalized = rawCreations.map((creation: any) =>
+          this._normalizeCreation({
             ...creation,
+            type: "image" as const,
+            mediaIds: creation.imageIds,
             createdAt: new Date(creation.createdAt),
           })
+        )
+        for (const creation of normalized) {
+          if (!this.creations.some((existing) => existing.id === creation.id)) {
+            this.creations.push(creation)
+          }
         }
       } finally {
         this.loadingCreations = false
@@ -314,6 +343,9 @@ export const useImageCreations = defineStore("imageCreationsStore", {
         type: "image",
       }
 
+      if (createdItem.creatorUsername) {
+        void useCreatorStore().rememberOne(createdItem.creatorId, createdItem.creatorUsername)
+      }
       this.creations.unshift(createdItem)
     },
   },

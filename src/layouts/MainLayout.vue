@@ -38,9 +38,9 @@ q-layout(view="lHh Lpr lFf" )
           template(v-else)
             q-btn(rounded padding="6px" dense size="xs" :color="upvotesColor" v-if="$userAuth.upvotesWallet" @click="openUpvoteInfo")
               .row.items-center
-                div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.upvotesWallet?.remainingToday || 0 }}
+                div( style="font-size:14px;" :class="isMobile ? 'q-ml-sm text-caption' : 'q-ml-md'") {{ $userAuth?.optimisticUpvotesRemaining || 0 }}
                 q-img.q-ml-sm.q-mr-sm(
-                  :src="$userAuth?.upvotesWallet?.remainingToday ? '/upvote-fire.png' : '/upvote-fire-dull.png'"
+                  :src="$userAuth?.optimisticUpvotesRemaining ? '/upvote-fire.png' : '/upvote-fire-dull.png'"
                   :style="{ width: isMobile ? '22px' : '30px', height: isMobile ? '22px' : '30px' }"
                   alt="available upvotes" no-spinner)
               q-tooltip
@@ -109,7 +109,7 @@ q-layout(view="lHh Lpr lFf" )
           .text-h6 Your Upvotes
       .q-ma-md
         .row
-          p Remaining: {{ $userAuth.upvotesWallet?.remainingToday }} / {{ $userAuth.upvotesWallet?.allowance }}
+          p Remaining: {{ $userAuth.optimisticUpvotesRemaining }} / {{ $userAuth.upvotesWallet?.allowance }}
         .row
           p Resets : {{ new Date($userAuth.upvotesWallet?.resetAt || "").toLocaleString() }}
       q-card-section(v-if="upvoteInfoLoading")
@@ -225,7 +225,7 @@ export default defineComponent({
     },
     upvotesColor() {
       if (!this.$userAuth.upvotesWallet) return "negative"
-      return this.$userAuth.upvotesWallet.remainingToday > 0 ? "grey-9" : "accent"
+      return this.$userAuth.optimisticUpvotesRemaining > 0 ? "grey-9" : "accent"
     },
     hasClaimableMissions(): boolean {
       try {

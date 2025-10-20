@@ -338,36 +338,53 @@ export const usePopularityStore = defineStore("popularityStore", {
     },
     async addUpvote(id: string, mediaType?: "image" | "video") {
       await this.init()
+      const userAuth = useUserAuth()
+
+      const showNoUpvotesDialog = (resetAt?: string | null) => {
+        const ms = resetAt ? new Date(resetAt).getTime() - Date.now() : 0
+        const hrs = ms > 0 ? Math.floor(ms / 3600000) : 0
+        const mins = ms > 0 ? Math.floor((ms % 3600000) / 60000) : 0
+        const timeStr = ms > 0 ? (hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`) : "soon"
+        Dialog.create({
+          title: "No Upvotes Left",
+          message: `<div style="text-align:center;line-height:1.4;">
+            <img src="/upvote-fire-dull.png" alt="no upvotes" style="width:40px;height:40px;margin-bottom:8px;" />
+            <div>You’ve used all your upvotes for today.</div>
+            <div>They’ll recharge in <b>${timeStr}</b>.</div>
+          </div>`,
+          html: true,
+          ok: { label: "OK", flat: true, color: "primary" },
+        })
+      }
 
       // Simple wallet check to prevent obvious overspending on slow connections
       try {
-        const userAuth = useUserAuth()
         if (userAuth.loggedIn) {
-          if (!userAuth.upvotesWallet) {
+          let wallet = userAuth.upvotesWallet
+          if (!wallet) {
             await userAuth.loadUpvotesWallet()
+            wallet = userAuth.upvotesWallet
           }
-          if (userAuth.upvotesWallet && userAuth.upvotesWallet.remainingToday <= 0) {
-            const resetAt = userAuth.upvotesWallet.resetAt
-            const ms = resetAt ? new Date(resetAt).getTime() - Date.now() : 0
-            const hrs = ms > 0 ? Math.floor(ms / 3600000) : 0
-            const mins = ms > 0 ? Math.floor((ms % 3600000) / 60000) : 0
-            const timeStr = ms > 0 ? (hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`) : "soon"
-            Dialog.create({
-              title: "No Upvotes Left",
-              message: `<div style="text-align:center;line-height:1.4;">
-                <img src="/upvote-fire-dull.png" alt="no upvotes" style="width:40px;height:40px;margin-bottom:8px;" />
-                <div>You’ve used all your upvotes for today.</div>
-                <div>They’ll recharge in <b>${timeStr}</b>.</div>
-              </div>`,
-              html: true,
-              ok: { label: "OK", flat: true, color: "primary" },
-            })
-            return
+          if (wallet) {
+            const optimisticRemaining = userAuth.optimisticUpvotesRemaining
+            if (optimisticRemaining <= 0) {
+              showNoUpvotesDialog(wallet.resetAt)
+              return
+            }
           }
         }
       } catch (e) {
         // Best-effort: if wallet cannot be loaded, allow the attempt; server will enforce limits
       }
+
+      // Reserve an optimistic spend so header and guards update immediately
+      let trackedPending = false
+      try {
+        if (userAuth.loggedIn) {
+          userAuth.pendingUpvoteSpends += 1
+          trackedPending = true
+        }
+      } catch {}
 
       // Allow parallel upvote calls: no per-id _mutating lock here
       let e = this.entries[id]
@@ -384,42 +401,23 @@ export const usePopularityStore = defineStore("popularityStore", {
       e.mediaType = type
       await this._put(e)
 
-      // Optimistically decrement the user's upvotes wallet so header updates instantly
-      let decrementedWallet = false
-      try {
-        const userAuth = useUserAuth()
-        if (userAuth.loggedIn && userAuth.upvotesWallet && userAuth.upvotesWallet.remainingToday > 0) {
-          userAuth.upvotesWallet.remainingToday = Math.max(0, userAuth.upvotesWallet.remainingToday - 1)
-          decrementedWallet = true
-        }
-      } catch {}
-
       try {
         await upvotesUpvote({ ...(type === "video" ? { videoId: id } : { imageId: id }) })
         try { tma.upvote(id, type) } catch {}
         // Refresh wallet after successful spend (non-blocking safety)
-        try {
-          const userAuth = useUserAuth()
-          if (userAuth.loggedIn) await userAuth.loadUpvotesWallet()
-        } catch (e2) {
-          console.error("[popularityStore] failed to refresh upvotes wallet", e2)
-        }
+        try { if (userAuth.loggedIn) userAuth.scheduleUpvotesWalletRefresh(2000) } catch {}
         // Confirm server truth for this id and lift suppression
         void this._confirmFromServer(id, type)
       } catch (err) {
+        if (trackedPending) {
+          userAuth.pendingUpvoteSpends = Math.max(0, userAuth.pendingUpvoteSpends - 1)
+        }
         // Per-call rollback: subtract only our optimistic +1 and restore prior state
         const cur = this.entries[id] || e
         cur.upvotes = Math.max(0, (cur.upvotes ?? 0) - 1)
         cur.isUpvotedByMe = prevIsUpvoted
         await this._put(cur)
         this._clearSuppress(id)
-        // Roll back wallet optimistic decrement
-        try {
-          const userAuth = useUserAuth()
-          if (decrementedWallet && userAuth.upvotesWallet) {
-            userAuth.upvotesWallet.remainingToday += 1
-          }
-        } catch {}
         throw err
       }
     },

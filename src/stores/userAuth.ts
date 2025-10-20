@@ -46,7 +46,17 @@ export const useUserAuth = defineStore("userAuth", {
       notificationConfig: null as NotificationConfig | null,
       pointsHistory: [] as PointsTransfer[],
       upvotesWallet: null as UpvotesGetWallet200 | null,
+      pendingUpvoteSpends: 0,
+      upvotesWalletRefreshTimer: null as number | null,
+      upvotesWalletRefreshInFlight: false,
     }
+  },
+  getters: {
+    optimisticUpvotesRemaining(state): number {
+      const remaining = state.upvotesWallet?.remainingToday ?? 0
+      const pending = state.pendingUpvoteSpends ?? 0
+      return Math.max(0, remaining - pending)
+    },
   },
   actions: {
     async loadNotificationConfig(userId?: string) {
@@ -123,10 +133,54 @@ export const useUserAuth = defineStore("userAuth", {
     },
     async loadUpvotesWallet() {
       try {
+        const prevRemaining = this.upvotesWallet?.remainingToday ?? null
         const response = await upvotesGetWallet()
+        const serverRemaining = response.data?.remainingToday ?? 0
+        if (prevRemaining !== null) {
+          const diff = prevRemaining - serverRemaining
+          if (diff > 0) {
+            this.pendingUpvoteSpends = Math.max(0, this.pendingUpvoteSpends - diff)
+          } else if (diff < 0) {
+            this.pendingUpvoteSpends = Math.max(0, this.pendingUpvoteSpends + diff)
+          }
+        } else {
+          this.pendingUpvoteSpends = Math.max(0, this.pendingUpvoteSpends)
+        }
         this.upvotesWallet = response.data
       } catch (e) {
         console.error("Failed to load upvotes wallet", e)
+      }
+    },
+    scheduleUpvotesWalletRefresh(delayMs = 2000) {
+      try {
+        if (typeof window === "undefined") {
+          this.upvotesWalletRefreshTimer = null
+          void this.refreshUpvotesWalletNow()
+          return
+        }
+      } catch {
+        this.upvotesWalletRefreshTimer = null
+        // In non-browser contexts fall through to immediate refresh
+        void this.refreshUpvotesWalletNow()
+        return
+      }
+      if (this.upvotesWalletRefreshTimer) {
+        window.clearTimeout(this.upvotesWalletRefreshTimer)
+        this.upvotesWalletRefreshTimer = null
+      }
+      const ms = Math.max(0, delayMs)
+      this.upvotesWalletRefreshTimer = window.setTimeout(() => {
+        this.upvotesWalletRefreshTimer = null
+        void this.refreshUpvotesWalletNow()
+      }, ms) as unknown as number
+    },
+    async refreshUpvotesWalletNow() {
+      if (this.upvotesWalletRefreshInFlight) return
+      this.upvotesWalletRefreshInFlight = true
+      try {
+        await this.loadUpvotesWallet()
+      } finally {
+        this.upvotesWalletRefreshInFlight = false
       }
     },
     setUserId(userId: string) {
@@ -374,6 +428,12 @@ export const useUserAuth = defineStore("userAuth", {
       this.notificationConfig = null
       this.userProfile = null
       this.upvotesWallet = null
+      this.pendingUpvoteSpends = 0
+      if (this.upvotesWalletRefreshTimer) {
+        try { window.clearTimeout(this.upvotesWalletRefreshTimer) } catch { clearTimeout(this.upvotesWalletRefreshTimer) }
+        this.upvotesWalletRefreshTimer = null
+      }
+      this.upvotesWalletRefreshInFlight = false
       umami.identify({ userId: "logged-out" })
       try { telemetree.identify({ userId: "logged-out" }) } catch {}
       clearImageSecretCache()
