@@ -3821,6 +3821,161 @@ export type AdminListUploadedImages200 = {
   items: AdminListUploadedImages200ItemsItem[];
 };
 
+export type AdminEmailFunnelsOverview200ItemTemplate = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  subject: string;
+};
+
+export type AdminEmailFunnelsOverview200ItemUnsubscribeGroup = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  sendgridGroupId: number | null;
+};
+
+export type AdminEmailFunnelsOverview200ItemStats = {
+  total: number;
+  sent: number;
+  ready: number;
+  pending: number;
+  skipped: number;
+  failed: number;
+};
+
+export type AdminEmailFunnelsOverview200Item = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  active: boolean;
+  handlerKey: string;
+  shouldSendKey: string;
+  sendDelaySeconds: number;
+  /** @nullable */
+  cooldownHours: number | null;
+  template: AdminEmailFunnelsOverview200ItemTemplate;
+  unsubscribeGroup: AdminEmailFunnelsOverview200ItemUnsubscribeGroup;
+  stats: AdminEmailFunnelsOverview200ItemStats;
+  /** @nullable */
+  lastEvaluatedAt: string | null;
+  /** @nullable */
+  lastSentAt: string | null;
+};
+
+export type AdminEmailFunnelOptions200DefinitionsItem = {
+  key: string;
+  description: string;
+  /** @nullable */
+  candidateBatchSize: number | null;
+};
+
+export type AdminEmailFunnelOptions200TemplatesItem = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  subject: string;
+};
+
+export type AdminEmailFunnelOptions200UnsubscribeGroupsItem = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  sendgridGroupId: number | null;
+};
+
+export type AdminEmailFunnelOptions200 = {
+  definitions: AdminEmailFunnelOptions200DefinitionsItem[];
+  templates: AdminEmailFunnelOptions200TemplatesItem[];
+  unsubscribeGroups: AdminEmailFunnelOptions200UnsubscribeGroupsItem[];
+};
+
+export type AdminEmailFunnelsSyncBuiltinBody = { [key: string]: unknown };
+
+export type AdminEmailFunnelsSyncBuiltin200 = {
+  ok: boolean;
+};
+
+export type AdminEmailFunnelUpdateBody = {
+  id: string;
+  name?: string;
+  /** @nullable */
+  description?: string | null;
+  active?: boolean;
+  handlerKey?: string;
+  shouldSendKey?: string;
+  templateId?: string;
+  unsubscribeGroupId?: string;
+  /** @minimum 0 */
+  sendDelaySeconds?: number;
+  /**
+   * @minimum 0
+   * @nullable
+   */
+  cooldownHours?: number | null;
+};
+
+export type AdminEmailFunnelUpdate200Template = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  subject: string;
+};
+
+export type AdminEmailFunnelUpdate200UnsubscribeGroup = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  sendgridGroupId: number | null;
+};
+
+export type AdminEmailFunnelUpdate200Stats = {
+  total: number;
+  sent: number;
+  ready: number;
+  pending: number;
+  skipped: number;
+  failed: number;
+};
+
+export type AdminEmailFunnelUpdate200 = {
+  id: string;
+  key: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  active: boolean;
+  handlerKey: string;
+  shouldSendKey: string;
+  sendDelaySeconds: number;
+  /** @nullable */
+  cooldownHours: number | null;
+  template: AdminEmailFunnelUpdate200Template;
+  unsubscribeGroup: AdminEmailFunnelUpdate200UnsubscribeGroup;
+  stats: AdminEmailFunnelUpdate200Stats;
+  /** @nullable */
+  lastEvaluatedAt: string | null;
+  /** @nullable */
+  lastSentAt: string | null;
+};
+
 export type AdminDiscountCodesList200Item = {
   code: string;
   discount: number;
@@ -5190,6 +5345,7 @@ export type MotdPublish200 = {
   /** @nullable */
   expiresAt: string | null;
   emailed: boolean;
+  telegramSent: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5230,6 +5386,7 @@ export type MotdUpdate200 = {
   /** @nullable */
   expiresAt: string | null;
   emailed: boolean;
+  telegramSent: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5258,6 +5415,17 @@ export type MotdSendEmail200 = {
   sent: number;
   failedCount: number;
   failures: MotdSendEmail200FailuresItem[];
+};
+
+export type MotdSendTelegramBody = {
+  id: string;
+};
+
+export type MotdSendTelegram200 = {
+  processed: number;
+  sent: number;
+  skipped: number;
+  errors: number;
 };
 
 export type MotdEmailStats200ItemsItemMetrics = {
@@ -5304,6 +5472,7 @@ export type MotdList200ItemsItem = {
   /** @nullable */
   expiresAt: string | null;
   emailed: boolean;
+  telegramSent: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -5347,6 +5516,7 @@ export type MotdGet200 = {
   /** @nullable */
   expiresAt: string | null;
   emailed: boolean;
+  telegramSent: boolean;
   /** @nullable */
   createdById: string | null;
   /** @nullable */
@@ -8005,6 +8175,92 @@ export const adminListUploadedImages = async (params?: AdminListUploadedImagesPa
 
 
 
+export const getAdminEmailFunnelsOverviewUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelsOverview`
+}
+
+export const adminEmailFunnelsOverview = async ( options?: RequestInit): Promise<AdminEmailFunnelsOverview200Item[]> => {
+  
+  return fetcher<AdminEmailFunnelsOverview200Item[]>(getAdminEmailFunnelsOverviewUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminEmailFunnelOptionsUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelOptions`
+}
+
+export const adminEmailFunnelOptions = async ( options?: RequestInit): Promise<AdminEmailFunnelOptions200> => {
+  
+  return fetcher<AdminEmailFunnelOptions200>(getAdminEmailFunnelOptionsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminEmailFunnelsSyncBuiltinUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelsSyncBuiltin`
+}
+
+export const adminEmailFunnelsSyncBuiltin = async (adminEmailFunnelsSyncBuiltinBody?: AdminEmailFunnelsSyncBuiltinBody, options?: RequestInit): Promise<AdminEmailFunnelsSyncBuiltin200> => {
+  
+  return fetcher<AdminEmailFunnelsSyncBuiltin200>(getAdminEmailFunnelsSyncBuiltinUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminEmailFunnelsSyncBuiltinBody,)
+  }
+);}
+
+
+
+export const getAdminEmailFunnelUpdateUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelUpdate`
+}
+
+export const adminEmailFunnelUpdate = async (adminEmailFunnelUpdateBody: AdminEmailFunnelUpdateBody, options?: RequestInit): Promise<AdminEmailFunnelUpdate200> => {
+  
+  return fetcher<AdminEmailFunnelUpdate200>(getAdminEmailFunnelUpdateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminEmailFunnelUpdateBody,)
+  }
+);}
+
+
+
 export const getAdminDiscountCodesListUrl = () => {
 
 
@@ -9624,6 +9880,28 @@ export const motdSendEmail = async (motdSendEmailBody: MotdSendEmailBody, option
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       motdSendEmailBody,)
+  }
+);}
+
+
+
+export const getMotdSendTelegramUrl = () => {
+
+
+  
+
+  return `/motd/sendTelegram`
+}
+
+export const motdSendTelegram = async (motdSendTelegramBody: MotdSendTelegramBody, options?: RequestInit): Promise<MotdSendTelegram200> => {
+  
+  return fetcher<MotdSendTelegram200>(getMotdSendTelegramUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      motdSendTelegramBody,)
   }
 );}
 

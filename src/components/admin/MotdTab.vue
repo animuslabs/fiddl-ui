@@ -48,6 +48,15 @@
         .row.items-center.q-gutter-xs
           q-btn(size="sm" icon="visibility" flat :title="'Preview'" @click="openPreviewRow(props.row)")
           q-btn(size="sm" icon="edit" color="primary" flat :title="'Edit'" @click="openEdit(props.row)")
+          q-btn(
+            size="sm"
+            icon="send"
+            color="info"
+            flat
+            :disable="props.row.telegramSent || sendingTelegram"
+            :title="props.row.telegramSent ? 'Already sent to Telegram' : 'Publish to Telegram'"
+            @click="openTelegramConfirm(props.row)"
+          )
           q-btn(size="sm" icon="mail" color="warning" flat :disable="props.row.emailed || sending" :title="props.row.emailed ? 'Already emailed' : 'Send mass email'" @click="openSendConfirm(props.row)")
   // Inline create/edit form (simple + reliable)
   q-card(v-if="formOpen" class="motd-form-card" flat bordered)
@@ -161,6 +170,48 @@
       q-card-actions(align="right")
         q-btn(flat label="Close" v-close-popup)
 
+  // Confirm send-telegram dialog
+  q-dialog(v-model="confirmTelegramOpen" :maximized="$q.screen.lt.md")
+    q-card(flat bordered style="min-width: min(560px, 96vw)")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="send" size="28px" color="info" class="q-mt-xs")
+          .column
+            .text-h6 Publish MOTD to Telegram
+            .text-caption.text-grey-6(v-if="telegramTarget?.title") {{ telegramTarget?.title }}
+            .text-body2.q-mt-sm This will post this MOTD to Telegram followers.
+            .text-negative.text-caption.q-mt-xs(v-if="telegramTarget?.telegramSent") This MOTD has already been sent to Telegram.
+      q-card-actions(align="right")
+        q-btn(flat label="Cancel" v-close-popup :disable="sendingTelegram")
+        q-btn(color="info" label="Publish to Telegram" :loading="sendingTelegram" :disable="sendingTelegram || telegramTarget?.telegramSent" @click="confirmTelegram")
+
+  // Telegram results dialog
+  q-dialog(v-model="telegramResultOpen" :maximized="$q.screen.lt.md")
+    q-card(flat bordered style="min-width: min(560px, 96vw); max-width: 96vw")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="outgoing_mail" size="28px" color="info" class="q-mt-xs")
+          .column
+            .text-h6 Telegram Publish Results
+            .text-caption.text-grey-6(v-if="telegramTarget?.title") {{ telegramTarget?.title }}
+      q-separator
+      q-card-section
+        .row.q-col-gutter-lg
+          .col-auto
+            .text-body1.text-weight-medium Processed
+            .text-h6 {{ telegramResult?.processed || 0 }}
+          .col-auto
+            .text-body1.text-weight-medium Sent
+            .text-h6 {{ telegramResult?.sent || 0 }}
+          .col-auto
+            .text-body1.text-weight-medium Skipped
+            .text-h6 {{ telegramResult?.skipped || 0 }}
+          .col-auto
+            .text-body1.text-weight-medium Errors
+            .text-h6(:class="(telegramResult?.errors||0) > 0 ? 'text-negative' : ''") {{ telegramResult?.errors || 0 }}
+      q-card-actions(align="right")
+        q-btn(flat label="Close" v-close-popup)
+
   // Email stats dialog
   q-dialog(v-model="statsOpen" :maximized="$q.screen.lt.md")
     q-card(flat bordered style="min-width: min(960px, 98vw); max-width: 98vw; max-height: 96vh; display:flex; flex-direction:column")
@@ -198,10 +249,12 @@ import {
   useMotdPublish,
   useMotdUpdate,
   useMotdSendEmail,
+  useMotdSendTelegram,
   useMotdEmailStats,
   type MotdList200ItemsItem,
   type MotdEmailStats200ItemsItem,
   type MotdSendEmail200,
+  type MotdSendTelegram200,
 } from 'src/lib/orval'
 
 type DialogMode = 'create' | 'edit'
@@ -321,6 +374,7 @@ const previewBodyClass = computed(() => ({
 const publishMutation = useMotdPublish()
 const updateMutation = useMotdUpdate()
 const sendEmailMutation = useMotdSendEmail()
+const sendTelegramMutation = useMotdSendTelegram()
 
 function resetForm() {
   form.id = null
@@ -565,6 +619,36 @@ const statsColumns = [
   { name: 'lastEventAt', label: 'Last Event', field: (row: MotdEmailStats200ItemsItem) => (row.lastEventAt ? toLocalDisplay(row.lastEventAt) : '-'), align: 'left', sortable: true },
   { name: 'error', label: 'Error', field: 'error', align: 'left', sortable: false },
 ] as const
+
+// --- Send Telegram flow ---
+const confirmTelegramOpen = ref(false)
+const telegramTarget = ref<MotdList200ItemsItem | null>(null)
+const sendingTelegram = ref(false)
+const telegramResultOpen = ref(false)
+const telegramResult = ref<MotdSendTelegram200 | null>(null)
+
+function openTelegramConfirm(row: MotdList200ItemsItem) {
+  telegramTarget.value = row
+  confirmTelegramOpen.value = true
+}
+
+async function confirmTelegram() {
+  if (!telegramTarget.value) return
+  try {
+    sendingTelegram.value = true
+    const res = await sendTelegramMutation.mutateAsync({ data: { id: telegramTarget.value.id } })
+    const payload = res?.data
+    telegramResult.value = payload || null
+    confirmTelegramOpen.value = false
+    telegramResultOpen.value = true
+    Notify.create({ type: 'positive', message: `Telegram sent: ${payload?.sent ?? 0}` })
+    await motdQuery.refetch()
+  } catch (error) {
+    catchErr(error)
+  } finally {
+    sendingTelegram.value = false
+  }
+}
 </script>
 
 <style lang="sass" scoped>

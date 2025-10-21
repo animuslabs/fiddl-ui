@@ -46,6 +46,14 @@ MediaViewerControls(
             @volumechange="onVolumeChange"
             @click.stop="onMediaClick"
           )
+          //- Visible overlay while HD (or LG fallback) is loading and preview is showing
+          div.hd-loading-overlay(
+            v-if="mediaViewerStore.hdVideoLoading && !showHd"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading HD video"
+          )
+            span.hd-loading-text Loading HD
           //- HD layer (fades in when synced)
           video.video-layer.hd(
             v-if="hdCandidateUrl"
@@ -73,9 +81,7 @@ MediaViewerControls(
           ref="imageRef"
         )
 
-      .absolute-top.full-width(style="width:100vw")
-        .centered(v-if="mediaViewerStore.hdVideoLoading")
-          h6.text-white HD Loading
+
 </template>
 
 <script setup lang="ts">
@@ -154,9 +160,19 @@ const stageSizeStyle = computed(() => {
   style.width = `${width > 0 ? width : frameMaxWidth.value}px`
   return style
 })
-const imageStageStyle = computed(() => ({
-  ...stageSizeStyle.value,
-}))
+const imageStageStyle = computed(() => {
+  const style: Record<string, string> = {
+    ...stageSizeStyle.value,
+  }
+  if (aspectRatio.value) {
+    style.aspectRatio = aspectRatio.value
+  } else if (displayDimensions.value.height > 0) {
+    style.height = `${displayDimensions.value.height}px`
+  } else {
+    style.height = stageHeight.value
+  }
+  return style
+})
 const videoStageStyle = computed(() => {
   const style: Record<string, string> = {
     ...stageSizeStyle.value,
@@ -209,6 +225,7 @@ const hdCandidateUrl = computed(() => currentHdUrl.value || s3Video(mediaViewerS
 
 // Aspect ratio lock for container (prevents size pop)
 const aspectRatio = ref<string | null>(null)
+const aspectRatioNum = ref<number | null>(null)
 
 // Crossfade control
 const showHd = ref(false)
@@ -257,6 +274,7 @@ function applyVideoDimensions(width: number, height: number): boolean {
   if (!width || !height) return false
   previewReady.value = true
   aspectRatio.value = `${width} / ${height}`
+  aspectRatioNum.value = width / height
   updateNaturalDimensions(width, height)
   return true
 }
@@ -583,6 +601,7 @@ watch(
     // Reset local crossfade state and aspect ratio
     showHd.value = false
     aspectRatio.value = null
+    aspectRatioNum.value = null
     cancelSyncLoop()
 
     // Check like status and load HD media only for navigation between media
@@ -725,13 +744,26 @@ onBeforeUnmount(() => {
 function updateNaturalDimensions(width: number, height: number) {
   if (!width || !height) return
   naturalDimensions.value = { width, height }
+  // Lock aspect ratio on first measurement for images so md->lg->hd swaps don't reflow
+  if (!aspectRatioNum.value) {
+    aspectRatioNum.value = width / height
+    aspectRatio.value = `${width} / ${height}`
+  }
   recalculateDisplayDimensions()
 }
 
 function recalculateDisplayDimensions() {
   const { width, height } = naturalDimensions.value
-  if (!width || !height) return
   if (typeof window === "undefined") {
+    if (aspectRatioNum.value) {
+      const ratio = Math.max(0.0001, aspectRatioNum.value)
+      const baseH = 1000
+      const baseW = Math.round(baseH * ratio)
+      displayDimensions.value = { width: baseW, height: baseH }
+      mediaWidth.value = baseW
+      return
+    }
+    if (!width || !height) return
     displayDimensions.value = { width, height }
     mediaWidth.value = width
     return
@@ -739,6 +771,27 @@ function recalculateDisplayDimensions() {
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight
   const maxHeight = Math.max(0, Math.round(viewportHeight * 0.75))
   const maxWidth = frameMaxWidth.value
+
+  // Prefer locked aspect ratio when available to keep size stable across src swaps
+  if (aspectRatioNum.value) {
+    const ratio = Math.max(0.0001, aspectRatioNum.value)
+    const widthIfMaxHeight = Math.round(maxHeight * ratio)
+    let displayWidth: number
+    let displayHeight: number
+    if (widthIfMaxHeight > maxWidth) {
+      displayWidth = Math.max(1, Math.round(maxWidth))
+      displayHeight = Math.max(1, Math.round(displayWidth / ratio))
+    } else {
+      displayHeight = Math.max(1, Math.round(maxHeight))
+      displayWidth = Math.max(1, Math.round(displayHeight * ratio))
+    }
+    displayDimensions.value = { width: displayWidth, height: displayHeight }
+    mediaWidth.value = displayWidth
+    scheduleStageMeasurement()
+    return
+  }
+
+  if (!width || !height) return
   const widthScale = maxWidth > 0 && width > 0 ? maxWidth / width : Number.POSITIVE_INFINITY
   const heightScale = maxHeight > 0 && height > 0 ? maxHeight / height : Number.POSITIVE_INFINITY
   const scaleCandidate = Math.min(widthScale, heightScale)
@@ -760,6 +813,8 @@ function primeDimensionsFromMetadata(media: any) {
   const baseHeight = 1000
   const baseWidth = Math.max(1, aspect * baseHeight)
   naturalDimensions.value = { width: baseWidth, height: baseHeight }
+  aspectRatioNum.value = aspect
+  aspectRatio.value = `${baseWidth} / ${baseHeight}`
   recalculateDisplayDimensions()
 }
 </script>
@@ -813,6 +868,39 @@ function primeDimensionsFromMetadata(media: any) {
     animation: none;
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* High-contrast flashing overlay for HD loading while preview is active */
+.hd-loading-overlay {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  animation: mv-flash 1.2s ease-in-out infinite;
+}
+.hd-loading-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+@keyframes mv-flash {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hd-loading-overlay {
+    animation: none;
+    opacity: 1;
   }
 }
 .image-darken {
