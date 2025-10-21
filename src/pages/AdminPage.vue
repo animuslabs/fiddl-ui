@@ -6,6 +6,7 @@ q-page.full-height.full-width.admin-page
     q-tabs(v-model="tab" ).q-mb-md
       q-tab( name="promo-codes" label="Promo Codes")
       q-tab(name="motd" label="MOTD")
+      q-tab(name="email-funnels" label="Email Funnels")
       q-tab(name="users" label="Users")
       q-tab(name="user-attributions" label="User Attributions")
       q-tab(name="payments" label="Payments")
@@ -91,6 +92,9 @@ q-page.full-height.full-width.admin-page
     // MOTD tab
     div(v-if="tab == 'motd'" class="q-pa-sm")
       MotdTab
+
+    div(v-if="tab == 'email-funnels'" class="q-pa-sm")
+      EmailFunnelsTab
 
     // Discount Codes tab
     div(v-if="tab == 'discount-codes'" class="q-pa-sm")
@@ -331,6 +335,26 @@ q-page.full-height.full-width.admin-page
               q-btn(size="sm" icon="login" flat @click="loginAsUser(props.row.user.id)" class="q-ml-xs")
             template(v-else)
               span -
+      template(#body-cell-attribution="props")
+        q-td(:props="props" class="no-wrap" style="white-space: nowrap;")
+          .row.items-center.no-wrap.q-gutter-xs
+            q-chip(
+              v-if="props.row.user?.id && attribSourceByUserId[props.row.user.id] && attribSourceByUserId[props.row.user.id] !== '-'"
+              size="sm"
+              color="grey-7"
+              text-color="white"
+              dense
+            ) {{ attribSourceByUserId[props.row.user.id] }}
+            q-badge(v-else color="grey-5" text-color="black" label="-")
+            q-btn(
+              size="sm"
+              icon="insights"
+              flat dense round
+              :disable="!props.row.user?.id || !canOpenAttrib(props.row.user.id)"
+              :loading="props.row.user?.id ? attribLoading[props.row.user.id] === true : false"
+              :title="props.row.user?.id && canOpenAttrib(props.row.user.id) ? 'View attribution' : 'No attribution data'"
+              @click="props.row.user && openAttributionDialog(props.row.user)"
+            )
       template(#body-cell-discount="props")
         q-td(:props="props")
           template(v-if="props.row.discountInfo")
@@ -674,12 +698,13 @@ type TablePagination = { sortBy: string; descending: boolean; page: number; rows
 type OnRequestProps = { pagination: TablePagination }
 
 import AdminStats from "components/admin/AdminStats.vue"
+import EmailFunnelsTab from "components/admin/EmailFunnelsTab.vue"
 import MotdTab from "components/admin/MotdTab.vue"
 import UserAttributionsTab from "components/admin/UserAttributionsTab.vue"
 import UserAttributionDetails from "components/dialogs/UserAttributionDetails.vue"
 
 export default defineComponent({
-  components: { AdminStats, MotdTab, UserAttributionsTab },
+  components: { AdminStats, EmailFunnelsTab, MotdTab, UserAttributionsTab },
 
   setup() {
     const router = useRouter()
@@ -810,8 +835,10 @@ export default defineComponent({
       attribLoading.value[userId] = true
       try {
         const res = await adminAttributionGroups({ groupBy: 'source', search: userId, includeUnknown: true, limit: 5, offset: 0 })
-        const item = res?.data?.items?.[0]
-        attribSourceByUserId.value[userId] = (item?.key as any) || '-'
+        const items = Array.isArray(res?.data?.items) ? res?.data?.items : []
+        const firstKnown = items.find((it: any) => typeof it?.key === 'string' && it.key.trim().length > 0)
+        const fallback = items[0]
+        attribSourceByUserId.value[userId] = (firstKnown?.key as any) || (fallback?.key as any) || '-'
       } catch {
         attribSourceByUserId.value[userId] = '-'
       } finally {
@@ -927,6 +954,13 @@ export default defineComponent({
       for (const r of paymentsRows.value) if (r?.status) vals.add(String(r.status))
       return Array.from(vals).sort()
     })
+    watch(paymentsRows, (rows) => {
+      const ids = (rows || [])
+        .map((r: any) => r?.user?.id)
+        .filter((id: any): id is string => typeof id === 'string' && id.length > 0)
+        .slice(0, 50)
+      ids.forEach((id: string) => void loadAttribForUser(id))
+    }, { immediate: true })
 
     const labelById = (id?: string | null) => {
       const key = typeof id === 'string' ? id : ''
@@ -1036,6 +1070,7 @@ export default defineComponent({
     const paymentsColumns: QTableColumn<any>[] = [
       { name: "createdAt", label: "Date", field: "createdAt", sortable: true, format: (val: string) => (val ? new Date(val).toLocaleString() : "") },
       { name: "user", label: "User", field: (row: any) => row.user?.username || row.user?.email || row.user?.telegramName || row.user?.telegramId || row.user?.id || "-", sortable: true },
+      { name: "attribution", label: "Attrib", field: (row: any) => row?.user?.id || "", sortable: false },
       { name: "method", label: "Method", field: "method", sortable: true },
       { name: "status", label: "Status", field: "status", sortable: true },
       { name: "points", label: "Points", field: "points", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
@@ -2128,7 +2163,7 @@ export default defineComponent({
       })
     },
     normalizeAdminTab(slug?: string): string {
-      const allowed = new Set(["promo-codes", "motd", "users", "user-attributions", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
+      const allowed = new Set(["promo-codes", "motd", "email-funnels", "users", "user-attributions", "payments", "uploaded-images", "training-images", "discount-codes", "affiliate-payouts", "stats"]) as Set<string>
       if (!slug) return "promo-codes"
       return allowed.has(slug) ? slug : "promo-codes"
     },
@@ -2255,7 +2290,10 @@ export default defineComponent({
     },
     openAttributionDialog(row: any) {
       try {
-        Dialog.create({ component: UserAttributionDetails, componentProps: { userId: row?.id, username: row?.profile?.username || null } })
+        const userId = row?.id || row?.userId || row?.user?.id
+        if (!userId) return
+        const username = row?.profile?.username ?? row?.username ?? row?.user?.profile?.username ?? null
+        Dialog.create({ component: UserAttributionDetails, componentProps: { userId, username } })
       } catch (e) {}
     },
   },

@@ -16,41 +16,13 @@ div.media-viewer-shell
         )
       div.viewer-top-actions
         q-btn(
-          v-if="!isCompact"
-          icon="share"
-          round
-          flat
-          color="white"
-          size="sm"
-          :dense="$q.screen.lt.md"
-          @click.stop="shareMenuOpen = true"
-        )
-          q-menu(
-            v-model:show="shareMenuOpen"
-            anchor="bottom left"
-            self="top left"
-            class="viewer-menu"
-            @click.stop
-          )
-            q-list
-              q-item(clickable @click.stop="mobileShare()" v-close-popup)
-                q-item-section
-                  .row.items-center
-                    q-icon(:name="shareIcon" size="20px").q-mr-md
-                    div Share Creation
-              q-item(clickable @click="share()" v-close-popup)
-                q-item-section
-                  .row.items-center
-                    q-icon(name="content_copy" size="20px").q-mr-md
-                    div Copy Link
-        q-btn(
           v-if="mediaViewerStore.loadedRequestId"
           icon="sym_o_info"
           round
           flat
           color="white"
-          size="sm"
-          :dense="$q.screen.lt.md"
+          :size="topButtonSize"
+          :dense="topButtonDense"
           @click.stop="showRequestInfoDialog()"
         )
         q-btn(
@@ -60,8 +32,8 @@ div.media-viewer-shell
           flat
           :class="mediaViewerStore.downloadClass"
           color="white"
-          size="sm"
-          :dense="$q.screen.lt.md"
+          :size="topButtonSize"
+          :dense="topButtonDense"
           @click.stop="showDownloadWindow()"
         )
           q-tooltip
@@ -71,8 +43,8 @@ div.media-viewer-shell
           icon="edit"
           round
           flat
-          size="sm"
-          :dense="$q.screen.lt.md"
+          :size="topButtonSize"
+          :dense="topButtonDense"
           :color="mediaViewerStore.editBtnColor"
           @click.stop="editMedia()"
         )
@@ -81,8 +53,8 @@ div.media-viewer-shell
           round
           flat
           color="white"
-          size="sm"
-          :dense="$q.screen.lt.md"
+          :size="topButtonSize"
+          :dense="topButtonDense"
           @click.stop="moreMenuOpen = true"
         )
           q-menu(
@@ -160,6 +132,34 @@ div.media-viewer-shell
       :class="{ 'has-counts': hasAnyCounts }"
     )
       div.pop-row(:class="{ 'has-any-counts': hasAnyCounts }")
+        div.pop-item
+          q-btn(
+            icon="share"
+            round
+            flat
+            size="sm"
+            :dense="$q.screen.lt.md"
+            color="white"
+            @click.stop="shareMenuOpen = true"
+          )
+          q-menu(
+            v-model:show="shareMenuOpen"
+            anchor="top middle"
+            self="bottom middle"
+            class="viewer-menu"
+            @click.stop
+          )
+            q-list
+              q-item(clickable @click.stop="mobileShare()" v-close-popup)
+                q-item-section
+                  .row.items-center
+                    q-icon(:name="shareIcon" size="20px").q-mr-md
+                    div Share Creation
+              q-item(clickable @click="share()" v-close-popup)
+                q-item-section
+                  .row.items-center
+                    q-icon(name="content_copy" size="20px").q-mr-md
+                    div Copy Link
         div.pop-item
           q-btn(
             icon="favorite"
@@ -278,6 +278,8 @@ const showCreatorInfo = computed(() => mediaViewerStore.creatorMeta.userName.len
 const shareIcon = computed(() => (mediaViewerStore.currentMediaType === "image" ? "image" : "smart_display"))
 const isCompact = computed(() => frameWidthValue.value < 520 || $q.screen.lt.sm)
 const hasAnyCounts = computed(() => favoriteCount.value > 0 || commentCount.value > 0 || upvoteCount.value > 0)
+const topButtonSize = computed(() => (isCompact.value ? "sm" : "md"))
+const topButtonDense = computed(() => (isCompact.value ? true : $q.screen.lt.md))
 
 const fallbackFrameWidth = computed(() => {
   const available = Math.max(320, $q.screen.width - 32)

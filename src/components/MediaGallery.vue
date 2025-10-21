@@ -1719,7 +1719,7 @@ function prefetchImage(url: string): Promise<void> {
                 template(v-else)
                   // Loading overlay for images that are still rendering/propagating
                   // Use v-show to avoid DOM remove/add and prevent pop
-                  div.loading-overlay(v-show="showImageOverlay(m.id)")
+                  div.loading-overlay(v-show="!isPendingItem(m) && showImageOverlay(m.id)")
                     div.loading-overlay__stack
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
@@ -1746,7 +1746,12 @@ function prefetchImage(url: string): Promise<void> {
                     )
                   // Pending items: avoid mounting <img> to prevent UA broken-icon flicker
                   template(v-else)
-                    div.media-placeholder
+                    div.media-placeholder(:class="{ 'media-placeholder--pending': props.showLoading }")
+                      template(v-if="props.showLoading")
+                        div.media-placeholder__overlay
+                          div.loading-overlay__stack
+                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                            span.loading-overlay__label Loading
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
                 div.media-placeholder
@@ -1798,7 +1803,7 @@ function prefetchImage(url: string): Promise<void> {
                     span.nsfw-helper Tap to confirm viewing
                 template(v-else)
                   // Loading overlay for images that are still rendering/propagating
-                  div.loading-overlay(v-show="showImageOverlay(m.id)")
+                  div.loading-overlay(v-show="!isPendingItem(m) && showImageOverlay(m.id)")
                     div.loading-overlay__stack
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
                       span.loading-overlay__label Loading
@@ -1825,7 +1830,12 @@ function prefetchImage(url: string): Promise<void> {
                     )
                   // Pending items: avoid mounting <img> to prevent UA broken-icon flicker
                   template(v-else)
-                    div.media-placeholder
+                    div.media-placeholder(:class="{ 'media-placeholder--pending': props.showLoading }")
+                      template(v-if="props.showLoading")
+                        div.media-placeholder__overlay
+                          div.loading-overlay__stack
+                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                            span.loading-overlay__label Loading
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
                 div.media-placeholder
@@ -2108,6 +2118,36 @@ function prefetchImage(url: string): Promise<void> {
   width: 100%;
   height: 100%;
   background: #000; /* black placeholder */
+}
+
+.media-placeholder__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: inherit;
+}
+
+.media-wrapper.mode-grid .media-placeholder {
+  position: relative;
+  height: auto;
+}
+
+.media-wrapper.mode-grid .media-placeholder::before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+
+.media-wrapper.mode-grid .media-placeholder__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.media-placeholder--pending {
+  color: white;
 }
 
 /* Transparent spacer used when offscreen but preview should remain visible */

@@ -1,54 +1,68 @@
 <template lang="pug">
-q-card.q-dialog-plugin(:style="$q.screen.lt.md ? 'width:92vw; max-width:92vw; max-height:90vh;' : 'width:760px; max-width:95vw; max-height:90vh;'")
-  q-card-section(class="row items-center q-gutter-sm")
-    q-avatar(icon="insights" color="primary" text-color="white")
-    .column
-      .text-h6 User Attribution Details
-      .text-caption.text-grey-7 {{ subtitle }}
-    q-space
-    q-btn(flat round dense icon="close" v-close-popup)
-  q-separator
+q-dialog(
+  ref="dialogRef"
+  :maximized="$q.screen.lt.md"
+  transition-show="jump-down"
+  transition-hide="jump-up"
+  @hide="onDialogHide"
+)
+  q-card.q-dialog-plugin.attribution-dialog(:style="cardStyle")
+    q-card-section(class="row items-center q-gutter-sm")
+      q-avatar(icon="insights" color="primary" text-color="white")
+      .column
+        .text-h6 User Attribution Details
+        .text-caption.text-grey-7 {{ subtitle }}
+      q-space
+      q-btn(flat round dense icon="close" @click="onDialogCancel")
+    q-separator
 
-  q-card-section
-    q-scroll-area(style="height: calc(90vh - 120px)")
-      .column.q-gutter-md
-        div(v-for="section in sections" :key="section.key")
-          .row.items-center.q-gutter-sm
-            .text-subtitle2 {{ section.label }}
-            q-spinner(size="xs" v-if="section.loading")
-          .q-mt-xs
+    q-card-section(class="q-pt-none")
+      q-scroll-area(:style="scrollAreaStyle" class="q-pr-sm")
+        .column.q-gutter-lg
+          div(v-for="section in sections" :key="section.key" class="section-block")
+            .row.items-center.q-gutter-sm.q-mb-xs
+              .text-subtitle2 {{ section.label }}
+              q-spinner(size="xs" v-if="section.loading")
             template(v-if="section.error")
               q-banner(dense inline-actions class="bg-red-2 text-negative")
                 template(#avatar)
                   q-icon(name="warning")
                 | Failed to load
             template(v-else-if="section.items && section.items.length")
-              .row.q-col-gutter-sm
-                .col-12(v-for="item in section.items" :key="String(item.key) + '-' + section.key")
-                  .row.items-center.q-gutter-xs
-                    q-chip(size="sm" color="dark" text-color="white" dense)
-                      | {{ item.key || 'Unknown' }}
-                    q-chip(size="sm" color="primary" text-color="white" dense)
-                      | Users: {{ (item.users || 0).toLocaleString() }}
-                    q-chip(size="sm" color="secondary" text-color="white" dense)
-                      | Paid: {{ (item.paidUsers || 0).toLocaleString() }}
-                    q-chip(size="sm" color="grey-7" text-color="white" dense)
-                      | Created Img: {{ (item.createdImageUsers || 0).toLocaleString() }}
+              q-markup-table(dense flat bordered class="attribution-table")
+                thead
+                  tr
+                    th.label-col Value
+                    th.count-col Users
+                    th.count-col Paid
+                    th.count-col Created Img
+                tbody
+                  tr(v-for="item in section.items" :key="`${section.key}-${String(item.key ?? 'unknown')}`")
+                    td.label-col {{ formatValue(item.key) }}
+                    td.count-col {{ formatCount(item.users) }}
+                    td.count-col {{ formatCount(item.paidUsers) }}
+                    td.count-col {{ formatCount(item.createdImageUsers) }}
             template(v-else)
               .text-grey-7 None
 
-  q-separator
-  q-card-actions(align="right")
-    q-btn(flat label="Close" v-close-popup)
+    q-separator
+    q-card-actions(align="right")
+      q-btn(flat label="Close" @click="onDialogCancel")
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, computed } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
+import { useDialogPluginComponent, useQuasar } from 'quasar'
 import { adminAttributionGroups, type AdminAttributionGroups200ItemsItem } from 'src/lib/orval'
+
+defineEmits([...useDialogPluginComponent.emits])
+
+const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent()
+const $q = useQuasar()
 
 const props = defineProps<{ userId: string; username?: string | null }>()
 
-const subtitle = computed(() => props.username ? `@${props.username} (${props.userId})` : props.userId)
+const subtitle = computed(() => (props.username ? `@${props.username} (${props.userId})` : props.userId))
 
 type Section = { key: string; label: string; items: AdminAttributionGroups200ItemsItem[]; loading: boolean; error: boolean }
 
@@ -63,17 +77,48 @@ const sections = reactive<Section[]>([
   { key: 'surveyResultOther', label: 'Survey Other', items: [], loading: true, error: false },
 ])
 
+const cardStyle = computed(() => {
+  if ($q.screen.lt.md) {
+    return {
+      width: '100%',
+      maxWidth: '100vw',
+      maxHeight: 'calc(100vh - 48px)',
+    }
+  }
+  return {
+    width: '760px',
+    maxWidth: '95vw',
+    maxHeight: 'calc(100vh - 96px)',
+  }
+})
+
+const scrollAreaStyle = computed(() => {
+  if ($q.screen.lt.md) {
+    return 'max-height: calc(100vh - 220px);'
+  }
+  return 'max-height: 60vh;'
+})
+
+const formatValue = (value: unknown) => {
+  if (value == null) return 'Unknown'
+  if (typeof value === 'string' && value.trim().length === 0) return 'Unknown'
+  return String(value)
+}
+
+const formatCount = (value: number | null | undefined) => {
+  const v = typeof value === 'number' ? value : Number(value || 0)
+  return v.toLocaleString()
+}
+
 onMounted(async () => {
-  // Fetch per section serially to avoid overloading
+  // Fetch per section serially to avoid hammering the API
   for (const s of sections) {
     s.loading = true
     s.error = false
     try {
       const { data } = await adminAttributionGroups({
         groupBy: s.key as any,
-        // NOTE: The API groups globally; user-level search may not match.
-        // We best-effort search by userId; if your API supports it, it will return matches.
-        // Otherwise sections will be empty and UI shows "None".
+        // NOTE: The API groups globally; user-level search may not match userId exactly.
         search: props.userId,
         includeUnknown: true,
         limit: 10,
@@ -89,3 +134,28 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped lang="scss">
+.attribution-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-block {
+  min-width: 0;
+}
+
+.attribution-table thead tr th,
+.attribution-table tbody tr td {
+  white-space: nowrap;
+}
+
+.attribution-table .label-col {
+  width: 45%;
+}
+
+.attribution-table .count-col {
+  width: 18%;
+  text-align: right;
+}
+</style>

@@ -558,10 +558,10 @@ const sending = ref(false)
 const sendResultOpen = ref(false)
 const sendResult = ref<MotdSendEmail200 | null>(null)
 
-const failureColumns = [
+const failureColumns: QTableColumn<{ email: string; reason: string }>[] = [
   { name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true },
   { name: 'reason', label: 'Reason', field: 'reason', align: 'left', sortable: true },
-] as const
+]
 
 function openSendConfirm(row: MotdList200ItemsItem) {
   sendTarget.value = row
@@ -603,7 +603,7 @@ function refetchStats() {
   void statsQuery.refetch()
 }
 
-const statsColumns = [
+const statsColumns: QTableColumn<MotdEmailStats200ItemsItem>[] = [
   { name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true },
   { name: 'startsAt', label: 'Starts', field: (row: MotdEmailStats200ItemsItem) => toLocalDisplay(row.startsAt), align: 'left', sortable: true },
   { name: 'emailed', label: 'Emailed', field: (row: MotdEmailStats200ItemsItem) => (row.emailed ? 'Yes' : 'No'), align: 'left', sortable: true },
@@ -618,7 +618,7 @@ const statsColumns = [
   { name: 'unsubscribes', label: 'Unsubs', field: (row: MotdEmailStats200ItemsItem) => row.metrics?.unsubscribes ?? 0, align: 'right', sortable: true },
   { name: 'lastEventAt', label: 'Last Event', field: (row: MotdEmailStats200ItemsItem) => (row.lastEventAt ? toLocalDisplay(row.lastEventAt) : '-'), align: 'left', sortable: true },
   { name: 'error', label: 'Error', field: 'error', align: 'left', sortable: false },
-] as const
+]
 
 // --- Send Telegram flow ---
 const confirmTelegramOpen = ref(false)

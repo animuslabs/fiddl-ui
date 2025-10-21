@@ -15,7 +15,7 @@ MediaViewerControls(
     )
       transition(name="fade")
         .absolute-top.full-width.loading-indicator-container(
-          v-if="mediaViewerStore.imgLoading || mediaViewerStore.loading || mediaViewerStore.hdVideoLoading || mediaViewerStore.rateLimitActive"
+          v-if="showLoadingIndicator"
           role="status"
           aria-label="Loading additional media"
         )
@@ -46,9 +46,9 @@ MediaViewerControls(
             @volumechange="onVolumeChange"
             @click.stop="onMediaClick"
           )
-          //- Visible overlay while HD (or LG fallback) is loading and preview is showing
+          //- Visible overlay while a higher-quality layer is loading (preview visible)
           div.hd-loading-overlay(
-            v-if="mediaViewerStore.hdVideoLoading && !showHd"
+            v-if="showHdLoadingOverlay"
             role="status"
             aria-live="polite"
             aria-label="Loading HD video"
@@ -135,10 +135,14 @@ const previewReady = ref(false)
 const METADATA_RETRY_LIMIT = 5
 const METADATA_RETRY_DELAY_MS = 120
 let metadataRetryHandle: number | null = null
-const MEASUREMENT_RETRY_LIMIT = 6
-const MEASUREMENT_RETRY_DELAY_MS = 120
+const MEASUREMENT_RETRY_LIMIT = 12
+const MEASUREMENT_RETRY_DELAY_MS = 60
+const BURST_MEASUREMENT_FRAMES = 8
+const INITIAL_MEASUREMENT_FRAMES = 14
 let measurementRetryHandle: number | null = null
 let measurementRetryAttempts = 0
+let measurementRaf: number | null = null
+let burstMeasurementsRemaining = 0
 const frameMaxWidth = computed(() => {
   const available = Math.max(MIN_FRAME_WIDTH, $q.screen.width - 32)
   return Math.min(available, MAX_FRAME_WIDTH)
@@ -251,6 +255,14 @@ const videoPlaceholderStyle = computed(() => {
   } as Record<string, string>
 })
 
+// Show HD overlay while preview is active and HD/LG layer hasn't taken over yet
+const showHdLoadingOverlay = computed(() => {
+  if (mediaViewerStore.currentMediaType !== "video") return false
+  if (mediaViewerStore.rateLimitActive) return false
+  // When preview is ready but HD/LG hasn't crossfaded in yet
+  return previewReady.value && !showHd.value
+})
+
 // Register currently active video with store for external controls
 function syncActiveVideoElement() {
   void nextTick(() => {
@@ -316,60 +328,53 @@ watch(
   },
 )
 
-// Detect if the currently bound image URL is the small preview
-const currentImageUrl = computed(() => (mediaViewerStore.currentMediaType === "image" ? mediaViewerStore.getCurrentMediaUrl() : ""))
-const isSmPreview = computed(() => /-sm\.webp(\?|$)/.test(currentImageUrl.value))
-
-const shouldDimDuringLoadRaw = computed(() => {
-  if (!mediaViewerStore.firstImageLoaded) return false
-  if (mediaViewerStore.loading) return true
-  if (mediaViewerStore.imgLoading && !isSmPreview.value) return true
-  return false
-})
-
-const BLUR_DELAY_MS = 500
-const shouldDimDuringLoad = ref(false)
-let blurDelayTimer: number | null = null
+// Loading dot: delay for images so it shows only after 500ms
+const LOADING_DOT_DELAY_MS = 500
+const showImmediateIndicator = computed(
+  () =>
+    mediaViewerStore.loading ||
+    mediaViewerStore.hdVideoLoading ||
+    mediaViewerStore.rateLimitActive ||
+    (mediaViewerStore.currentMediaType !== "image" && mediaViewerStore.imgLoading),
+)
+const watchingImageLoading = computed(() => mediaViewerStore.currentMediaType === "image" && mediaViewerStore.imgLoading)
+const showImageLoadingDelayed = ref(false)
+let imgLoadingTimer: number | null = null
 
 watch(
-  shouldDimDuringLoadRaw,
-  (shouldActivate) => {
-    if (shouldActivate) {
-      if (blurDelayTimer !== null || shouldDimDuringLoad.value) return
-      blurDelayTimer = window.setTimeout(() => {
-        shouldDimDuringLoad.value = true
-        blurDelayTimer = null
-      }, BLUR_DELAY_MS)
+  watchingImageLoading,
+  (active) => {
+    if (active) {
+      if (imgLoadingTimer != null) return
+      imgLoadingTimer = window.setTimeout(() => {
+        imgLoadingTimer = null
+        if (watchingImageLoading.value) showImageLoadingDelayed.value = true
+      }, LOADING_DOT_DELAY_MS)
     } else {
-      if (blurDelayTimer !== null) {
-        clearTimeout(blurDelayTimer)
-        blurDelayTimer = null
+      if (imgLoadingTimer != null) {
+        clearTimeout(imgLoadingTimer)
+        imgLoadingTimer = null
       }
-      if (shouldDimDuringLoad.value) {
-        shouldDimDuringLoad.value = false
-      }
+      showImageLoadingDelayed.value = false
     }
   },
   { immediate: true },
 )
 
+const showLoadingIndicator = computed(() => showImmediateIndicator.value || showImageLoadingDelayed.value)
+
 onBeforeUnmount(() => {
-  if (blurDelayTimer !== null) {
-    clearTimeout(blurDelayTimer)
-    blurDelayTimer = null
+  if (imgLoadingTimer !== null) {
+    clearTimeout(imgLoadingTimer)
+    imgLoadingTimer = null
   }
 })
 
 const imageWrapperClass = computed(() => ["image-wrapper"])
 
-const imageClassList = computed(() => {
-  if (!mediaViewerStore.firstImageLoaded) return "image-darken blur-anim-only"
-  return shouldDimDuringLoad.value ? "image-darken active blur-anim-dim" : "image-darken"
-})
-
 const imageAttrs = computed(() => {
   const base = {
-    class: imageClassList.value,
+    class: "image-static",
     style: {
       // Fill area; image sizing handled by wrapper CSS
       "max-height": viewportHeight(75),
@@ -616,17 +621,33 @@ function resetMeasurementRetry() {
     window.clearTimeout(measurementRetryHandle)
     measurementRetryHandle = null
   }
+  if (measurementRaf !== null) {
+    cancelAnimationFrame(measurementRaf)
+    measurementRaf = null
+  }
+  burstMeasurementsRemaining = 0
   measurementRetryAttempts = 0
 }
 
-function scheduleStageMeasurement() {
-  resetMeasurementRetry()
+function scheduleStageMeasurement(frames = BURST_MEASUREMENT_FRAMES, resetRetry = true) {
+  if (resetRetry) resetMeasurementRetry()
+  burstMeasurementsRemaining = Math.max(burstMeasurementsRemaining, Math.max(1, frames))
   runStageMeasurement()
 }
 
 function runStageMeasurement() {
+  if (measurementRaf !== null) return
   void nextTick(() => {
-    const performMeasurement = () => {
+    const scheduleNextFrame = () => {
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        measurementRaf = window.requestAnimationFrame(step)
+      } else {
+        step()
+      }
+    }
+
+    const step = () => {
+      measurementRaf = null
       const width = updateStageWidth()
       if (shouldRetryMeasurement(width)) {
         queueMeasurementRetry()
@@ -634,13 +655,14 @@ function runStageMeasurement() {
         measurementRetryAttempts = 0
         measurementRetryHandle = null
       }
+
+      if (burstMeasurementsRemaining > 0) {
+        burstMeasurementsRemaining -= 1
+        scheduleNextFrame()
+      }
     }
 
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-      window.requestAnimationFrame(performMeasurement)
-    } else {
-      performMeasurement()
-    }
+    scheduleNextFrame()
   })
 }
 
@@ -653,6 +675,7 @@ function queueMeasurementRetry() {
   measurementRetryAttempts += 1
   measurementRetryHandle = window.setTimeout(() => {
     measurementRetryHandle = null
+    burstMeasurementsRemaining = Math.max(burstMeasurementsRemaining, BURST_MEASUREMENT_FRAMES)
     runStageMeasurement()
   }, delay)
 }
@@ -877,7 +900,7 @@ function primeDimensionsFromMetadata(media: any) {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 40;
+  z-index: 80;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.7);
   color: #fff;
@@ -903,56 +926,10 @@ function primeDimensionsFromMetadata(media: any) {
     opacity: 1;
   }
 }
-.image-darken {
+.image-static {
   background-color: transparent;
   color: transparent;
-  /* Keep transform smooth; filter animation is handled via keyframes */
-  transition: transform 0.3s ease;
-  will-change: transform;
-}
-.image-darken.hd-loaded {
-  transform: scale(1.01);
-}
-.image-darken.active {
-  /* Fallback/static filter while not animating */
-  filter: blur(3px) brightness(50%) saturate(50%);
-}
-
-/* Blur-out animations
-   - blur-anim-only: only animates blur from 5px to 0px (no dimming)
-   - blur-anim-dim: animates blur while keeping dimming constant */
-@keyframes mv-blur-out-only {
-  0% {
-    filter: blur(5px);
-  }
-  100% {
-    filter: blur(0);
-  }
-}
-
-@keyframes mv-blur-out-dim {
-  0% {
-    filter: blur(5px) brightness(50%) saturate(50%);
-  }
-  100% {
-    filter: blur(0) brightness(50%) saturate(50%);
-  }
-}
-
-.blur-anim-only {
-  animation: mv-blur-out-only 3s ease-out forwards;
-}
-
-.blur-anim-dim {
-  animation: mv-blur-out-dim 3s ease-out forwards;
-}
-
-/* Respect reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .blur-anim-only,
-  .blur-anim-dim {
-    animation: none;
-  }
+  will-change: auto;
 }
 
 .indicator {

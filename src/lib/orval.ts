@@ -4005,6 +4005,42 @@ export type AdminEmailFunnelUpdate200 = {
   lastSentAt: string | null;
 };
 
+export type AdminEmailFunnelPreviewParams = {
+userId: string;
+funnelId?: string;
+funnelKey?: string;
+};
+
+export type AdminEmailFunnelPreview200AnyOf = {
+  ok: boolean;
+  subject: string;
+  html: string;
+  text: string;
+  shouldReason?: string;
+};
+
+export type AdminEmailFunnelPreview200AnyOfTwo = {
+  ok: boolean;
+  reason: string;
+};
+
+export type AdminEmailFunnelPreview200 = AdminEmailFunnelPreview200AnyOf | AdminEmailFunnelPreview200AnyOfTwo;
+
+export type AdminEmailFunnelSendTestBody = {
+  userId: string;
+  funnelId?: string;
+  funnelKey?: string;
+  force?: boolean;
+};
+
+export type AdminEmailFunnelSendTest200 = {
+  ok: boolean;
+  emailId?: string;
+  /** @nullable */
+  messageId?: string | null;
+  reason?: string;
+};
+
 export type AdminDiscountCodesList200Item = {
   code: string;
   discount: number;
@@ -11875,6 +11911,120 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       > => {
 
       const mutationOptions = getAdminEmailFunnelUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminEmailFunnelPreview = (
+    params: MaybeRef<AdminEmailFunnelPreviewParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminEmailFunnelPreview200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/emailFunnelPreview`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminEmailFunnelPreviewQueryKey = (params: MaybeRef<AdminEmailFunnelPreviewParams>,) => {
+    return ['admin','emailFunnelPreview', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminEmailFunnelPreviewQueryOptions = <TData = Awaited<ReturnType<typeof adminEmailFunnelPreview>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<AdminEmailFunnelPreviewParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelPreview>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminEmailFunnelPreviewQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminEmailFunnelPreview>>> = ({ signal }) => adminEmailFunnelPreview(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelPreview>>, TError, TData> 
+}
+
+export type AdminEmailFunnelPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof adminEmailFunnelPreview>>>
+export type AdminEmailFunnelPreviewQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminEmailFunnelPreview<TData = Awaited<ReturnType<typeof adminEmailFunnelPreview>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<AdminEmailFunnelPreviewParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelPreview>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminEmailFunnelPreviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminEmailFunnelSendTest = (
+    adminEmailFunnelSendTestBody: MaybeRef<AdminEmailFunnelSendTestBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminEmailFunnelSendTest200>> => {
+    adminEmailFunnelSendTestBody = unref(adminEmailFunnelSendTestBody);
+    
+    return axios.post(
+      `/admin/emailFunnelSendTest`,
+      adminEmailFunnelSendTestBody,options
+    );
+  }
+
+
+
+export const getAdminEmailFunnelSendTestMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSendTest>>, TError,{data: AdminEmailFunnelSendTestBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSendTest>>, TError,{data: AdminEmailFunnelSendTestBody}, TContext> => {
+
+const mutationKey = ['adminEmailFunnelSendTest'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminEmailFunnelSendTest>>, {data: AdminEmailFunnelSendTestBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminEmailFunnelSendTest(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminEmailFunnelSendTestMutationResult = NonNullable<Awaited<ReturnType<typeof adminEmailFunnelSendTest>>>
+    export type AdminEmailFunnelSendTestMutationBody = AdminEmailFunnelSendTestBody
+    export type AdminEmailFunnelSendTestMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminEmailFunnelSendTest = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSendTest>>, TError,{data: AdminEmailFunnelSendTestBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminEmailFunnelSendTest>>,
+        TError,
+        {data: AdminEmailFunnelSendTestBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminEmailFunnelSendTestMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -3976,6 +3976,42 @@ export type AdminEmailFunnelUpdate200 = {
   lastSentAt: string | null;
 };
 
+export type AdminEmailFunnelPreviewParams = {
+userId: string;
+funnelId?: string;
+funnelKey?: string;
+};
+
+export type AdminEmailFunnelPreview200AnyOf = {
+  ok: boolean;
+  subject: string;
+  html: string;
+  text: string;
+  shouldReason?: string;
+};
+
+export type AdminEmailFunnelPreview200AnyOfTwo = {
+  ok: boolean;
+  reason: string;
+};
+
+export type AdminEmailFunnelPreview200 = AdminEmailFunnelPreview200AnyOf | AdminEmailFunnelPreview200AnyOfTwo;
+
+export type AdminEmailFunnelSendTestBody = {
+  userId: string;
+  funnelId?: string;
+  funnelKey?: string;
+  force?: boolean;
+};
+
+export type AdminEmailFunnelSendTest200 = {
+  ok: boolean;
+  emailId?: string;
+  /** @nullable */
+  messageId?: string | null;
+  reason?: string;
+};
+
 export type AdminDiscountCodesList200Item = {
   code: string;
   discount: number;
@@ -8256,6 +8292,56 @@ export const adminEmailFunnelUpdate = async (adminEmailFunnelUpdateBody: AdminEm
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       adminEmailFunnelUpdateBody,)
+  }
+);}
+
+
+
+export const getAdminEmailFunnelPreviewUrl = (params: AdminEmailFunnelPreviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/emailFunnelPreview?${stringifiedParams}` : `/admin/emailFunnelPreview`
+}
+
+export const adminEmailFunnelPreview = async (params: AdminEmailFunnelPreviewParams, options?: RequestInit): Promise<AdminEmailFunnelPreview200> => {
+  
+  return fetcher<AdminEmailFunnelPreview200>(getAdminEmailFunnelPreviewUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminEmailFunnelSendTestUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelSendTest`
+}
+
+export const adminEmailFunnelSendTest = async (adminEmailFunnelSendTestBody: AdminEmailFunnelSendTestBody, options?: RequestInit): Promise<AdminEmailFunnelSendTest200> => {
+  
+  return fetcher<AdminEmailFunnelSendTest200>(getAdminEmailFunnelSendTestUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminEmailFunnelSendTestBody,)
   }
 );}
 
