@@ -188,34 +188,24 @@
               q-toggle(v-model="form.active" label="Active" color="positive")
           .row.q-col-gutter-md
             .col-12.col-md-6
-              .column.q-gutter-xs
-                q-select(
-                  v-model="form.templateId"
-                  :options="templateOptions"
-                  label="Template"
-                  outlined
-                  dense
-                  emit-value
-                  map-options
-                  :loading="optionsLoading"
-                  behavior="menu"
-                )
-                  template(#option="scope")
-                    q-item(v-bind="scope.itemProps")
-                      q-item-section
-                        q-item-label {{ scope.opt.label }}
-                        q-item-label(caption v-if="scope.opt.subject") Subject: {{ scope.opt.subject }}
-                      q-item-section(side)
-                        q-chip(dense size="sm" color="grey-7" text-color="white") {{ scope.opt.key }}
-                q-btn(
-                  flat
-                  size="sm"
-                  icon="edit"
-                  label="Edit Template"
-                  class="self-start"
-                  @click="openTemplateEditor"
-                  :disable="!selectedTemplate"
-                )
+              q-select(
+                v-model="form.templateId"
+                :options="templateOptions"
+                label="Template"
+                outlined
+                dense
+                emit-value
+                map-options
+                :loading="optionsLoading"
+                behavior="menu"
+              )
+                template(#option="scope")
+                  q-item(v-bind="scope.itemProps")
+                    q-item-section
+                      q-item-label {{ scope.opt.label }}
+                      q-item-label(caption v-if="scope.opt.subject") Subject: {{ scope.opt.subject }}
+                    q-item-section(side)
+                      q-chip(dense size="sm" color="grey-7" text-color="white") {{ scope.opt.key }}
             .col-12.col-md-6
               q-select(
                 v-model="form.unsubscribeGroupId"
@@ -426,11 +416,21 @@
             .text-caption.text-grey-3 Handler output may differ at send time.
           q-banner(dense rounded color="grey-8" text-color="white" icon="psychology" v-if="previewShouldReason")
             .text-body2 {{ previewShouldReason }}
+          .row.justify-end.items-center.q-gutter-xs
+            span.text-caption.text-grey-5.q-mr-sm Theme
+            q-btn-toggle(
+              v-model="previewTheme"
+              size="sm"
+              rounded
+              unelevated
+              toggle-color="primary"
+              :options="previewThemeOptions"
+            )
           q-card(flat bordered)
-            q-card-section
-              div.preview-html(v-html="previewHtml")
+            q-card-section(:class="['preview-card', previewThemeClass]")
+              div.preview-html(:class="previewThemeClass" v-html="previewHtml")
           q-card(flat bordered v-if="previewText")
-            q-card-section
+            q-card-section(:class="['preview-card', previewThemeClass]")
               pre.preview-text {{ previewText }}
         template(v-else)
           q-banner(dense rounded color="negative" text-color="white" icon="error_outline")
@@ -438,16 +438,6 @@
             .text-caption.text-grey-3 {{ previewFailureReason || 'Eligibility check prevented rendering for this user.' }}
       q-card-actions(align="right")
         q-btn(flat label="Close" @click="previewDialog = false")
-
-  EmailTemplateEditorDialog(
-    v-if="selectedTemplate"
-    v-model="templateEditorOpen"
-    :template-id="selectedTemplate.id"
-    :template-key="selectedTemplate.key"
-    :template-name="selectedTemplate.name"
-    :template-description="selectedTemplate.description || null"
-    @saved="handleTemplateSaved"
-  )
 
   // Create dialog placeholder (wired for future backend support)
   q-dialog(v-model="createOpen" :maximized="$q.screen.lt.md")
@@ -562,8 +552,6 @@ import {
   type AdminListUsers200UsersItem,
 } from 'src/lib/orval'
 import { catchErr } from 'src/lib/util'
-import EmailTemplateEditorDialog from './EmailTemplateEditorDialog.vue'
-import type { AdminEmailTemplateDetail } from 'src/lib/adminEmailTemplates'
 
 interface HandlerOption {
   label: string
@@ -806,7 +794,12 @@ const testingEmail = ref(false)
 const previewDialog = ref(false)
 const previewLoading = ref(false)
 const previewResult = ref<AdminEmailFunnelPreview200 | null>(null)
-const templateEditorOpen = ref(false)
+const previewTheme = ref<'light' | 'dark'>('light')
+const previewThemeOptions = [
+  { label: 'Light', value: 'light', icon: 'light_mode' },
+  { label: 'Dark (Gmail)', value: 'dark', icon: 'dark_mode' },
+]
+const previewThemeClass = computed(() => (previewTheme.value === 'dark' ? 'preview-theme-dark' : 'preview-theme-light'))
 
 const testUserIdValid = computed(() => uuidRegex.test(testUserId.value.trim()))
 const testUserIdError = computed(() => {
@@ -841,6 +834,7 @@ function resetPreviewState() {
   previewDialog.value = false
   previewResult.value = null
   previewLoading.value = false
+  previewTheme.value = 'light'
 }
 
 function resetTestControls() {
@@ -899,32 +893,6 @@ function filterUserLookup(val: string, update: (fn: () => void) => void) {
       }
     }
   })
-}
-
-function openTemplateEditor() {
-  if (!selectedTemplate.value) {
-    Notify.create({ type: 'warning', message: 'Select a template before editing.' })
-    return
-  }
-  templateEditorOpen.value = true
-}
-
-function handleTemplateSaved(detail: AdminEmailTemplateDetail) {
-  if (selectedFunnel.value?.template?.id === detail.id) {
-    const next: AdminEmailFunnelsOverview200Item = {
-      ...selectedFunnel.value,
-      template: {
-        ...selectedFunnel.value.template,
-        name: detail.name,
-        description: detail.description,
-        subject: detail.subject,
-      },
-    }
-    selectedFunnel.value = next
-    applyFunnelToForm(next)
-  }
-  void optionsQuery.refetch()
-  void funnelsQuery.refetch()
 }
 
 async function openPreviewEmail() {
@@ -1264,15 +1232,47 @@ async function submitCreate() {
       font-weight: 600
   .q-banner
     border: 1px solid rgba(255,255,255,0.1)
+  .preview-card
+    transition: background-color 0.2s ease, color 0.2s ease
+    border-radius: 6px
   .preview-html
     max-height: 50vh
     overflow-y: auto
     font-size: 0.9rem
     line-height: 1.4
-    background-color: rgba(255,255,255,0.02)
-    border-radius: 4px
   .preview-text
     white-space: pre-wrap
     font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
     font-size: 0.85rem
+  .preview-theme-light
+    background-color: #ffffff !important
+    color: #202124 !important
+  .preview-theme-light :deep(body),
+  .preview-theme-light :deep(table),
+  .preview-theme-light :deep(td),
+  .preview-theme-light :deep(tr)
+    background-color: #ffffff !important
+    color: #202124 !important
+  .preview-theme-light :deep(a)
+    color: #1a73e8 !important
+  .preview-theme-dark
+    background-color: #202124 !important
+    color: #e8eaed !important
+  .preview-theme-dark :deep(body),
+  .preview-theme-dark :deep(table),
+  .preview-theme-dark :deep(td),
+  .preview-theme-dark :deep(tr)
+    background-color: #202124 !important
+    color: #e8eaed !important
+  .preview-theme-dark :deep(h1),
+  .preview-theme-dark :deep(h2),
+  .preview-theme-dark :deep(h3),
+  .preview-theme-dark :deep(h4)
+    color: #f1f3f4 !important
+  .preview-theme-dark :deep(a)
+    color: #8ab4f8 !important
+  .preview-theme-dark :deep(hr)
+    border-color: rgba(232,234,237,0.25) !important
+  .preview-theme-dark :deep(img)
+    filter: brightness(0.95)
 </style>
