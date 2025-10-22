@@ -98,7 +98,7 @@
         div.text-body2.text-grey-6 Sync your environment to load registered funnels.
 
   q-dialog(v-model="detailOpen" :maximized="detailMaximized || $q.screen.lt.md")
-    q-card(flat bordered :class="['funnel-dialog-card', { 'funnel-dialog-card--max': detailMaximized }]")
+    q-card(flat bordered :class="detailDialogClasses")
       q-card-section
         .row.items-start.q-col-gutter-md
           q-icon(name="insights" size="32px" color="primary" class="q-mt-xs")
@@ -344,15 +344,7 @@
         q-btn(flat label="Close" @click="detailOpen = false")
 
   q-dialog(v-model="previewDialog" :maximized="previewMaximized || $q.screen.lt.md")
-    q-card(
-      flat
-      bordered
-      :class="[
-        'funnel-dialog-card',
-        'funnel-preview-card',
-        { 'funnel-dialog-card--max': previewMaximized, 'preview-maximized': previewMaximized },
-      ]"
-    )
+    q-card(flat bordered :class="previewDialogClasses")
       q-card-section
         .row.items-start.q-col-gutter-md
           q-icon(name="visibility" size="32px" color="primary" class="q-mt-xs")
@@ -594,6 +586,18 @@ const testUserIdError = computed(() => {
   return testUserIdValid.value ? '' : 'Enter a valid UUID user ID'
 })
 const hasTestUser = computed(() => testUserIdValid.value)
+
+const detailDialogClasses = computed(() => ({
+  'funnel-dialog-card': true,
+  'funnel-dialog-card--max': detailMaximized.value,
+}))
+
+const previewDialogClasses = computed(() => ({
+  'funnel-dialog-card': true,
+  'funnel-preview-card': true,
+  'funnel-dialog-card--max': previewMaximized.value,
+  'preview-maximized': previewMaximized.value,
+}))
 
 const previewSuccess = computed<AdminEmailPreviewSuccess | null>(() => {
   const result = previewResult.value
