@@ -3907,6 +3907,126 @@ export type AdminEmailFunnelEngagement200Item = {
   clicksUniqueRecent: number;
 };
 
+export type AdminListEmailFunnelEmailsParams = {
+limit?: number;
+offset?: number;
+search?: string;
+funnelKeys?: string[];
+statuses?: AdminListEmailFunnelEmailsStatusesItem[];
+account?: string;
+email?: string;
+unsubscribeGroupKey?: string;
+handlerKey?: string;
+startDateTime?: string;
+endDateTime?: string;
+dateField?: AdminListEmailFunnelEmailsDateField;
+sortBy?: AdminListEmailFunnelEmailsSortBy;
+sortDir?: AdminListEmailFunnelEmailsSortDir;
+};
+
+export type AdminListEmailFunnelEmailsStatusesItem = typeof AdminListEmailFunnelEmailsStatusesItem[keyof typeof AdminListEmailFunnelEmailsStatusesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListEmailFunnelEmailsStatusesItem = {
+  pending: 'pending',
+  ready: 'ready',
+  sent: 'sent',
+  skipped: 'skipped',
+  failed: 'failed',
+} as const;
+
+export type AdminListEmailFunnelEmailsDateField = typeof AdminListEmailFunnelEmailsDateField[keyof typeof AdminListEmailFunnelEmailsDateField];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListEmailFunnelEmailsDateField = {
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  evaluatedAt: 'evaluatedAt',
+  scheduledSendAt: 'scheduledSendAt',
+  sentAt: 'sentAt',
+} as const;
+
+export type AdminListEmailFunnelEmailsSortBy = typeof AdminListEmailFunnelEmailsSortBy[keyof typeof AdminListEmailFunnelEmailsSortBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListEmailFunnelEmailsSortBy = {
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  evaluatedAt: 'evaluatedAt',
+  scheduledSendAt: 'scheduledSendAt',
+  sentAt: 'sentAt',
+} as const;
+
+export type AdminListEmailFunnelEmailsSortDir = typeof AdminListEmailFunnelEmailsSortDir[keyof typeof AdminListEmailFunnelEmailsSortDir];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListEmailFunnelEmailsSortDir = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type AdminListEmailFunnelEmails200ItemsItemStatus = typeof AdminListEmailFunnelEmails200ItemsItemStatus[keyof typeof AdminListEmailFunnelEmails200ItemsItemStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListEmailFunnelEmails200ItemsItemStatus = {
+  pending: 'pending',
+  ready: 'ready',
+  sent: 'sent',
+  skipped: 'skipped',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminListEmailFunnelEmails200ItemsItemUser = {
+  id: string;
+  /** @nullable */
+  username: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  telegramId: string | null;
+  /** @nullable */
+  telegramName: string | null;
+} | null;
+
+export type AdminListEmailFunnelEmails200ItemsItem = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: AdminListEmailFunnelEmails200ItemsItemStatus;
+  funnelKey: string;
+  unsubscribeGroupKey: string;
+  /** @nullable */
+  user: AdminListEmailFunnelEmails200ItemsItemUser;
+  email: string;
+  /** @nullable */
+  evaluatedAt: string | null;
+  /** @nullable */
+  scheduledSendAt: string | null;
+  /** @nullable */
+  sentAt: string | null;
+  /** @nullable */
+  subject: string | null;
+  /** @nullable */
+  handlerKey: string | null;
+  /** @nullable */
+  shouldSendReason: string | null;
+  /** @nullable */
+  error: string | null;
+};
+
+export type AdminListEmailFunnelEmails200 = {
+  total: number;
+  items: AdminListEmailFunnelEmails200ItemsItem[];
+};
+
 export type AdminEmailFunnelPreviewParams = {
 userId: string;
 funnelKey: string;
@@ -8186,6 +8306,34 @@ export const getAdminEmailFunnelEngagementUrl = (params?: AdminEmailFunnelEngage
 export const adminEmailFunnelEngagement = async (params?: AdminEmailFunnelEngagementParams, options?: RequestInit): Promise<AdminEmailFunnelEngagement200Item[]> => {
   
   return fetcher<AdminEmailFunnelEngagement200Item[]>(getAdminEmailFunnelEngagementUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminListEmailFunnelEmailsUrl = (params?: AdminListEmailFunnelEmailsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/listEmailFunnelEmails?${stringifiedParams}` : `/admin/listEmailFunnelEmails`
+}
+
+export const adminListEmailFunnelEmails = async (params?: AdminListEmailFunnelEmailsParams, options?: RequestInit): Promise<AdminListEmailFunnelEmails200> => {
+  
+  return fetcher<AdminListEmailFunnelEmails200>(getAdminListEmailFunnelEmailsUrl(params),
   {      
     ...options,
     method: 'GET'

@@ -109,6 +109,15 @@
           q-btn(
             flat
             dense
+            color="primary"
+            icon="mail"
+            label="View Emails"
+            @click="openEmailsDialog"
+            :disable="!selectedFunnel"
+          )
+          q-btn(
+            flat
+            dense
             :icon="detailMaximized ? 'fullscreen_exit' : 'fullscreen'"
             :title="detailMaximized ? 'Exit full screen' : 'View full screen'"
             @click="detailMaximized = !detailMaximized"
@@ -343,6 +352,202 @@
       q-card-actions(align="right")
         q-btn(flat label="Close" @click="detailOpen = false")
 
+  q-dialog(v-model="emailsDialogOpen" :maximized="emailsDialogMaximized || $q.screen.lt.md")
+    q-card(flat bordered :class="emailsDialogClasses")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="mail" size="32px" color="primary" class="q-mt-xs")
+          .column.q-gutter-xs
+            .text-h6.text-weight-medium Funnel Emails
+            div.text-caption.text-grey-5(v-if="selectedFunnel") {{ selectedFunnel.name }} · {{ selectedFunnel.key }}
+          q-space
+          q-btn(
+            flat
+            dense
+            :icon="emailsDialogMaximized ? 'fullscreen_exit' : 'fullscreen'"
+            :title="emailsDialogMaximized ? 'Exit full screen' : 'View full screen'"
+            @click="emailsDialogMaximized = !emailsDialogMaximized"
+          )
+          q-btn(flat dense icon="close" @click="emailsDialogOpen = false")
+      q-separator
+      q-card-section(class="q-gutter-md emails-dialog-body")
+        .row.items-center.q-col-gutter-sm
+          q-input(
+            v-model="emailSearch"
+            dense
+            outlined
+            debounce="300"
+            clearable
+            placeholder="Search subject, user, email"
+            style="min-width:260px"
+            :disable="emailsLoading"
+          )
+          q-select(
+            v-model="emailStatusFilter"
+            outlined
+            dense
+            multiple
+            use-chips
+            emit-value
+            map-options
+            :options="emailStatusOptions"
+            style="min-width:220px"
+            label="Statuses"
+            :disable="emailsLoading"
+          )
+          q-space
+          q-btn(
+            icon="refresh"
+            flat
+            dense
+            @click="loadEmails()"
+            :loading="emailsLoading"
+            :disable="emailsLoading"
+            :title="'Refresh email list'"
+          )
+        q-banner(
+          v-if="emailsFetchError"
+          dense
+          rounded
+          color="negative"
+          text-color="white"
+          class="q-mt-sm"
+          icon="error_outline"
+        )
+          .text-body2 Failed to load emails
+          .text-caption.text-grey-3 Try again or adjust filters.
+        q-table(
+          flat
+          bordered
+          dense
+          row-key="id"
+          :rows="emailRows"
+          :columns="emailColumns"
+          :loading="emailsLoading"
+          v-model:pagination="emailsPagination"
+          :rows-per-page-options="[10,25,50,100]"
+          :rows-number="emailTotal"
+          binary-state-sort
+          @request="handleEmailsRequest"
+        )
+          template(#body-cell-status="props")
+            q-td(:props="props")
+              q-chip(
+                dense
+                size="sm"
+                text-color="white"
+                :color="emailStatusColor(props.row.status)"
+              ) {{ props.row.status.toUpperCase() }}
+          template(#body-cell-user="props")
+            q-td(:props="props")
+              template(v-if="props.row.user")
+                div.text-weight-medium {{ emailUserLabel(props.row.user) }}
+                div.text-caption.text-grey-6 {{ props.row.user.id }}
+              template(v-else)
+                span -
+          template(#body-cell-subject="props")
+            q-td(:props="props")
+              div.text-weight-medium {{ props.row.subject || '(no subject)' }}
+              div.text-caption.text-grey-6 {{ props.row.id }}
+          template(#body-cell-createdAt="props")
+            q-td(:props="props") {{ formatDate(props.row.createdAt) }}
+          template(#body-cell-sentAt="props")
+            q-td(:props="props")
+              span {{ formatDate(props.row.sentAt) }}
+              div.text-caption.text-grey-6(v-if="props.row.error") Failed: {{ props.row.error }}
+          template(#body-cell-actions="props")
+            q-td(:props="props")
+              q-btn(
+                size="sm"
+                icon="visibility"
+                color="primary"
+                flat
+                label="View"
+                @click.stop="openEmailPreview(props.row)"
+              )
+          template(#no-data)
+            .column.items-center.q-gutter-sm.q-my-xl.text-center
+              q-icon(name="mail_lock" size="42px" color="grey-7")
+              div.text-subtitle1 No emails found
+              div.text-body2.text-grey-6 Adjust filters or try another funnel.
+      q-card-actions(align="right")
+        q-btn(flat label="Close" @click="emailsDialogOpen = false")
+
+  q-dialog(v-model="emailPreviewOpen" :maximized="emailPreviewMaximized || $q.screen.lt.md")
+    q-card(flat bordered :class="emailPreviewDialogClasses")
+      q-card-section
+        .row.items-start.q-col-gutter-md
+          q-icon(name="draft" size="32px" color="primary" class="q-mt-xs")
+          .column.q-gutter-xs
+            .text-h6.text-weight-medium Email Details
+            div.text-caption.text-grey-5(v-if="selectedEmailLog")
+              span {{ selectedEmailLog.subject || '(no subject)' }} · {{ selectedEmailLog.id }}
+          q-space
+          q-btn(
+            flat
+            dense
+            :icon="emailPreviewMaximized ? 'fullscreen_exit' : 'fullscreen'"
+            :title="emailPreviewMaximized ? 'Exit full screen' : 'View full screen'"
+            @click="emailPreviewMaximized = !emailPreviewMaximized"
+          )
+          q-btn(flat dense icon="close" @click="emailPreviewOpen = false")
+      q-separator
+      q-card-section(class="q-gutter-md emails-dialog-body")
+        template(v-if="selectedEmailLog")
+          q-markup-table(dense flat bordered class="info-table")
+            tbody
+              tr
+                td.label Status
+                td
+                  q-chip(
+                    dense
+                    size="sm"
+                    text-color="white"
+                    :color="emailStatusColor(selectedEmailLog.status)"
+                  ) {{ selectedEmailLog.status.toUpperCase() }}
+              tr
+                td.label Created
+                td {{ formatDate(selectedEmailLog.createdAt) }}
+              tr
+                td.label Sent
+                td {{ formatDate(selectedEmailLog.sentAt) }}
+              tr
+                td.label Evaluated
+                td {{ formatDate(selectedEmailLog.evaluatedAt) }}
+              tr
+                td.label Handler
+                td {{ selectedEmailLog.handlerKey || '-' }}
+              tr
+                td.label Should Reason
+                td {{ selectedEmailLog.shouldSendReason || '-' }}
+              tr
+                td.label Error
+                td {{ selectedEmailLog.error || '-' }}
+              tr
+                td.label User
+                td
+                  template(v-if="selectedEmailLog.user")
+                    div.text-weight-medium {{ emailUserLabel(selectedEmailLog.user) }}
+                    div.text-caption.text-grey-6 {{ selectedEmailLog.user.id }}
+                  template(v-else)
+                    span -
+          q-card(flat bordered v-if="emailPreviewHtml")
+            q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
+              iframe.preview-iframe(
+                :srcdoc="emailPreviewHtml"
+                sandbox="allow-same-origin"
+                referrerpolicy="no-referrer"
+                :class="{ 'preview-iframe--max': emailPreviewMaximized }"
+              )
+          q-card(flat bordered v-if="emailPreviewText")
+            q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
+              pre.preview-text {{ emailPreviewText }}
+          q-card(flat bordered)
+            q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
+              pre.preview-text {{ emailPreviewRaw }}
+      q-card-actions(align="right")
+        q-btn(flat label="Close" @click="emailPreviewOpen = false")
+
   q-dialog(v-model="previewDialog" :maximized="previewMaximized || $q.screen.lt.md")
     q-card(flat bordered :class="previewDialogClasses")
       q-card-section
@@ -391,6 +596,7 @@
 import { computed, ref, watch } from 'vue'
 import { Dialog, Notify, type QTableColumn, useQuasar } from 'quasar'
 import {
+  adminListEmailFunnelEmails,
   adminListUsers,
   adminEmailFunnelPreview,
   useAdminEmailFunnelEngagement,
@@ -404,6 +610,11 @@ import {
   type AdminEmailFunnelsOverview200Item,
   type AdminEmailFunnelsOverviewParams,
   type AdminListUsers200UsersItem,
+  type AdminListEmailFunnelEmails200ItemsItem,
+  type AdminListEmailFunnelEmailsParams,
+  type AdminListEmailFunnelEmailsSortBy,
+  type AdminListEmailFunnelEmailsSortDir,
+  type AdminListEmailFunnelEmailsStatusesItem,
 } from 'src/lib/orval'
 import { catchErr } from 'src/lib/util'
 
@@ -419,6 +630,22 @@ interface UserLookupOption {
   value: string
   email?: string | null
   username?: string | null
+}
+
+type EmailLogItem = AdminListEmailFunnelEmails200ItemsItem
+interface ParsedEmailContent {
+  html: string
+  text: string
+  raw: string
+}
+
+interface TableRequestPayload {
+  pagination: {
+    sortBy: string
+    descending: boolean
+    page: number
+    rowsPerPage: number
+  }
 }
 
 const $q = useQuasar()
@@ -547,6 +774,74 @@ const engagementWindowLabel = computed(() => {
   return `Recent window since ${formatDate(selectedEngagement.value.recentWindowStart)}`
 })
 
+const emailStatusLabels: Record<AdminListEmailFunnelEmailsStatusesItem, string> = {
+  pending: 'Pending',
+  ready: 'Ready',
+  sent: 'Sent',
+  skipped: 'Skipped',
+  failed: 'Failed',
+}
+
+const emailStatuses = Object.values(AdminListEmailFunnelEmailsStatusesItem) as AdminListEmailFunnelEmailsStatusesItem[]
+const emailStatusOptions = emailStatuses.map((status) => ({
+  label: emailStatusLabels[status],
+  value: status,
+}))
+
+const emailsDialogOpen = ref(false)
+const emailsDialogMaximized = ref(true)
+const emailPreviewOpen = ref(false)
+const emailPreviewMaximized = ref(false)
+const emailSearch = ref('')
+const emailStatusFilter = ref<AdminListEmailFunnelEmailsStatusesItem[]>([])
+const emailsPagination = ref({ sortBy: 'createdAt', descending: true, page: 1, rowsPerPage: 25 })
+const emailRows = ref<EmailLogItem[]>([])
+const emailTotal = ref(0)
+const emailsLoading = ref(false)
+const emailsFetchError = ref(false)
+const selectedEmailLog = ref<EmailLogItem | null>(null)
+let emailsRequestId = 0
+
+const emailSortableMap: Record<string, AdminListEmailFunnelEmailsSortBy> = {
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  evaluatedAt: 'evaluatedAt',
+  scheduledSendAt: 'scheduledSendAt',
+  sentAt: 'sentAt',
+}
+
+const emailColumns = computed<QTableColumn<EmailLogItem>[]>(() => [
+  { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
+  {
+    name: 'user',
+    label: 'User',
+    field: (row) => row.user?.id || '',
+    align: 'left',
+    sortable: false,
+  },
+  { name: 'subject', label: 'Subject', field: 'subject', align: 'left', sortable: false },
+  { name: 'createdAt', label: 'Created', field: 'createdAt', align: 'left', sortable: true },
+  { name: 'sentAt', label: 'Sent', field: 'sentAt', align: 'left', sortable: true },
+  { name: 'actions', label: '', field: 'id', align: 'right', sortable: false },
+])
+
+const emailsDialogClasses = computed(() => ({
+  'funnel-dialog-card': true,
+  'funnel-dialog-card--max': emailsDialogMaximized.value,
+}))
+
+const emailPreviewDialogClasses = computed(() => ({
+  'funnel-dialog-card': true,
+  'funnel-preview-card': true,
+  'funnel-dialog-card--max': emailPreviewMaximized.value,
+  'preview-maximized': emailPreviewMaximized.value,
+}))
+
+const emailPreviewContent = computed<ParsedEmailContent>(() => parseEmailContent(selectedEmailLog.value?.email))
+const emailPreviewHtml = computed(() => emailPreviewContent.value.html)
+const emailPreviewText = computed(() => emailPreviewContent.value.text)
+const emailPreviewRaw = computed(() => emailPreviewContent.value.raw)
+
 function refresh() {
   void Promise.all([funnelsQuery.refetch(), engagementQuery.refetch()])
 }
@@ -558,6 +853,150 @@ function openDetailDialog(funnel: EmailFunnelOverview) {
   detailOpen.value = true
 }
 
+function openEmailsDialog() {
+  if (!selectedFunnel.value) return
+  emailsDialogMaximized.value = true
+  emailsDialogOpen.value = true
+  emailPreviewOpen.value = false
+  selectedEmailLog.value = null
+  emailsPagination.value = {
+    sortBy: emailsPagination.value.sortBy,
+    descending: emailsPagination.value.descending,
+    page: 1,
+    rowsPerPage: emailsPagination.value.rowsPerPage,
+  }
+}
+
+function handleEmailsRequest(props: TableRequestPayload) {
+  emailsPagination.value = {
+    sortBy: props.pagination.sortBy,
+    descending: props.pagination.descending,
+    page: props.pagination.page,
+    rowsPerPage: props.pagination.rowsPerPage,
+  }
+  void loadEmails()
+}
+
+function emailStatusColor(status: AdminListEmailFunnelEmailsStatusesItem): string {
+  switch (status) {
+    case 'sent':
+      return 'positive'
+    case 'ready':
+      return 'warning'
+    case 'pending':
+      return 'accent'
+    case 'skipped':
+      return 'grey-7'
+    case 'failed':
+      return 'negative'
+    default:
+      return 'grey-6'
+  }
+}
+
+function emailUserLabel(user: NonNullable<EmailLogItem['user']>): string {
+  const parts: string[] = []
+  if (user.username) parts.push(`@${user.username}`)
+  if (user.email) parts.push(user.email)
+  if (!parts.length) parts.push(user.id)
+  return parts.join(' · ')
+}
+
+function buildEmailParams(): AdminListEmailFunnelEmailsParams | null {
+  const funnelKey = selectedFunnel.value?.key
+  if (!funnelKey) return null
+  const paginationState = emailsPagination.value
+  const rowsPerPage = paginationState.rowsPerPage > 0 ? paginationState.rowsPerPage : undefined
+  const offset = rowsPerPage ? (paginationState.page - 1) * rowsPerPage : undefined
+  const sortBy = paginationState.sortBy ? emailSortableMap[paginationState.sortBy] : undefined
+  const sortDir: AdminListEmailFunnelEmailsSortDir | undefined =
+    sortBy && paginationState.descending ? 'desc' : sortBy ? 'asc' : undefined
+  const searchTerm = emailSearch.value.trim()
+  const statuses = emailStatusFilter.value.length ? [...emailStatusFilter.value] : undefined
+  const params: AdminListEmailFunnelEmailsParams = {
+    funnelKeys: [funnelKey],
+    limit: rowsPerPage,
+    offset,
+    search: searchTerm || undefined,
+    statuses,
+    sortBy,
+    sortDir,
+  }
+  return params
+}
+
+async function loadEmails() {
+  const params = buildEmailParams()
+  if (!params) {
+    emailRows.value = []
+    emailTotal.value = 0
+    return
+  }
+  const requestId = ++emailsRequestId
+  emailsLoading.value = true
+  emailsFetchError.value = false
+  try {
+    const response = await adminListEmailFunnelEmails(params)
+    if (requestId !== emailsRequestId) return
+    const payload = response?.data
+    emailRows.value = payload?.items ?? []
+    emailTotal.value = typeof payload?.total === 'number' ? payload.total : payload?.items?.length ?? 0
+  } catch (error) {
+    if (requestId === emailsRequestId) {
+      emailsFetchError.value = true
+      catchErr(error)
+    }
+  } finally {
+    if (requestId === emailsRequestId) {
+      emailsLoading.value = false
+    }
+  }
+}
+
+function openEmailPreview(row: EmailLogItem) {
+  selectedEmailLog.value = row
+  emailPreviewMaximized.value = false
+  emailPreviewOpen.value = true
+}
+
+function parseEmailContent(raw?: string | null): ParsedEmailContent {
+  const original = typeof raw === 'string' ? raw : ''
+  if (!original) return { html: '', text: '', raw: '' }
+  const trimmed = original.trim()
+  if (!trimmed) return { html: '', text: '', raw: '' }
+  const looksLikeJson =
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  if (looksLikeJson) {
+    try {
+      const parsed = JSON.parse(trimmed) as unknown
+      if (typeof parsed === 'object' && parsed !== null) {
+        const obj = parsed as Record<string, unknown>
+        const content =
+          typeof obj.content === 'object' && obj.content !== null ? (obj.content as Record<string, unknown>) : null
+        const html =
+          typeof obj.html === 'string'
+            ? (obj.html as string)
+            : content && typeof content.html === 'string'
+            ? (content.html as string)
+            : ''
+        const text =
+          typeof obj.text === 'string'
+            ? (obj.text as string)
+            : content && typeof content.text === 'string'
+            ? (content.text as string)
+            : ''
+        if (html || text) {
+          return { html, text, raw: original }
+        }
+      }
+    } catch {
+      // fall through and treat as raw markup/text content
+    }
+  }
+  const looksLikeHtml = /<[^>]+>/.test(trimmed)
+  return looksLikeHtml ? { html: original, text: '', raw: original } : { html: '', text: original, raw: original }
+}
+
 watch(rows, (list) => {
   if (!selectedFunnel.value) return
   const updated = list.find((row) => row.key === selectedFunnel.value?.key)
@@ -565,6 +1004,66 @@ watch(rows, (list) => {
     selectedFunnel.value = updated
   }
 })
+
+watch(
+  () => emailsDialogOpen.value,
+  (open) => {
+    if (open) {
+      emailsDialogMaximized.value = true
+      emailsPagination.value.page = 1
+      void loadEmails()
+    } else {
+      emailsDialogMaximized.value = true
+      emailPreviewOpen.value = false
+      emailPreviewMaximized.value = false
+      selectedEmailLog.value = null
+    }
+  },
+)
+
+watch(
+  () => selectedFunnel.value?.key,
+  (key) => {
+    if (!key) {
+      emailRows.value = []
+      emailTotal.value = 0
+      emailsFetchError.value = false
+      return
+    }
+    if (emailsDialogOpen.value) {
+      emailsPagination.value.page = 1
+      void loadEmails()
+    }
+  },
+)
+
+watch(
+  () => emailPreviewOpen.value,
+  (open) => {
+    if (!open) {
+      emailPreviewMaximized.value = false
+    }
+  },
+)
+
+watch(
+  emailSearch,
+  () => {
+    if (!emailsDialogOpen.value) return
+    emailsPagination.value.page = 1
+    void loadEmails()
+  },
+)
+
+watch(
+  emailStatusFilter,
+  () => {
+    if (!emailsDialogOpen.value) return
+    emailsPagination.value.page = 1
+    void loadEmails()
+  },
+  { deep: true },
+)
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -618,6 +1117,7 @@ watch(
   (open) => {
     if (!open) {
       resetTestControls()
+      emailsDialogOpen.value = false
       selectedFunnel.value = null
       detailMaximized.value = true
     }
@@ -817,7 +1317,8 @@ function formatDate(value?: string | null): string {
     color: #1f1f1f;
   }
 
-  .funnel-dialog-body {
+  .funnel-dialog-body,
+  .emails-dialog-body {
     flex: 1 1 auto;
     overflow-y: auto;
   }
