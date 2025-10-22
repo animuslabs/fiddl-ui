@@ -277,7 +277,7 @@ q-page.full-height.full-width.admin-page
                 flat dense round
                 :disable="!canOpenAttrib(props.row.id)"
                 :loading="attribLoading[props.row.id] === true"
-                :title="canOpenAttrib(props.row.id) ? 'View attribution' : 'No attribution data'"
+                :title="attributionButtonTitle(props.row.id)"
                 @click="openAttributionDialog(props.row)"
               )
         template(#body-cell-username="props")
@@ -352,7 +352,7 @@ q-page.full-height.full-width.admin-page
               flat dense round
               :disable="!props.row.user?.id || !canOpenAttrib(props.row.user.id)"
               :loading="props.row.user?.id ? attribLoading[props.row.user.id] === true : false"
-              :title="props.row.user?.id && canOpenAttrib(props.row.user.id) ? 'View attribution' : 'No attribution data'"
+              :title="props.row.user?.id ? attributionButtonTitle(props.row.user.id) : 'No attribution data'"
               @click="props.row.user && openAttributionDialog(props.row.user)"
             )
       template(#body-cell-discount="props")
@@ -688,6 +688,9 @@ import {
   adminAffiliatePayoutReceipts,
   adminAffiliatePayoutDetailsForUser,
   adminAttributionGroups,
+  AdminAttributionGroupsGroupBy,
+  AdminAttributionGroupsOrderBy,
+  AdminAttributionGroupsSortDir,
   type AdminListUsersSortBy,
   type AdminListUsersSortDir,
 } from "src/lib/orval"
@@ -822,34 +825,71 @@ export default defineComponent({
     // Basic attribution source per user (lazy cached)
     const attribSourceByUserId = ref<Record<string, string>>({})
     const attribLoading = ref<Record<string, boolean>>({})
+    const attribSearchHints = ref<Record<string, string[]>>({})
     const canOpenAttrib = (userId: string) => {
-      const v = attribSourceByUserId.value[userId]
-      if (attribLoading.value[userId]) return false
-      if (!v) return false
-      if (v === '-') return false
-      return true
+      if (!userId) return false
+      return attribLoading.value[userId] !== true
     }
-    async function loadAttribForUser(userId: string) {
+    const attributionButtonTitle = (userId: string) => {
+      if (!userId) return "No attribution data"
+      if (attribLoading.value[userId]) return "Loading attribution…"
+      const value = attribSourceByUserId.value[userId]
+      if (!value || value === "-") return "View attribution details"
+      return `Primary source: ${value}`
+    }
+    async function loadAttribForUser(userId: string, rawHints: string[] = []) {
       if (!userId) return
-      if (attribSourceByUserId.value[userId] || attribLoading.value[userId]) return
+      if (attribLoading.value[userId]) return
+      const { hints, added } = mergeAttribHints(userId, rawHints)
+      const currentValue = attribSourceByUserId.value[userId]
+      if (currentValue && currentValue !== "-") return
+      if (currentValue === "-" && !added) return
       attribLoading.value[userId] = true
       try {
-        const res = await adminAttributionGroups({ groupBy: 'source', search: userId, includeUnknown: true, limit: 5, offset: 0 })
-        const items = Array.isArray(res?.data?.items) ? res?.data?.items : []
-        const firstKnown = items.find((it: any) => typeof it?.key === 'string' && it.key.trim().length > 0)
-        const fallback = items[0]
-        attribSourceByUserId.value[userId] = (firstKnown?.key as any) || (fallback?.key as any) || '-'
-      } catch {
-        attribSourceByUserId.value[userId] = '-'
+        let resolved: string | null = null
+        for (const term of hints) {
+          if (!term) continue
+          try {
+            const res = await adminAttributionGroups({
+              groupBy: AdminAttributionGroupsGroupBy.source,
+              search: term,
+              includeUnknown: true,
+              limit: 5,
+              offset: 0,
+              orderBy: AdminAttributionGroupsOrderBy.users,
+              sortDir: AdminAttributionGroupsSortDir.desc,
+            })
+            const items = Array.isArray(res?.data?.items) ? res.data.items : []
+            if (items.length > 0) {
+              const firstKnown = items.find((it: any) => typeof it?.key === "string" && it.key.trim().length > 0)
+              const fallback = items[0]
+              resolved = (firstKnown?.key as any) || (fallback?.key as any) || resolved
+              if (resolved && resolved !== "-") break
+            }
+          } catch (error) {
+            // Ignore individual term failures and continue
+          }
+        }
+        attribSourceByUserId.value[userId] = resolved || "-"
+      } catch (error) {
+        if (!attribSourceByUserId.value[userId]) attribSourceByUserId.value[userId] = "-"
       } finally {
         delete attribLoading.value[userId]
       }
     }
     // Prefetch for current page rows
-    watch(usersRows, (rows) => {
-      const ids = (rows || []).slice(0, 50).map((r: any) => r.id).filter((x: any) => typeof x === 'string')
-      ids.forEach((id: string) => void loadAttribForUser(id))
-    }, { immediate: true })
+    watch(
+      usersRows,
+      (rows) => {
+        const list = Array.isArray(rows) ? rows.slice(0, 50) : []
+        list.forEach((row: any) => {
+          if (!row || typeof row?.id !== "string") return
+          const hints = collectUserAttribHints(row)
+          void loadAttribForUser(row.id, hints)
+        })
+      },
+      { immediate: true },
+    )
     watch([userSearch, includeBanned], () => {
       usersPagination.value.page = 1
       refetchUsers()
@@ -954,13 +994,94 @@ export default defineComponent({
       for (const r of paymentsRows.value) if (r?.status) vals.add(String(r.status))
       return Array.from(vals).sort()
     })
-    watch(paymentsRows, (rows) => {
-      const ids = (rows || [])
-        .map((r: any) => r?.user?.id)
-        .filter((id: any): id is string => typeof id === 'string' && id.length > 0)
-        .slice(0, 50)
-      ids.forEach((id: string) => void loadAttribForUser(id))
-    }, { immediate: true })
+    watch(
+      paymentsRows,
+      (rows) => {
+        const list = Array.isArray(rows) ? rows.slice(0, 50) : []
+        list.forEach((row: any) => {
+          const user = row?.user
+          if (!user || typeof user?.id !== "string") return
+          const hints = collectUserAttribHints(user)
+          void loadAttribForUser(user.id, hints)
+        })
+      },
+      { immediate: true },
+    )
+
+    function mergeAttribHints(userId: string, extraHints: string[] = []): { hints: string[]; added: boolean } {
+      const current = attribSearchHints.value[userId] || []
+      const currentSet = new Set(current)
+      const combined = new Set(current)
+      emitSearchVariants(userId).forEach((variant) => combined.add(variant))
+      extraHints.forEach((hint) => {
+        emitSearchVariants(hint).forEach((variant) => combined.add(variant))
+      })
+      const hints = Array.from(combined).filter((value) => typeof value === "string" && value.trim().length > 0)
+      const added = hints.length > currentSet.size
+      attribSearchHints.value[userId] = hints
+      return { hints, added }
+    }
+
+    function emitSearchVariants(value: unknown): string[] {
+      if (typeof value !== "string") return []
+      const trimmed = value.trim()
+      if (!trimmed) return []
+      const variants = new Set<string>()
+      variants.add(trimmed)
+      const lower = trimmed.toLowerCase()
+      variants.add(lower)
+      if (trimmed.startsWith("@")) {
+        const without = trimmed.slice(1)
+        if (without) {
+          variants.add(without)
+          variants.add(without.toLowerCase())
+        }
+      } else if (/^[\w.-]{3,}$/i.test(trimmed) && !trimmed.includes("@") && !trimmed.includes(" ")) {
+        variants.add(`@${trimmed}`)
+        variants.add(`@${trimmed.toLowerCase()}`)
+      }
+      return Array.from(variants).filter((entry) => entry.trim().length > 0)
+    }
+
+    function collectUserAttribHints(user: any): string[] {
+      if (!user || typeof user !== "object") return []
+      const hints = new Set<string>()
+      const push = (value: unknown) => {
+        if (typeof value !== "string") return
+        emitSearchVariants(value).forEach((variant) => hints.add(variant))
+      }
+      push(user?.id)
+      push(user?.userId)
+      const directKeys = [
+        "username",
+        "userName",
+        "handle",
+        "displayName",
+        "email",
+        "source",
+        "utmSource",
+        "utmMedium",
+        "utmCampaign",
+        "referrer",
+        "referrerDomain",
+        "landingDomain",
+      ]
+      directKeys.forEach((key) => push((user as any)?.[key]))
+      const profile = user?.profile
+      if (profile && typeof profile === "object") {
+        Object.values(profile).forEach((val) => push(val))
+      }
+      if (Array.isArray((user as any)?.emails)) {
+        ;(user as any).emails.forEach((val: unknown) => push(val))
+      }
+      if (Array.isArray((user as any)?.identities)) {
+        ;(user as any).identities.forEach((entry: any) => {
+          if (typeof entry === "string") push(entry)
+          else if (entry && typeof entry === "object") Object.values(entry).forEach((val) => push(val))
+        })
+      }
+      return Array.from(hints)
+    }
 
     const labelById = (id?: string | null) => {
       const key = typeof id === 'string' ? id : ''
@@ -1887,7 +2008,12 @@ export default defineComponent({
       onUsersRequest,
       attribSourceByUserId,
       attribLoading,
+      attribSearchHints,
       canOpenAttrib,
+      attributionButtonTitle,
+      loadAttribForUser,
+      collectUserAttribHints,
+      mergeAttribHints,
 
       // payments
       paymentsUserId,
@@ -2290,10 +2416,39 @@ export default defineComponent({
     },
     openAttributionDialog(row: any) {
       try {
-        const userId = row?.id || row?.userId || row?.user?.id
+        const user = typeof row?.id === "string" ? row : row?.user && typeof row.user.id === "string" ? row.user : null
+        const userId = user?.id || row?.id || row?.userId || row?.user?.id
         if (!userId) return
-        const username = row?.profile?.username ?? row?.username ?? row?.user?.profile?.username ?? null
-        Dialog.create({ component: UserAttributionDetails, componentProps: { userId, username } })
+        const username =
+          user?.profile?.username ??
+          user?.username ??
+          row?.profile?.username ??
+          row?.username ??
+          row?.user?.profile?.username ??
+          null
+        const hintSet = new Set<string>()
+        const collect = this.collectUserAttribHints
+        if (typeof collect === "function") {
+          const baseHints = collect(user || {})
+          baseHints.forEach((hint: string) => hintSet.add(hint))
+          if (row && row !== user) {
+            collect(row).forEach((hint: string) => hintSet.add(hint))
+          }
+        }
+        const hintArray = Array.from(hintSet)
+        const merged =
+          typeof this.mergeAttribHints === "function" ? this.mergeAttribHints(userId, hintArray) : { hints: hintArray }
+        if (typeof this.loadAttribForUser === "function") {
+          void this.loadAttribForUser(userId, hintArray)
+        }
+        Dialog.create({
+          component: UserAttributionDetails,
+          componentProps: {
+            userId,
+            username,
+            searchHints: Array.isArray(merged?.hints) ? merged.hints : hintArray,
+          },
+        })
       } catch (e) {}
     },
   },

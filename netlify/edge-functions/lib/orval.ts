@@ -3821,17 +3821,11 @@ export type AdminListUploadedImages200 = {
   items: AdminListUploadedImages200ItemsItem[];
 };
 
-export type AdminEmailFunnelsOverview200ItemTemplate = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  subject: string;
+export type AdminEmailFunnelsOverviewParams = {
+sinceDays?: number;
 };
 
 export type AdminEmailFunnelsOverview200ItemUnsubscribeGroup = {
-  id: string;
   key: string;
   name: string;
   /** @nullable */
@@ -3849,104 +3843,7 @@ export type AdminEmailFunnelsOverview200ItemStats = {
   failed: number;
 };
 
-export type AdminEmailFunnelsOverview200Item = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  active: boolean;
-  handlerKey: string;
-  shouldSendKey: string;
-  sendDelaySeconds: number;
-  /** @nullable */
-  cooldownHours: number | null;
-  template: AdminEmailFunnelsOverview200ItemTemplate;
-  unsubscribeGroup: AdminEmailFunnelsOverview200ItemUnsubscribeGroup;
-  stats: AdminEmailFunnelsOverview200ItemStats;
-  /** @nullable */
-  lastEvaluatedAt: string | null;
-  /** @nullable */
-  lastSentAt: string | null;
-};
-
-export type AdminEmailFunnelOptions200DefinitionsItem = {
-  key: string;
-  description: string;
-  /** @nullable */
-  candidateBatchSize: number | null;
-};
-
-export type AdminEmailFunnelOptions200TemplatesItem = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  subject: string;
-};
-
-export type AdminEmailFunnelOptions200UnsubscribeGroupsItem = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  /** @nullable */
-  sendgridGroupId: number | null;
-};
-
-export type AdminEmailFunnelOptions200 = {
-  definitions: AdminEmailFunnelOptions200DefinitionsItem[];
-  templates: AdminEmailFunnelOptions200TemplatesItem[];
-  unsubscribeGroups: AdminEmailFunnelOptions200UnsubscribeGroupsItem[];
-};
-
-export type AdminEmailFunnelsSyncBuiltinBody = { [key: string]: unknown };
-
-export type AdminEmailFunnelsSyncBuiltin200 = {
-  ok: boolean;
-};
-
-export type AdminEmailFunnelUpdateBody = {
-  id: string;
-  name?: string;
-  /** @nullable */
-  description?: string | null;
-  active?: boolean;
-  handlerKey?: string;
-  shouldSendKey?: string;
-  templateId?: string;
-  unsubscribeGroupId?: string;
-  /** @minimum 0 */
-  sendDelaySeconds?: number;
-  /**
-   * @minimum 0
-   * @nullable
-   */
-  cooldownHours?: number | null;
-};
-
-export type AdminEmailFunnelUpdate200Template = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  subject: string;
-};
-
-export type AdminEmailFunnelUpdate200UnsubscribeGroup = {
-  id: string;
-  key: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  /** @nullable */
-  sendgridGroupId: number | null;
-};
-
-export type AdminEmailFunnelUpdate200Stats = {
+export type AdminEmailFunnelsOverview200ItemRecent = {
   total: number;
   sent: number;
   ready: number;
@@ -3955,31 +3852,64 @@ export type AdminEmailFunnelUpdate200Stats = {
   failed: number;
 };
 
-export type AdminEmailFunnelUpdate200 = {
-  id: string;
+export type AdminEmailFunnelsOverview200ItemReasonsItem = {
+  reason: string;
+  count: number;
+};
+
+export type AdminEmailFunnelsOverview200Item = {
   key: string;
   name: string;
-  /** @nullable */
-  description: string | null;
+  description: string;
   active: boolean;
   handlerKey: string;
   shouldSendKey: string;
   sendDelaySeconds: number;
   /** @nullable */
   cooldownHours: number | null;
-  template: AdminEmailFunnelUpdate200Template;
-  unsubscribeGroup: AdminEmailFunnelUpdate200UnsubscribeGroup;
-  stats: AdminEmailFunnelUpdate200Stats;
+  /** @nullable */
+  candidateBatchSize: number | null;
+  supportsManualTrigger: boolean;
+  unsubscribeGroup: AdminEmailFunnelsOverview200ItemUnsubscribeGroup;
+  stats: AdminEmailFunnelsOverview200ItemStats;
+  recentWindowStart: string;
+  recent: AdminEmailFunnelsOverview200ItemRecent;
+  reasons: AdminEmailFunnelsOverview200ItemReasonsItem[];
   /** @nullable */
   lastEvaluatedAt: string | null;
   /** @nullable */
   lastSentAt: string | null;
+  /** @nullable */
+  lastSentReason: string | null;
+  /** @nullable */
+  lastErrorAt: string | null;
+  /** @nullable */
+  lastError: string | null;
+};
+
+export type AdminEmailFunnelEngagementParams = {
+sinceDays?: number;
+funnelKeys?: string[];
+};
+
+export type AdminEmailFunnelEngagement200Item = {
+  funnelKey: string;
+  sentTotal: number;
+  opensTotal: number;
+  opensUnique: number;
+  clicksTotal: number;
+  clicksUnique: number;
+  recentWindowStart: string;
+  sentRecent: number;
+  opensTotalRecent: number;
+  opensUniqueRecent: number;
+  clicksTotalRecent: number;
+  clicksUniqueRecent: number;
 };
 
 export type AdminEmailFunnelPreviewParams = {
 userId: string;
-funnelId?: string;
-funnelKey?: string;
+funnelKey: string;
 };
 
 export type AdminEmailFunnelPreview200AnyOf = {
@@ -3999,8 +3929,7 @@ export type AdminEmailFunnelPreview200 = AdminEmailFunnelPreview200AnyOf | Admin
 
 export type AdminEmailFunnelSendTestBody = {
   userId: string;
-  funnelId?: string;
-  funnelKey?: string;
+  funnelKey: string;
   force?: boolean;
 };
 
@@ -8211,17 +8140,24 @@ export const adminListUploadedImages = async (params?: AdminListUploadedImagesPa
 
 
 
-export const getAdminEmailFunnelsOverviewUrl = () => {
+export const getAdminEmailFunnelsOverviewUrl = (params?: AdminEmailFunnelsOverviewParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/admin/emailFunnelsOverview`
+  return stringifiedParams.length > 0 ? `/admin/emailFunnelsOverview?${stringifiedParams}` : `/admin/emailFunnelsOverview`
 }
 
-export const adminEmailFunnelsOverview = async ( options?: RequestInit): Promise<AdminEmailFunnelsOverview200Item[]> => {
+export const adminEmailFunnelsOverview = async (params?: AdminEmailFunnelsOverviewParams, options?: RequestInit): Promise<AdminEmailFunnelsOverview200Item[]> => {
   
-  return fetcher<AdminEmailFunnelsOverview200Item[]>(getAdminEmailFunnelsOverviewUrl(),
+  return fetcher<AdminEmailFunnelsOverview200Item[]>(getAdminEmailFunnelsOverviewUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -8232,66 +8168,29 @@ export const adminEmailFunnelsOverview = async ( options?: RequestInit): Promise
 
 
 
-export const getAdminEmailFunnelOptionsUrl = () => {
+export const getAdminEmailFunnelEngagementUrl = (params?: AdminEmailFunnelEngagementParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/admin/emailFunnelOptions`
+  return stringifiedParams.length > 0 ? `/admin/emailFunnelEngagement?${stringifiedParams}` : `/admin/emailFunnelEngagement`
 }
 
-export const adminEmailFunnelOptions = async ( options?: RequestInit): Promise<AdminEmailFunnelOptions200> => {
+export const adminEmailFunnelEngagement = async (params?: AdminEmailFunnelEngagementParams, options?: RequestInit): Promise<AdminEmailFunnelEngagement200Item[]> => {
   
-  return fetcher<AdminEmailFunnelOptions200>(getAdminEmailFunnelOptionsUrl(),
+  return fetcher<AdminEmailFunnelEngagement200Item[]>(getAdminEmailFunnelEngagementUrl(params),
   {      
     ...options,
     method: 'GET'
     
     
-  }
-);}
-
-
-
-export const getAdminEmailFunnelsSyncBuiltinUrl = () => {
-
-
-  
-
-  return `/admin/emailFunnelsSyncBuiltin`
-}
-
-export const adminEmailFunnelsSyncBuiltin = async (adminEmailFunnelsSyncBuiltinBody?: AdminEmailFunnelsSyncBuiltinBody, options?: RequestInit): Promise<AdminEmailFunnelsSyncBuiltin200> => {
-  
-  return fetcher<AdminEmailFunnelsSyncBuiltin200>(getAdminEmailFunnelsSyncBuiltinUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      adminEmailFunnelsSyncBuiltinBody,)
-  }
-);}
-
-
-
-export const getAdminEmailFunnelUpdateUrl = () => {
-
-
-  
-
-  return `/admin/emailFunnelUpdate`
-}
-
-export const adminEmailFunnelUpdate = async (adminEmailFunnelUpdateBody: AdminEmailFunnelUpdateBody, options?: RequestInit): Promise<AdminEmailFunnelUpdate200> => {
-  
-  return fetcher<AdminEmailFunnelUpdate200>(getAdminEmailFunnelUpdateUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      adminEmailFunnelUpdateBody,)
   }
 );}
 

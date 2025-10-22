@@ -24,6 +24,9 @@
     q-space
     q-btn(icon="refresh" flat @click="refetch" :loading="isFetching")
 
+  .text-caption.text-grey-5.q-mb-xs {{ tableSummary }}
+  .text-caption.text-grey-6.q-mb-sm(v-if="groupBySummary") {{ groupBySummary }}
+
   q-table(
     :rows="rows"
     :columns="columns"
@@ -37,6 +40,18 @@
     :rows-per-page-options="[10,25,50,100,0]"
     :no-data-label="'No attribution data'"
   )
+    template(#header="props")
+      q-tr(:props="props")
+        q-th(v-for="col in props.cols" :key="col.name" :props="props")
+          span {{ col.label }}
+          q-icon(
+            v-if="col.help"
+            name="info_outline"
+            size="16px"
+            class="q-ml-xs text-grey-5"
+          )
+            q-tooltip(anchor="top middle" self="bottom middle" class="text-body2")
+              | {{ col.help }}
     template(#body-cell-key="props")
       q-td(:props="props")
         span(v-if="props.row.key") {{ props.row.key }}
@@ -96,19 +111,35 @@ function onRequest({ pagination: p }: { pagination: TablePagination }) {
   refetch()
 }
 
-const columns: QTableColumn<any>[] = [
-  { name: 'key', label: 'Key', field: 'key', align: 'left', sortable: true },
-  { name: 'users', label: 'Users', field: 'users', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString() },
-  { name: 'paidUsers', label: 'Paid', field: 'paidUsers', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString() },
-  { name: 'createdImageUsers', label: 'Img Creators', field: 'createdImageUsers', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString() },
-  { name: 'spentPointsTotal', label: 'Spent Pts', field: 'spentPointsTotal', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString() },
-  { name: 'usdTotal', label: 'USD Total', field: 'usdTotal', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}` },
-  { name: 'usdPayPal', label: 'USD PayPal', field: 'usdPayPal', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}` },
-  { name: 'usdCrypto', label: 'USD Crypto', field: 'usdCrypto', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}` },
-  { name: 'usdStars', label: 'USD Stars', field: 'usdStars', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}` },
-  { name: 'firstSignup', label: 'First Signup', field: 'firstSignup', sortable: true },
-  { name: 'lastSignup', label: 'Last Signup', field: 'lastSignup', sortable: true },
+type AttributionColumn = QTableColumn<any> & { help?: string }
+
+const columns: AttributionColumn[] = [
+  { name: 'key', label: 'Attribution Key', field: 'key', align: 'left', sortable: true, help: 'The grouped value for the selected dimension (source, UTM, referrer, or survey response).' },
+  { name: 'users', label: 'Signups', field: 'users', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString(), help: 'Unique users whose first recorded attribution matched this key.' },
+  { name: 'paidUsers', label: 'Paid Users', field: 'paidUsers', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString(), help: 'Users in this group who completed any payment.' },
+  { name: 'createdImageUsers', label: 'Image Creators', field: 'createdImageUsers', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString(), help: 'Users in this group who have generated at least one image.' },
+  { name: 'spentPointsTotal', label: 'Points Spent', field: 'spentPointsTotal', align: 'right', sortable: true, format: (v: number) => (v || 0).toLocaleString(), help: 'Total points spent across all users in this group.' },
+  { name: 'usdTotal', label: 'USD Total', field: 'usdTotal', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}`, help: 'All USD-equivalent revenue (PayPal + crypto + app stores) from this group.' },
+  { name: 'usdPayPal', label: 'USD PayPal', field: 'usdPayPal', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}`, help: 'Revenue collected via PayPal from users in this group.' },
+  { name: 'usdCrypto', label: 'USD Crypto', field: 'usdCrypto', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}`, help: 'Revenue collected via crypto payments from this group.' },
+  { name: 'usdStars', label: 'USD Stars', field: 'usdStars', align: 'right', sortable: true, format: (v: number) => `$${(v || 0).toFixed(2)}`, help: 'Revenue collected via in-app stars for this group.' },
+  { name: 'firstSignup', label: 'First Signup', field: 'firstSignup', sortable: true, help: 'Earliest signup date seen for this attribution key under the current filters.' },
+  { name: 'lastSignup', label: 'Last Signup', field: 'lastSignup', sortable: true, help: 'Most recent signup date for this attribution key under the current filters.' },
 ]
+
+const groupByDescriptions: Record<string, string> = {
+  source: 'First-touch source captured from tracking pixels, referral links, or manual overrides.',
+  utmSource: 'UTM source parameter recorded on the user’s first visit.',
+  utmMedium: 'UTM medium parameter from the first recorded visit.',
+  utmCampaign: 'UTM campaign parameter from the first recorded visit.',
+  referrerDomain: 'Original referrer domain detected during signup.',
+  landingDomain: 'First landing domain where the signup happened.',
+  surveyResult: 'Answer chosen in the onboarding “How did you hear about Fiddl?” survey.',
+  surveyResultOther: 'Free-form survey response entered when selecting “Other”.',
+}
+
+const groupBySummary = computed(() => groupByDescriptions[groupBy.value] || '')
+const tableSummary = 'Metrics are aggregated per attribution key across the currently filtered signups. Counts are unique users.'
 
 const groupByOptions = [
   { label: 'Source', value: 'source' },
@@ -140,4 +171,3 @@ const sortDirOptions = [
   { label: 'Asc', value: 'asc', icon: 'north' },
 ]
 </script>
-

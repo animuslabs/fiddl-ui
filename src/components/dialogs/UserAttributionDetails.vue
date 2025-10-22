@@ -51,16 +51,16 @@ q-dialog(
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { adminAttributionGroups, type AdminAttributionGroups200ItemsItem } from 'src/lib/orval'
+import { adminAttributionGroups, AdminAttributionGroupsOrderBy, AdminAttributionGroupsSortDir, type AdminAttributionGroups200ItemsItem } from 'src/lib/orval'
 
 defineEmits([...useDialogPluginComponent.emits])
 
 const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent()
 const $q = useQuasar()
 
-const props = defineProps<{ userId: string; username?: string | null }>()
+const props = defineProps<{ userId: string; username?: string | null; searchHints?: string[] | null }>()
 
 const subtitle = computed(() => (props.username ? `@${props.username} (${props.userId})` : props.userId))
 
@@ -110,28 +110,72 @@ const formatCount = (value: number | null | undefined) => {
   return v.toLocaleString()
 }
 
-onMounted(async () => {
-  // Fetch per section serially to avoid hammering the API
-  for (const s of sections) {
-    s.loading = true
-    s.error = false
-    try {
-      const { data } = await adminAttributionGroups({
-        groupBy: s.key as any,
-        // NOTE: The API groups globally; user-level search may not match userId exactly.
-        search: props.userId,
-        includeUnknown: true,
-        limit: 10,
-        offset: 0,
-      })
-      s.items = Array.isArray(data?.items) ? data.items : []
-    } catch (e) {
-      s.error = true
-      s.items = []
-    } finally {
-      s.loading = false
-    }
+const searchTerms = computed(() => {
+  const terms = new Set<string>()
+  const push = (value?: string | null) => {
+    const trimmed = typeof value === 'string' ? value.trim() : ''
+    if (trimmed) terms.add(trimmed)
   }
+  push(props.userId)
+  if (props.username) {
+    const unprefixed = props.username.replace(/^@/, '')
+    push(unprefixed)
+    push(`@${unprefixed}`)
+  }
+  props.searchHints?.forEach((hint) => push(hint))
+  return Array.from(terms)
+})
+
+async function loadSections() {
+  const terms = searchTerms.value
+  for (const section of sections) {
+    section.loading = true
+    section.error = false
+    section.items = []
+
+    if (terms.length === 0) {
+      section.loading = false
+      continue
+    }
+
+    let loaded = false
+    let hadError = false
+
+    for (const term of terms) {
+      try {
+        const { data } = await adminAttributionGroups({
+          groupBy: section.key as any,
+          search: term,
+          includeUnknown: true,
+          limit: 25,
+          offset: 0,
+          orderBy: AdminAttributionGroupsOrderBy.users,
+          sortDir: AdminAttributionGroupsSortDir.desc,
+        })
+        const items = Array.isArray(data?.items) ? data.items : []
+        if (items.length > 0) {
+          section.items = items
+          loaded = true
+          break
+        }
+      } catch (e) {
+        hadError = true
+      }
+    }
+
+    if (!loaded && hadError) {
+      section.error = true
+    }
+    section.loading = false
+  }
+}
+
+onMounted(() => {
+  void loadSections()
+})
+
+watch(searchTerms, () => {
+  void loadSections()
 })
 </script>
 
