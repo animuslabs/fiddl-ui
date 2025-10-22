@@ -28,7 +28,7 @@ q-page
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import mediaViwer from "lib/mediaViewer"
-import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import ImageRequestCard from "src/components/MediaRequestCard.vue"
 import { creationsGetCreationData, userGetUsername } from "src/lib/orval"
 import { avatarImg } from "lib/netlifyImg"

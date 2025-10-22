@@ -1,6 +1,6 @@
 import { Dialog } from "quasar"
 import MediaViewer from "src/components/dialogs/MediaViewer.vue"
-import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import { usePopularityStore } from "src/stores/popularityStore"
 
 export const COMMENT_DIALOG_SENTINEL = "__media_viewer_open_comments__"

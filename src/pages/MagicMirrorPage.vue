@@ -271,7 +271,7 @@ import PromptTemplatesPicker from "src/components/magic/PromptTemplatesPicker.vu
 import PrivyLogin from "src/components/dialogs/PrivyLogin.vue"
 // Replaced inline mini with reusable QuickBuyPointsDialog
 import QuickBuyPointsDialog from "src/components/dialogs/QuickBuyPointsDialog.vue"
-import { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import SimpleMediaGrid, { type Item } from "src/components/magic/SimpleMediaGrid.vue"
 import { img } from "lib/netlifyImg"
 import { createMagicTrainingSet } from "src/lib/magic/magicTrainingSet"

@@ -15,30 +15,14 @@ import { isOwned } from "lib/ownedMediaCache"
 import LikeMedia from "src/components/dialogs/LikeMedia.vue"
 import UnlockForInput from "src/components/dialogs/UnlockForInput.vue"
 import type { MediaType } from "lib/types"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import { creationsSetRequestPrivacy, creationsDeleteRequest, creationsDeleteMedia } from "lib/orval"
 import { prices } from "stores/pricesStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 
-export interface MediaGalleryMeta {
-  id: string
-  url?: string
-  aspectRatio?: number
-  // Preferred field used by this component
-  type?: "image" | "video"
-  // Back-compat for API objects that provide `mediaType`
-  mediaType?: "image" | "video"
-  requestId?: string
-  requestType?: "image" | "video"
-  isPublic?: boolean
-  requestQuantity?: number
-  placeholder?: boolean
-  nsfw?: boolean
-  // Optional creator metadata (when available from caller)
-  creatorId?: string
-  creatorUsername?: string
-}
+export type { MediaGalleryMeta }
 
 const props = withDefaults(
   defineProps<{

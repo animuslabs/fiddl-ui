@@ -47,7 +47,8 @@ q-page.full-width.position-relative
 <script setup lang="ts">
 import { ref, computed, watch, shallowRef, onUnmounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import MediaGallery from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import ModelCard from "src/components/ModelCard.vue"
 import { models, loadCurrentModel, clearCurrentModel } from "src/stores/modelsStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"

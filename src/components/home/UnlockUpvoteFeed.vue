@@ -101,7 +101,7 @@ export default defineComponent({
         const list = Array.isArray(data) ? data : []
         this.events = this.normalize(list)
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn("UnlockUpvoteFeed refreshFull failed", err)
       } finally {
         this.loading = false
@@ -123,7 +123,7 @@ export default defineComponent({
           this.events = this.normalize(merged).slice(0, this.limit)
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn("UnlockUpvoteFeed refreshDelta failed", err)
       }
     },

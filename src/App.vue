@@ -71,13 +71,6 @@ export default defineComponent({
     ReferralSurveyDialog,
     MotdDialog,
   },
-  computed: {
-    isMotdAllowedRoute(): boolean {
-      const name = this.$route?.name
-      if (!name) return false
-      return this.motdAllowedRoutes.includes(String(name))
-    },
-  },
   data() {
     return {
       images: [] as string[],
@@ -88,6 +81,13 @@ export default defineComponent({
       motdSuppressed: false as boolean,
       motdAllowedRoutes: ["index", "browse", "create", "forge"] as string[],
     }
+  },
+  computed: {
+    isMotdAllowedRoute(): boolean {
+      const name = this.$route?.name
+      if (!name) return false
+      return this.motdAllowedRoutes.includes(String(name))
+    },
   },
   watch: {
     "$route.query": {

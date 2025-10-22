@@ -2,7 +2,7 @@ import { defineStore } from "pinia"
 import { creationsBrowseCreateRequests, type CreationsBrowseCreateRequests200Item } from "src/lib/orval"
 import { img, s3Video } from "lib/netlifyImg"
 import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
-import type { MediaGalleryMeta } from "components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import type { MediaType } from "lib/types"
 import { useCreatorStore } from "src/stores/creatorStore"
 

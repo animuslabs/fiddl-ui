@@ -44,7 +44,8 @@ import { ref, computed, watch } from "vue"
 import { useQuasar } from "quasar"
 import { img } from "lib/netlifyImg"
 import { hdDownloadUrl, originalDownloadUrl } from "src/lib/imageCdn"
-import MediaGallery, { type MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import MediaGallery from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 
 const props = withDefaults(
   defineProps<{

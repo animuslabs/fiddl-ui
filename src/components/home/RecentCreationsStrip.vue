@@ -128,7 +128,7 @@ export default defineComponent({
         })
         this.items = this.normalizeRows(data as unknown as CreationsBrowseCreateRequests200Item[])
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn("RecentCreationsStrip refreshFull failed", err)
       } finally {
         this.loading = false
@@ -163,7 +163,7 @@ export default defineComponent({
           this.items = unique.slice(0, this.limit)
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.warn("RecentCreationsStrip refreshDelta failed", err)
       }
     },

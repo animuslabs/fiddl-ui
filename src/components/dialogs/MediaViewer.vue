@@ -14,7 +14,7 @@ MediaViewerDialog(
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import MediaViewerDialog from "./MediaViewerDialog.vue"
 
 export default defineComponent({

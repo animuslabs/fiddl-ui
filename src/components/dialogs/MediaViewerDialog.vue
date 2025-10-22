@@ -15,7 +15,7 @@ import { QDialog } from "quasar"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
 import { useMediaNavigation } from "src/lib/composables/useMediaNavigation"
-import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import MediaViewerMedia from "./MediaViewerMedia.vue"
 
 interface Props {

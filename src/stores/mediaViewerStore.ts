@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { LocalStorage, SessionStorage } from "quasar"
-import type { MediaGalleryMeta } from "src/components/MediaGallery.vue"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import { collectionsMediaInUsersCollection, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { catchErr, isRateLimitError } from "src/lib/util"

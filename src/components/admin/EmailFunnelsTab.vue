@@ -97,8 +97,8 @@
         div.text-subtitle1 No email funnels found
         div.text-body2.text-grey-6 Sync your environment to load registered funnels.
 
-  q-dialog(v-model="detailOpen" :maximized="$q.screen.lt.md")
-    q-card(flat bordered class="funnel-dialog-card")
+  q-dialog(v-model="detailOpen" :maximized="detailMaximized || $q.screen.lt.md")
+    q-card(flat bordered :class="['funnel-dialog-card', { 'funnel-dialog-card--max': detailMaximized }]")
       q-card-section
         .row.items-start.q-col-gutter-md
           q-icon(name="insights" size="32px" color="primary" class="q-mt-xs")
@@ -106,9 +106,16 @@
             .text-h6.text-weight-medium Funnel Overview
             div.text-caption.text-grey-5(v-if="selectedFunnel") {{ selectedFunnel.name }} · {{ selectedFunnel.key }}
           q-space
+          q-btn(
+            flat
+            dense
+            :icon="detailMaximized ? 'fullscreen_exit' : 'fullscreen'"
+            :title="detailMaximized ? 'Exit full screen' : 'View full screen'"
+            @click="detailMaximized = !detailMaximized"
+          )
           q-btn(flat dense icon="close" @click="detailOpen = false")
       q-separator
-      q-card-section(class="q-gutter-y-md" v-if="selectedFunnel")
+      q-card-section(class="q-gutter-y-md funnel-dialog-body" v-if="selectedFunnel")
         q-banner(
           v-if="selectedFunnel.lastErrorAt"
           dense
@@ -336,8 +343,16 @@
       q-card-actions(align="right")
         q-btn(flat label="Close" @click="detailOpen = false")
 
-  q-dialog(v-model="previewDialog" :maximized="$q.screen.lt.md")
-    q-card(flat bordered class="funnel-dialog-card")
+  q-dialog(v-model="previewDialog" :maximized="previewMaximized || $q.screen.lt.md")
+    q-card(
+      flat
+      bordered
+      :class="[
+        'funnel-dialog-card',
+        'funnel-preview-card',
+        { 'funnel-dialog-card--max': previewMaximized, 'preview-maximized': previewMaximized },
+      ]"
+    )
       q-card-section
         .row.items-start.q-col-gutter-md
           q-icon(name="visibility" size="32px" color="primary" class="q-mt-xs")
@@ -345,27 +360,35 @@
             .text-h6.text-weight-medium Funnel Email Preview
             div.text-caption.text-grey-5(v-if="previewSubject") Subject: {{ previewSubject }}
           q-space
+          q-btn(
+            flat
+            dense
+            :icon="previewMaximized ? 'fullscreen_exit' : 'fullscreen'"
+            :title="previewMaximized ? 'Exit full screen' : 'View full screen'"
+            @click="previewMaximized = !previewMaximized"
+          )
           q-btn(flat dense icon="close" @click="previewDialog = false")
       q-separator
-      q-card-section(class="q-gutter-y-md")
+      q-card-section(class="q-gutter-y-md funnel-dialog-body")
         template(v-if="previewSuccess")
-          q-banner(dense rounded color="grey-9" text-color="white" icon="mail")
+          q-banner(dense rounded color="grey-1" text-color="grey-10" icon="mail")
             .text-body2 Preview generated for user {{ previewUserLabel }}
             .text-caption.text-grey-3 Handler output may vary at send time.
-          q-banner(dense rounded color="grey-8" text-color="white" icon="psychology" v-if="previewShouldReason")
+          q-banner(dense rounded color="blue-grey-1" text-color="blue-grey-9" icon="psychology" v-if="previewShouldReason")
             .text-body2 {{ previewShouldReason }}
           q-card(flat bordered)
-            q-card-section(class="preview-card")
+            q-card-section(:class="['preview-card', { 'preview-card--max': previewMaximized }]")
               iframe.preview-iframe(
                 :srcdoc="previewHtml"
                 sandbox="allow-same-origin"
                 referrerpolicy="no-referrer"
+                :class="{ 'preview-iframe--max': previewMaximized }"
               )
           q-card(flat bordered v-if="previewText")
-            q-card-section(class="preview-card")
+            q-card-section(:class="['preview-card', { 'preview-card--max': previewMaximized }]")
               pre.preview-text {{ previewText }}
         template(v-else)
-          q-banner(dense rounded color="negative" text-color="white" icon="error_outline")
+          q-banner(dense rounded color="red-1" text-color="red-9" icon="error_outline")
             .text-body2 Preview unavailable
             .text-caption.text-grey-3 {{ previewFailureReason || 'Eligibility check prevented rendering for this user.' }}
       q-card-actions(align="right")
@@ -518,6 +541,7 @@ const engagementMap = computed(() => {
 })
 
 const detailOpen = ref(false)
+const detailMaximized = ref(true)
 const selectedFunnel = ref<EmailFunnelOverview | null>(null)
 
 const selectedEngagement = computed<EmailFunnelEngagement | null>(() => {
@@ -538,6 +562,7 @@ function refresh() {
 function openDetailDialog(funnel: EmailFunnelOverview) {
   selectedFunnel.value = funnel
   resetTestControls()
+  detailMaximized.value = true
   detailOpen.value = true
 }
 
@@ -548,16 +573,6 @@ watch(rows, (list) => {
     selectedFunnel.value = updated
   }
 })
-
-watch(
-  () => detailOpen.value,
-  (open) => {
-    if (!open) {
-      resetTestControls()
-      selectedFunnel.value = null
-    }
-  },
-)
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -571,6 +586,7 @@ const testingEmail = ref(false)
 const previewDialog = ref(false)
 const previewLoading = ref(false)
 const previewResult = ref<AdminEmailFunnelPreview200 | null>(null)
+const previewMaximized = ref(false)
 
 const testUserIdValid = computed(() => uuidRegex.test(testUserId.value.trim()))
 const testUserIdError = computed(() => {
@@ -593,6 +609,24 @@ const previewText = computed(() => previewSuccess.value?.text || '')
 const previewShouldReason = computed(() => previewSuccess.value?.shouldReason || '')
 const previewUserLabel = computed(() => testUserSelection.value?.label || testUserId.value.trim() || 'N/A')
 
+watch(
+  () => detailOpen.value,
+  (open) => {
+    if (!open) {
+      resetTestControls()
+      selectedFunnel.value = null
+      detailMaximized.value = true
+    }
+  },
+)
+
+watch(
+  () => previewDialog.value,
+  (open) => {
+    if (!open) previewMaximized.value = false
+  },
+)
+
 const testUserSelectionInfo = computed(() => {
   const opt = testUserSelection.value
   if (!opt) return ''
@@ -607,6 +641,7 @@ function resetPreviewState() {
   previewDialog.value = false
   previewResult.value = null
   previewLoading.value = false
+  previewMaximized.value = false
 }
 
 function resetTestControls() {
@@ -757,8 +792,35 @@ function formatDate(value?: string | null): string {
 <style lang="scss">
 .email-funnels-tab {
   .funnel-dialog-card {
-    max-width: 960px;
-    width: 100%;
+    width: min(1200px, 95vw);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    color: #1f1f1f;
+  }
+
+  .funnel-dialog-card--max {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .funnel-preview-card {
+    background: #ffffff;
+    color: #1f1f1f;
+  }
+
+  .funnel-dialog-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  .funnel-dialog-card .q-card-actions {
+    border-top: 1px solid #e3e6ea;
+    padding: 12px 16px;
   }
 
   .info-table {
@@ -785,15 +847,30 @@ function formatDate(value?: string | null): string {
   }
 
   .preview-card {
-    background: #f5f5f5;
-    border-radius: 6px;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e3e6ea;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-card--max {
+    min-height: clamp(420px, 80vh, calc(100vh - 220px));
+    flex: 1 1 auto;
   }
 
   .preview-iframe {
     width: 100%;
-    min-height: 420px;
+    min-height: clamp(360px, 60vh, 560px);
+    height: 100%;
     border: none;
     background: white;
+  }
+
+  .preview-iframe--max {
+    min-height: clamp(420px, 80vh, calc(100vh - 220px));
+    flex: 1 1 auto;
   }
 
   .preview-text {
@@ -802,6 +879,25 @@ function formatDate(value?: string | null): string {
     word-break: break-word;
     font-size: 0.85rem;
     line-height: 1.4;
+    overflow-x: auto;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e3e6ea;
+    padding: 12px;
+  }
+
+  .preview-maximized {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .funnel-dialog-card {
+      width: min(1400px, 96vw);
+    }
   }
 }
 </style>

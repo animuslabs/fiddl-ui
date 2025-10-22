@@ -78,10 +78,10 @@ import { copyToClipboard, Dialog, Notify, useQuasar } from "quasar"
 import { creationsDeleteRequest, creationsSetRequestPrivacy, modelsGetCustomModel, userGetUsername } from "src/lib/orval"
 import { type CreateImageRequestWithCustomModel } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
+import type { MediaGalleryMeta } from "src/types/media-gallery"
 import { defineComponent, PropType, ref, Ref } from "vue"
 import type { CreateImageRequestData, CreateVideoRequest } from "fiddl-server/dist/lib/types/serverTypes"
 import type { UnifiedRequest } from "lib/types"
-import { MediaGalleryMeta } from "src/components/MediaGallery.vue"
 export default defineComponent({
   components: {
     CreatedImageCard,
