@@ -188,24 +188,34 @@
               q-toggle(v-model="form.active" label="Active" color="positive")
           .row.q-col-gutter-md
             .col-12.col-md-6
-              q-select(
-                v-model="form.templateId"
-                :options="templateOptions"
-                label="Template"
-                outlined
-                dense
-                emit-value
-                map-options
-                :loading="optionsLoading"
-                behavior="menu"
-              )
-                template(#option="scope")
-                  q-item(v-bind="scope.itemProps")
-                    q-item-section
-                      q-item-label {{ scope.opt.label }}
-                      q-item-label(caption v-if="scope.opt.subject") Subject: {{ scope.opt.subject }}
-                    q-item-section(side)
-                      q-chip(dense size="sm" color="grey-7" text-color="white") {{ scope.opt.key }}
+              .column.q-gutter-xs
+                q-select(
+                  v-model="form.templateId"
+                  :options="templateOptions"
+                  label="Template"
+                  outlined
+                  dense
+                  emit-value
+                  map-options
+                  :loading="optionsLoading"
+                  behavior="menu"
+                )
+                  template(#option="scope")
+                    q-item(v-bind="scope.itemProps")
+                      q-item-section
+                        q-item-label {{ scope.opt.label }}
+                        q-item-label(caption v-if="scope.opt.subject") Subject: {{ scope.opt.subject }}
+                      q-item-section(side)
+                        q-chip(dense size="sm" color="grey-7" text-color="white") {{ scope.opt.key }}
+                q-btn(
+                  flat
+                  size="sm"
+                  icon="edit"
+                  label="Edit Template"
+                  class="self-start"
+                  @click="openTemplateEditor"
+                  :disable="!selectedTemplate"
+                )
             .col-12.col-md-6
               q-select(
                 v-model="form.unsubscribeGroupId"
@@ -255,19 +265,53 @@
               .text-caption.text-grey-3 Handler implementations can override subject/body at send time.
           .column.q-gutter-sm
             .text-subtitle2 Preview & Test Email
-            .row.q-col-gutter-md.items-center
+            .row.q-col-gutter-md
               .col-12.col-md-6
-                q-input(
-                  v-model="testUserId"
-                  label="User ID"
+                q-select(
+                  v-model="testUserSelection"
+                  label="Find user (username/email)"
                   outlined
                   dense
                   clearable
-                  placeholder="Enter user ID to preview or send test"
+                  use-input
+                  fill-input
+                  input-debounce="0"
+                  :options="userLookupOptions"
+                  :loading="userLookupLoading"
+                  @filter="filterUserLookup"
+                  @update:model-value="handleUserSelection"
+                  behavior="menu"
+                )
+                  template(#option="scope")
+                    q-item(v-bind="scope.itemProps")
+                      q-item-section
+                        q-item-label {{ scope.opt.label }}
+                        q-item-label(caption v-if="scope.opt.email || scope.opt.username")
+                          span(v-if="scope.opt.username") @{{ scope.opt.username }}
+                          span(v-if="scope.opt.email && scope.opt.username") ·
+                          span(v-if="scope.opt.email") {{ scope.opt.email }}
+                      q-item-section(side)
+                        q-chip(dense size="sm" color="grey-7" text-color="white") {{ scope.opt.value }}
+                  template(#no-option)
+                    q-item
+                      q-item-section.text-grey-6 No matches found
+              .col-12.col-md-6
+                q-input(
+                  v-model="testUserId"
+                  label="User ID (UUID)"
+                  outlined
+                  dense
+                  clearable
+                  placeholder="Paste user ID or select above"
                   :disable="previewLoading || testingEmail"
+                  :error="!!testUserIdError"
+                  :error-message="testUserIdError"
+                  autocomplete="off"
                   @keydown.enter.prevent="openPreviewEmail"
                 )
-              .col-12.col-md-3
+            div.text-caption.text-grey-6(v-if="testUserSelectionInfo") {{ testUserSelectionInfo }}
+            .row.q-col-gutter-md.items-center
+              .col-12.col-md-4
                 q-toggle(
                   v-model="testForce"
                   label="Force send"
@@ -395,6 +439,16 @@
       q-card-actions(align="right")
         q-btn(flat label="Close" @click="previewDialog = false")
 
+  EmailTemplateEditorDialog(
+    v-if="selectedTemplate"
+    v-model="templateEditorOpen"
+    :template-id="selectedTemplate.id"
+    :template-key="selectedTemplate.key"
+    :template-name="selectedTemplate.name"
+    :template-description="selectedTemplate.description || null"
+    @saved="handleTemplateSaved"
+  )
+
   // Create dialog placeholder (wired for future backend support)
   q-dialog(v-model="createOpen" :maximized="$q.screen.lt.md")
     q-card(flat bordered class="funnel-dialog-card")
@@ -489,21 +543,27 @@ import {
   useQuasar,
 } from 'quasar'
 import {
+  adminListUsers,
   adminEmailFunnelPreview,
   useAdminEmailFunnelsOverview,
   useAdminEmailFunnelOptions,
   useAdminEmailFunnelUpdate,
   useAdminEmailFunnelSendTest,
   useAdminEmailFunnelsSyncBuiltin,
+  type AdminEmailFunnelPreviewParams,
   type AdminEmailFunnelOptions200DefinitionsItem,
   type AdminEmailFunnelOptions200TemplatesItem,
   type AdminEmailFunnelOptions200UnsubscribeGroupsItem,
   type AdminEmailFunnelPreview200,
+  type AdminEmailFunnelSendTestBody,
   type AdminEmailFunnelUpdateBody,
   type AdminEmailFunnelUpdate200,
   type AdminEmailFunnelsOverview200Item,
+  type AdminListUsers200UsersItem,
 } from 'src/lib/orval'
 import { catchErr } from 'src/lib/util'
+import EmailTemplateEditorDialog from './EmailTemplateEditorDialog.vue'
+import type { AdminEmailTemplateDetail } from 'src/lib/adminEmailTemplates'
 
 interface HandlerOption {
   label: string
@@ -553,6 +613,13 @@ interface ActivityRow {
 
 type AdminEmailPreviewSuccess = Extract<AdminEmailFunnelPreview200, { html: string }>
 type AdminEmailPreviewFailure = Extract<AdminEmailFunnelPreview200, { reason: string }>
+
+interface UserLookupOption {
+  label: string
+  value: string
+  email?: string | null
+  username?: string | null
+}
 
 const $q = useQuasar()
 
@@ -727,14 +794,26 @@ const templatePreview = computed(() => {
   return `Default subject: ${selectedTemplate.value.subject || '(none set)'}`
 })
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 const testUserId = ref('')
+const testUserSelection = ref<UserLookupOption | null>(null)
+const userLookupOptions = ref<UserLookupOption[]>([])
+const userLookupLoading = ref(false)
+let userLookupRequestId = 0
 const testForce = ref(false)
 const testingEmail = ref(false)
 const previewDialog = ref(false)
 const previewLoading = ref(false)
 const previewResult = ref<AdminEmailFunnelPreview200 | null>(null)
+const templateEditorOpen = ref(false)
 
-const hasTestUser = computed(() => !!testUserId.value.trim())
+const testUserIdValid = computed(() => uuidRegex.test(testUserId.value.trim()))
+const testUserIdError = computed(() => {
+  if (!testUserId.value) return ''
+  return testUserIdValid.value ? '' : 'Enter a valid UUID user ID'
+})
+const hasTestUser = computed(() => testUserIdValid.value)
 const previewSuccess = computed<AdminEmailPreviewSuccess | null>(() => {
   const result = previewResult.value
   return result && 'html' in result ? (result as AdminEmailPreviewSuccess) : null
@@ -747,7 +826,16 @@ const previewSubject = computed(() => previewSuccess.value?.subject || '')
 const previewHtml = computed(() => previewSuccess.value?.html || '')
 const previewText = computed(() => previewSuccess.value?.text || '')
 const previewShouldReason = computed(() => previewSuccess.value?.shouldReason || '')
-const previewUserLabel = computed(() => testUserId.value.trim() || 'N/A')
+const previewUserLabel = computed(() => testUserSelection.value?.label || testUserId.value.trim() || 'N/A')
+const testUserSelectionInfo = computed(() => {
+  const opt = testUserSelection.value
+  if (!opt) return ''
+  const parts: string[] = []
+  if (opt.username) parts.push(`@${opt.username}`)
+  if (opt.email) parts.push(opt.email)
+  parts.push(opt.value)
+  return parts.filter(Boolean).join(' · ')
+})
 
 function resetPreviewState() {
   previewDialog.value = false
@@ -757,23 +845,103 @@ function resetPreviewState() {
 
 function resetTestControls() {
   testUserId.value = ''
+  testUserSelection.value = null
+  userLookupOptions.value = []
   testForce.value = false
   testingEmail.value = false
   previewLoading.value = false
   resetPreviewState()
 }
 
+function mapUserToOption(user: AdminListUsers200UsersItem): UserLookupOption {
+  const username = user.profile?.username || null
+  const email = user.profile?.email || null
+  const label = username ? `@${username}` : email || user.id
+  return {
+    label,
+    value: user.id,
+    email,
+    username,
+  }
+}
+
+function handleUserSelection(option: UserLookupOption | null) {
+  if (option) {
+    testUserSelection.value = option
+    testUserId.value = option.value
+  } else {
+    testUserSelection.value = null
+  }
+}
+
+function filterUserLookup(val: string, update: (fn: () => void) => void) {
+  const term = val.trim()
+  if (term.length < 2) {
+    update(() => {
+      userLookupOptions.value = []
+    })
+    userLookupLoading.value = false
+    return
+  }
+  const requestId = ++userLookupRequestId
+  userLookupLoading.value = true
+  update(async () => {
+    try {
+      const res = await adminListUsers({ search: term, limit: 20, includeBanned: true })
+      if (requestId !== userLookupRequestId) return
+      const list = res?.data?.users || []
+      userLookupOptions.value = list.map(mapUserToOption)
+    } catch (error) {
+      if (requestId === userLookupRequestId) catchErr(error)
+    } finally {
+      if (requestId === userLookupRequestId) {
+        userLookupLoading.value = false
+      }
+    }
+  })
+}
+
+function openTemplateEditor() {
+  if (!selectedTemplate.value) {
+    Notify.create({ type: 'warning', message: 'Select a template before editing.' })
+    return
+  }
+  templateEditorOpen.value = true
+}
+
+function handleTemplateSaved(detail: AdminEmailTemplateDetail) {
+  if (selectedFunnel.value?.template?.id === detail.id) {
+    const next: AdminEmailFunnelsOverview200Item = {
+      ...selectedFunnel.value,
+      template: {
+        ...selectedFunnel.value.template,
+        name: detail.name,
+        description: detail.description,
+        subject: detail.subject,
+      },
+    }
+    selectedFunnel.value = next
+    applyFunnelToForm(next)
+  }
+  void optionsQuery.refetch()
+  void funnelsQuery.refetch()
+}
+
 async function openPreviewEmail() {
-  if (!selectedFunnel.value?.id) return
-  if (!hasTestUser.value) {
-    Notify.create({ type: 'warning', message: 'Enter a user ID to preview this funnel.' })
+  if (!selectedFunnel.value) return
+  const trimmedUserId = testUserId.value.trim()
+  if (!testUserIdValid.value) {
+    Notify.create({ type: 'warning', message: 'Enter a valid user ID to preview this funnel.' })
     return
   }
   if (previewLoading.value) return
   previewResult.value = null
   previewLoading.value = true
   try {
-    const res = await adminEmailFunnelPreview({ userId: testUserId.value.trim(), funnelId: selectedFunnel.value.id })
+    const params: AdminEmailFunnelPreviewParams = { userId: trimmedUserId }
+    if (selectedFunnel.value.id) params.funnelId = selectedFunnel.value.id
+    else if (selectedFunnel.value.key) params.funnelKey = selectedFunnel.value.key
+    const res = await adminEmailFunnelPreview(params)
     const data = res?.data
     if (data) {
       previewResult.value = data
@@ -789,19 +957,21 @@ async function openPreviewEmail() {
 }
 
 async function sendTestEmail() {
-  if (!selectedFunnel.value?.id) return
-  if (!hasTestUser.value) {
-    Notify.create({ type: 'warning', message: 'Enter a user ID to send a test email.' })
+  if (!selectedFunnel.value) return
+  const trimmedUserId = testUserId.value.trim()
+  if (!testUserIdValid.value) {
+    Notify.create({ type: 'warning', message: 'Enter a valid user ID to send a test email.' })
     return
   }
   if (testingEmail.value) return
   testingEmail.value = true
   try {
-    const payload = {
-      userId: testUserId.value.trim(),
-      funnelId: selectedFunnel.value.id,
+    const payload: AdminEmailFunnelSendTestBody = {
+      userId: trimmedUserId,
       ...(testForce.value ? { force: true } : {}),
     }
+    if (selectedFunnel.value.id) payload.funnelId = selectedFunnel.value.id
+    else if (selectedFunnel.value.key) payload.funnelKey = selectedFunnel.value.key
     const res = await sendTestMutation.mutateAsync({ data: payload })
     const data = res?.data
     if (data?.ok) {
@@ -923,6 +1093,13 @@ async function saveDetail() {
 watch(detailOpen, (open) => {
   if (!open) {
     resetPreviewState()
+  }
+})
+
+watch(testUserId, (value) => {
+  if (!testUserSelection.value) return
+  if (testUserSelection.value.value !== value.trim()) {
+    testUserSelection.value = null
   }
 })
 
