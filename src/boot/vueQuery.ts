@@ -16,6 +16,38 @@ if (!apiUrl.startsWith("http") && !apiUrl.startsWith("https")) {
 // Configure axios
 axios.defaults.baseURL = apiUrl
 axios.defaults.timeout = 0
+axios.defaults.paramsSerializer = {
+  serialize: (params) => {
+    if (!params) return ''
+    if (typeof params === 'string') return params
+    if (params instanceof URLSearchParams) return params.toString()
+
+    const parts: string[] = []
+
+    const appendParam = (key: string, value: unknown): void => {
+      if (value === undefined || value === null) return
+
+      if (Array.isArray(value)) {
+        value.forEach((entry) => appendParam(`${key}[]`, entry))
+        return
+      }
+
+      let normalized: string | null | undefined
+      if (value instanceof Date) normalized = value.toISOString()
+      else if (typeof value === 'boolean') normalized = value ? 'true' : 'false'
+      else if (typeof value === 'number') normalized = Number.isFinite(value) ? `${value}` : null
+      else if (typeof value === 'string') normalized = value
+      else normalized = JSON.stringify(value)
+
+      if (normalized === undefined || normalized === null) return
+      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(normalized)}`)
+    }
+
+    Object.entries(params as Record<string, unknown>).forEach(([key, value]) => appendParam(key, value))
+
+    return parts.join('&')
+  },
+}
 
 // Track whether we've already notified about an expired session (notification disabled)
 // let hasNotifiedExpiry = false

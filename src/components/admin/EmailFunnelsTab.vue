@@ -85,10 +85,21 @@
       q-td(:props="props")
         q-btn(
           size="sm"
+          flat
+          :color="props.row.active ? 'negative' : 'positive'"
+          :icon="props.row.active ? 'pause' : 'play_arrow'"
+          :label="props.row.active ? 'Pause' : 'Resume'"
+          :loading="isFunnelToggleLoading(props.row.key)"
+          :disable="isFunnelToggleLoading(props.row.key)"
+          @click.stop="props.row.active ? promptPauseFunnel(props.row) : promptResumeFunnel(props.row)"
+        )
+        q-btn(
+          size="sm"
           icon="visibility"
           color="primary"
           flat
           label="Details"
+          :disable="isFunnelToggleLoading(props.row.key)"
           @click.stop="openDetailDialog(props.row)"
         )
     template(#no-data)
@@ -106,6 +117,16 @@
             .text-h6.text-weight-medium Funnel Overview
             div.text-caption.text-grey-5(v-if="selectedFunnel") {{ selectedFunnel.name }} · {{ selectedFunnel.key }}
           q-space
+          q-btn(
+            v-if="selectedFunnel"
+            flat
+            dense
+            :color="selectedFunnel.active ? 'negative' : 'positive'"
+            :icon="selectedFunnel.active ? 'pause' : 'play_arrow'"
+            :label="selectedFunnel.active ? 'Pause' : 'Resume'"
+            :loading="isFunnelToggleLoading(selectedFunnel.key)"
+            @click="selectedFunnel.active ? promptPauseFunnel(selectedFunnel) : promptResumeFunnel(selectedFunnel)"
+          )
           q-btn(
             flat
             dense
@@ -125,6 +146,17 @@
           q-btn(flat dense icon="close" @click="detailOpen = false")
       q-separator
       q-card-section(class="q-gutter-y-md funnel-dialog-body" v-if="selectedFunnel")
+        q-banner(
+          v-if="!selectedFunnel.active"
+          dense
+          rounded
+          color="orange-8"
+          text-color="white"
+          icon="pause_circle"
+        )
+          .text-body2 Funnel is currently paused.
+          .text-caption(v-if="selectedAdminState?.pausedAt") Paused {{ formatDate(selectedAdminState?.pausedAt) }}
+          .text-caption(v-if="selectedAdminState?.note") Note: {{ selectedAdminState.note }}
         q-banner(
           v-if="selectedFunnel.lastErrorAt"
           dense
@@ -148,6 +180,20 @@
                     tr
                       td.label Active
                       td {{ selectedFunnel.active ? 'Yes' : 'No' }}
+                    tr
+                      td.label Paused At
+                      td {{ formatDate(selectedAdminState?.pausedAt) }}
+                    tr
+                      td.label Resumed At
+                      td {{ formatDate(selectedAdminState?.resumedAt) }}
+                    tr
+                      td.label Admin Note
+                      td {{ selectedAdminState?.note || '-' }}
+                    tr
+                      td.label Updated By
+                      td
+                        div {{ selectedAdminStateUpdatedBy || '-' }}
+                        div.text-caption.text-grey-6(v-if="selectedAdminState?.updatedAt") {{ formatDate(selectedAdminState?.updatedAt) }}
                     tr
                       td.label Handler
                       td {{ selectedFunnel.handlerKey }}
@@ -600,6 +646,7 @@ import {
   adminListUsers,
   adminEmailFunnelPreview,
   useAdminEmailFunnelEngagement,
+  useAdminEmailFunnelSetActive,
   useAdminEmailFunnelSendTest,
   useAdminEmailFunnelsOverview,
   type AdminEmailFunnelPreview200,
@@ -614,7 +661,9 @@ import {
   type AdminListEmailFunnelEmailsParams,
   type AdminListEmailFunnelEmailsSortBy,
   type AdminListEmailFunnelEmailsSortDir,
-  type AdminListEmailFunnelEmailsStatusesItem,
+  type AdminEmailFunnelSetActiveBody,
+  AdminListEmailFunnelEmailsStatusesItem as AdminEmailStatusEnum,
+  type AdminListEmailFunnelEmailsStatusesItem as AdminEmailStatus,
 } from 'src/lib/orval'
 import { catchErr } from 'src/lib/util'
 
@@ -705,6 +754,119 @@ const engagementQuery = useAdminEmailFunnelEngagement<EmailFunnelEngagement[]>(e
   },
 })
 
+const setActiveMutation = useAdminEmailFunnelSetActive()
+const funnelToggleLoading = ref<Record<string, boolean>>({})
+
+function setFunnelToggleLoading(key: string, loading: boolean) {
+  funnelToggleLoading.value = { ...funnelToggleLoading.value, [key]: loading }
+}
+
+function isFunnelToggleLoading(key: string): boolean {
+  return !!funnelToggleLoading.value[key]
+}
+
+function syncFunnelActiveState(key: string, active: boolean, adminState: EmailFunnelOverview['adminState']) {
+  const current = funnelsQuery.data.value
+  if (Array.isArray(current)) {
+    const updated = current.map((row) =>
+      row.key === key
+        ? {
+            ...row,
+            active,
+            adminState,
+          }
+        : row,
+    )
+    funnelsQuery.data.value = updated
+  }
+  if (selectedFunnel.value?.key === key && selectedFunnel.value) {
+    selectedFunnel.value = {
+      ...selectedFunnel.value,
+      active,
+      adminState,
+    }
+  }
+}
+
+async function applyFunnelActiveState(funnel: EmailFunnelOverview, active: boolean, note?: string) {
+  if (!funnel?.key) return
+  const key = funnel.key
+  if (isFunnelToggleLoading(key)) return
+  setFunnelToggleLoading(key, true)
+  const trimmedNote = typeof note === 'string' ? note.trim() : ''
+  const payload: AdminEmailFunnelSetActiveBody = {
+    funnelKey: key,
+    active,
+    note: trimmedNote ? trimmedNote : null,
+  }
+  try {
+    const response = await setActiveMutation.mutateAsync({ data: payload })
+    const data = response?.data
+    if (data?.ok) {
+      syncFunnelActiveState(key, active, data.adminState ?? null)
+      Notify.create({
+        type: 'positive',
+        message: active ? 'Funnel resumed' : 'Funnel paused',
+      })
+      void refresh()
+    } else {
+      Notify.create({
+        type: 'info',
+        message: active ? 'Resume request completed; verify status shortly.' : 'Pause request completed; verify status shortly.',
+      })
+      void refresh()
+    }
+  } catch (error) {
+    catchErr(error)
+  } finally {
+    setFunnelToggleLoading(key, false)
+  }
+}
+
+function promptPauseFunnel(funnel: EmailFunnelOverview) {
+  if (!funnel) return
+  if (isFunnelToggleLoading(funnel.key)) return
+  const label = funnel.name || funnel.key
+  Dialog.create({
+    title: 'Pause Email Funnel',
+    message: `Pause "${label}"? Pending sends will stop until resumed.`,
+    cancel: true,
+    ok: { label: 'Pause funnel', color: 'negative' },
+    prompt: {
+      model: '',
+      type: 'textarea',
+      label: 'Pause note (optional)',
+      autogrow: true,
+      counter: true,
+      maxlength: 500,
+    },
+  }).onOk((note: string) => {
+    void applyFunnelActiveState(funnel, false, note)
+  })
+}
+
+function promptResumeFunnel(funnel: EmailFunnelOverview) {
+  if (!funnel) return
+  if (isFunnelToggleLoading(funnel.key)) return
+  const label = funnel.name || funnel.key
+  Dialog.create({
+    title: 'Resume Email Funnel',
+    message: `Resume "${label}"? Eligible users may start receiving emails again.`,
+    cancel: true,
+    ok: { label: 'Resume funnel', color: 'positive' },
+    prompt: {
+      model: '',
+      type: 'textarea',
+      label: 'Resume note (optional)',
+      autogrow: true,
+      counter: true,
+      maxlength: 500,
+    },
+  }).onOk((note: string) => {
+    void applyFunnelActiveState(funnel, true, note)
+  })
+}
+
 const rows = computed<EmailFunnelOverview[]>(() => funnelsQuery.data.value ?? [])
 const isLoading = computed(() => funnelsQuery.isLoading.value)
 const isFetching = computed(() => funnelsQuery.isFetching.value || engagementQuery.isFetching.value)
@@ -769,12 +931,23 @@ const selectedEngagement = computed<EmailFunnelEngagement | null>(() => {
   return engagementMap.value.get(key) ?? null
 })
 
+const selectedAdminState = computed(() => selectedFunnel.value?.adminState ?? null)
+const selectedAdminStateUpdatedBy = computed(() => {
+  const state = selectedAdminState.value
+  if (!state) return ''
+  const parts: string[] = []
+  if (state.updatedByUsername) parts.push(`@${state.updatedByUsername}`)
+  if (state.updatedByEmail) parts.push(state.updatedByEmail)
+  if (state.updatedByUserId) parts.push(state.updatedByUserId)
+  return parts.filter(Boolean).join(' · ')
+})
+
 const engagementWindowLabel = computed(() => {
   if (!selectedEngagement.value) return ''
   return `Recent window since ${formatDate(selectedEngagement.value.recentWindowStart)}`
 })
 
-const emailStatusLabels: Record<AdminListEmailFunnelEmailsStatusesItem, string> = {
+const emailStatusLabels: Record<AdminEmailStatus, string> = {
   pending: 'Pending',
   ready: 'Ready',
   sent: 'Sent',
@@ -782,7 +955,7 @@ const emailStatusLabels: Record<AdminListEmailFunnelEmailsStatusesItem, string> 
   failed: 'Failed',
 }
 
-const emailStatuses = Object.values(AdminListEmailFunnelEmailsStatusesItem) as AdminListEmailFunnelEmailsStatusesItem[]
+const emailStatuses = Object.values(AdminEmailStatusEnum) as AdminEmailStatus[]
 const emailStatusOptions = emailStatuses.map((status) => ({
   label: emailStatusLabels[status],
   value: status,
@@ -793,7 +966,7 @@ const emailsDialogMaximized = ref(true)
 const emailPreviewOpen = ref(false)
 const emailPreviewMaximized = ref(false)
 const emailSearch = ref('')
-const emailStatusFilter = ref<AdminListEmailFunnelEmailsStatusesItem[]>([])
+const emailStatusFilter = ref<AdminEmailStatus[]>([])
 const emailsPagination = ref({ sortBy: 'createdAt', descending: true, page: 1, rowsPerPage: 25 })
 const emailRows = ref<EmailLogItem[]>([])
 const emailTotal = ref(0)
@@ -877,7 +1050,7 @@ function handleEmailsRequest(props: TableRequestPayload) {
   void loadEmails()
 }
 
-function emailStatusColor(status: AdminListEmailFunnelEmailsStatusesItem): string {
+function emailStatusColor(status: AdminEmailStatus): string {
   switch (status) {
     case 'sent':
       return 'positive'

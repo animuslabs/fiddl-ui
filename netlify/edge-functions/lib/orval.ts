@@ -3857,6 +3857,27 @@ export type AdminEmailFunnelsOverview200ItemReasonsItem = {
   count: number;
 };
 
+/**
+ * @nullable
+ */
+export type AdminEmailFunnelsOverview200ItemAdminState = {
+  funnelKey: string;
+  active: boolean;
+  /** @nullable */
+  pausedAt: string | null;
+  /** @nullable */
+  resumedAt: string | null;
+  updatedAt: string;
+  /** @nullable */
+  note: string | null;
+  /** @nullable */
+  updatedByUserId: string | null;
+  /** @nullable */
+  updatedByEmail: string | null;
+  /** @nullable */
+  updatedByUsername: string | null;
+} | null;
+
 export type AdminEmailFunnelsOverview200Item = {
   key: string;
   name: string;
@@ -3885,6 +3906,8 @@ export type AdminEmailFunnelsOverview200Item = {
   lastErrorAt: string | null;
   /** @nullable */
   lastError: string | null;
+  /** @nullable */
+  adminState: AdminEmailFunnelsOverview200ItemAdminState;
 };
 
 export type AdminEmailFunnelEngagementParams = {
@@ -3905,6 +3928,43 @@ export type AdminEmailFunnelEngagement200Item = {
   opensUniqueRecent: number;
   clicksTotalRecent: number;
   clicksUniqueRecent: number;
+};
+
+export type AdminEmailFunnelSetActiveBody = {
+  funnelKey: string;
+  active: boolean;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  note?: string | null;
+};
+
+/**
+ * @nullable
+ */
+export type AdminEmailFunnelSetActive200AdminState = {
+  funnelKey: string;
+  active: boolean;
+  /** @nullable */
+  pausedAt: string | null;
+  /** @nullable */
+  resumedAt: string | null;
+  updatedAt: string;
+  /** @nullable */
+  note: string | null;
+  /** @nullable */
+  updatedByUserId: string | null;
+  /** @nullable */
+  updatedByEmail: string | null;
+  /** @nullable */
+  updatedByUsername: string | null;
+} | null;
+
+export type AdminEmailFunnelSetActive200 = {
+  ok: boolean;
+  /** @nullable */
+  adminState: AdminEmailFunnelSetActive200AdminState;
 };
 
 export type AdminListEmailFunnelEmailsParams = {
@@ -8311,6 +8371,28 @@ export const adminEmailFunnelEngagement = async (params?: AdminEmailFunnelEngage
     method: 'GET'
     
     
+  }
+);}
+
+
+
+export const getAdminEmailFunnelSetActiveUrl = () => {
+
+
+  
+
+  return `/admin/emailFunnelSetActive`
+}
+
+export const adminEmailFunnelSetActive = async (adminEmailFunnelSetActiveBody: AdminEmailFunnelSetActiveBody, options?: RequestInit): Promise<AdminEmailFunnelSetActive200> => {
+  
+  return fetcher<AdminEmailFunnelSetActive200>(getAdminEmailFunnelSetActiveUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminEmailFunnelSetActiveBody,)
   }
 );}
 

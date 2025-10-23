@@ -3886,6 +3886,27 @@ export type AdminEmailFunnelsOverview200ItemReasonsItem = {
   count: number;
 };
 
+/**
+ * @nullable
+ */
+export type AdminEmailFunnelsOverview200ItemAdminState = {
+  funnelKey: string;
+  active: boolean;
+  /** @nullable */
+  pausedAt: string | null;
+  /** @nullable */
+  resumedAt: string | null;
+  updatedAt: string;
+  /** @nullable */
+  note: string | null;
+  /** @nullable */
+  updatedByUserId: string | null;
+  /** @nullable */
+  updatedByEmail: string | null;
+  /** @nullable */
+  updatedByUsername: string | null;
+} | null;
+
 export type AdminEmailFunnelsOverview200Item = {
   key: string;
   name: string;
@@ -3914,6 +3935,8 @@ export type AdminEmailFunnelsOverview200Item = {
   lastErrorAt: string | null;
   /** @nullable */
   lastError: string | null;
+  /** @nullable */
+  adminState: AdminEmailFunnelsOverview200ItemAdminState;
 };
 
 export type AdminEmailFunnelEngagementParams = {
@@ -3934,6 +3957,43 @@ export type AdminEmailFunnelEngagement200Item = {
   opensUniqueRecent: number;
   clicksTotalRecent: number;
   clicksUniqueRecent: number;
+};
+
+export type AdminEmailFunnelSetActiveBody = {
+  funnelKey: string;
+  active: boolean;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  note?: string | null;
+};
+
+/**
+ * @nullable
+ */
+export type AdminEmailFunnelSetActive200AdminState = {
+  funnelKey: string;
+  active: boolean;
+  /** @nullable */
+  pausedAt: string | null;
+  /** @nullable */
+  resumedAt: string | null;
+  updatedAt: string;
+  /** @nullable */
+  note: string | null;
+  /** @nullable */
+  updatedByUserId: string | null;
+  /** @nullable */
+  updatedByEmail: string | null;
+  /** @nullable */
+  updatedByUsername: string | null;
+} | null;
+
+export type AdminEmailFunnelSetActive200 = {
+  ok: boolean;
+  /** @nullable */
+  adminState: AdminEmailFunnelSetActive200AdminState;
 };
 
 export type AdminListEmailFunnelEmailsParams = {
@@ -11856,6 +11916,62 @@ export function useAdminEmailFunnelEngagement<TData = Awaited<ReturnType<typeof 
 
 
 
+export const adminEmailFunnelSetActive = (
+    adminEmailFunnelSetActiveBody: MaybeRef<AdminEmailFunnelSetActiveBody>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminEmailFunnelSetActive200>> => {
+    adminEmailFunnelSetActiveBody = unref(adminEmailFunnelSetActiveBody);
+    
+    return axios.post(
+      `/admin/emailFunnelSetActive`,
+      adminEmailFunnelSetActiveBody,options
+    );
+  }
+
+
+
+export const getAdminEmailFunnelSetActiveMutationOptions = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSetActive>>, TError,{data: AdminEmailFunnelSetActiveBody}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSetActive>>, TError,{data: AdminEmailFunnelSetActiveBody}, TContext> => {
+
+const mutationKey = ['adminEmailFunnelSetActive'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminEmailFunnelSetActive>>, {data: AdminEmailFunnelSetActiveBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminEmailFunnelSetActive(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminEmailFunnelSetActiveMutationResult = NonNullable<Awaited<ReturnType<typeof adminEmailFunnelSetActive>>>
+    export type AdminEmailFunnelSetActiveMutationBody = AdminEmailFunnelSetActiveBody
+    export type AdminEmailFunnelSetActiveMutationError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>
+
+    export const useAdminEmailFunnelSetActive = <TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorINTERNALSERVERERROR>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminEmailFunnelSetActive>>, TError,{data: AdminEmailFunnelSetActiveBody}, TContext>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient): UseMutationReturnType<
+        Awaited<ReturnType<typeof adminEmailFunnelSetActive>>,
+        TError,
+        {data: AdminEmailFunnelSetActiveBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminEmailFunnelSetActiveMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const adminListEmailFunnelEmails = (
     params?: MaybeRef<AdminListEmailFunnelEmailsParams>, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AdminListEmailFunnelEmails200>> => {
