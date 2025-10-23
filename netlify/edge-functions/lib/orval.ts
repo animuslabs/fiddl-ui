@@ -3912,7 +3912,7 @@ export type AdminEmailFunnelsOverview200Item = {
 
 export type AdminEmailFunnelEngagementParams = {
 sinceDays?: number;
-funnelKeys?: string[];
+funnelKey?: string;
 };
 
 export type AdminEmailFunnelEngagement200Item = {
@@ -4065,7 +4065,8 @@ export type AdminListEmailFunnelEmails200ItemsItem = {
   unsubscribeGroupKey: string;
   /** @nullable */
   user: AdminListEmailFunnelEmails200ItemsItemUser;
-  email: string;
+  /** @nullable */
+  email: string | null;
   /** @nullable */
   evaluatedAt: string | null;
   /** @nullable */
@@ -4086,6 +4087,37 @@ export type AdminListEmailFunnelEmails200 = {
   total: number;
   items: AdminListEmailFunnelEmails200ItemsItem[];
 };
+
+export type AdminEmailFunnelEmailContentParams = {
+id: string;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOfRecord = {
+  id: string;
+  funnelKey: string;
+  /** @nullable */
+  subject: string | null;
+  /** @nullable */
+  bodyHtml: string | null;
+  /** @nullable */
+  bodyMarkdown: string | null;
+  /** @nullable */
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOf = {
+  ok: boolean;
+  record: AdminEmailFunnelEmailContent200AnyOfRecord;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOfThree = {
+  ok: boolean;
+  reason: string;
+};
+
+export type AdminEmailFunnelEmailContent200 = AdminEmailFunnelEmailContent200AnyOf | AdminEmailFunnelEmailContent200AnyOfThree;
 
 export type AdminEmailFunnelPreviewParams = {
 userId: string;
@@ -8416,6 +8448,34 @@ export const getAdminListEmailFunnelEmailsUrl = (params?: AdminListEmailFunnelEm
 export const adminListEmailFunnelEmails = async (params?: AdminListEmailFunnelEmailsParams, options?: RequestInit): Promise<AdminListEmailFunnelEmails200> => {
   
   return fetcher<AdminListEmailFunnelEmails200>(getAdminListEmailFunnelEmailsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAdminEmailFunnelEmailContentUrl = (params: AdminEmailFunnelEmailContentParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/emailFunnelEmailContent?${stringifiedParams}` : `/admin/emailFunnelEmailContent`
+}
+
+export const adminEmailFunnelEmailContent = async (params: AdminEmailFunnelEmailContentParams, options?: RequestInit): Promise<AdminEmailFunnelEmailContent200> => {
+  
+  return fetcher<AdminEmailFunnelEmailContent200>(getAdminEmailFunnelEmailContentUrl(params),
   {      
     ...options,
     method: 'GET'

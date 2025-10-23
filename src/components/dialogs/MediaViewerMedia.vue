@@ -131,6 +131,62 @@ const mediaWidth = ref(0)
 let stageObserver: ResizeObserver | null = null
 const naturalDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const displayDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const WIDTH_STABLE_FRAMES = 2
+const widthCache = new Map<string, number>()
+const currentMediaId = computed(() => mediaViewerStore.currentMediaId)
+let lastMeasuredWidth = 0
+let stableMeasuredFrames = 0
+
+function resetWidthTracking() {
+  lastMeasuredWidth = 0
+  stableMeasuredFrames = 0
+}
+
+function cacheCommittedWidth(width: number) {
+  const id = currentMediaId.value
+  if (!id) return
+  widthCache.set(id, width)
+}
+
+function commitFrameWidth(width: number, source: "expected" | "measured" = "measured") {
+  if (!Number.isFinite(width) || width <= 0) return
+  const normalized = Math.max(1, Math.round(width))
+
+  if (source === "expected") {
+    mediaWidth.value = normalized
+    cacheCommittedWidth(normalized)
+    lastMeasuredWidth = normalized
+    stableMeasuredFrames = WIDTH_STABLE_FRAMES
+    return
+  }
+
+  const expected = displayDimensions.value.width
+  if (expected > 0) {
+    const expectedNormalized = Math.max(1, Math.round(expected))
+    const expectedTolerance = Math.max(2, expectedNormalized * 0.01)
+    if (Math.abs(width - expected) <= expectedTolerance) {
+      mediaWidth.value = expectedNormalized
+      cacheCommittedWidth(expectedNormalized)
+      lastMeasuredWidth = expectedNormalized
+      stableMeasuredFrames = WIDTH_STABLE_FRAMES
+      return
+    }
+  }
+
+  const tolerance = Math.max(2, normalized * 0.02)
+  if (Math.abs(normalized - lastMeasuredWidth) <= tolerance) {
+    stableMeasuredFrames += 1
+  } else {
+    stableMeasuredFrames = 1
+  }
+  lastMeasuredWidth = normalized
+
+  if (stableMeasuredFrames >= WIDTH_STABLE_FRAMES || mediaWidth.value <= 0) {
+    mediaWidth.value = normalized
+    cacheCommittedWidth(normalized)
+  }
+}
+
 const previewReady = ref(false)
 const METADATA_RETRY_LIMIT = 5
 const METADATA_RETRY_DELAY_MS = 120
@@ -581,11 +637,18 @@ watch(
   () => mediaViewerStore.currentMediaId,
   async (newId, oldId) => {
     if (!newId) return
+    resetWidthTracking()
     clearMetadataRetry()
     resetMeasurementRetry()
     previewReady.value = false
-    // Reset measured width so the frame can grow to fallback size before new media measures
-    mediaWidth.value = 0
+    const cachedWidth = widthCache.get(newId)
+    if (cachedWidth && cachedWidth > 0) {
+      mediaWidth.value = cachedWidth
+      lastMeasuredWidth = cachedWidth
+      stableMeasuredFrames = WIDTH_STABLE_FRAMES
+    } else if (!oldId) {
+      mediaWidth.value = 0
+    }
     naturalDimensions.value = { width: 0, height: 0 }
     displayDimensions.value = { width: 0, height: 0 }
     primeDimensionsFromMetadata(currentMedia.value)
@@ -703,7 +766,7 @@ function updateStageWidth(rect?: DOMRectReadOnly | null): number {
     width = rect?.width ?? mediaStageRef.value?.getBoundingClientRect().width ?? 0
   }
   if (width > 0) {
-    mediaWidth.value = width
+    commitFrameWidth(width, "measured")
   }
   return width
 }
@@ -783,12 +846,12 @@ function recalculateDisplayDimensions() {
       const baseH = 1000
       const baseW = Math.round(baseH * ratio)
       displayDimensions.value = { width: baseW, height: baseH }
-      mediaWidth.value = baseW
+      commitFrameWidth(baseW, "expected")
       return
     }
     if (!width || !height) return
     displayDimensions.value = { width, height }
-    mediaWidth.value = width
+    commitFrameWidth(width, "expected")
     return
   }
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -809,7 +872,7 @@ function recalculateDisplayDimensions() {
       displayWidth = Math.max(1, Math.round(displayHeight * ratio))
     }
     displayDimensions.value = { width: displayWidth, height: displayHeight }
-    mediaWidth.value = displayWidth
+    commitFrameWidth(displayWidth, "expected")
     scheduleStageMeasurement()
     return
   }
@@ -822,7 +885,7 @@ function recalculateDisplayDimensions() {
   const displayWidth = Math.max(1, Math.round(width * scale))
   const displayHeight = Math.max(1, Math.round(height * scale))
   displayDimensions.value = { width: displayWidth, height: displayHeight }
-  mediaWidth.value = displayWidth
+  commitFrameWidth(displayWidth, "expected")
   scheduleStageMeasurement()
 }
 

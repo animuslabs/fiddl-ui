@@ -1,7 +1,7 @@
 // src/boot/vue-query.ts
 import { boot } from "quasar/wrappers"
 import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query"
-import axios from "axios"
+import axios, { AxiosHeaders, type AxiosRequestHeaders } from "axios"
 import { jwt } from "src/lib/jwt"
 import { useUserAuth } from "src/stores/userAuth"
 // import { Notify } from "quasar"
@@ -28,7 +28,9 @@ axios.defaults.paramsSerializer = {
       if (value === undefined || value === null) return
 
       if (Array.isArray(value)) {
-        value.forEach((entry) => appendParam(`${key}[]`, entry))
+        const filtered = value.filter((entry) => entry !== undefined && entry !== null)
+        if (!filtered.length) return
+        filtered.forEach((entry) => appendParam(key, entry))
         return
       }
 
@@ -68,7 +70,10 @@ axios.interceptors.request.use((config) => {
 
   const jwtData = jwt.read()
   if (jwtData) {
-    config.headers.Authorization = `Bearer ${jwtData.token}`
+    // Ensure headers object exists and is correctly typed
+    const headers = (config.headers ?? new AxiosHeaders()) as AxiosRequestHeaders
+    headers.set("Authorization", `Bearer ${jwtData.token}`)
+    config.headers = headers
   }
   return config
 })

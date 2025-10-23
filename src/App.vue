@@ -2,7 +2,8 @@
 //- div.bg-black(style="position:fixed").full-width.full-height.z-max
 //- ImageGallery(:images="images" ref="gallery" hidden  )
 
-router-view(style="z-index:1")
+.z-index-wrap(style="z-index:1")
+  router-view
 .z-top
   ReferralSurveyDialog(v-model="showReferralSurvey" :user-id="$userAuth.userId" @submitted="onReferralSubmitted")
   MotdDialog

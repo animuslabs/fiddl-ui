@@ -144,7 +144,9 @@ q-layout(view="lHh Lpr lFf" )
     )
     //- .centered(style="width:100vw; height:100%" )
       //- h4.text-white {{ create.state.req.customModelName }} {{ create.state.req.customModelId}}
-    router-view.full-width(style="max-width:1650px;")
+    // Avoid passing class/style directly to RouterView to prevent Vue warnings
+    .full-width(style="max-width:1650px;")
+      router-view
     .full-width.q-pa-md
       .centered.items-center.q-gutter-md
         q-btn(type="a" href="https://twitter.com/fiddlart" icon="fa-brands fa-x-twitter" color="primary" flat)

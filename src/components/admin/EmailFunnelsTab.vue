@@ -416,7 +416,7 @@
           )
           q-btn(flat dense icon="close" @click="emailsDialogOpen = false")
       q-separator
-      q-card-section(class="q-gutter-md emails-dialog-body")
+      q-card-section(:class="['q-gutter-md', 'emails-dialog-body', { 'dialog-body--max': emailPreviewMaximized }]")
         .row.items-center.q-col-gutter-sm
           q-input(
             v-model="emailSearch"
@@ -527,8 +527,19 @@
           .column.q-gutter-xs
             .text-h6.text-weight-medium Email Details
             div.text-caption.text-grey-5(v-if="selectedEmailLog")
-              span {{ selectedEmailLog.subject || '(no subject)' }} · {{ selectedEmailLog.id }}
+              span {{ emailPreviewSubject }} · {{ selectedEmailLog.id }}
           q-space
+          q-btn-toggle.theme-toggle(
+            v-model="emailPreviewTheme"
+            dense
+            flat
+            size="sm"
+            no-caps
+            toggle-color="primary"
+            toggle-text-color="white"
+            color="grey-7"
+            :options="previewThemeOptions"
+          )
           q-btn(
             flat
             dense
@@ -540,6 +551,8 @@
       q-separator
       q-card-section(class="q-gutter-md emails-dialog-body")
         template(v-if="selectedEmailLog")
+          q-inner-loading(:showing="emailContentLoading")
+            q-spinner(color="primary")
           q-markup-table(dense flat bordered class="info-table")
             tbody
               tr
@@ -570,6 +583,9 @@
                 td.label Error
                 td {{ selectedEmailLog.error || '-' }}
               tr
+                td.label Recipient
+                td {{ selectedEmailLog.email }}
+              tr
                 td.label User
                 td
                   template(v-if="selectedEmailLog.user")
@@ -577,18 +593,47 @@
                     div.text-caption.text-grey-6 {{ selectedEmailLog.user.id }}
                   template(v-else)
                     span -
-          q-card(flat bordered v-if="emailPreviewHtml")
+          q-banner(
+            v-if="emailContentError"
+            dense
+            rounded
+            color="negative"
+            text-color="white"
+            icon="error_outline"
+          )
+            .text-body2 Failed to load email content
+            .text-caption.text-grey-3 {{ emailContentError }}
+          q-banner(
+            v-else-if="emailContentFailureReason"
+            dense
+            rounded
+            color="orange-8"
+            text-color="white"
+            icon="warning"
+          )
+            .text-body2 Email content unavailable
+            .text-caption.text-grey-3 {{ emailContentFailureReason }}
+          q-card(
+            flat
+            bordered
+            v-if="emailPreviewHtml"
+            :class="['preview-wrapper', { 'preview-wrapper--max': emailPreviewMaximized }]"
+          )
             q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
               iframe.preview-iframe(
                 :srcdoc="emailPreviewHtml"
                 sandbox="allow-same-origin"
                 referrerpolicy="no-referrer"
+                :key="emailPreviewIframeKey"
+                :style="previewIframeStyle(emailPreviewTheme)"
                 :class="{ 'preview-iframe--max': emailPreviewMaximized }"
+                ref="emailPreviewIframeRef"
+                @load="() => autosizeEmailIframe()"
               )
           q-card(flat bordered v-if="emailPreviewText")
             q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
               pre.preview-text {{ emailPreviewText }}
-          q-card(flat bordered)
+          q-card(flat bordered v-if="emailPreviewRaw")
             q-card-section(:class="['preview-card', { 'preview-card--max': emailPreviewMaximized }]")
               pre.preview-text {{ emailPreviewRaw }}
       q-card-actions(align="right")
@@ -603,6 +648,17 @@
             .text-h6.text-weight-medium Funnel Email Preview
             div.text-caption.text-grey-5(v-if="previewSubject") Subject: {{ previewSubject }}
           q-space
+          q-btn-toggle.theme-toggle(
+            v-model="previewTheme"
+            dense
+            flat
+            size="sm"
+            no-caps
+            toggle-color="primary"
+            toggle-text-color="white"
+            color="grey-7"
+            :options="previewThemeOptions"
+          )
           q-btn(
             flat
             dense
@@ -612,20 +668,28 @@
           )
           q-btn(flat dense icon="close" @click="previewDialog = false")
       q-separator
-      q-card-section(class="q-gutter-y-md funnel-dialog-body")
+      q-card-section(:class="['q-gutter-y-md', 'funnel-dialog-body', { 'dialog-body--max': previewMaximized }]")
         template(v-if="previewSuccess")
           q-banner(dense rounded color="grey-1" text-color="grey-10" icon="mail")
             .text-body2 Preview generated for user {{ previewUserLabel }}
             .text-caption.text-grey-3 Handler output may vary at send time.
           q-banner(dense rounded color="blue-grey-1" text-color="blue-grey-9" icon="psychology" v-if="previewShouldReason")
             .text-body2 {{ previewShouldReason }}
-          q-card(flat bordered)
+          q-card(
+            flat
+            bordered
+            :class="['preview-wrapper', { 'preview-wrapper--max': previewMaximized }]"
+          )
             q-card-section(:class="['preview-card', { 'preview-card--max': previewMaximized }]")
               iframe.preview-iframe(
                 :srcdoc="previewHtml"
                 sandbox="allow-same-origin"
                 referrerpolicy="no-referrer"
+                :key="previewIframeKey"
+                :style="previewIframeStyle(previewTheme)"
                 :class="{ 'preview-iframe--max': previewMaximized }"
+                ref="previewIframeRef"
+                @load="() => autosizePreviewIframe()"
               )
           q-card(flat bordered v-if="previewText")
             q-card-section(:class="['preview-card', { 'preview-card--max': previewMaximized }]")
@@ -639,9 +703,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { Dialog, Notify, type QTableColumn, useQuasar } from 'quasar'
 import {
+  adminEmailFunnelEmailContent,
   adminListEmailFunnelEmails,
   adminListUsers,
   adminEmailFunnelPreview,
@@ -654,6 +719,8 @@ import {
   type AdminEmailFunnelEngagementParams,
   type AdminEmailFunnelPreviewParams,
   type AdminEmailFunnelSendTestBody,
+  type AdminEmailFunnelEmailContent200,
+  type AdminEmailFunnelEmailContent200AnyOfRecord,
   type AdminEmailFunnelsOverview200Item,
   type AdminEmailFunnelsOverviewParams,
   type AdminListUsers200UsersItem,
@@ -673,6 +740,10 @@ type EmailFunnelEngagement = AdminEmailFunnelEngagement200Item
 
 type AdminEmailPreviewSuccess = Extract<AdminEmailFunnelPreview200, { html: string }>
 type AdminEmailPreviewFailure = Extract<AdminEmailFunnelPreview200, { reason: string }>
+type PreviewTheme = 'light' | 'dark'
+type AdminEmailContentResponse = AdminEmailFunnelEmailContent200
+type AdminEmailContentSuccess = Extract<AdminEmailContentResponse, { record: AdminEmailFunnelEmailContent200AnyOfRecord }>
+type AdminEmailContentFailure = Extract<AdminEmailContentResponse, { reason: string }>
 
 interface UserLookupOption {
   label: string
@@ -724,6 +795,11 @@ const statusFilter = ref<'active' | 'all'>('active')
 const statusOptions: { label: string; value: 'active' | 'all'; icon: string }[] = [
   { label: 'Active', value: 'active', icon: 'play_arrow' },
   { label: 'All', value: 'all', icon: 'all_inclusive' },
+]
+
+const previewThemeOptions: { label: string; value: PreviewTheme; icon: string }[] = [
+  { label: 'Light', value: 'light', icon: 'light_mode' },
+  { label: 'Dark', value: 'dark', icon: 'dark_mode' },
 ]
 
 const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 10 })
@@ -832,6 +908,7 @@ function promptPauseFunnel(funnel: EmailFunnelOverview) {
     message: `Pause "${label}"? Pending sends will stop until resumed.`,
     cancel: true,
     ok: { label: 'Pause funnel', color: 'negative' },
+    maximized: $q.screen.lt.md,
     prompt: {
       model: '',
       type: 'textarea',
@@ -854,6 +931,7 @@ function promptResumeFunnel(funnel: EmailFunnelOverview) {
     message: `Resume "${label}"? Eligible users may start receiving emails again.`,
     cancel: true,
     ok: { label: 'Resume funnel', color: 'positive' },
+    maximized: $q.screen.lt.md,
     prompt: {
       model: '',
       type: 'textarea',
@@ -965,6 +1043,7 @@ const emailsDialogOpen = ref(false)
 const emailsDialogMaximized = ref(true)
 const emailPreviewOpen = ref(false)
 const emailPreviewMaximized = ref(false)
+const emailPreviewTheme = ref<PreviewTheme>('light')
 const emailSearch = ref('')
 const emailStatusFilter = ref<AdminEmailStatus[]>([])
 const emailsPagination = ref({ sortBy: 'createdAt', descending: true, page: 1, rowsPerPage: 25 })
@@ -974,6 +1053,10 @@ const emailsLoading = ref(false)
 const emailsFetchError = ref(false)
 const selectedEmailLog = ref<EmailLogItem | null>(null)
 let emailsRequestId = 0
+const emailContentLoading = ref(false)
+const emailContentError = ref('')
+const emailContentResult = ref<AdminEmailContentResponse | null>(null)
+let emailContentRequestId = 0
 
 const emailSortableMap: Record<string, AdminListEmailFunnelEmailsSortBy> = {
   createdAt: 'createdAt',
@@ -1010,8 +1093,44 @@ const emailPreviewDialogClasses = computed(() => ({
   'preview-maximized': emailPreviewMaximized.value,
 }))
 
-const emailPreviewContent = computed<ParsedEmailContent>(() => parseEmailContent(selectedEmailLog.value?.email))
-const emailPreviewHtml = computed(() => emailPreviewContent.value.html)
+const emailPreviewIframeRef = ref<HTMLIFrameElement | null>(null)
+const previewIframeRef = ref<HTMLIFrameElement | null>(null)
+
+const emailContentSuccess = computed<AdminEmailContentSuccess | null>(() => {
+  const result = emailContentResult.value
+  return result && 'record' in result ? (result as AdminEmailContentSuccess) : null
+})
+
+const emailContentRecord = computed(() => emailContentSuccess.value?.record ?? null)
+
+const emailContentFailureReason = computed(() => {
+  const result = emailContentResult.value
+  return result && 'reason' in result ? (result as AdminEmailContentFailure).reason : ''
+})
+
+const emailPreviewSubject = computed(() => {
+  const subject =
+    emailContentRecord.value?.subject ??
+    selectedEmailLog.value?.subject ??
+    ''
+  return subject || '(no subject)'
+})
+
+const emailPreviewIframeKey = computed(() => `${emailPreviewTheme.value}-${selectedEmailLog.value?.id ?? 'none'}`)
+
+const emailPreviewContent = computed<ParsedEmailContent>(() => {
+  const record = emailContentRecord.value
+  if (record) {
+    const html = typeof record.bodyHtml === 'string' ? record.bodyHtml : ''
+    const text = typeof record.bodyMarkdown === 'string' ? record.bodyMarkdown : ''
+    if (html || text) {
+      return { html, text, raw: html || text }
+    }
+  }
+  return { html: '', text: '', raw: '' }
+})
+const emailPreviewHtmlRaw = computed(() => emailPreviewContent.value.html)
+const emailPreviewHtml = computed(() => applyPreviewTheme(emailPreviewHtmlRaw.value, emailPreviewTheme.value))
 const emailPreviewText = computed(() => emailPreviewContent.value.text)
 const emailPreviewRaw = computed(() => emailPreviewContent.value.raw)
 
@@ -1032,6 +1151,10 @@ function openEmailsDialog() {
   emailsDialogOpen.value = true
   emailPreviewOpen.value = false
   selectedEmailLog.value = null
+  emailContentResult.value = null
+  emailContentError.value = ''
+  emailContentLoading.value = false
+  emailContentRequestId = 0
   emailsPagination.value = {
     sortBy: emailsPagination.value.sortBy,
     descending: emailsPagination.value.descending,
@@ -1086,15 +1209,15 @@ function buildEmailParams(): AdminListEmailFunnelEmailsParams | null {
     sortBy && paginationState.descending ? 'desc' : sortBy ? 'asc' : undefined
   const searchTerm = emailSearch.value.trim()
   const statuses = emailStatusFilter.value.length ? [...emailStatusFilter.value] : undefined
-  const params: AdminListEmailFunnelEmailsParams = {
-    funnelKeys: [funnelKey],
+  const params = {
+    funnelKey,
     limit: rowsPerPage,
     offset,
     search: searchTerm || undefined,
     statuses,
     sortBy,
     sortDir,
-  }
+  } as unknown as AdminListEmailFunnelEmailsParams
   return params
 }
 
@@ -1129,45 +1252,34 @@ async function loadEmails() {
 function openEmailPreview(row: EmailLogItem) {
   selectedEmailLog.value = row
   emailPreviewMaximized.value = false
+  emailPreviewTheme.value = 'light'
   emailPreviewOpen.value = true
+  emailContentResult.value = null
+  emailContentError.value = ''
+  void loadEmailContent(row.id)
 }
 
-function parseEmailContent(raw?: string | null): ParsedEmailContent {
-  const original = typeof raw === 'string' ? raw : ''
-  if (!original) return { html: '', text: '', raw: '' }
-  const trimmed = original.trim()
-  if (!trimmed) return { html: '', text: '', raw: '' }
-  const looksLikeJson =
-    (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))
-  if (looksLikeJson) {
-    try {
-      const parsed = JSON.parse(trimmed) as unknown
-      if (typeof parsed === 'object' && parsed !== null) {
-        const obj = parsed as Record<string, unknown>
-        const content =
-          typeof obj.content === 'object' && obj.content !== null ? (obj.content as Record<string, unknown>) : null
-        const html =
-          typeof obj.html === 'string'
-            ? (obj.html as string)
-            : content && typeof content.html === 'string'
-            ? (content.html as string)
-            : ''
-        const text =
-          typeof obj.text === 'string'
-            ? (obj.text as string)
-            : content && typeof content.text === 'string'
-            ? (content.text as string)
-            : ''
-        if (html || text) {
-          return { html, text, raw: original }
-        }
-      }
-    } catch {
-      // fall through and treat as raw markup/text content
+async function loadEmailContent(emailId: string) {
+  const id = (emailId || '').trim()
+  if (!id) return
+  const requestId = ++emailContentRequestId
+  emailContentLoading.value = true
+  emailContentError.value = ''
+  emailContentResult.value = null
+  try {
+    const response = await adminEmailFunnelEmailContent({ id })
+    if (requestId !== emailContentRequestId) return
+    emailContentResult.value = response?.data ?? null
+  } catch (error) {
+    if (requestId !== emailContentRequestId) return
+    emailContentResult.value = null
+    emailContentError.value = 'Failed to load email content. Try again.'
+    catchErr(error)
+  } finally {
+    if (requestId === emailContentRequestId) {
+      emailContentLoading.value = false
     }
   }
-  const looksLikeHtml = /<[^>]+>/.test(trimmed)
-  return looksLikeHtml ? { html: original, text: '', raw: original } : { html: '', text: original, raw: original }
 }
 
 watch(rows, (list) => {
@@ -1184,12 +1296,20 @@ watch(
     if (open) {
       emailsDialogMaximized.value = true
       emailsPagination.value.page = 1
+      emailContentResult.value = null
+      emailContentError.value = ''
+      emailContentLoading.value = false
+      emailContentRequestId = 0
       void loadEmails()
     } else {
       emailsDialogMaximized.value = true
       emailPreviewOpen.value = false
       emailPreviewMaximized.value = false
       selectedEmailLog.value = null
+      emailContentResult.value = null
+      emailContentError.value = ''
+      emailContentLoading.value = false
+      emailContentRequestId = 0
     }
   },
 )
@@ -1215,7 +1335,13 @@ watch(
   (open) => {
     if (!open) {
       emailPreviewMaximized.value = false
+      emailPreviewTheme.value = 'light'
+      emailContentResult.value = null
+      emailContentError.value = ''
+      emailContentLoading.value = false
+      emailContentRequestId = 0
     }
+    nextTick(() => autosizeEmailIframe())
   },
 )
 
@@ -1227,6 +1353,12 @@ watch(
     void loadEmails()
   },
 )
+
+watch([emailPreviewHtmlRaw, () => emailPreviewTheme.value, () => emailPreviewMaximized.value], () => {
+  nextTick(() => autosizeEmailIframe())
+})
+
+// moved below previewHtmlRaw/previewTheme declarations
 
 watch(
   emailStatusFilter,
@@ -1251,6 +1383,7 @@ const previewDialog = ref(false)
 const previewLoading = ref(false)
 const previewResult = ref<AdminEmailFunnelPreview200 | null>(null)
 const previewMaximized = ref(false)
+const previewTheme = ref<PreviewTheme>('light')
 
 const testUserIdValid = computed(() => uuidRegex.test(testUserId.value.trim()))
 const testUserIdError = computed(() => {
@@ -1280,10 +1413,48 @@ const previewFailureReason = computed(() => {
   return result && 'reason' in result ? (result as AdminEmailPreviewFailure).reason : ''
 })
 const previewSubject = computed(() => previewSuccess.value?.subject || '')
-const previewHtml = computed(() => previewSuccess.value?.html || '')
+const previewHtmlRaw = computed(() => previewSuccess.value?.html || '')
+const previewHtml = computed(() => applyPreviewTheme(previewHtmlRaw.value, previewTheme.value))
 const previewText = computed(() => previewSuccess.value?.text || '')
 const previewShouldReason = computed(() => previewSuccess.value?.shouldReason || '')
 const previewUserLabel = computed(() => testUserSelection.value?.label || testUserId.value.trim() || 'N/A')
+const previewIframeKey = computed(() => `${previewTheme.value}-${selectedFunnel.value?.key ?? 'preview'}`)
+
+watch([previewHtmlRaw, () => previewTheme.value, () => previewMaximized.value], () => {
+  nextTick(() => autosizePreviewIframe())
+})
+
+function autosizeIframe(el: HTMLIFrameElement | null, maximized: boolean) {
+  if (!el) return
+  if (maximized) {
+    el.style.height = '100%'
+    return
+  }
+  try {
+    const doc = el.contentDocument
+    const root = doc?.documentElement
+    const body = doc?.body
+    const h = Math.max(
+      root?.scrollHeight || 0,
+      root?.offsetHeight || 0,
+      body?.scrollHeight || 0,
+      body?.offsetHeight || 0,
+    )
+    if (h > 0) el.style.height = `${h}px`
+  } catch {
+    // ignore cross-origin or other failures
+  }
+}
+
+function autosizeEmailIframe() {
+  autosizeIframe(emailPreviewIframeRef.value, emailPreviewMaximized.value)
+  setTimeout(() => autosizeIframe(emailPreviewIframeRef.value, emailPreviewMaximized.value), 150)
+}
+
+function autosizePreviewIframe() {
+  autosizeIframe(previewIframeRef.value, previewMaximized.value)
+  setTimeout(() => autosizeIframe(previewIframeRef.value, previewMaximized.value), 150)
+}
 
 watch(
   () => detailOpen.value,
@@ -1300,7 +1471,11 @@ watch(
 watch(
   () => previewDialog.value,
   (open) => {
-    if (!open) previewMaximized.value = false
+    if (!open) {
+      previewMaximized.value = false
+      previewTheme.value = 'light'
+    }
+    nextTick(() => autosizePreviewIframe())
   },
 )
 
@@ -1319,6 +1494,7 @@ function resetPreviewState() {
   previewResult.value = null
   previewLoading.value = false
   previewMaximized.value = false
+  previewTheme.value = 'light'
 }
 
 function resetTestControls() {
@@ -1394,6 +1570,7 @@ async function openPreviewEmail() {
     const res = await adminEmailFunnelPreview(params)
     if (res?.data) {
       previewResult.value = res.data
+      previewTheme.value = 'light'
       previewDialog.value = true
     } else {
       Notify.create({ type: 'info', message: 'Preview did not return data.' })
@@ -1416,6 +1593,7 @@ function confirmSendTest() {
       : 'This will evaluate eligibility and send if permitted. Continue?',
     cancel: true,
     ok: { label: 'Send test', color: 'primary' },
+    maximized: $q.screen.lt.md,
   }).onOk(() => {
     void sendTestEmail()
   })
@@ -1448,6 +1626,80 @@ async function sendTestEmail() {
     catchErr(error)
   } finally {
     testingEmail.value = false
+  }
+}
+
+function applyPreviewTheme(html: string, theme: PreviewTheme): string {
+  if (!html) return ''
+  const themeClass = theme === 'dark' ? 'gmail-dark' : 'gmail-light'
+  const baseStyles = `
+    html, body { margin: 0 !important; }
+    img { max-width: 100% !important; height: auto !important; }
+    body, table, td, div { color: inherit !important; }
+  `
+  const themeStyles =
+    theme === 'dark'
+      ? `
+    html, body { background-color: #202124 !important; color: #e8eaed !important; }
+    a { color: #8ab4f8 !important; }
+  `
+      : `
+    html, body { background-color: #ffffff !important; color: #202124 !important; }
+    a { color: #1a73e8 !important; }
+  `
+  const colorScheme = theme === 'dark' ? 'dark light' : 'light dark'
+  const styleBlock = `<meta name="color-scheme" content="${colorScheme}" /><style id="funnel-preview-theme">${baseStyles}${themeStyles}</style>`
+  const hasHtmlTag = /<html[\s>]/i.test(html)
+
+  if (!hasHtmlTag) {
+    return `<!DOCTYPE html><html class="${themeClass}"><head><meta charset="utf-8" />${styleBlock}</head><body class="${themeClass}">${html}</body></html>`
+  }
+
+  let result = html.replace(/<html([^>]*)>/i, (match, attrs = '') => {
+    if (attrs) {
+      const classAttrMatch = attrs.match(/\bclass=(['"])([^'"]*)\1/i)
+      if (classAttrMatch) {
+        const [classAttr, quote, classNames] = classAttrMatch
+        const names = classNames.split(/\s+/).filter(Boolean)
+        if (!names.includes(themeClass)) names.push(themeClass)
+        const replacement = `class=${quote}${names.join(' ')}${quote}`
+        return match.replace(classAttr, replacement)
+      }
+      return `<html${attrs} class="${themeClass}">`
+    }
+    return `<html class="${themeClass}">`
+  })
+
+  if (/<head[\s>]/i.test(result)) {
+    result = result.replace(/<head([^>]*)>/i, `<head$1>${styleBlock}`)
+  } else {
+    result = result.replace(/<html([^>]*)>/i, `<html$1><head>${styleBlock}</head>`)
+  }
+
+  if (/<body[\s>]/i.test(result)) {
+    result = result.replace(/<body([^>]*)>/i, (match, attrs = '') => {
+      if (attrs) {
+        const classAttrMatch = attrs.match(/\bclass=(['"])([^'"]*)\1/i)
+        if (classAttrMatch) {
+          const [classAttr, quote, classNames] = classAttrMatch
+          const names = classNames.split(/\s+/).filter(Boolean)
+          if (!names.includes(themeClass)) names.push(themeClass)
+          const replacement = `class=${quote}${names.join(' ')}${quote}`
+          return match.replace(classAttr, replacement)
+        }
+        return `<body${attrs} class="${themeClass}">`
+      }
+      return `<body class="${themeClass}">`
+    })
+  }
+
+  return result
+}
+
+function previewIframeStyle(theme: PreviewTheme): Record<string, string> {
+  return {
+    backgroundColor: theme === 'dark' ? '#202124' : '#ffffff',
+    color: theme === 'dark' ? '#e8eaed' : '#202124',
   }
 }
 
@@ -1494,6 +1746,24 @@ function formatDate(value?: string | null): string {
   .emails-dialog-body {
     flex: 1 1 auto;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dialog-body--max {
+    min-height: 0;
+  }
+
+  .dialog-body--max .preview-wrapper {
+    flex: 1 1 auto;
+  }
+
+  .dialog-body--max .preview-card {
+    flex: 1 1 auto;
+  }
+
+  .dialog-body--max .preview-iframe {
+    min-height: 0;
   }
 
   .funnel-dialog-card .q-card-actions {
@@ -1524,6 +1794,16 @@ function formatDate(value?: string | null): string {
     }
   }
 
+  .preview-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-wrapper--max {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   .preview-card {
     background: #ffffff;
     border-radius: 8px;
@@ -1531,24 +1811,37 @@ function formatDate(value?: string | null): string {
     border: 1px solid #e3e6ea;
     display: flex;
     flex-direction: column;
+    padding: 0;
   }
 
   .preview-card--max {
-    min-height: clamp(420px, 80vh, calc(100vh - 220px));
     flex: 1 1 auto;
+    min-height: 0;
   }
 
   .preview-iframe {
+    display: block;
     width: 100%;
     min-height: clamp(360px, 60vh, 560px);
-    height: 100%;
+    height: auto;
+    flex: 0 0 auto;
     border: none;
-    background: white;
+    background: transparent;
   }
 
   .preview-iframe--max {
     min-height: clamp(420px, 80vh, calc(100vh - 220px));
+    height: 100%;
     flex: 1 1 auto;
+  }
+
+  .theme-toggle {
+    margin-right: 8px;
+  }
+
+  .theme-toggle .q-btn {
+    min-width: 0;
+    padding: 0 8px;
   }
 
   .preview-text {

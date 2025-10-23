@@ -1,5 +1,12 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" :maximized="$q.screen.lt.md" :persistent="mediaViewerStore.isPersistent")
+q-dialog(
+  ref="dialog"
+  @hide="onDialogHide"
+  :maximized="$q.screen.lt.md"
+  :persistent="mediaViewerStore.isPersistent"
+  transition-show="none"
+  transition-hide="none"
+)
   q-card.bg-transparent(style="width:100vw; max-width:100vw;" @click.self="hide()")
     .centered.full-width(@click="hide")
       MediaViewerMedia.full-width(

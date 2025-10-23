@@ -3941,7 +3941,7 @@ export type AdminEmailFunnelsOverview200Item = {
 
 export type AdminEmailFunnelEngagementParams = {
 sinceDays?: number;
-funnelKeys?: string[];
+funnelKey?: string;
 };
 
 export type AdminEmailFunnelEngagement200Item = {
@@ -4094,7 +4094,8 @@ export type AdminListEmailFunnelEmails200ItemsItem = {
   unsubscribeGroupKey: string;
   /** @nullable */
   user: AdminListEmailFunnelEmails200ItemsItemUser;
-  email: string;
+  /** @nullable */
+  email: string | null;
   /** @nullable */
   evaluatedAt: string | null;
   /** @nullable */
@@ -4115,6 +4116,37 @@ export type AdminListEmailFunnelEmails200 = {
   total: number;
   items: AdminListEmailFunnelEmails200ItemsItem[];
 };
+
+export type AdminEmailFunnelEmailContentParams = {
+id: string;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOfRecord = {
+  id: string;
+  funnelKey: string;
+  /** @nullable */
+  subject: string | null;
+  /** @nullable */
+  bodyHtml: string | null;
+  /** @nullable */
+  bodyMarkdown: string | null;
+  /** @nullable */
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOf = {
+  ok: boolean;
+  record: AdminEmailFunnelEmailContent200AnyOfRecord;
+};
+
+export type AdminEmailFunnelEmailContent200AnyOfThree = {
+  ok: boolean;
+  reason: string;
+};
+
+export type AdminEmailFunnelEmailContent200 = AdminEmailFunnelEmailContent200AnyOf | AdminEmailFunnelEmailContent200AnyOfThree;
 
 export type AdminEmailFunnelPreviewParams = {
 userId: string;
@@ -12019,6 +12051,64 @@ export function useAdminListEmailFunnelEmails<TData = Awaited<ReturnType<typeof 
  ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminListEmailFunnelEmailsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>;
+
+  return query;
+}
+
+
+
+
+export const adminEmailFunnelEmailContent = (
+    params: MaybeRef<AdminEmailFunnelEmailContentParams>, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<AdminEmailFunnelEmailContent200>> => {
+    params = unref(params);
+    
+    return axios.get(
+      `/admin/emailFunnelEmailContent`,{
+    ...options,
+        params: {...unref(params), ...options?.params},}
+    );
+  }
+
+
+export const getAdminEmailFunnelEmailContentQueryKey = (params: MaybeRef<AdminEmailFunnelEmailContentParams>,) => {
+    return ['admin','emailFunnelEmailContent', ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminEmailFunnelEmailContentQueryOptions = <TData = Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(params: MaybeRef<AdminEmailFunnelEmailContentParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>, TError, TData>>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  getAdminEmailFunnelEmailContentQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>> = ({ signal }) => adminEmailFunnelEmailContent(params, { signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>, TError, TData> 
+}
+
+export type AdminEmailFunnelEmailContentQueryResult = NonNullable<Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>>
+export type AdminEmailFunnelEmailContentQueryError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>
+
+
+
+export function useAdminEmailFunnelEmailContent<TData = Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>, TError = AxiosError<ErrorBADREQUEST | ErrorUNAUTHORIZED | ErrorFORBIDDEN | ErrorNOTFOUND | ErrorINTERNALSERVERERROR>>(
+ params: MaybeRef<AdminEmailFunnelEmailContentParams>, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminEmailFunnelEmailContent>>, TError, TData>>, axios?: AxiosRequestConfig}
+ , queryClient?: QueryClient 
+ ): UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminEmailFunnelEmailContentQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as UseQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
