@@ -30,7 +30,7 @@ axios.defaults.paramsSerializer = {
       if (Array.isArray(value)) {
         const filtered = value.filter((entry) => entry !== undefined && entry !== null)
         if (!filtered.length) return
-        filtered.forEach((entry) => appendParam(key, entry))
+        filtered.forEach((entry) => appendParam(`${key}[]`, entry))
         return
       }
 

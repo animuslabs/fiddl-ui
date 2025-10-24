@@ -4000,7 +4000,7 @@ export type AdminListEmailFunnelEmailsParams = {
 limit?: number;
 offset?: number;
 search?: string;
-funnelKeys?: string[];
+funnelKey?: string;
 statuses?: AdminListEmailFunnelEmailsStatusesItem[];
 account?: string;
 email?: string;
@@ -4151,6 +4151,7 @@ export type AdminEmailFunnelEmailContent200 = AdminEmailFunnelEmailContent200Any
 export type AdminEmailFunnelPreviewParams = {
 userId: string;
 funnelKey: string;
+stage?: number;
 };
 
 export type AdminEmailFunnelPreview200AnyOf = {

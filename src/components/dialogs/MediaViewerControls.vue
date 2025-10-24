@@ -142,24 +142,24 @@ div.media-viewer-shell
             color="white"
             @click.stop="shareMenuOpen = true"
           )
-          q-menu(
-            v-model:show="shareMenuOpen"
-            anchor="top middle"
-            self="bottom middle"
-            class="viewer-menu"
-            @click.stop
-          )
-            q-list
-              q-item(clickable @click.stop="mobileShare()" v-close-popup)
-                q-item-section
-                  .row.items-center
-                    q-icon(:name="shareIcon" size="20px").q-mr-md
-                    div Share Creation
-              q-item(clickable @click="share()" v-close-popup)
-                q-item-section
-                  .row.items-center
-                    q-icon(name="content_copy" size="20px").q-mr-md
-                    div Copy Link
+            q-menu(
+              v-model:show="shareMenuOpen"
+              anchor="top middle"
+              self="bottom middle"
+              class="viewer-menu"
+              @click.stop
+            )
+              q-list
+                q-item(clickable @click.stop="mobileShare()" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(:name="shareIcon" size="20px").q-mr-md
+                      div Share Creation
+                q-item(clickable @click="share()" v-close-popup)
+                  q-item-section
+                    .row.items-center
+                      q-icon(name="content_copy" size="20px").q-mr-md
+                      div Copy Link
         div.pop-item
           q-btn(
             icon="favorite"

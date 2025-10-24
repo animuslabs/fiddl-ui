@@ -86,6 +86,124 @@ const videoReloadKey = ref<Record<string, number>>({})
 const imageLoading = ref<Record<string, boolean>>({})
 const imageReloadKey = ref<Record<string, number>>({})
 
+const VIDEO_RETRY_BASE_DELAY_MS = 1500
+const VIDEO_RETRY_MAX_DELAY_MS = 20000
+const VIDEO_PLAYBACK_BASE_DELAY_MS = 700
+const VIDEO_PLAYBACK_MAX_DELAY_MS = 12000
+
+type VideoRetryEntry = { attempts: number; timer: number | null }
+const videoRetryState = new Map<string, VideoRetryEntry>()
+
+type VideoPlaybackEntry = { attempts: number; timer: number | null }
+const videoPlaybackState = new Map<string, VideoPlaybackEntry>()
+
+function cancelVideoRetryTimer(id: string) {
+  const entry = videoRetryState.get(id)
+  if (!entry || entry.timer == null) return
+  if (typeof window !== "undefined") {
+    window.clearTimeout(entry.timer)
+  }
+  entry.timer = null
+}
+
+function clearVideoRetryState(id: string) {
+  cancelVideoRetryTimer(id)
+  videoRetryState.delete(id)
+}
+
+function scheduleVideoRetry(id: string) {
+  if (typeof window === "undefined") return
+  const previous = videoRetryState.get(id)
+  const attempts = (previous?.attempts ?? 0) + 1
+  cancelVideoRetryTimer(id)
+  const delay = Math.min(VIDEO_RETRY_MAX_DELAY_MS, VIDEO_RETRY_BASE_DELAY_MS * attempts)
+  const entry: VideoRetryEntry = { attempts, timer: null }
+  entry.timer = window.setTimeout(() => {
+    const current = videoRetryState.get(id)
+    if (!current) return
+    current.timer = null
+    videoLoading.value[id] = true
+    videoReloadKey.value[id] = Date.now()
+  }, delay) as unknown as number
+  videoRetryState.set(id, entry)
+}
+
+function cancelVideoPlaybackTimer(id: string) {
+  const entry = videoPlaybackState.get(id)
+  if (!entry || entry.timer == null) return
+  if (typeof window !== "undefined") {
+    window.clearTimeout(entry.timer)
+  }
+  entry.timer = null
+}
+
+function clearVideoPlaybackState(id: string) {
+  cancelVideoPlaybackTimer(id)
+  videoPlaybackState.delete(id)
+}
+
+function schedulePlaybackRetry(id: string, attempt: number) {
+  if (typeof window === "undefined") return
+  const delay = Math.min(VIDEO_PLAYBACK_MAX_DELAY_MS, VIDEO_PLAYBACK_BASE_DELAY_MS * Math.max(1, attempt))
+  cancelVideoPlaybackTimer(id)
+  const entry: VideoPlaybackEntry = { attempts: attempt, timer: null }
+  entry.timer = window.setTimeout(() => {
+    ensureVideoLooping(id, attempt)
+  }, delay) as unknown as number
+  videoPlaybackState.set(id, entry)
+}
+
+function ensureVideoLooping(id: string, attempt = 0): void {
+  cancelVideoPlaybackTimer(id)
+  if (typeof document === "undefined") {
+    schedulePlaybackRetry(id, attempt + 1)
+    return
+  }
+  const videoEl = document.querySelector(`video[data-id="${id}"]`) as HTMLVideoElement | null
+  if (!videoEl) {
+    schedulePlaybackRetry(id, attempt + 1)
+    return
+  }
+  const ready = videoEl.readyState >= 2
+  const playing = ready && !videoEl.paused && videoEl.currentTime > 0 && !videoEl.ended
+  if (playing) {
+    clearVideoPlaybackState(id)
+    return
+  }
+  const queueNext = () => {
+    schedulePlaybackRetry(id, attempt + 1)
+  }
+  if (ready) {
+    try {
+      const playResult = videoEl.play()
+      if (playResult && typeof playResult.then === "function") {
+        playResult
+          .then(() => {
+            if (videoEl.paused) {
+              queueNext()
+            } else {
+              clearVideoPlaybackState(id)
+            }
+          })
+          .catch(() => {
+            queueNext()
+          })
+        return
+      }
+    } catch {
+      queueNext()
+      return
+    }
+    if (!videoEl.paused) {
+      clearVideoPlaybackState(id)
+    } else {
+      queueNext()
+    }
+  } else {
+    queueNext()
+  }
+}
+
 // ----- Mobile pinch-to-zoom (ephemeral) -----
 // Shows a temporary fixed overlay while user pinches an image tile on mobile.
 // When they release, the image snaps back and overlay hides.
@@ -866,6 +984,17 @@ function pruneInactiveState(activeIds: Set<string>) {
   pruneRecord(deleteLoading.value)
   pruneRecord(addInputLoading.value)
 
+  for (const key of Array.from(videoRetryState.keys())) {
+    if (!activeIds.has(key)) {
+      clearVideoRetryState(key)
+    }
+  }
+  for (const key of Array.from(videoPlaybackState.keys())) {
+    if (!activeIds.has(key)) {
+      clearVideoPlaybackState(key)
+    }
+  }
+
   for (const [key, burst] of Object.entries(upvoteBursts.value)) {
     if (!activeIds.has(key)) {
       if (burst?.timer) window.clearTimeout(burst.timer)
@@ -1017,6 +1146,8 @@ function getMediaType(url: string): "image" | "video" {
 
 function markVideoLoadStart(id: string) {
   videoLoading.value[id] = true
+  cancelVideoRetryTimer(id)
+  clearVideoPlaybackState(id)
 }
 
 function markVideoLoaded(id: string) {
@@ -1028,6 +1159,8 @@ function markVideoLoaded(id: string) {
     // Use explicit false to indicate "done loading" so template checks can
     // reliably hide the overlay and show the video element.
     videoLoading.value[id] = false
+    clearVideoRetryState(id)
+    ensureVideoLooping(id)
 
     if (el.videoWidth && el.videoHeight) {
       const realAspect = el.videoWidth / el.videoHeight
@@ -1047,8 +1180,10 @@ function markVideoLoaded(id: string) {
 }
 
 function markVideoErrored(id: string) {
-  // Stop showing the loading overlay for hard failures
-  videoLoading.value[id] = false
+  // Keep showing the loading overlay while we retry fetching the preview
+  videoLoading.value[id] = true
+  clearVideoPlaybackState(id)
+  scheduleVideoRetry(id)
 }
 
 function markImageLoaded(id: string) {
@@ -1402,6 +1537,12 @@ onUnmounted(() => {
   if (imageUpgradeTimer !== null) {
     window.clearInterval(imageUpgradeTimer)
     imageUpgradeTimer = null
+  }
+  for (const key of Array.from(videoRetryState.keys())) {
+    clearVideoRetryState(key)
+  }
+  for (const key of Array.from(videoPlaybackState.keys())) {
+    clearVideoPlaybackState(key)
   }
 })
 
