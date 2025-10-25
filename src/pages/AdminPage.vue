@@ -1033,7 +1033,7 @@ export default defineComponent({
           endDateTime: paymentsEnd.value ? new Date(paymentsEnd.value).toISOString() : undefined,
         }
 
-        const pageSize = 1000
+        const pageSize = 500
         let offset = 0
         let total = 0
         const all: AdminListPayments200ItemsItem[] = []
@@ -1191,20 +1191,7 @@ export default defineComponent({
       }
       push(user?.id)
       push(user?.userId)
-      const directKeys = [
-        "username",
-        "userName",
-        "handle",
-        "displayName",
-        "email",
-        "source",
-        "utmSource",
-        "utmMedium",
-        "utmCampaign",
-        "referrer",
-        "referrerDomain",
-        "landingDomain",
-      ]
+      const directKeys = ["username", "userName", "handle", "displayName", "email", "source", "utmSource", "utmMedium", "utmCampaign", "referrer", "referrerDomain", "landingDomain"]
       directKeys.forEach((key) => push((user as any)?.[key]))
       const profile = user?.profile
       if (profile && typeof profile === "object") {
@@ -1223,8 +1210,8 @@ export default defineComponent({
     }
 
     const labelById = (id?: string | null) => {
-      const key = typeof id === 'string' ? id : ''
-      if (!key) return ''
+      const key = typeof id === "string" ? id : ""
+      if (!key) return ""
       return userLabelById.value[key] || key
     }
 
@@ -1248,13 +1235,7 @@ export default defineComponent({
 
     const profileLinkForUser = (user: any) => {
       if (!user) return ""
-      const username =
-        user?.username ||
-        user?.profile?.username ||
-        user?.userName ||
-        user?.originUsername ||
-        user?.creatorUsername ||
-        undefined
+      const username = user?.username || user?.profile?.username || user?.userName || user?.originUsername || user?.creatorUsername || undefined
       return profileLinkForUsername(typeof username === "string" ? username : undefined)
     }
 
@@ -1282,28 +1263,13 @@ export default defineComponent({
       const pkg = row.package || {}
 
       const possibleCodes = [row.discountCode, details.discountCode, details.discount_code, details.discountcode]
-      const discountCode = possibleCodes
-        .map((code: unknown) => (typeof code === "string" ? code.trim() : ""))
-        .find((code) => !!code)
+      const discountCode = possibleCodes.map((code: unknown) => (typeof code === "string" ? code.trim() : "")).find((code) => !!code)
 
-      const discountPctRaw =
-        row.discountPct ??
-        details.discountPct ??
-        details.discount_pct ??
-        details.discountPercent ??
-        details.discount_percent ??
-        pkg.discountPct ??
-        pkg.discount_pct
+      const discountPctRaw = row.discountPct ?? details.discountPct ?? details.discount_pct ?? details.discountPercent ?? details.discount_percent ?? pkg.discountPct ?? pkg.discount_pct
 
       const percent = normalizeDiscountPercent(discountPctRaw)
 
-      const discountAmountRaw =
-        row.discountAmount ??
-        row.discountUsd ??
-        details.discountAmount ??
-        details.discount_amount ??
-        details.discountUsd ??
-        details.discount_usd
+      const discountAmountRaw = row.discountAmount ?? row.discountUsd ?? details.discountAmount ?? details.discount_amount ?? details.discountUsd ?? details.discount_usd
 
       const amountUsd = normalizeDiscountAmount(discountAmountRaw)
 
@@ -1364,8 +1330,8 @@ export default defineComponent({
     const userColumns: QTableColumn<any>[] = [
       { name: "actions", label: "Actions", field: "id", align: "left", sortable: false },
       { name: "username", label: "Username", field: (row: any) => row.profile?.username || "", sortable: true },
-      { name: "email", label: "Email", field: (row: any) => row.profile?.email || "", sortable: true, classes: 'no-wrap' },
-      { name: "telegram", label: "Telegram", field: (row: any) => row.profile?.telegramName || row.profile?.telegramId || "", sortable: true, classes: 'no-wrap' },
+      { name: "email", label: "Email", field: (row: any) => row.profile?.email || "", sortable: true, classes: "no-wrap" },
+      { name: "telegram", label: "Telegram", field: (row: any) => row.profile?.telegramName || row.profile?.telegramId || "", sortable: true, classes: "no-wrap" },
       { name: "attribution", label: "Attrib", field: "id", sortable: false },
       { name: "availablePoints", label: "Avail", field: "availablePoints", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
       { name: "spentPoints", label: "Spent", field: "spentPoints", align: "right", sortable: true, format: (val: number) => (val ?? 0).toLocaleString() },
@@ -1492,16 +1458,7 @@ export default defineComponent({
 
     const uploadsAccountIdentifier = (user: any) => {
       if (!user) return ""
-      return (
-        user?.username ||
-        user?.profile?.username ||
-        user?.email ||
-        user?.profile?.email ||
-        user?.telegramName ||
-        user?.telegramId ||
-        user?.id ||
-        ""
-      )
+      return user?.username || user?.profile?.username || user?.email || user?.profile?.email || user?.telegramName || user?.telegramId || user?.id || ""
     }
 
     const filterUploadsByUser = (user: any) => {
@@ -1672,16 +1629,7 @@ export default defineComponent({
 
     const tsetsAccountIdentifier = (user: any) => {
       if (!user) return ""
-      return (
-        user?.username ||
-        user?.profile?.username ||
-        user?.email ||
-        user?.profile?.email ||
-        user?.telegramName ||
-        user?.telegramId ||
-        user?.id ||
-        ""
-      )
+      return user?.username || user?.profile?.username || user?.email || user?.profile?.email || user?.telegramName || user?.telegramId || user?.id || ""
     }
 
     const filterTsetsByUser = (user: any) => {
@@ -1775,7 +1723,6 @@ export default defineComponent({
       }
     }
 
-
     // Discount Codes state and actions
     const dcRows = ref<any[]>([])
     const dcLoading = ref(false)
@@ -1793,8 +1740,8 @@ export default defineComponent({
       { name: "discount", label: "Discount", field: "discount", sortable: true },
       { name: "uses", label: "Uses", field: (row: any) => `${row.used}/${row.maximumUses}`, sortable: true },
       { name: "linkedUser", label: "Linked User", field: (row: any) => (row.linkedUserId ? userLabelById.value[row.linkedUserId] || row.linkedUserId : ""), sortable: true },
-      { name: "pendingPayout", label: "Pending", field: (row: any) => (row as any).pendingPayout || 0, align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
-      { name: "totalPayout", label: "Total Paid", field: (row: any) => (row as any).totalPayout || 0, align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "pendingPayout", label: "Pending", field: (row: any) => (row as any).pendingPayout || 0, align: "right", sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "totalPayout", label: "Total Paid", field: (row: any) => (row as any).totalPayout || 0, align: "right", sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
       { name: "createdAt", label: "Created", field: "createdAt", sortable: true },
     ]
 
@@ -1869,22 +1816,22 @@ export default defineComponent({
       return rows
     })
     const pendingPayoutColumns: QTableColumn<any>[] = [
-      { name: 'user', label: 'User', field: 'user', sortable: true },
-      { name: 'paypalEmail', label: 'PayPal Email', field: 'userId', sortable: false },
-      { name: 'pending', label: 'Pending', field: 'pending', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
-      { name: 'actions', label: 'Actions', field: 'userId', sortable: false },
+      { name: "user", label: "User", field: "user", sortable: true },
+      { name: "paypalEmail", label: "PayPal Email", field: "userId", sortable: false },
+      { name: "pending", label: "Pending", field: "pending", align: "right", sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "actions", label: "Actions", field: "userId", sortable: false },
     ]
 
     function confirmAffiliatePayout(userId: string, amount: number) {
       Dialog.create({
-        title: 'Confirm Payout',
+        title: "Confirm Payout",
         message: `Payout $${(amount || 0).toFixed(2)} to ${userLabelById.value[userId] || userId}?`,
         cancel: true,
-        ok: { label: 'Payout', color: 'primary' },
+        ok: { label: "Payout", color: "primary" },
       }).onOk(async () => {
         try {
           await adminAffiliatePayoutUser({ userId })
-          Notify.create({ type: 'positive', message: 'Payout executed' })
+          Notify.create({ type: "positive", message: "Payout executed" })
           await refetchDiscounts()
           await refetchAffiliateReceipts()
         } catch (e) {
@@ -1897,10 +1844,10 @@ export default defineComponent({
     const apReceipts = ref<any[]>([])
     const apLoading = ref(false)
     const apColumns: QTableColumn<any>[] = [
-      { name: 'payoutDate', label: 'Date', field: 'payoutDate', sortable: true },
-      { name: 'user', label: 'User', field: 'user', sortable: false },
-      { name: 'paypalEmail', label: 'PayPal Email', field: 'paypalEmail', sortable: false },
-      { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
+      { name: "payoutDate", label: "Date", field: "payoutDate", sortable: true },
+      { name: "user", label: "User", field: "user", sortable: false },
+      { name: "paypalEmail", label: "PayPal Email", field: "paypalEmail", sortable: false },
+      { name: "amount", label: "Amount", field: "amount", align: "right", sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
     ]
 
     async function ensureUserLabels(ids: string[]) {
@@ -1921,7 +1868,7 @@ export default defineComponent({
     }
 
     async function ensurePayoutDetails(ids: string[], force = false) {
-      const unique = Array.from(new Set(ids.filter((id): id is string => typeof id === 'string' && id))) as string[]
+      const unique = Array.from(new Set(ids.filter((id): id is string => typeof id === "string" && id))) as string[]
       await Promise.all(
         unique.map(async (id) => {
           if (!force && payoutDetailsByUserId.value[id]) return
@@ -1945,7 +1892,7 @@ export default defineComponent({
         apLoading.value = true
         const res = await adminAffiliatePayoutReceipts({ limit: 100, offset: 0 })
         apReceipts.value = Array.isArray(res?.data) ? res.data : []
-        const ids = apReceipts.value.map((r: any) => r.userId).filter((v: any) => typeof v === 'string' && v)
+        const ids = apReceipts.value.map((r: any) => r.userId).filter((v: any) => typeof v === "string" && v)
         await ensureUserLabels(ids as string[])
         await ensurePayoutDetails(ids as string[])
       } catch (e) {
@@ -2276,21 +2223,21 @@ export default defineComponent({
       unclaimedPromoCodes: [] as PromoCode[],
       allPromoCodes: [] as PromoCode[],
       promoLoading: false as boolean,
-      promoSearch: '' as string,
-      promoFilterStatus: 'all' as 'all' | 'unclaimed' | 'claimed',
+      promoSearch: "" as string,
+      promoFilterStatus: "all" as "all" | "unclaimed" | "claimed",
       promoStatusOptions: [
-        { label: 'All', value: 'all', icon: 'all_inclusive' },
-        { label: 'Unclaimed', value: 'unclaimed', icon: 'check_circle' },
-        { label: 'Claimed', value: 'claimed', icon: 'done_all' },
-      ] as { label: string; value: 'all' | 'unclaimed' | 'claimed'; icon: string }[],
+        { label: "All", value: "all", icon: "all_inclusive" },
+        { label: "Unclaimed", value: "unclaimed", icon: "check_circle" },
+        { label: "Claimed", value: "claimed", icon: "done_all" },
+      ] as { label: string; value: "all" | "unclaimed" | "claimed"; icon: string }[],
       promoColumns: [
-        { name: 'actions', label: 'Actions', field: 'id', align: 'left', sortable: false },
-        { name: 'code', label: 'Code', field: 'id', sortable: false },
-        { name: 'points', label: 'Points', field: 'points', align: 'right', sortable: true },
-        { name: 'status', label: 'Status', field: 'claimedAt', sortable: true },
-        { name: 'claimedBy', label: 'Claimed By', field: 'claimedByUserId', sortable: false },
-        { name: 'createdAt', label: 'Created', field: 'createdAt', sortable: true },
-        { name: 'claimedAt', label: 'Claimed', field: 'claimedAt', sortable: true },
+        { name: "actions", label: "Actions", field: "id", align: "left", sortable: false },
+        { name: "code", label: "Code", field: "id", sortable: false },
+        { name: "points", label: "Points", field: "points", align: "right", sortable: true },
+        { name: "status", label: "Status", field: "claimedAt", sortable: true },
+        { name: "claimedBy", label: "Claimed By", field: "claimedByUserId", sortable: false },
+        { name: "createdAt", label: "Created", field: "createdAt", sortable: true },
+        { name: "claimedAt", label: "Claimed", field: "claimedAt", sortable: true },
       ] as QTableColumn<any>[],
       tab: "promo-codes",
       avatarImg,
@@ -2306,15 +2253,15 @@ export default defineComponent({
   computed: {
     promoFilteredRows(): any[] {
       try {
-        const q = (this.promoSearch || '').trim().toLowerCase()
+        const q = (this.promoSearch || "").trim().toLowerCase()
         const status = this.promoFilterStatus
         const rows = Array.isArray(this.allPromoCodes) ? this.allPromoCodes : []
         return rows.filter((r: any) => {
-          if (status === 'unclaimed' && r.claimedAt) return false
-          if (status === 'claimed' && !r.claimedAt) return false
+          if (status === "unclaimed" && r.claimedAt) return false
+          if (status === "claimed" && !r.claimedAt) return false
           if (!q) return true
           const sid = this.shortId(String(r.id)).toLowerCase()
-          const userLbl = String(this.labelById(r.claimedByUserId) || '').toLowerCase()
+          const userLbl = String(this.labelById(r.claimedByUserId) || "").toLowerCase()
           return sid.includes(q) || userLbl.includes(q)
         })
       } catch {
@@ -2397,7 +2344,7 @@ export default defineComponent({
           .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
           .reverse()
         // Ensure user labels for claimed codes
-        const ids = Array.from(new Set(allPromoCodes.map((c: any) => c.claimedByUserId).filter((v: any) => typeof v === 'string' && v))) as string[]
+        const ids = Array.from(new Set(allPromoCodes.map((c: any) => c.claimedByUserId).filter((v: any) => typeof v === "string" && v))) as string[]
         await Promise.all(
           ids.map(async (id) => {
             try {
@@ -2420,14 +2367,14 @@ export default defineComponent({
     confirmDeletePromo(row: any) {
       if (!row || !row.id) return
       Dialog.create({
-        title: 'Delete promo code',
+        title: "Delete promo code",
         message: `Delete promo code ${this.shortId(row.id)}?`,
         cancel: true,
-        ok: { label: 'Delete', color: 'negative' },
+        ok: { label: "Delete", color: "negative" },
       }).onOk(async () => {
         try {
           await promoDeletePromoCode({ id: String(row.id) })
-          Notify.create({ type: 'positive', message: 'Promo code deleted' })
+          Notify.create({ type: "positive", message: "Promo code deleted" })
           await this.loadPromoCodes()
         } catch (error) {
           catchErr(error)
@@ -2513,8 +2460,7 @@ export default defineComponent({
       void copyToClipboard(this.qrLink)
       Notify.create({ message: "Link copied", color: "positive", icon: "check" })
     },
-    
-    
+
     async createPromoCode(kind: "claim" | "mm" = "claim") {
       try {
         const response = await promoCreatePromoCode({ points: this.promoPoints ? Number(this.promoPoints) : 0 })
@@ -2565,13 +2511,7 @@ export default defineComponent({
         const user = typeof row?.id === "string" ? row : row?.user && typeof row.user.id === "string" ? row.user : null
         const userId = user?.id || row?.id || row?.userId || row?.user?.id
         if (!userId) return
-        const username =
-          user?.profile?.username ??
-          user?.username ??
-          row?.profile?.username ??
-          row?.username ??
-          row?.user?.profile?.username ??
-          null
+        const username = user?.profile?.username ?? user?.username ?? row?.profile?.username ?? row?.username ?? row?.user?.profile?.username ?? null
         const hintSet = new Set<string>()
         const collect = this.collectUserAttribHints
         if (typeof collect === "function") {
@@ -2582,8 +2522,7 @@ export default defineComponent({
           }
         }
         const hintArray = Array.from(hintSet)
-        const merged =
-          typeof this.mergeAttribHints === "function" ? this.mergeAttribHints(userId, hintArray) : { hints: hintArray }
+        const merged = typeof this.mergeAttribHints === "function" ? this.mergeAttribHints(userId, hintArray) : { hints: hintArray }
         if (typeof this.loadAttribForUser === "function") {
           void this.loadAttribForUser(userId, hintArray)
         }
