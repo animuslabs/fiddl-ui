@@ -214,13 +214,13 @@
           q-card(flat bordered class="summary-card")
             q-card-section
               .summary-label Status
+              .summary-helper The funnel's current processing state.
               .summary-value(:class="selectedFunnel.active ? 'text-positive' : 'text-grey-7'") {{ selectedFunnel.active ? 'Active' : 'Paused' }}
-              div.text-caption.text-grey-6(v-if="selectedFunnel.lastSentAt") Last sent {{ formatDate(selectedFunnel.lastSentAt) }}
-              div.text-caption.text-grey-6(v-if="selectedFunnel.lastEvaluatedAt") Evaluated {{ formatDate(selectedFunnel.lastEvaluatedAt) }}
-              div.text-caption.text-grey-6(v-if="selectedAdminStateUpdatedBy") Updated by {{ selectedAdminStateUpdatedBy }}
+              div.text-caption.text-grey-6(v-if="selectedFunnel.lastSentAt") Last email sent {{ formatDate(selectedFunnel.lastSentAt) }}
           q-card(flat bordered class="summary-card")
             q-card-section
-              .summary-label {{ sinceDays }}-day window
+              .summary-label Activity ({{ sinceDays }} days)
+              .summary-helper Deliveries and issues over the recent window.
               .row.q-col-gutter-sm.q-mt-sm
                 .col-auto
                   .summary-chip-label Sent
@@ -231,13 +231,11 @@
                 .col-auto
                   .summary-chip-label Failed
                   .summary-chip-value {{ numberDisplay(selectedFunnel.recent.failed) }}
-                .col-auto
-                  .summary-chip-label Skipped
-                  .summary-chip-value {{ numberDisplay(selectedFunnel.recent.skipped) }}
               div.text-caption.text-grey-6(v-if="selectedFunnel.recentWindowStart") Since {{ formatDate(selectedFunnel.recentWindowStart) }}
           q-card(flat bordered class="summary-card")
             q-card-section
               .summary-label Engagement
+              .summary-helper Opens and clicks from recent deliveries.
               div.text-caption.text-grey-6(v-if="engagementWindowLabel") {{ engagementWindowLabel }}
               .row.q-col-gutter-sm.q-mt-sm
                 .col-auto
@@ -251,10 +249,10 @@
                   .summary-chip-value {{ numberDisplay(selectedEngagement?.sentRecent) }}
         q-list(padding class="detail-accordions")
           q-expansion-item(
-            default-open
             expand-separator
             icon="trending_up"
             label="Performance & Volume"
+            caption="Lifetime counts and top send reasons"
           )
             template(#default)
               .row.q-col-gutter-md.q-mt-sm
@@ -310,6 +308,7 @@
             expand-separator
             icon="insights"
             label="Engagement"
+            caption="Opens, clicks, and trends over time"
           )
             template(#default)
               q-card(flat bordered class="q-mt-sm")
@@ -337,6 +336,7 @@
             expand-separator
             icon="settings"
             label="Technical Details"
+            caption="Configuration, handlers, and integration IDs"
           )
             template(#default)
               .row.q-col-gutter-md.q-mt-sm
@@ -394,6 +394,7 @@
             expand-separator
             icon="science"
             label="Preview & Testing"
+            caption="Render a sample email and send tests"
           )
             template(#default)
               q-card(flat bordered class="q-mt-sm")
@@ -638,27 +639,37 @@
                       div.text-caption.text-grey-5(v-if="selectedEmailLog.user") Recipient · {{ emailUserLabel(selectedEmailLog.user) }}
                     q-space
                     .column.items-end.q-gutter-xs
-                      q-btn-group(flat unelevated class="theme-toggle")
-                        q-btn(
-                          size="sm"
-                          :color="emailPreviewTheme === 'light' ? 'primary' : 'grey-7'"
-                          text-color="white"
-                          icon="light_mode"
-                          round
-                          dense
-                          @click="emailPreviewTheme = 'light'"
-                        )
-                          q-tooltip(anchor="top middle" self="bottom middle") Light theme
-                        q-btn(
-                          size="sm"
-                          :color="emailPreviewTheme === 'dark' ? 'primary' : 'grey-7'"
-                          text-color="white"
-                          icon="dark_mode"
-                          round
-                          dense
-                          @click="emailPreviewTheme = 'dark'"
-                        )
-                          q-tooltip(anchor="top middle" self="bottom middle") Dark theme
+          q-btn-group(flat unelevated class="theme-toggle")
+            q-btn(
+              size="sm"
+              :color="emailPreviewTheme === 'exact' ? 'primary' : 'grey-7'"
+              text-color="white"
+              icon="mail"
+              round
+              dense
+              @click="emailPreviewTheme = 'exact'"
+            )
+              q-tooltip(anchor="top middle" self="bottom middle") Exact email
+            q-btn(
+              size="sm"
+              :color="emailPreviewTheme === 'light' ? 'primary' : 'grey-7'"
+              text-color="white"
+              icon="light_mode"
+              round
+              dense
+              @click="emailPreviewTheme = 'light'"
+            )
+              q-tooltip(anchor="top middle" self="bottom middle") Light theme
+            q-btn(
+              size="sm"
+              :color="emailPreviewTheme === 'dark' ? 'primary' : 'grey-7'"
+              text-color="white"
+              icon="dark_mode"
+              round
+              dense
+              @click="emailPreviewTheme = 'dark'"
+            )
+              q-tooltip(anchor="top middle" self="bottom middle") Dark theme
                       q-btn(
                         flat
                         dense
@@ -782,6 +793,16 @@
             div.text-caption.text-grey-6(v-if="selectedFunnel") {{ selectedFunnel.name }} · {{ selectedFunnel.key }}
           q-space
           q-btn-group(flat unelevated class="theme-toggle")
+            q-btn(
+              size="sm"
+              :color="previewTheme === 'exact' ? 'primary' : 'grey-7'"
+              text-color="white"
+              icon="mail"
+              round
+              dense
+              @click="previewTheme = 'exact'"
+            )
+              q-tooltip(anchor="top middle" self="bottom middle") Exact email
             q-btn(
               size="sm"
               :color="previewTheme === 'light' ? 'primary' : 'grey-7'"
@@ -913,7 +934,7 @@ import {
   type AdminListEmailFunnelEmailsStatusesItem as AdminEmailStatus,
 } from "src/lib/orval"
 import { renderMarkdown } from "src/lib/markdown"
-import { catchErr } from "src/lib/util"
+import { catchErr, decodeHtmlEntities } from "src/lib/util"
 
 type EmailFunnelOverview = AdminEmailFunnelsOverview200Item
 type EmailFunnelStatusCounts = EmailFunnelOverview["stats"]
@@ -921,7 +942,7 @@ type EmailFunnelEngagement = AdminEmailFunnelEngagement200Item
 
 type AdminEmailPreviewSuccess = Extract<AdminEmailFunnelPreview200, { html: string }>
 type AdminEmailPreviewFailure = Extract<AdminEmailFunnelPreview200, { reason: string }>
-type PreviewTheme = "light" | "dark"
+type PreviewTheme = "exact" | "light" | "dark"
 type MarkdownViewMode = "rendered" | "source"
 type AdminEmailContentResponse = AdminEmailFunnelEmailContent200
 type AdminEmailContentSuccess = Extract<AdminEmailContentResponse, { record: AdminEmailFunnelEmailContent200AnyOfRecord }>
@@ -1220,7 +1241,7 @@ const emailStatusOptions = emailStatuses.map((status) => ({
 const emailsDialogOpen = ref(false)
 const emailsDialogMaximized = ref(true)
 const emailPreviewMaximized = ref(false)
-const emailPreviewTheme = ref<PreviewTheme>("light")
+const emailPreviewTheme = ref<PreviewTheme>("exact")
 const emailMarkdownView = ref<MarkdownViewMode>("rendered")
 const emailRawExpanded = ref(false)
 const emailSearch = ref("")
@@ -1296,7 +1317,13 @@ const emailPreviewHtmlRaw = computed(() => emailPreviewContent.value.html)
 const emailPreviewHtml = computed(() => applyPreviewTheme(emailPreviewHtmlRaw.value, emailPreviewTheme.value))
 const emailPreviewMarkdown = computed(() => emailPreviewContent.value.markdown)
 const emailPreviewHasMarkdown = computed(() => emailPreviewMarkdown.value.trim().length > 0)
-const emailPreviewMarkdownHtml = computed(() => (emailPreviewHasMarkdown.value ? renderMarkdown(emailPreviewMarkdown.value) : ""))
+const emailPreviewMarkdownHtml = computed(() => {
+  if (!emailPreviewHasMarkdown.value) return ""
+  const raw = emailPreviewMarkdown.value || ""
+  const decoded = decodeHtmlEntities(raw)
+  const looksHtml = /<\w+[^>]*>/.test(decoded) || /&lt;\w+/i.test(raw)
+  return looksHtml ? decoded : renderMarkdown(decoded)
+})
 const emailPreviewRawHtml = computed(() => emailContentRecord.value?.bodyHtml || "")
 
 function refresh() {
@@ -1315,7 +1342,7 @@ function openEmailsDialog() {
   emailsDialogMaximized.value = true
   emailPreviewMaximized.value = true
   emailsDialogOpen.value = true
-  emailPreviewTheme.value = "light"
+  emailPreviewTheme.value = "exact"
   emailMarkdownView.value = "rendered"
   emailRawExpanded.value = false
   selectedEmailLog.value = null
@@ -1444,7 +1471,7 @@ async function loadEmails() {
 
 function openEmailPreview(row: EmailLogItem) {
   selectedEmailLog.value = row
-  emailPreviewTheme.value = "light"
+  emailPreviewTheme.value = "exact"
   emailPreviewMaximized.value = true
   emailMarkdownView.value = "rendered"
   emailRawExpanded.value = false
@@ -1501,7 +1528,7 @@ watch(
     } else {
       emailsDialogMaximized.value = true
       emailPreviewMaximized.value = false
-      emailPreviewTheme.value = "light"
+      emailPreviewTheme.value = "exact"
       emailMarkdownView.value = "rendered"
       emailRawExpanded.value = false
       selectedEmailLog.value = null
@@ -1532,7 +1559,7 @@ watch(
   () => selectedEmailLog.value,
   (log) => {
     if (!log) {
-      emailPreviewTheme.value = "light"
+      emailPreviewTheme.value = "exact"
       emailContentResult.value = null
       emailContentError.value = ""
       emailContentLoading.value = false
@@ -1579,7 +1606,7 @@ const previewDialog = ref(false)
 const previewLoading = ref(false)
 const previewResult = ref<AdminEmailFunnelPreview200 | null>(null)
 const previewMaximized = ref(false)
-const previewTheme = ref<PreviewTheme>("light")
+const previewTheme = ref<PreviewTheme>("exact")
 const previewMarkdownView = ref<MarkdownViewMode>("rendered")
 
 const testUserIdValid = computed(() => uuidRegex.test(testUserId.value.trim()))
@@ -1627,7 +1654,13 @@ const previewHtmlRaw = computed(() => previewSuccess.value?.html || "")
 const previewHtml = computed(() => applyPreviewTheme(previewHtmlRaw.value, previewTheme.value))
 const previewMarkdown = computed(() => previewSuccess.value?.text || "")
 const previewHasMarkdown = computed(() => previewMarkdown.value.trim().length > 0)
-const previewMarkdownHtml = computed(() => (previewHasMarkdown.value ? renderMarkdown(previewMarkdown.value) : ""))
+const previewMarkdownHtml = computed(() => {
+  if (!previewHasMarkdown.value) return ""
+  const raw = previewMarkdown.value || ""
+  const decoded = decodeHtmlEntities(raw)
+  const looksHtml = /<\w+[^>]*>/.test(decoded) || /&lt;\w+/i.test(raw)
+  return looksHtml ? decoded : renderMarkdown(decoded)
+})
 const previewShouldReason = computed(() => previewSuccess.value?.shouldReason || "")
 const previewUserLabel = computed(() => testUserSelection.value?.label || testUserId.value.trim() || "N/A")
 const previewIframeKey = computed(() => `${previewTheme.value}-${selectedFunnel.value?.key ?? "preview"}`)
@@ -1680,7 +1713,7 @@ watch(
   (open) => {
     if (!open) {
       previewMaximized.value = false
-      previewTheme.value = "light"
+      previewTheme.value = "exact"
       previewMarkdownView.value = "rendered"
     }
     nextTick(() => autosizePreviewIframe())
@@ -1702,7 +1735,7 @@ function resetPreviewState() {
   previewResult.value = null
   previewLoading.value = false
   previewMaximized.value = false
-  previewTheme.value = "light"
+  previewTheme.value = "exact"
   previewMarkdownView.value = "rendered"
 }
 
@@ -1788,7 +1821,7 @@ async function openPreviewEmail() {
     const res = await adminEmailFunnelPreview(params)
     if (res?.data) {
       previewResult.value = res.data
-      previewTheme.value = "light"
+      previewTheme.value = "exact"
       previewMarkdownView.value = "rendered"
       previewDialog.value = true
     } else {
@@ -1848,6 +1881,7 @@ async function sendTestEmail() {
 
 function applyPreviewTheme(html: string, theme: PreviewTheme): string {
   if (!html) return ""
+  if (theme === "exact") return html
   const themeClass = theme === "dark" ? "gmail-dark" : "gmail-light"
   const bodyBackground = theme === "dark" ? "#202124" : "#ffffff"
   const bodyText = theme === "dark" ? "#e8eaed" : "#202124"
@@ -1973,6 +2007,8 @@ function formatDate(value?: string | null): string {
   .funnel-preview-card {
     background: #ffffff;
     color: #1f1f1f;
+    /* Wider by default for easier reading */
+    width: min(1520px, 98vw);
   }
 
   .detail-dialog-body {
@@ -1982,7 +2018,7 @@ function formatDate(value?: string | null): string {
 
   .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px;
   }
 
@@ -2004,6 +2040,12 @@ function formatDate(value?: string | null): string {
     font-size: 1.4rem;
     font-weight: 600;
     margin-top: 4px;
+  }
+
+  .summary-helper {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: #6b7280;
   }
 
   .summary-chip-label {
@@ -2139,6 +2181,7 @@ function formatDate(value?: string | null): string {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+    overflow-wrap: anywhere;
     font-size: 0.85rem;
     line-height: 1.4;
     overflow-x: auto;
@@ -2178,6 +2221,19 @@ function formatDate(value?: string | null): string {
     line-height: 1.6;
     color: #202124;
     word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .markdown-rendered img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .markdown-rendered table {
+    width: 100%;
+    border-collapse: collapse;
+    display: block;
+    overflow: auto;
   }
 
   .markdown-rendered p {
@@ -2270,11 +2326,15 @@ function formatDate(value?: string | null): string {
     .funnel-dialog-card {
       width: min(1400px, 96vw);
     }
+    /* Ensure the three summary cards line up on one row on desktop */
+    .summary-grid {
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+    }
   }
 
   @media (min-width: 1280px) {
     .summary-grid {
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(3, minmax(300px, 1fr));
     }
   }
 }
