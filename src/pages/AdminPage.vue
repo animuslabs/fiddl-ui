@@ -196,7 +196,7 @@ q-page.full-height.full-width.admin-page
                 | {{ labelById(props.row.userId) }}
             template(v-else)
               span {{ labelById(props.row.userId) }}
-        template(#body-cell-payout="props")
+        template(#body-cell-paypalEmail="props")
           q-td(:props="props")
             template(v-if="payoutDetailsByUserId[props.row.userId]?.paypalEmail")
               span {{ payoutDetailsByUserId[props.row.userId]?.paypalEmail || '' }}
@@ -229,6 +229,12 @@ q-page.full-height.full-width.admin-page
                 | {{ labelById(props.row.userId) }}
             template(v-else)
               span {{ labelById(props.row.userId) }}
+        template(#body-cell-paypalEmail="props")
+          q-td(:props="props")
+            template(v-if="payoutDetailsByUserId[props.row.userId]?.paypalEmail")
+              span {{ payoutDetailsByUserId[props.row.userId]?.paypalEmail || '' }}
+            template(v-else)
+              span Not linked
         template(#body-cell-amount="props")
           q-td(:props="props") ${{ (props.row.amount || 0).toFixed(2) }}
     div(v-if="tab == 'users'").q-pa-sm
@@ -1679,25 +1685,8 @@ export default defineComponent({
           totalPayout: Number(r?.affiliatePaid || 0),
         }))
         const ids = Array.from(new Set(dcRows.value.map((r: any) => r?.linkedUserId).filter((v: any) => typeof v === "string" && v))) as string[]
-        await Promise.all(
-          ids.map(async (id) => {
-            try {
-              const resp = await adminListUsers({ search: id, limit: 1, offset: 0 })
-              const user = resp?.data?.users?.[0]
-              if (user) {
-                userLabelById.value[id] = userDisplay({ username: user.profile?.username, email: user.profile?.email, telegramName: user.profile?.telegramName, id: user.id })
-                if (user.profile?.username) userUsernameById.value[id] = user.profile.username
-              }
-            } catch {}
-            try {
-              const pd = await adminAffiliatePayoutDetailsForUser({ userId: id })
-              const data = pd?.data
-              if (data && data.userId) {
-                payoutDetailsByUserId.value[id] = { paypalEmail: data.paypalEmail ?? null, totalPaid: Number(data.totalPaid || 0) }
-              }
-            } catch {}
-          }),
-        )
+        await ensureUserLabels(ids)
+        await ensurePayoutDetails(ids, true)
       } catch (e) {
         // show a toast
         Notify.create({ type: "negative", message: "Failed to load discount codes" })
@@ -1748,7 +1737,7 @@ export default defineComponent({
     })
     const pendingPayoutColumns: QTableColumn<any>[] = [
       { name: 'user', label: 'User', field: 'user', sortable: true },
-      { name: 'payout', label: 'Payout', field: 'userId', sortable: false },
+      { name: 'paypalEmail', label: 'PayPal Email', field: 'userId', sortable: false },
       { name: 'pending', label: 'Pending', field: 'pending', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
       { name: 'actions', label: 'Actions', field: 'userId', sortable: false },
     ]
@@ -1777,6 +1766,7 @@ export default defineComponent({
     const apColumns: QTableColumn<any>[] = [
       { name: 'payoutDate', label: 'Date', field: 'payoutDate', sortable: true },
       { name: 'user', label: 'User', field: 'user', sortable: false },
+      { name: 'paypalEmail', label: 'PayPal Email', field: 'paypalEmail', sortable: false },
       { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true, format: (val: number) => `$${(val || 0).toFixed(2)}` },
     ]
 
@@ -1797,6 +1787,26 @@ export default defineComponent({
       )
     }
 
+    async function ensurePayoutDetails(ids: string[], force = false) {
+      const unique = Array.from(new Set(ids.filter((id): id is string => typeof id === 'string' && id))) as string[]
+      await Promise.all(
+        unique.map(async (id) => {
+          if (!force && payoutDetailsByUserId.value[id]) return
+          try {
+            const resp = await adminAffiliatePayoutDetailsForUser({ userId: id })
+            const data = resp?.data
+            payoutDetailsByUserId.value[id] = {
+              paypalEmail: data?.paypalEmail ?? null,
+              totalPaid: Number(data?.totalPaid || 0),
+            }
+          } catch {
+            if (!force && payoutDetailsByUserId.value[id]) return
+            payoutDetailsByUserId.value[id] = { paypalEmail: null, totalPaid: 0 }
+          }
+        }),
+      )
+    }
+
     async function fetchAffiliateReceipts() {
       try {
         apLoading.value = true
@@ -1804,6 +1814,7 @@ export default defineComponent({
         apReceipts.value = Array.isArray(res?.data) ? res.data : []
         const ids = apReceipts.value.map((r: any) => r.userId).filter((v: any) => typeof v === 'string' && v)
         await ensureUserLabels(ids as string[])
+        await ensurePayoutDetails(ids as string[])
       } catch (e) {
         apReceipts.value = []
       } finally {

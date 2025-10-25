@@ -5,15 +5,28 @@ import { SortMethod } from "fiddl-server/dist/lib/types/serverTypes"
 import type { MediaGalleryMeta } from "src/types/media-gallery"
 import type { MediaType } from "lib/types"
 import { useCreatorStore } from "src/stores/creatorStore"
+import { extractAspectRatioFromMeta, getCachedAspectRatio, parseAspectRatio, rememberAspectRatio } from "lib/aspectRatio"
 
-function aspectRatioToNumber(raw?: string | null): number | undefined {
-  if (!raw) return undefined
-  if (raw.includes(":")) {
-    const [w, h] = raw.split(":").map(parseFloat)
-    return h && w ? w / h : undefined
+function resolveAspectRatio(row: BrowseRow, mediaId: string, mediaItem: { [key: string]: unknown }): number | undefined {
+  const rowRatio = parseAspectRatio(row.aspectRatio)
+  if (typeof rowRatio === "number") {
+    rememberAspectRatio(mediaId, rowRatio)
+    return rowRatio
   }
-  const n = parseFloat(raw)
-  return Number.isFinite(n) ? n : undefined
+
+  const mediaRatio = parseAspectRatio((mediaItem as unknown as { aspectRatio?: unknown })?.aspectRatio)
+  if (typeof mediaRatio === "number") {
+    rememberAspectRatio(mediaId, mediaRatio)
+    return mediaRatio
+  }
+
+  const metaRatio = extractAspectRatioFromMeta((row as unknown as { meta?: unknown }).meta)
+  if (typeof metaRatio === "number") {
+    rememberAspectRatio(mediaId, metaRatio)
+    return metaRatio
+  }
+
+  return getCachedAspectRatio(mediaId)
 }
 
 export const sortMethodIcon: Record<SortMethod, string> = {
@@ -186,11 +199,13 @@ export const useBrowserStore = defineStore("browserStore", {
         for (const m of medias) {
           if (this.media.find((e) => e.id === m.id)) continue
 
+          const aspectRatio = resolveAspectRatio(row, m.id, m)
+
           const item: MediaItem = {
             id: m.id,
             url: t === "image" ? img(m.id, "md") : s3Video(m.id, "preview-md"),
             type: t,
-            aspectRatio: aspectRatioToNumber(row.aspectRatio),
+            aspectRatio,
             createdAt: new Date(row.createdAt),
             nsfw: m.nsfw === true,
             // Pass-through creator metadata from the nested user object

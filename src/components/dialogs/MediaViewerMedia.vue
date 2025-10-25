@@ -92,6 +92,7 @@ import MediaViewerControls from "./MediaViewerControls.vue"
 import { img, s3Video } from "src/lib/netlifyImg"
 import { isOwned } from "lib/ownedMediaCache"
 import { viewportHeight } from "src/lib/viewport"
+import { getCachedAspectRatio, parseAspectRatio, rememberAspectRatio } from "src/lib/aspectRatio"
 interface Props {
   downloadMode?: boolean
   allowDelete?: boolean
@@ -199,12 +200,14 @@ let measurementRetryHandle: number | null = null
 let measurementRetryAttempts = 0
 let measurementRaf: number | null = null
 let burstMeasurementsRemaining = 0
+let forcedRecalcTimer: number | null = null
 const frameMaxWidth = computed(() => {
   const available = Math.max(MIN_FRAME_WIDTH, $q.screen.width - 32)
   return Math.min(available, MAX_FRAME_WIDTH)
 })
 let removeViewportResizeListeners: (() => void) | null = null
 const currentMedia = computed(() => mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex] ?? null)
+let cancelAspectPrime: (() => void) | null = null
 
 const stageHeight = computed(() => viewportHeight(75))
 const touchMoveStyle = computed(() => ({
@@ -343,6 +346,7 @@ function applyVideoDimensions(width: number, height: number): boolean {
   previewReady.value = true
   aspectRatio.value = `${width} / ${height}`
   aspectRatioNum.value = width / height
+  rememberAspectRatio(mediaViewerStore.currentMediaId, aspectRatioNum.value)
   updateNaturalDimensions(width, height)
   return true
 }
@@ -637,6 +641,7 @@ watch(
   () => mediaViewerStore.currentMediaId,
   async (newId, oldId) => {
     if (!newId) return
+    cancelPendingAspectPrime()
     resetWidthTracking()
     clearMetadataRetry()
     resetMeasurementRetry()
@@ -652,9 +657,20 @@ watch(
     naturalDimensions.value = { width: 0, height: 0 }
     displayDimensions.value = { width: 0, height: 0 }
     primeDimensionsFromMetadata(currentMedia.value)
+    // Immediately compute a fallback frame so bars align while we load
+    recalculateDisplayDimensions()
+    primeAspectRatioForCurrentMedia()
 
     if (!oldId) {
       scheduleStageMeasurement()
+      if (typeof window !== 'undefined') {
+        if (forcedRecalcTimer != null) window.clearTimeout(forcedRecalcTimer)
+        forcedRecalcTimer = window.setTimeout(() => {
+          forcedRecalcTimer = null
+          recalculateDisplayDimensions()
+          scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+        }, 500)
+      }
       return // Skip initial load (handled by parent)
     }
 
@@ -793,6 +809,20 @@ onMounted(() => {
     updateStageWidth(entry.contentRect)
   })
   if (mediaStageRef.value) stageObserver.observe(mediaStageRef.value)
+  // Ensure we draw an initial fallback frame (square) even when
+  // metadata is missing and before the image onload fires.
+  recalculateDisplayDimensions()
+  primeAspectRatioForCurrentMedia()
+  // Force a late recalc ~0.5s after open to mirror
+  // the successful reflow that happens after navigation.
+  if (typeof window !== 'undefined') {
+    if (forcedRecalcTimer != null) window.clearTimeout(forcedRecalcTimer)
+    forcedRecalcTimer = window.setTimeout(() => {
+      forcedRecalcTimer = null
+      recalculateDisplayDimensions()
+      scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+    }, 500)
+  }
 })
 
 watch(
@@ -818,12 +848,17 @@ onBeforeUnmount(() => {
   mediaViewerStore.registerVideoElement(null)
   clearMetadataRetry()
   resetMeasurementRetry()
+  cancelPendingAspectPrime()
   if (removeViewportResizeListeners) {
     removeViewportResizeListeners()
   }
   if (stageObserver) {
     stageObserver.disconnect()
     stageObserver = null
+  }
+  if (typeof window !== 'undefined' && forcedRecalcTimer != null) {
+    window.clearTimeout(forcedRecalcTimer)
+    forcedRecalcTimer = null
   }
 })
 
@@ -834,8 +869,61 @@ function updateNaturalDimensions(width: number, height: number) {
   if (!aspectRatioNum.value) {
     aspectRatioNum.value = width / height
     aspectRatio.value = `${width} / ${height}`
+    rememberAspectRatio(mediaViewerStore.currentMediaId, aspectRatioNum.value)
   }
   recalculateDisplayDimensions()
+}
+
+function cancelPendingAspectPrime() {
+  if (cancelAspectPrime) {
+    cancelAspectPrime()
+    cancelAspectPrime = null
+  }
+}
+
+function primeAspectRatioForCurrentMedia() {
+  cancelPendingAspectPrime()
+  if (mediaViewerStore.currentMediaType !== "image") return
+  if (aspectRatioNum.value && aspectRatioNum.value > 0) return
+  if (typeof window === "undefined") return
+  const id = mediaViewerStore.currentMediaId
+  if (!id) return
+  const cached = getCachedAspectRatio(id)
+  if (typeof cached === "number" && cached > 0) {
+    primeDimensionsFromMetadata({ id, aspectRatio: cached })
+    return
+  }
+  const src = mediaViewerStore.getCurrentMediaUrl()
+  if (!src) return
+  let cancelled = false
+  const probe = new Image()
+  probe.decoding = "async"
+  const finalize = () => {
+    if (cancelled) return
+    cancelAspectPrime = null
+    if (probe.naturalWidth && probe.naturalHeight) {
+      updateNaturalDimensions(probe.naturalWidth, probe.naturalHeight)
+    }
+  }
+  probe.onload = finalize
+  probe.onerror = () => {
+    if (cancelled) return
+    cancelAspectPrime = null
+  }
+  cancelAspectPrime = () => {
+    cancelled = true
+    probe.onload = null
+    probe.onerror = null
+  }
+  probe.src = src
+  if (typeof (probe as HTMLImageElement & { decode?: () => Promise<void> }).decode === "function") {
+    void (probe as HTMLImageElement & { decode: () => Promise<void> })
+      .decode()
+      .then(finalize)
+      .catch(() => {
+        /* ignore decode failure; rely on events */
+      })
+  }
 }
 
 function recalculateDisplayDimensions() {
@@ -877,7 +965,13 @@ function recalculateDisplayDimensions() {
     return
   }
 
-  if (!width || !height) return
+  if (!width || !height) {
+    const fallbackSize = Math.max(1, Math.round(Math.min(frameMaxWidth.value, maxHeight)))
+    displayDimensions.value = { width: fallbackSize, height: fallbackSize }
+    commitFrameWidth(fallbackSize, "expected")
+    scheduleStageMeasurement()
+    return
+  }
   const widthScale = maxWidth > 0 && width > 0 ? maxWidth / width : Number.POSITIVE_INFINITY
   const heightScale = maxHeight > 0 && height > 0 ? maxHeight / height : Number.POSITIVE_INFINITY
   const scaleCandidate = Math.min(widthScale, heightScale)
@@ -894,13 +988,23 @@ watch(frameMaxWidth, () => {
 })
 
 function primeDimensionsFromMetadata(media: any) {
-  const aspect = typeof media?.aspectRatio === "number" && media.aspectRatio > 0 ? media.aspectRatio : null
+  const id = (media?.id as string | undefined) ?? mediaViewerStore.currentMediaId
+  let aspect: number | undefined
+  if (typeof media?.aspectRatio === "number" && media.aspectRatio > 0) {
+    aspect = media.aspectRatio
+  } else {
+    aspect = parseAspectRatio(media?.aspectRatio)
+  }
+  if (!aspect) {
+    aspect = getCachedAspectRatio(id)
+  }
   if (!aspect) return
   const baseHeight = 1000
   const baseWidth = Math.max(1, aspect * baseHeight)
   naturalDimensions.value = { width: baseWidth, height: baseHeight }
   aspectRatioNum.value = aspect
   aspectRatio.value = `${baseWidth} / ${baseHeight}`
+  rememberAspectRatio(id, aspect)
   recalculateDisplayDimensions()
 }
 </script>

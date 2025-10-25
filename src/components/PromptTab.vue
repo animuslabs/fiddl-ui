@@ -165,6 +165,7 @@ import type { MediaType, UnifiedRequest } from "lib/types"
 import { useUserAuth } from "src/stores/userAuth"
 import { useCreateContextStore } from "src/stores/createContextStore"
 import MagicMirrorDialog from "src/components/MagicMirrorDialog.vue"
+import { extractAspectRatioFromMeta, getCachedAspectRatio, parseAspectRatio as parseAspectRatioValue, rememberAspectRatio } from "src/lib/aspectRatio"
 // Overlay Add-as-input handled inside MediaGallery when showUseAsInput is true
 export default defineComponent({
   name: "PromptTab",
@@ -418,23 +419,30 @@ export default defineComponent({
             requestType: (req.type as MediaType | undefined) || mediaType,
             isPublic: req.public,
             requestQuantity: req.quantity,
-            aspectRatio: this.parseAspectRatio(req.aspectRatio),
+            aspectRatio: this.resolveAspectRatio(req, id),
             nsfw,
           }
         })
       })
     },
-    parseAspectRatio(raw: unknown): number | undefined {
-      if (typeof raw === "number" && Number.isFinite(raw)) return raw
-      if (typeof raw !== "string" || !raw.length) return undefined
-      if (raw.includes(":")) {
-        const parts = raw.split(":").map((x) => Number.parseFloat(x))
-        const [w = Number.NaN, h = Number.NaN] = parts
-        if (Number.isFinite(w) && Number.isFinite(h) && h !== 0) return w / h
-        return undefined
+    resolveAspectRatio(req: UnifiedRequest, mediaId: string): number | undefined {
+      const direct = parseAspectRatioValue(req.aspectRatio)
+      if (typeof direct === "number") {
+        rememberAspectRatio(mediaId, direct)
+        return direct
       }
-      const parsed = Number.parseFloat(raw)
-      return Number.isFinite(parsed) ? parsed : undefined
+
+      const meta = (req as unknown as { meta?: unknown }).meta
+      const metaRatio = extractAspectRatioFromMeta(meta)
+      if (typeof metaRatio === "number") {
+        rememberAspectRatio(mediaId, metaRatio)
+        return metaRatio
+      }
+
+      const cached = getCachedAspectRatio(mediaId)
+      if (typeof cached === "number") return cached
+
+      return undefined
     },
     isImageCreations(store: any): store is ReturnType<typeof useImageCreations> {
       return "filter" in store && "customModelId" in store.filter

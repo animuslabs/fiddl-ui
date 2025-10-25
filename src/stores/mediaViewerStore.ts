@@ -6,6 +6,7 @@ import { img, s3Video } from "src/lib/netlifyImg"
 import { catchErr, isRateLimitError } from "src/lib/util"
 import { markOwned, isOwned } from "lib/ownedMediaCache"
 import { hdUrl } from "lib/imageCdn"
+import { getCachedAspectRatio, parseAspectRatio, rememberAspectRatio } from "lib/aspectRatio"
 import { useUserAuth } from "src/stores/userAuth"
 import { useCreatorStore } from "src/stores/creatorStore"
 
@@ -227,6 +228,20 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const isPlaceholder = (m: MediaGalleryMeta) => m?.placeholder === true || (typeof m?.id === "string" && m.id.startsWith("pending-"))
 
       const filtered = mediaObjects.filter((m) => !isPlaceholder(m))
+
+      for (const media of filtered) {
+        if (!media?.id) continue
+        const numericAspect = typeof media.aspectRatio === "number" && Number.isFinite(media.aspectRatio) && media.aspectRatio > 0 ? media.aspectRatio : parseAspectRatio((media as unknown as { aspectRatio?: unknown }).aspectRatio)
+        if (typeof numericAspect === "number") {
+          media.aspectRatio = numericAspect
+          rememberAspectRatio(media.id, numericAspect)
+        } else {
+          const cached = getCachedAspectRatio(media.id)
+          if (typeof cached === "number") {
+            media.aspectRatio = cached
+          }
+        }
+      }
 
       // Derive the intended starting media by id, then remap to filtered list
       const idHint = startId || mediaObjects?.[startIndex]?.id

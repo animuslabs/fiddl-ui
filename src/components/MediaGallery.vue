@@ -21,6 +21,7 @@ import { prices } from "stores/pricesStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useCreateImageStore } from "src/stores/createImageStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
+import { getCachedAspectRatio, rememberAspectRatio } from "lib/aspectRatio"
 
 export type { MediaGalleryMeta }
 
@@ -1062,7 +1063,12 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
       const type: "image" | "video" = derived === "video" ? "video" : "image"
       const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
       const fallbackAspect = type === "video" ? 16 / 9 : 1
-      const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (item.aspectRatio ?? fallbackAspect)
+      const cachedAspect = getCachedAspectRatio(item.id)
+      const baseAspect = typeof item.aspectRatio === "number" ? item.aspectRatio : cachedAspect
+      if (!isPlaceholder && typeof baseAspect === "number" && baseAspect > 0) {
+        rememberAspectRatio(item.id, baseAspect)
+      }
+      const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (baseAspect ?? fallbackAspect)
       // Initialize progressive target/current sizes for images
       if (type === "image") initImageProgressState(item.id, item.url)
       return { ...item, type, aspectRatio }
@@ -1174,6 +1180,7 @@ function markVideoLoaded(id: string) {
           delete layoutSpans.value[id]
         }
         item.aspectRatio = realAspect
+        rememberAspectRatio(id, realAspect)
       }
     }
   }
@@ -1192,17 +1199,18 @@ function markImageLoaded(id: string) {
   if (im && im.naturalWidth && im.naturalHeight) {
     const realAspect = im.naturalWidth / im.naturalHeight
     const item = galleryItems.value.find((i) => i.id === id)
-    if (item) {
-      const prev = item.aspectRatio
-      // Clear cached mosaic row/col spans when the real aspect arrives so the
-      // grid can reflow and reveal the full image height on mobile.
-      if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
-        delete layoutSpans.value[id]
+      if (item) {
+        const prev = item.aspectRatio
+        // Clear cached mosaic row/col spans when the real aspect arrives so the
+        // grid can reflow and reveal the full image height on mobile.
+        if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
+          delete layoutSpans.value[id]
+        }
+        item.aspectRatio = realAspect
+        rememberAspectRatio(id, realAspect)
       }
-      item.aspectRatio = realAspect
     }
   }
-}
 
 function markImageErrored(id: string) {
   const item = galleryItems.value.find((i) => i.id === id)
