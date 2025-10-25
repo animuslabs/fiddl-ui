@@ -639,37 +639,37 @@
                       div.text-caption.text-grey-5(v-if="selectedEmailLog.user") Recipient · {{ emailUserLabel(selectedEmailLog.user) }}
                     q-space
                     .column.items-end.q-gutter-xs
-          q-btn-group(flat unelevated class="theme-toggle")
-            q-btn(
-              size="sm"
-              :color="emailPreviewTheme === 'exact' ? 'primary' : 'grey-7'"
-              text-color="white"
-              icon="mail"
-              round
-              dense
-              @click="emailPreviewTheme = 'exact'"
-            )
-              q-tooltip(anchor="top middle" self="bottom middle") Exact email
-            q-btn(
-              size="sm"
-              :color="emailPreviewTheme === 'light' ? 'primary' : 'grey-7'"
-              text-color="white"
-              icon="light_mode"
-              round
-              dense
-              @click="emailPreviewTheme = 'light'"
-            )
-              q-tooltip(anchor="top middle" self="bottom middle") Light theme
-            q-btn(
-              size="sm"
-              :color="emailPreviewTheme === 'dark' ? 'primary' : 'grey-7'"
-              text-color="white"
-              icon="dark_mode"
-              round
-              dense
-              @click="emailPreviewTheme = 'dark'"
-            )
-              q-tooltip(anchor="top middle" self="bottom middle") Dark theme
+                      q-btn-group(flat unelevated class="theme-toggle")
+                        q-btn(
+                          size="sm"
+                          :color="emailPreviewTheme === 'exact' ? 'primary' : 'grey-7'"
+                          text-color="white"
+                          icon="mail"
+                          round
+                          dense
+                          @click="emailPreviewTheme = 'exact'"
+                        )
+                          q-tooltip(anchor="top middle" self="bottom middle") Exact email
+                        q-btn(
+                          size="sm"
+                          :color="emailPreviewTheme === 'light' ? 'primary' : 'grey-7'"
+                          text-color="white"
+                          icon="light_mode"
+                          round
+                          dense
+                          @click="emailPreviewTheme = 'light'"
+                        )
+                          q-tooltip(anchor="top middle" self="bottom middle") Light theme
+                        q-btn(
+                          size="sm"
+                          :color="emailPreviewTheme === 'dark' ? 'primary' : 'grey-7'"
+                          text-color="white"
+                          icon="dark_mode"
+                          round
+                          dense
+                          @click="emailPreviewTheme = 'dark'"
+                        )
+                          q-tooltip(anchor="top middle" self="bottom middle") Dark theme
                       q-btn(
                         flat
                         dense
