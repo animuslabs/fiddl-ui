@@ -310,6 +310,7 @@ q-page.full-height.full-width.admin-page
       q-input(v-model="paymentsStart" type="datetime-local" label="Start" dense outlined clearable style="min-width:220px")
       q-input(v-model="paymentsEnd" type="datetime-local" label="End" dense outlined clearable style="min-width:220px")
       q-space
+      q-btn(color="primary" icon="download" label="Export CSV" @click="exportPaymentsCsv" :loading="paymentsExporting")
       q-btn(icon="refresh" flat @click="refetchPayments" :loading="paymentsFetching")
     q-table(
       :rows="paymentsRows"
@@ -684,6 +685,7 @@ import {
   useAdminListUsers,
   useAdminBanUser,
   useAdminListPayments,
+  adminListPayments,
   creationsDescribeUploadedImage,
   adminListUsers,
   adminDiscountCodesList,
@@ -699,6 +701,9 @@ import {
   AdminAttributionGroupsSortDir,
   type AdminListUsersSortBy,
   type AdminListUsersSortDir,
+  type AdminListPaymentsMethod,
+  type AdminListPaymentsParams,
+  type AdminListPayments200ItemsItem,
 } from "src/lib/orval"
 import QRCode from "qrcode"
 import axios from "axios"
@@ -1013,6 +1018,134 @@ export default defineComponent({
       },
       { immediate: true },
     )
+
+    // Export payments to CSV using adminListPayments (orval)
+    const paymentsExporting = ref(false)
+    async function exportPaymentsCsv() {
+      if (paymentsExporting.value) return
+      paymentsExporting.value = true
+      try {
+        const baseParams: AdminListPaymentsParams = {
+          userId: paymentsUserId.value?.trim() ? paymentsUserId.value.trim() : undefined,
+          method: (paymentsMethod.value || undefined) as AdminListPaymentsMethod | undefined,
+          status: paymentsStatus.value || undefined,
+          startDateTime: paymentsStart.value ? new Date(paymentsStart.value).toISOString() : undefined,
+          endDateTime: paymentsEnd.value ? new Date(paymentsEnd.value).toISOString() : undefined,
+        }
+
+        const pageSize = 1000
+        let offset = 0
+        let total = 0
+        const all: AdminListPayments200ItemsItem[] = []
+
+        for (;;) {
+          const res = await adminListPayments({ ...baseParams, limit: pageSize, offset })
+          const data = res?.data
+          const items = Array.isArray(data?.items) ? data.items : []
+          total = Number(data?.total || items.length || 0)
+          all.push(...items)
+          offset += items.length
+          if (items.length === 0 || all.length >= total) break
+        }
+
+        const headers = [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "method",
+          "status",
+          "amountUsd",
+          "points",
+          "discountCode",
+          "discountPercent",
+          "discountAmountUsd",
+          "userId",
+          "username",
+          "email",
+          "telegramId",
+          "telegramName",
+          "packagePoints",
+          "packageUsd",
+          "packageDiscountPct",
+          "orderID",
+          "transactionId",
+          "currency",
+          "chainName",
+          "tokenType",
+          "tokenAmount",
+          "stars",
+          "destWallet",
+          "senderWallet",
+          "memo",
+        ] as const
+
+        const rows = all.map((row) => {
+          const discount = paymentDiscountInfo(row as any)
+          return {
+            createdAt: row.createdAt || "",
+            updatedAt: row.updatedAt || "",
+            id: row.id || "",
+            method: row.method || "",
+            status: row.status || "",
+            amountUsd: row.amountUsd ?? "",
+            points: row.points ?? "",
+            discountCode: row.discountCode ?? discount?.code ?? "",
+            discountPercent: discount?.percent ?? "",
+            discountAmountUsd: discount?.amountUsd ?? "",
+            userId: row.user?.id || "",
+            username: row.user?.username || "",
+            email: row.user?.email || "",
+            telegramId: row.user?.telegramId || "",
+            telegramName: row.user?.telegramName || "",
+            packagePoints: row.package?.points ?? "",
+            packageUsd: row.package?.usd ?? "",
+            packageDiscountPct: row.package?.discountPct ?? "",
+            orderID: row.details?.orderID || "",
+            transactionId: row.details?.transactionId || "",
+            currency: row.details?.currency || "",
+            chainName: row.details?.chainName || "",
+            tokenType: row.details?.tokenType || "",
+            tokenAmount: row.details?.tokenAmount ?? "",
+            stars: row.details?.stars ?? "",
+            destWallet: row.details?.destWallet || "",
+            senderWallet: row.details?.senderWallet || "",
+            memo: row.details?.memo || "",
+          }
+        })
+
+        const escapeCsv = (val: unknown): string => {
+          const s = val == null ? "" : String(val)
+          const needsQuotes = /[",\n]/.test(s)
+          const escaped = s.replace(/"/g, '""')
+          return needsQuotes ? `"${escaped}"` : escaped
+        }
+
+        let csv = headers.join(",") + "\n"
+        for (const r of rows) {
+          csv += headers.map((h) => escapeCsv((r as any)[h])).join(",") + "\n"
+        }
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        const ts = new Date()
+        const fn = `payments-${ts.getFullYear()}${String(ts.getMonth() + 1).padStart(2, "0")}${String(ts.getDate()).padStart(2, "0")}-${String(ts.getHours()).padStart(2, "0")}${String(ts.getMinutes()).padStart(2, "0")}${String(ts.getSeconds()).padStart(2, "0")}.csv`
+        a.href = url
+        a.download = fn
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        Notify.create({ message: `Exported ${rows.length.toLocaleString()} payments`, color: "positive", icon: "file_download" })
+      } catch (error) {
+        console.warn("exportPaymentsCsv failed", error)
+        catchErr(error)
+        Notify.create({ message: "Export failed", color: "negative" })
+      } finally {
+        paymentsExporting.value = false
+      }
+    }
 
     function mergeAttribHints(userId: string, extraHints: string[] = []): { hints: string[]; added: boolean } {
       const current = attribSearchHints.value[userId] || []
@@ -2042,6 +2175,8 @@ export default defineComponent({
       paymentsStatusOptions,
       refetchPayments,
       onPaymentsRequest,
+      paymentsExporting,
+      exportPaymentsCsv,
       statusColor,
       labelById,
       userDisplay,
