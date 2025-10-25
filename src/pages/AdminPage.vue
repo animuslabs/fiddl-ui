@@ -238,12 +238,37 @@ q-page.full-height.full-width.admin-page
         template(#body-cell-amount="props")
           q-td(:props="props") ${{ (props.row.amount || 0).toFixed(2) }}
     div(v-if="tab == 'users'").q-pa-sm
-      .row.items-center.q-gutter-sm.q-mb-sm
-        q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
-        q-toggle(v-model="includeBanned" label="Include banned" dense)
-        q-space
-        q-btn(color="primary" icon="download" label="Export CSV" @click="exportUsersCsv" :loading="usersExporting")
-        q-btn(icon="refresh" flat @click="refetchUsers" :loading="usersFetching")
+      .row.items-center.q-col-gutter-sm.q-mb-sm
+        .col-12.col-sm-auto
+          q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
+        .col-auto
+          q-toggle(v-model="includeBanned" label="Include banned" dense)
+        .col-auto
+          q-toggle(v-model="filterOnlyBanned" label="Only banned" dense)
+        .col-auto
+          q-toggle(v-model="filterAdminOnly" label="Admins only" dense)
+        .col-12.col-sm-auto
+          q-input(v-model.number="filterMinSpent" type="number" dense outlined label="Min Spent" input-style="font-size:16px;" inputmode="numeric" style="min-width:140px")
+        .col-12.col-sm-auto
+          q-input(v-model.number="filterMaxSpent" type="number" dense outlined label="Max Spent" input-style="font-size:16px;" inputmode="numeric" style="min-width:140px")
+        .col-12.col-sm-auto
+          q-input(v-model.number="filterMinAvail" type="number" dense outlined label="Min Avail" input-style="font-size:16px;" inputmode="numeric" style="min-width:140px")
+        .col-12.col-sm-auto
+          q-input(v-model.number="filterMaxAvail" type="number" dense outlined label="Max Avail" input-style="font-size:16px;" inputmode="numeric" style="min-width:140px")
+        .col-12.col-sm-auto
+          q-input(v-model="filterCreatedStart" type="datetime-local" label="Created Start" dense outlined clearable style="min-width:220px")
+        .col-12.col-sm-auto
+          q-input(v-model="filterCreatedEnd" type="datetime-local" label="Created End" dense outlined clearable style="min-width:220px")
+        .col-12.col-sm-auto
+          q-input(v-model="filterActiveStart" type="datetime-local" label="Active Start" dense outlined clearable style="min-width:220px")
+        .col-12.col-sm-auto
+          q-input(v-model="filterActiveEnd" type="datetime-local" label="Active End" dense outlined clearable style="min-width:220px")
+        .col-auto
+          q-space
+        .col-auto
+          q-btn(color="primary" icon="download" label="Export CSV" @click="exportUsersCsv" :loading="usersExporting")
+        .col-auto
+          q-btn(icon="refresh" flat @click="refetchUsers" :loading="usersFetching")
       q-table(
         :rows="usersRows"
         :columns="userColumns"
@@ -727,6 +752,17 @@ export default defineComponent({
     const router = useRouter()
     const userSearch = ref("")
     const includeBanned = ref(false)
+    // Additional users tab filters
+    const filterOnlyBanned = ref(false)
+    const filterAdminOnly = ref(false)
+    const filterMinSpent = ref<number | null>(null)
+    const filterMaxSpent = ref<number | null>(null)
+    const filterMinAvail = ref<number | null>(null)
+    const filterMaxAvail = ref<number | null>(null)
+    const filterCreatedStart = ref<string | null>(null)
+    const filterCreatedEnd = ref<string | null>(null)
+    const filterActiveStart = ref<string | null>(null)
+    const filterActiveEnd = ref<string | null>(null)
 
     const usersPagination = ref({
       sortBy: "spentPoints",
@@ -760,7 +796,7 @@ export default defineComponent({
           limit: limit.value,
           offset: offset.value,
           search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
-          includeBanned: includeBanned.value ? true : undefined,
+          includeBanned: includeBanned.value || filterOnlyBanned.value ? true : undefined,
           sortBy,
           sortDir,
         }
@@ -773,10 +809,33 @@ export default defineComponent({
     const usersQuery = useAdminListUsers(params)
     const usersRows = computed(() => {
       const rows = usersQuery.data?.value?.data?.users || []
+      // Apply client-side filters
+      const createdStartTs = filterCreatedStart.value ? new Date(filterCreatedStart.value).getTime() : null
+      const createdEndTs = filterCreatedEnd.value ? new Date(filterCreatedEnd.value).getTime() : null
+      const activeStartTs = filterActiveStart.value ? new Date(filterActiveStart.value).getTime() : null
+      const activeEndTs = filterActiveEnd.value ? new Date(filterActiveEnd.value).getTime() : null
+
+      let filtered = rows.filter((row: any) => {
+        if (filterOnlyBanned.value && !row?.banned) return false
+        if (filterAdminOnly.value && !row?.admin) return false
+        const spent = Number(row?.spentPoints ?? 0)
+        const avail = Number(row?.availablePoints ?? 0)
+        if (filterMinSpent.value != null && spent < Number(filterMinSpent.value)) return false
+        if (filterMaxSpent.value != null && spent > Number(filterMaxSpent.value)) return false
+        if (filterMinAvail.value != null && avail < Number(filterMinAvail.value)) return false
+        if (filterMaxAvail.value != null && avail > Number(filterMaxAvail.value)) return false
+        const createdAtTs = row?.createdAt ? new Date(row.createdAt).getTime() : null
+        if (createdStartTs != null && (createdAtTs == null || createdAtTs < createdStartTs)) return false
+        if (createdEndTs != null && (createdAtTs == null || createdAtTs > createdEndTs)) return false
+        const lastActiveTs = row?.lastActiveAt ? new Date(row.lastActiveAt).getTime() : null
+        if (activeStartTs != null && (lastActiveTs == null || lastActiveTs < activeStartTs)) return false
+        if (activeEndTs != null && (lastActiveTs == null || lastActiveTs > activeEndTs)) return false
+        return true
+      })
       const sortBy = usersPagination.value.sortBy || "spentPoints"
       const apiSortable = new Set(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"]) as Set<string>
       // If server supports this sort, trust server order
-      if (apiSortable.has(sortBy)) return rows
+      if (apiSortable.has(sortBy)) return filtered
 
       // Otherwise, sort locally within the current page
       const desc = !!usersPagination.value.descending
@@ -819,7 +878,7 @@ export default defineComponent({
             return row[sortBy]
         }
       }
-      return rows.slice().sort((a: any, b: any) => {
+      return filtered.slice().sort((a: any, b: any) => {
         const av = val(a)
         const bv = val(b)
         let cmp = 0
@@ -867,15 +926,38 @@ export default defineComponent({
           if (users.length === 0 || all.length >= total) break
         }
 
+        // Apply same client-side filters as the table
+        const createdStartTs = filterCreatedStart.value ? new Date(filterCreatedStart.value).getTime() : null
+        const createdEndTs = filterCreatedEnd.value ? new Date(filterCreatedEnd.value).getTime() : null
+        const activeStartTs = filterActiveStart.value ? new Date(filterActiveStart.value).getTime() : null
+        const activeEndTs = filterActiveEnd.value ? new Date(filterActiveEnd.value).getTime() : null
+        const filteredAll = all.filter((row: any) => {
+          if (filterOnlyBanned.value && !row?.banned) return false
+          if (filterAdminOnly.value && !row?.admin) return false
+          const spent = Number(row?.spentPoints ?? 0)
+          const avail = Number(row?.availablePoints ?? 0)
+          if (filterMinSpent.value != null && spent < Number(filterMinSpent.value)) return false
+          if (filterMaxSpent.value != null && spent > Number(filterMaxSpent.value)) return false
+          if (filterMinAvail.value != null && avail < Number(filterMinAvail.value)) return false
+          if (filterMaxAvail.value != null && avail > Number(filterMaxAvail.value)) return false
+          const createdAtTs = row?.createdAt ? new Date(row.createdAt).getTime() : null
+          if (createdStartTs != null && (createdAtTs == null || createdAtTs < createdStartTs)) return false
+          if (createdEndTs != null && (createdAtTs == null || createdAtTs > createdEndTs)) return false
+          const lastActiveTs = row?.lastActiveAt ? new Date(row.lastActiveAt).getTime() : null
+          if (activeStartTs != null && (lastActiveTs == null || lastActiveTs < activeStartTs)) return false
+          if (activeEndTs != null && (lastActiveTs == null || lastActiveTs > activeEndTs)) return false
+          return true
+        })
+
         // Resolve primary attribution source per user with light concurrency
         const primarySourceCache: Record<string, string> = { ...attribSourceByUserId.value }
         const concurrency = 6
         let idx = 0
 
         const worker = async () => {
-          while (idx < all.length) {
+          while (idx < filteredAll.length) {
             const i = idx++
-            const row = all[i]
+            const row = filteredAll[i]
             if (!row || !row.id || primarySourceCache[row.id]) continue
             const hints = collectUserAttribHints(row)
             let resolved: string | null = null
@@ -931,7 +1013,7 @@ export default defineComponent({
           "attribSource",
         ] as const
 
-        const rows = all.map((u) => ({
+        const rows = filteredAll.map((u) => ({
           id: u.id || "",
           username: u.profile?.username || "",
           email: u.profile?.email || "",
@@ -1055,9 +1137,12 @@ export default defineComponent({
       },
       { immediate: true },
     )
-    watch([userSearch, includeBanned], () => {
+    watch([userSearch, includeBanned, filterOnlyBanned], () => {
       usersPagination.value.page = 1
       refetchUsers()
+    })
+    watch([filterAdminOnly, filterMinSpent, filterMaxSpent, filterMinAvail, filterMaxAvail, filterCreatedStart, filterCreatedEnd, filterActiveStart, filterActiveEnd], () => {
+      usersPagination.value.page = 1
     })
 
     // Payments tab
@@ -2340,6 +2425,17 @@ export default defineComponent({
       exportUsersCsv,
       confirmBan,
       onUsersRequest,
+      // users filters
+      filterOnlyBanned,
+      filterAdminOnly,
+      filterMinSpent,
+      filterMaxSpent,
+      filterMinAvail,
+      filterMaxAvail,
+      filterCreatedStart,
+      filterCreatedEnd,
+      filterActiveStart,
+      filterActiveEnd,
       attribSourceByUserId,
       attribLoading,
       attribSearchHints,
