@@ -1,5 +1,6 @@
 <template lang="pug">
 MediaViewerControls(
+  :key="controlsKey"
   :allowDelete="allowDelete"
   :downloadMode="downloadMode"
   :initialCommentId="initialCommentId"
@@ -129,6 +130,7 @@ const hdRef = ref<HTMLVideoElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const mediaStageRef = ref<HTMLElement | null>(null)
 const mediaWidth = ref(0)
+const controlsKey = ref(0)
 let stageObserver: ResizeObserver | null = null
 const naturalDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const displayDimensions = ref<{ width: number; height: number }>({ width: 0, height: 0 })
@@ -189,6 +191,7 @@ function commitFrameWidth(width: number, source: "expected" | "measured" = "meas
 }
 
 const previewReady = ref(false)
+const heightClampedToViewport = ref(false)
 const METADATA_RETRY_LIMIT = 5
 const METADATA_RETRY_DELAY_MS = 120
 let metadataRetryHandle: number | null = null
@@ -230,7 +233,7 @@ const imageStageStyle = computed(() => {
   if (aspectRatio.value) {
     style.aspectRatio = aspectRatio.value
   } else if (displayDimensions.value.height > 0) {
-    style.height = `${displayDimensions.value.height}px`
+    style.height = heightClampedToViewport.value ? stageHeight.value : `${displayDimensions.value.height}px`
   } else {
     style.height = stageHeight.value
   }
@@ -247,7 +250,7 @@ const videoStageStyle = computed(() => {
   if (aspectRatio.value) {
     style.aspectRatio = aspectRatio.value
   } else if (displayDimensions.value.height > 0) {
-    style.height = `${displayDimensions.value.height}px`
+    style.height = heightClampedToViewport.value ? stageHeight.value : `${displayDimensions.value.height}px`
   } else {
     style.height = stageHeight.value
   }
@@ -669,6 +672,7 @@ watch(
           forcedRecalcTimer = null
           recalculateDisplayDimensions()
           scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+          controlsKey.value += 1
         }, 500)
       }
       return // Skip initial load (handled by parent)
@@ -821,6 +825,7 @@ onMounted(() => {
       forcedRecalcTimer = null
       recalculateDisplayDimensions()
       scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+      controlsKey.value += 1
     }, 500)
   }
 })
@@ -849,6 +854,10 @@ onBeforeUnmount(() => {
   clearMetadataRetry()
   resetMeasurementRetry()
   cancelPendingAspectPrime()
+  if (typeof window !== 'undefined' && forcedRecalcTimer != null) {
+    window.clearTimeout(forcedRecalcTimer)
+    forcedRecalcTimer = null
+  }
   if (removeViewportResizeListeners) {
     removeViewportResizeListeners()
   }
@@ -935,11 +944,13 @@ function recalculateDisplayDimensions() {
       const baseW = Math.round(baseH * ratio)
       displayDimensions.value = { width: baseW, height: baseH }
       commitFrameWidth(baseW, "expected")
+      heightClampedToViewport.value = false
       return
     }
     if (!width || !height) return
     displayDimensions.value = { width, height }
     commitFrameWidth(width, "expected")
+    heightClampedToViewport.value = false
     return
   }
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -955,9 +966,11 @@ function recalculateDisplayDimensions() {
     if (widthIfMaxHeight > maxWidth) {
       displayWidth = Math.max(1, Math.round(maxWidth))
       displayHeight = Math.max(1, Math.round(displayWidth / ratio))
+      heightClampedToViewport.value = false
     } else {
       displayHeight = Math.max(1, Math.round(maxHeight))
       displayWidth = Math.max(1, Math.round(displayHeight * ratio))
+      heightClampedToViewport.value = true
     }
     displayDimensions.value = { width: displayWidth, height: displayHeight }
     commitFrameWidth(displayWidth, "expected")
@@ -969,6 +982,7 @@ function recalculateDisplayDimensions() {
     const fallbackSize = Math.max(1, Math.round(Math.min(frameMaxWidth.value, maxHeight)))
     displayDimensions.value = { width: fallbackSize, height: fallbackSize }
     commitFrameWidth(fallbackSize, "expected")
+    heightClampedToViewport.value = false
     scheduleStageMeasurement()
     return
   }
@@ -980,6 +994,8 @@ function recalculateDisplayDimensions() {
   const displayHeight = Math.max(1, Math.round(height * scale))
   displayDimensions.value = { width: displayWidth, height: displayHeight }
   commitFrameWidth(displayWidth, "expected")
+  // If the limiting factor was height, flag so the wrapper uses dvh instead of px
+  heightClampedToViewport.value = heightScale <= widthScale
   scheduleStageMeasurement()
 }
 
