@@ -242,6 +242,7 @@ q-page.full-height.full-width.admin-page
         q-input(v-model="userSearch" debounce="400" placeholder="Search users..." dense outlined clearable style="min-width:240px")
         q-toggle(v-model="includeBanned" label="Include banned" dense)
         q-space
+        q-btn(color="primary" icon="download" label="Export CSV" @click="exportUsersCsv" :loading="usersExporting")
         q-btn(icon="refresh" flat @click="refetchUsers" :loading="usersFetching")
       q-table(
         :rows="usersRows"
@@ -704,6 +705,8 @@ import {
   type AdminListPaymentsMethod,
   type AdminListPaymentsParams,
   type AdminListPayments200ItemsItem,
+  type AdminListUsersParams,
+  type AdminListUsers200UsersItem,
 } from "src/lib/orval"
 import QRCode from "qrcode"
 import axios from "axios"
@@ -734,7 +737,8 @@ export default defineComponent({
 
     const limit = computed(() => {
       const rpp = usersPagination.value.rowsPerPage
-      return rpp === 0 ? 1000 : rpp
+      const desired = rpp === 0 ? 100 : rpp
+      return Math.min(desired, 100)
     })
     const offset = computed(() => {
       const rpp = usersPagination.value.rowsPerPage
@@ -833,6 +837,156 @@ export default defineComponent({
       usersPagination.value = props.pagination
       refetchUsers()
     }
+
+    // Export users to CSV (respects current filters) and includes primary attribution source
+    const usersExporting = ref(false)
+    async function exportUsersCsv() {
+      if (usersExporting.value) return
+      usersExporting.value = true
+      try {
+        const curr = params.value as AdminListUsersParams
+        const baseParams: AdminListUsersParams = {
+          search: curr?.search,
+          includeBanned: curr?.includeBanned,
+          sortBy: curr?.sortBy,
+          sortDir: curr?.sortDir,
+        }
+
+        const pageSize = 100
+        let offsetAll = 0
+        let total = 0
+        const all: AdminListUsers200UsersItem[] = []
+
+        for (;;) {
+          const res = await adminListUsers({ ...baseParams, limit: pageSize, offset: offsetAll })
+          const data = res?.data
+          const users = Array.isArray(data?.users) ? data.users : []
+          total = Number(data?.total || users.length || 0)
+          all.push(...users)
+          offsetAll += users.length
+          if (users.length === 0 || all.length >= total) break
+        }
+
+        // Resolve primary attribution source per user with light concurrency
+        const primarySourceCache: Record<string, string> = { ...attribSourceByUserId.value }
+        const concurrency = 6
+        let idx = 0
+
+        const worker = async () => {
+          while (idx < all.length) {
+            const i = idx++
+            const row = all[i]
+            if (!row || !row.id || primarySourceCache[row.id]) continue
+            const hints = collectUserAttribHints(row)
+            let resolved: string | null = null
+            for (const term of hints) {
+              if (!term) continue
+              try {
+                const { data } = await adminAttributionGroups({
+                  groupBy: AdminAttributionGroupsGroupBy.source,
+                  search: term,
+                  includeUnknown: true,
+                  limit: 5,
+                  offset: 0,
+                  orderBy: AdminAttributionGroupsOrderBy.users,
+                  sortDir: AdminAttributionGroupsSortDir.desc,
+                })
+                const items = Array.isArray(data?.items) ? data.items : []
+                if (items.length > 0) {
+                  const firstKnown = items.find((it) => typeof it?.key === "string" && (it.key as string).trim().length > 0)
+                  const fallback = items[0]
+                  resolved = (firstKnown?.key as string | null) || (fallback?.key as string | null) || resolved
+                  if (resolved && resolved !== "-") break
+                }
+              } catch {
+                // continue trying other terms
+              }
+            }
+            primarySourceCache[row.id] = resolved || "-"
+          }
+        }
+        const workers = Array.from({ length: concurrency }, () => worker())
+        await Promise.all(workers)
+
+        const headers = [
+          "id",
+          "username",
+          "email",
+          "telegramId",
+          "telegramName",
+          "createdAt",
+          "updatedAt",
+          "lastActiveAt",
+          "admin",
+          "banned",
+          "availablePoints",
+          "spentPoints",
+          "images",
+          "videos",
+          "imageRequests",
+          "videoRequests",
+          "imagePurchases",
+          "videoPurchases",
+          "wallets",
+          "attribSource",
+        ] as const
+
+        const rows = all.map((u) => ({
+          id: u.id || "",
+          username: u.profile?.username || "",
+          email: u.profile?.email || "",
+          telegramId: u.profile?.telegramId || "",
+          telegramName: u.profile?.telegramName || "",
+          createdAt: u.createdAt || "",
+          updatedAt: u.updatedAt || "",
+          lastActiveAt: u.lastActiveAt || "",
+          admin: u.admin ? "true" : "false",
+          banned: u.banned ? "true" : "false",
+          availablePoints: u.availablePoints ?? "",
+          spentPoints: u.spentPoints ?? "",
+          images: u.stats?.images ?? "",
+          videos: u.stats?.videos ?? "",
+          imageRequests: u.stats?.imageRequests ?? "",
+          videoRequests: u.stats?.videoRequests ?? "",
+          imagePurchases: u.stats?.imagePurchases ?? "",
+          videoPurchases: u.stats?.videoPurchases ?? "",
+          wallets: Array.isArray(u.wallets) ? u.wallets.join(" ") : "",
+          attribSource: primarySourceCache[u.id] || "-",
+        }))
+
+        const escapeCsv = (val: unknown): string => {
+          const s = val == null ? "" : String(val)
+          const needsQuotes = /[",\n]/.test(s)
+          const escaped = s.replace(/"/g, '""')
+          return needsQuotes ? `"${escaped}"` : escaped
+        }
+
+        let csv = headers.join(",") + "\n"
+        for (const r of rows) {
+          csv += headers.map((h) => escapeCsv((r as Record<string, unknown>)[h])).join(",") + "\n"
+        }
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        const ts = new Date()
+        const fn = `users-${ts.getFullYear()}${String(ts.getMonth() + 1).padStart(2, "0")}${String(ts.getDate()).padStart(2, "0")}-${String(ts.getHours()).padStart(2, "0")}${String(ts.getMinutes()).padStart(2, "0")}${String(ts.getSeconds()).padStart(2, "0")}.csv`
+        a.href = url
+        a.download = fn
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        Notify.create({ message: `Exported ${rows.length.toLocaleString()} users`, color: "positive", icon: "file_download" })
+      } catch (error) {
+        console.warn("exportUsersCsv failed", error)
+        catchErr(error)
+        Notify.create({ message: "Export failed", color: "negative" })
+      } finally {
+        usersExporting.value = false
+      }
+    }
     // Basic attribution source per user (lazy cached)
     const attribSourceByUserId = ref<Record<string, string>>({})
     const attribLoading = ref<Record<string, boolean>>({})
@@ -922,7 +1076,8 @@ export default defineComponent({
 
     const limit2 = computed(() => {
       const rpp = paymentsPagination.value.rowsPerPage
-      return rpp === 0 ? 1000 : rpp
+      const desired = rpp === 0 ? 100 : rpp
+      return Math.min(desired, 100)
     })
     const offset2 = computed(() => {
       const rpp = paymentsPagination.value.rowsPerPage
@@ -1033,7 +1188,7 @@ export default defineComponent({
           endDateTime: paymentsEnd.value ? new Date(paymentsEnd.value).toISOString() : undefined,
         }
 
-        const pageSize = 500
+        const pageSize = 100
         let offset = 0
         let total = 0
         const all: AdminListPayments200ItemsItem[] = []
@@ -1371,7 +1526,8 @@ export default defineComponent({
 
     const limit3 = computed(() => {
       const rpp = uploadsPagination.value.rowsPerPage
-      return rpp === 0 ? 1000 : rpp
+      const desired = rpp === 0 ? 100 : rpp
+      return Math.min(desired, 100)
     })
     const offset3 = computed(() => {
       const rpp = uploadsPagination.value.rowsPerPage
@@ -1392,37 +1548,79 @@ export default defineComponent({
       try {
         if (initial) uploadsLoading.value = true
         else uploadsFetching.value = true
-        const params: any = {
-          limit: limit3.value,
-          offset: offset3.value,
-          order: uploadsPagination.value.descending ? "desc" : "asc",
+        const buildParams = (limitVal: number, offsetVal: number) => {
+          const params: any = {
+            limit: limitVal,
+            offset: offsetVal,
+            order: uploadsPagination.value.descending ? "desc" : "asc",
+          }
+          if (uploadsAccount.value?.trim()) params.account = uploadsAccount.value.trim()
+          if (uploadsStart.value) params.startDateTime = new Date(uploadsStart.value).toISOString()
+          if (uploadsEnd.value) params.endDateTime = new Date(uploadsEnd.value).toISOString()
+          return params
         }
-        if (uploadsAccount.value?.trim()) params.account = uploadsAccount.value.trim()
-        if (uploadsStart.value) params.startDateTime = new Date(uploadsStart.value).toISOString()
-        if (uploadsEnd.value) params.endDateTime = new Date(uploadsEnd.value).toISOString()
-        // Prefer orval admin endpoint if available, fallback to raw axios
-        let data: any
-        try {
-          const mod: any = await import("src/lib/orval")
-          if (typeof mod.adminListUploadedImages === "function") {
-            const res = await mod.adminListUploadedImages(params)
-            data = res?.data
-          } else {
+
+        const chunk = 100
+        const wantAll = uploadsPagination.value.rowsPerPage === 0
+        const allItems: any[] = []
+
+        if (wantAll) {
+          let offset = 0
+          let total = 0
+          for (;;) {
+            const params = buildParams(chunk, offset)
+            // Prefer orval admin endpoint if available, fallback to raw axios
+            let data: any
+            try {
+              const mod: any = await import("src/lib/orval")
+              if (typeof mod.adminListUploadedImages === "function") {
+                const res = await mod.adminListUploadedImages(params)
+                data = res?.data
+              } else {
+                const res = await axios.get("/admin/listUploadedImages", { params })
+                data = res.data
+              }
+            } catch {
+              const res = await axios.get("/admin/listUploadedImages", { params })
+              data = res.data
+            }
+            const items = Array.isArray(data?.items) ? data.items : []
+            total = Number(data?.total || total || 0)
+            allItems.push(...items)
+            if (items.length < chunk || allItems.length >= total) break
+            offset += items.length
+          }
+          uploadsRows.value = allItems.map((it: any) => ({
+            id: it.id || it.imageId || it._id,
+            createdAt: it.createdAt || it.created_at || null,
+            user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+          }))
+          uploadsTotal.value = allItems.length
+        } else {
+          const params = buildParams(limit3.value, offset3.value)
+          // Prefer orval admin endpoint if available, fallback to raw axios
+          let data: any
+          try {
+            const mod: any = await import("src/lib/orval")
+            if (typeof mod.adminListUploadedImages === "function") {
+              const res = await mod.adminListUploadedImages(params)
+              data = res?.data
+            } else {
+              const res = await axios.get("/admin/listUploadedImages", { params })
+              data = res.data
+            }
+          } catch {
             const res = await axios.get("/admin/listUploadedImages", { params })
             data = res.data
           }
-        } catch (err) {
-          // last resort
-          const res = await axios.get("/admin/listUploadedImages", { params })
-          data = res.data
+          const items = Array.isArray(data?.items) ? data.items : []
+          uploadsRows.value = items.map((it: any) => ({
+            id: it.id || it.imageId || it._id,
+            createdAt: it.createdAt || it.created_at || null,
+            user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+          }))
+          uploadsTotal.value = Number(data?.total || uploadsRows.value.length || 0)
         }
-        const items = Array.isArray(data?.items) ? data.items : []
-        uploadsRows.value = items.map((it: any) => ({
-          id: it.id || it.imageId || it._id,
-          createdAt: it.createdAt || it.created_at || null,
-          user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
-        }))
-        uploadsTotal.value = Number(data?.total || uploadsRows.value.length || 0)
       } finally {
         uploadsLoading.value = false
         uploadsFetching.value = false
@@ -1541,7 +1739,8 @@ export default defineComponent({
 
     const tsetsLimit = computed(() => {
       const rpp = tsetsPagination.value.rowsPerPage
-      return rpp === 0 ? 1000 : rpp
+      const desired = rpp === 0 ? 100 : rpp
+      return Math.min(desired, 100)
     })
     const tsetsOffset = computed(() => {
       const rpp = tsetsPagination.value.rowsPerPage
@@ -1562,39 +1761,81 @@ export default defineComponent({
       try {
         if (initial) tsetsLoading.value = true
         else tsetsFetching.value = true
-        const params: any = {
-          limit: tsetsLimit.value,
-          offset: tsetsOffset.value,
-          order: tsetsPagination.value.descending ? "desc" : "asc",
+        const buildParams = (limitVal: number, offsetVal: number) => {
+          const params: any = {
+            limit: limitVal,
+            offset: offsetVal,
+            order: tsetsPagination.value.descending ? "desc" : "asc",
+          }
+          if (tsetsAccount.value?.trim()) params.account = tsetsAccount.value.trim()
+          if (tsetsStart.value) params.startDateTime = new Date(tsetsStart.value).toISOString()
+          if (tsetsEnd.value) params.endDateTime = new Date(tsetsEnd.value).toISOString()
+          return params
         }
-        if (tsetsAccount.value?.trim()) params.account = tsetsAccount.value.trim()
-        if (tsetsStart.value) params.startDateTime = new Date(tsetsStart.value).toISOString()
-        if (tsetsEnd.value) params.endDateTime = new Date(tsetsEnd.value).toISOString()
 
-        let data: any
-        try {
-          const mod: any = await import("src/lib/orval")
-          if (typeof mod.adminListTrainingSetThumbnails === "function") {
-            const res = await mod.adminListTrainingSetThumbnails(params)
-            data = res?.data
-          } else {
+        const chunk = 100
+        const wantAll = tsetsPagination.value.rowsPerPage === 0
+        const allItems: any[] = []
+
+        if (wantAll) {
+          let offset = 0
+          let total = 0
+          for (;;) {
+            const params = buildParams(chunk, offset)
+            let data: any
+            try {
+              const mod: any = await import("src/lib/orval")
+              if (typeof mod.adminListTrainingSetThumbnails === "function") {
+                const res = await mod.adminListTrainingSetThumbnails(params)
+                data = res?.data
+              } else {
+                const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
+                data = res.data
+              }
+            } catch {
+              const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
+              data = res.data
+            }
+            const items = Array.isArray(data?.items) ? data.items : []
+            total = Number(data?.total || total || 0)
+            allItems.push(...items)
+            if (items.length < chunk || allItems.length >= total) break
+            offset += items.length
+          }
+          tsetsRows.value = allItems.map((it: any) => ({
+            thumbnailId: it.thumbnailId || it.id || it._id,
+            trainingSetId: it.trainingSetId,
+            createdAt: it.createdAt || it.created_at || null,
+            url: it.url,
+            user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+          }))
+          tsetsTotal.value = allItems.length
+        } else {
+          const params = buildParams(tsetsLimit.value, tsetsOffset.value)
+          let data: any
+          try {
+            const mod: any = await import("src/lib/orval")
+            if (typeof mod.adminListTrainingSetThumbnails === "function") {
+              const res = await mod.adminListTrainingSetThumbnails(params)
+              data = res?.data
+            } else {
+              const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
+              data = res.data
+            }
+          } catch {
             const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
             data = res.data
           }
-        } catch {
-          const res = await axios.get("/admin/listTrainingSetThumbnails", { params })
-          data = res.data
+          const items = Array.isArray(data?.items) ? data.items : []
+          tsetsRows.value = items.map((it: any) => ({
+            thumbnailId: it.thumbnailId || it.id || it._id,
+            trainingSetId: it.trainingSetId,
+            createdAt: it.createdAt || it.created_at || null,
+            url: it.url,
+            user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
+          }))
+          tsetsTotal.value = Number(data?.total || tsetsRows.value.length || 0)
         }
-
-        const items = Array.isArray(data?.items) ? data.items : []
-        tsetsRows.value = items.map((it: any) => ({
-          thumbnailId: it.thumbnailId || it.id || it._id,
-          trainingSetId: it.trainingSetId,
-          createdAt: it.createdAt || it.created_at || null,
-          url: it.url,
-          user: it.user || { id: it.userId, username: it.username, email: it.email, telegramName: it.telegramName },
-        }))
-        tsetsTotal.value = Number(data?.total || tsetsRows.value.length || 0)
       } finally {
         tsetsLoading.value = false
         tsetsFetching.value = false
@@ -1868,7 +2109,7 @@ export default defineComponent({
     }
 
     async function ensurePayoutDetails(ids: string[], force = false) {
-      const unique = Array.from(new Set(ids.filter((id): id is string => typeof id === "string" && id))) as string[]
+      const unique = Array.from(new Set(ids.filter((id): id is string => typeof id === "string" && id.length > 0))) as string[]
       await Promise.all(
         unique.map(async (id) => {
           if (!force && payoutDetailsByUserId.value[id]) return
@@ -2095,6 +2336,8 @@ export default defineComponent({
       usersFetching,
       userColumns,
       refetchUsers,
+      usersExporting,
+      exportUsersCsv,
       confirmBan,
       onUsersRequest,
       attribSourceByUserId,
