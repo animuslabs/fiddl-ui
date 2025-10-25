@@ -3479,35 +3479,181 @@ export type AdminBanUser200 = {
   stats: AdminBanUser200Stats;
 };
 
-export type AdminListUsersParams = {
-limit?: number;
-offset?: number;
-search?: string;
-includeBanned?: boolean;
-sortBy?: AdminListUsersSortBy;
-sortDir?: AdminListUsersSortDir;
-};
-
-export type AdminListUsersSortBy = typeof AdminListUsersSortBy[keyof typeof AdminListUsersSortBy];
+export type AdminListUsersBodySortBy = typeof AdminListUsersBodySortBy[keyof typeof AdminListUsersBodySortBy];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AdminListUsersSortBy = {
+export const AdminListUsersBodySortBy = {
   lastActiveAt: 'lastActiveAt',
   spentPoints: 'spentPoints',
   availablePoints: 'availablePoints',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  source: 'source',
+  utmSource: 'utmSource',
+  utmMedium: 'utmMedium',
+  utmCampaign: 'utmCampaign',
+  countryCode: 'countryCode',
+  surveyResult: 'surveyResult',
+  attributionCreatedAt: 'attributionCreatedAt',
+  profileEmail: 'profileEmail',
+  profileUsername: 'profileUsername',
 } as const;
 
-export type AdminListUsersSortDir = typeof AdminListUsersSortDir[keyof typeof AdminListUsersSortDir];
+export type AdminListUsersBodySortDir = typeof AdminListUsersBodySortDir[keyof typeof AdminListUsersBodySortDir];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AdminListUsersSortDir = {
+export const AdminListUsersBodySortDir = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type AdminListUsersBodyFiltersAdmin = typeof AdminListUsersBodyFiltersAdmin[keyof typeof AdminListUsersBodyFiltersAdmin];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsersBodyFiltersAdmin = {
+  only: 'only',
+  exclude: 'exclude',
+} as const;
+
+export type AdminListUsersBodyFiltersBanned = typeof AdminListUsersBodyFiltersBanned[keyof typeof AdminListUsersBodyFiltersBanned];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsersBodyFiltersBanned = {
+  only: 'only',
+  exclude: 'exclude',
+} as const;
+
+export type AdminListUsersBodyFiltersCreatedAt = {
+  gte?: string;
+  lte?: string;
+};
+
+export type AdminListUsersBodyFiltersLastActiveAt = {
+  gte?: string;
+  lte?: string;
+};
+
+export type AdminListUsersBodyFiltersSpentPoints = {
+  gte?: number;
+  lte?: number;
+};
+
+export type AdminListUsersBodyFiltersAvailablePoints = {
+  gte?: number;
+  lte?: number;
+};
+
+export type AdminListUsersBodyFiltersAttributionSurveyResultsItem = typeof AdminListUsersBodyFiltersAttributionSurveyResultsItem[keyof typeof AdminListUsersBodyFiltersAttributionSurveyResultsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsersBodyFiltersAttributionSurveyResultsItem = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+export type AdminListUsersBodyFiltersAttribution = {
+  hasAttribution?: boolean;
+  /** @minLength 1 */
+  source?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  sources?: string[];
+  /** @minLength 1 */
+  utmSource?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  utmSources?: string[];
+  /** @minLength 1 */
+  utmMedium?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  utmMediums?: string[];
+  /** @minLength 1 */
+  utmCampaign?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  utmCampaigns?: string[];
+  /** @minLength 1 */
+  countryCode?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  countryCodes?: string[];
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  surveyResults?: AdminListUsersBodyFiltersAttributionSurveyResultsItem[];
+  /** @minLength 1 */
+  surveyResultOther?: string;
+  /** @minLength 1 */
+  referrerDomain?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  referrerDomains?: string[];
+  /** @minLength 1 */
+  landingDomain?: string;
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  landingDomains?: string[];
+  /** @minLength 1 */
+  search?: string;
+};
+
+export type AdminListUsersBodyFilters = {
+  admin?: AdminListUsersBodyFiltersAdmin;
+  banned?: AdminListUsersBodyFiltersBanned;
+  createdAt?: AdminListUsersBodyFiltersCreatedAt;
+  lastActiveAt?: AdminListUsersBodyFiltersLastActiveAt;
+  spentPoints?: AdminListUsersBodyFiltersSpentPoints;
+  availablePoints?: AdminListUsersBodyFiltersAvailablePoints;
+  hasWallet?: boolean;
+  hasPurchases?: boolean;
+  attribution?: AdminListUsersBodyFiltersAttribution;
+};
+
+export type AdminListUsersBody = {
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+  /** @minimum 0 */
+  offset?: number;
+  search?: string;
+  includeBanned?: boolean;
+  sortBy?: AdminListUsersBodySortBy;
+  sortDir?: AdminListUsersBodySortDir;
+  filters?: AdminListUsersBodyFilters;
+};
 
 /**
  * @nullable
@@ -3541,6 +3687,60 @@ export type AdminListUsers200UsersItemProfile = {
   privyId: string | null;
 } | null;
 
+/**
+ * @nullable
+ */
+export type AdminListUsers200UsersItemAttributionSurveyResult = typeof AdminListUsers200UsersItemAttributionSurveyResult[keyof typeof AdminListUsers200UsersItemAttributionSurveyResult] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminListUsers200UsersItemAttributionSurveyResult = {
+  reddit: 'reddit',
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  search: 'search',
+  friend: 'friend',
+  blog: 'blog',
+  discord: 'discord',
+  newsletter: 'newsletter',
+  other: 'other',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminListUsers200UsersItemAttribution = {
+  /** @nullable */
+  createdAt: string | null;
+  /** @nullable */
+  source: string | null;
+  /** @nullable */
+  countryCode: string | null;
+  /** @nullable */
+  surveyResult: AdminListUsers200UsersItemAttributionSurveyResult;
+  /** @nullable */
+  surveyResultOther: string | null;
+  /** @nullable */
+  utmSource: string | null;
+  /** @nullable */
+  utmMedium: string | null;
+  /** @nullable */
+  utmCampaign: string | null;
+  /** @nullable */
+  referrerUrl: string | null;
+  /** @nullable */
+  referrerDomain: string | null;
+  /** @nullable */
+  landingUrl: string | null;
+  /** @nullable */
+  landingDomain: string | null;
+  /** @nullable */
+  identifiers: string | null;
+} | null;
+
 export type AdminListUsers200UsersItemStats = {
   imageRequests: number;
   imageRequestsFinished: number;
@@ -3564,6 +3764,8 @@ export type AdminListUsers200UsersItem = {
   lastActiveAt: string;
   /** @nullable */
   profile: AdminListUsers200UsersItemProfile;
+  /** @nullable */
+  attribution: AdminListUsers200UsersItemAttribution;
   wallets: string[];
   stats: AdminListUsers200UsersItemStats;
 };
@@ -4161,6 +4363,8 @@ export type AdminDiscountCodesList200Item = {
   used: number;
   maximumUses: number;
   /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
@@ -4189,6 +4393,8 @@ export type AdminDiscountCodeCreate200 = {
   used: number;
   maximumUses: number;
   /** @nullable */
+  expiresAt: string | null;
+  /** @nullable */
   linkedUserId: string | null;
   totalUsdSpent: number;
   totalUsdSaved: number;
@@ -4216,6 +4422,8 @@ export type AdminDiscountCodeUpdate200 = {
   createdAt: string;
   used: number;
   maximumUses: number;
+  /** @nullable */
+  expiresAt: string | null;
   /** @nullable */
   linkedUserId: string | null;
   totalUsdSpent: number;
@@ -5078,6 +5286,8 @@ export type DiscountsMyCodes200Item = {
   createdAt: string;
   used: number;
   maximumUses: number;
+  /** @nullable */
+  expiresAt: string | null;
   /** @nullable */
   linkedUserId: string | null;
   totalUsdSpent: number;
@@ -8213,29 +8423,23 @@ export const adminBanUser = async (adminBanUserBody: AdminBanUserBody, options?:
 
 
 
-export const getAdminListUsersUrl = (params?: AdminListUsersParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getAdminListUsersUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
-    
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
+  
 
-  return stringifiedParams.length > 0 ? `/admin/listUsers?${stringifiedParams}` : `/admin/listUsers`
+  return `/admin/listUsers`
 }
 
-export const adminListUsers = async (params?: AdminListUsersParams, options?: RequestInit): Promise<AdminListUsers200> => {
+export const adminListUsers = async (adminListUsersBody: AdminListUsersBody, options?: RequestInit): Promise<AdminListUsers200> => {
   
-  return fetcher<AdminListUsers200>(getAdminListUsersUrl(params),
+  return fetcher<AdminListUsers200>(getAdminListUsersUrl(),
   {      
     ...options,
-    method: 'GET'
-    
-    
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminListUsersBody,)
   }
 );}
 

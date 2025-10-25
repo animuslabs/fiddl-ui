@@ -295,21 +295,14 @@ q-page.full-height.full-width.admin-page
         template(#body-cell-attribution="props")
           q-td(:props="props" class="no-wrap" style="white-space: nowrap;")
             .row.items-center.no-wrap.q-gutter-xs
-              q-chip(
-                size="sm"
-                color="grey-7"
-                text-color="white"
-                dense
-                v-if="attribSourceByUserId[props.row.id] && attribSourceByUserId[props.row.id] !== '-'"
-              ) {{ attribSourceByUserId[props.row.id] }}
+              q-chip(v-if="props.row.attribution?.source && props.row.attribution.source !== '-'" size="sm" color="grey-7" text-color="white" dense)
+                | {{ props.row.attribution?.source }}
               q-badge(v-else color="grey-5" text-color="black" label="-")
               q-btn(
                 size="sm"
                 icon="insights"
                 flat dense round
-                :disable="!canOpenAttrib(props.row.id)"
-                :loading="attribLoading[props.row.id] === true"
-                :title="attributionButtonTitle(props.row.id)"
+                :title="props.row.attribution?.source ? `Primary source: ${props.row.attribution.source}` : 'View attribution details'"
                 @click="openAttributionDialog(props.row)"
               )
         template(#body-cell-username="props")
@@ -708,7 +701,7 @@ import {
   promoCreatePromoCode,
   promoGetPromoCodes,
   promoDeletePromoCode,
-  useAdminListUsers,
+  // useAdminListUsers,
   useAdminBanUser,
   useAdminListPayments,
   adminListPayments,
@@ -725,12 +718,12 @@ import {
   AdminAttributionGroupsGroupBy,
   AdminAttributionGroupsOrderBy,
   AdminAttributionGroupsSortDir,
-  type AdminListUsersSortBy,
-  type AdminListUsersSortDir,
+  type AdminListUsersBody,
+  type AdminListUsersBodySortBy,
+  type AdminListUsersBodySortDir,
   type AdminListPaymentsMethod,
   type AdminListPaymentsParams,
   type AdminListPayments200ItemsItem,
-  type AdminListUsersParams,
   type AdminListUsers200UsersItem,
 } from "src/lib/orval"
 import QRCode from "qrcode"
@@ -783,119 +776,85 @@ export default defineComponent({
       return (page - 1) * rpp
     })
 
-    const params = computed({
-      get: () => {
-        // Map UI sort to API-supported sort fields
-        const apiSortable = new Set<AdminListUsersSortBy>(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"])
-        const currentSort = usersPagination.value.sortBy || "spentPoints"
-        const maybeSort = currentSort as AdminListUsersSortBy
-        const sortBy = apiSortable.has(maybeSort) ? maybeSort : undefined
-        const sortDir: AdminListUsersSortDir | undefined = sortBy ? (usersPagination.value.descending ? "desc" : "asc") : undefined
+    // Users list via new adminListUsers body (server filters + sorting)
+    const usersRows = ref<AdminListUsers200UsersItem[]>([])
+    const usersTotal = ref(0)
+    const usersLoading = ref(false)
+    const usersFetching = ref(false)
 
-        return {
-          limit: limit.value,
-          offset: offset.value,
-          search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
-          includeBanned: includeBanned.value || filterOnlyBanned.value ? true : undefined,
-          sortBy,
-          sortDir,
-        }
-      },
-      set: () => {
-        // read-only interface; setter present to satisfy MaybeRef typing
-      },
-    })
-
-    const usersQuery = useAdminListUsers(params)
-    const usersRows = computed(() => {
-      const rows = usersQuery.data?.value?.data?.users || []
-      // Apply client-side filters
-      const createdStartTs = filterCreatedStart.value ? new Date(filterCreatedStart.value).getTime() : null
-      const createdEndTs = filterCreatedEnd.value ? new Date(filterCreatedEnd.value).getTime() : null
-      const activeStartTs = filterActiveStart.value ? new Date(filterActiveStart.value).getTime() : null
-      const activeEndTs = filterActiveEnd.value ? new Date(filterActiveEnd.value).getTime() : null
-
-      let filtered = rows.filter((row: any) => {
-        if (filterOnlyBanned.value && !row?.banned) return false
-        if (filterAdminOnly.value && !row?.admin) return false
-        const spent = Number(row?.spentPoints ?? 0)
-        const avail = Number(row?.availablePoints ?? 0)
-        if (filterMinSpent.value != null && spent < Number(filterMinSpent.value)) return false
-        if (filterMaxSpent.value != null && spent > Number(filterMaxSpent.value)) return false
-        if (filterMinAvail.value != null && avail < Number(filterMinAvail.value)) return false
-        if (filterMaxAvail.value != null && avail > Number(filterMaxAvail.value)) return false
-        const createdAtTs = row?.createdAt ? new Date(row.createdAt).getTime() : null
-        if (createdStartTs != null && (createdAtTs == null || createdAtTs < createdStartTs)) return false
-        if (createdEndTs != null && (createdAtTs == null || createdAtTs > createdEndTs)) return false
-        const lastActiveTs = row?.lastActiveAt ? new Date(row.lastActiveAt).getTime() : null
-        if (activeStartTs != null && (lastActiveTs == null || lastActiveTs < activeStartTs)) return false
-        if (activeEndTs != null && (lastActiveTs == null || lastActiveTs > activeEndTs)) return false
-        return true
-      })
-      const sortBy = usersPagination.value.sortBy || "spentPoints"
-      const apiSortable = new Set(["lastActiveAt", "spentPoints", "availablePoints", "createdAt", "updatedAt"]) as Set<string>
-      // If server supports this sort, trust server order
-      if (apiSortable.has(sortBy)) return filtered
-
-      // Otherwise, sort locally within the current page
-      const desc = !!usersPagination.value.descending
-      const isDate = sortBy === "lastActiveAt" || sortBy === "createdAt"
-      const val = (row: any) => {
-        switch (sortBy) {
-          case "username":
-            return row.profile?.username || ""
-          case "email":
-            return row.profile?.email || ""
-          case "telegram":
-            return row.profile?.telegramName || row.profile?.telegramId || ""
-          case "availablePoints":
-            return row.availablePoints ?? 0
-          case "spentPoints":
-            return row.spentPoints ?? 0
-          case "images":
-            return row.stats?.images ?? 0
-          case "videos":
-            return row.stats?.videos ?? 0
-          case "imageRequests":
-            return row.stats?.imageRequests ?? 0
-          case "videoRequests":
-            return row.stats?.videoRequests ?? 0
-          case "imagePurchases":
-            return row.stats?.imagePurchases ?? 0
-          case "videoPurchases":
-            return row.stats?.videoPurchases ?? 0
-          case "wallets":
-            return row.wallets?.length ?? 0
-          case "banned":
-            return row.banned ? 1 : 0
-          case "admin":
-            return row.admin ? 1 : 0
-          case "lastActiveAt":
-            return row.lastActiveAt || ""
-          case "createdAt":
-            return row.createdAt || ""
-          default:
-            return row[sortBy]
-        }
+    const apiSortForUi = (ui: string): AdminListUsersBodySortBy | undefined => {
+      switch (ui) {
+        case 'username':
+          return 'profileUsername'
+        case 'email':
+          return 'profileEmail'
+        case 'attribution':
+          return 'source'
+        case 'availablePoints':
+          return 'availablePoints'
+        case 'spentPoints':
+          return 'spentPoints'
+        case 'lastActiveAt':
+          return 'lastActiveAt'
+        case 'createdAt':
+          return 'createdAt'
+        case 'updatedAt':
+          return 'updatedAt'
+        default:
+          return undefined
       }
-      return filtered.slice().sort((a: any, b: any) => {
-        const av = val(a)
-        const bv = val(b)
-        let cmp = 0
-        if (isDate) cmp = new Date(av || 0).getTime() - new Date(bv || 0).getTime()
-        else if (typeof av === "number" && typeof bv === "number") cmp = av - bv
-        else cmp = String(av ?? "").localeCompare(String(bv ?? ""))
-        return desc ? -cmp : cmp
-      })
-    })
-    const usersTotal = computed(() => usersQuery.data?.value?.data?.total || usersRows.value.length)
-    const usersLoading = usersQuery.isLoading
-    const usersFetching = usersQuery.isFetching
-    const refetchUsers = () => usersQuery.refetch()
+    }
+
+    function buildUsersBody(limitVal: number, offsetVal: number): AdminListUsersBody {
+      const uiSort = usersPagination.value.sortBy || 'spentPoints'
+      const sortBy = apiSortForUi(uiSort)
+      const sortDir: AdminListUsersBodySortDir | undefined = sortBy ? (usersPagination.value.descending ? 'desc' : 'asc') : undefined
+      const filters: AdminListUsersBody['filters'] = {}
+      if (filterAdminOnly.value) filters.admin = 'only'
+      if (filterOnlyBanned.value) filters.banned = 'only'
+      else if (!includeBanned.value) filters.banned = 'exclude'
+      if (filterMinSpent.value != null || filterMaxSpent.value != null) filters.spentPoints = { gte: filterMinSpent.value ?? undefined, lte: filterMaxSpent.value ?? undefined }
+      if (filterMinAvail.value != null || filterMaxAvail.value != null) filters.availablePoints = { gte: filterMinAvail.value ?? undefined, lte: filterMaxAvail.value ?? undefined }
+      if (filterCreatedStart.value || filterCreatedEnd.value) filters.createdAt = { gte: filterCreatedStart.value ? new Date(filterCreatedStart.value).toISOString() : undefined, lte: filterCreatedEnd.value ? new Date(filterCreatedEnd.value).toISOString() : undefined }
+      if (filterActiveStart.value || filterActiveEnd.value) filters.lastActiveAt = { gte: filterActiveStart.value ? new Date(filterActiveStart.value).toISOString() : undefined, lte: filterActiveEnd.value ? new Date(filterActiveEnd.value).toISOString() : undefined }
+
+      return {
+        limit: limitVal,
+        offset: offsetVal,
+        search: userSearch.value?.trim() ? userSearch.value.trim() : undefined,
+        includeBanned: includeBanned.value || filterOnlyBanned.value ? true : undefined,
+        sortBy,
+        sortDir,
+        filters,
+      }
+    }
+
+    async function fetchUsers(initial = false) {
+      try {
+        if (initial) usersLoading.value = true
+        else usersFetching.value = true
+        const body = buildUsersBody(limit.value, offset.value)
+        const res = await adminListUsers(body)
+        const data = res?.data
+        const rows = Array.isArray(data?.users) ? data.users : []
+        usersRows.value = rows
+        usersTotal.value = Number(data?.total || rows.length || 0)
+      } catch (error) {
+        catchErr(error)
+      } finally {
+        usersLoading.value = false
+        usersFetching.value = false
+      }
+    }
+
+    const refetchUsers = () => fetchUsers(false)
     const onUsersRequest = (props: OnRequestProps) => {
       usersPagination.value = props.pagination
-      refetchUsers()
+      void refetchUsers()
     }
+
+    // Initial load
+    void fetchUsers(true)
 
     // Export users to CSV (respects current filters) and includes primary attribution source
     const usersExporting = ref(false)
@@ -903,21 +862,14 @@ export default defineComponent({
       if (usersExporting.value) return
       usersExporting.value = true
       try {
-        const curr = params.value as AdminListUsersParams
-        const baseParams: AdminListUsersParams = {
-          search: curr?.search,
-          includeBanned: curr?.includeBanned,
-          sortBy: curr?.sortBy,
-          sortDir: curr?.sortDir,
-        }
-
         const pageSize = 100
         let offsetAll = 0
         let total = 0
         const all: AdminListUsers200UsersItem[] = []
 
         for (;;) {
-          const res = await adminListUsers({ ...baseParams, limit: pageSize, offset: offsetAll })
+          const body = buildUsersBody(pageSize, offsetAll)
+          const res = await adminListUsers(body)
           const data = res?.data
           const users = Array.isArray(data?.users) ? data.users : []
           total = Number(data?.total || users.length || 0)
@@ -925,70 +877,6 @@ export default defineComponent({
           offsetAll += users.length
           if (users.length === 0 || all.length >= total) break
         }
-
-        // Apply same client-side filters as the table
-        const createdStartTs = filterCreatedStart.value ? new Date(filterCreatedStart.value).getTime() : null
-        const createdEndTs = filterCreatedEnd.value ? new Date(filterCreatedEnd.value).getTime() : null
-        const activeStartTs = filterActiveStart.value ? new Date(filterActiveStart.value).getTime() : null
-        const activeEndTs = filterActiveEnd.value ? new Date(filterActiveEnd.value).getTime() : null
-        const filteredAll = all.filter((row: any) => {
-          if (filterOnlyBanned.value && !row?.banned) return false
-          if (filterAdminOnly.value && !row?.admin) return false
-          const spent = Number(row?.spentPoints ?? 0)
-          const avail = Number(row?.availablePoints ?? 0)
-          if (filterMinSpent.value != null && spent < Number(filterMinSpent.value)) return false
-          if (filterMaxSpent.value != null && spent > Number(filterMaxSpent.value)) return false
-          if (filterMinAvail.value != null && avail < Number(filterMinAvail.value)) return false
-          if (filterMaxAvail.value != null && avail > Number(filterMaxAvail.value)) return false
-          const createdAtTs = row?.createdAt ? new Date(row.createdAt).getTime() : null
-          if (createdStartTs != null && (createdAtTs == null || createdAtTs < createdStartTs)) return false
-          if (createdEndTs != null && (createdAtTs == null || createdAtTs > createdEndTs)) return false
-          const lastActiveTs = row?.lastActiveAt ? new Date(row.lastActiveAt).getTime() : null
-          if (activeStartTs != null && (lastActiveTs == null || lastActiveTs < activeStartTs)) return false
-          if (activeEndTs != null && (lastActiveTs == null || lastActiveTs > activeEndTs)) return false
-          return true
-        })
-
-        // Resolve primary attribution source per user with light concurrency
-        const primarySourceCache: Record<string, string> = { ...attribSourceByUserId.value }
-        const concurrency = 6
-        let idx = 0
-
-        const worker = async () => {
-          while (idx < filteredAll.length) {
-            const i = idx++
-            const row = filteredAll[i]
-            if (!row || !row.id || primarySourceCache[row.id]) continue
-            const hints = collectUserAttribHints(row)
-            let resolved: string | null = null
-            for (const term of hints) {
-              if (!term) continue
-              try {
-                const { data } = await adminAttributionGroups({
-                  groupBy: AdminAttributionGroupsGroupBy.source,
-                  search: term,
-                  includeUnknown: true,
-                  limit: 5,
-                  offset: 0,
-                  orderBy: AdminAttributionGroupsOrderBy.users,
-                  sortDir: AdminAttributionGroupsSortDir.desc,
-                })
-                const items = Array.isArray(data?.items) ? data.items : []
-                if (items.length > 0) {
-                  const firstKnown = items.find((it) => typeof it?.key === "string" && (it.key as string).trim().length > 0)
-                  const fallback = items[0]
-                  resolved = (firstKnown?.key as string | null) || (fallback?.key as string | null) || resolved
-                  if (resolved && resolved !== "-") break
-                }
-              } catch {
-                // continue trying other terms
-              }
-            }
-            primarySourceCache[row.id] = resolved || "-"
-          }
-        }
-        const workers = Array.from({ length: concurrency }, () => worker())
-        await Promise.all(workers)
 
         const headers = [
           "id",
@@ -1013,7 +901,7 @@ export default defineComponent({
           "attribSource",
         ] as const
 
-        const rows = filteredAll.map((u) => ({
+        const rows = all.map((u) => ({
           id: u.id || "",
           username: u.profile?.username || "",
           email: u.profile?.email || "",
@@ -1033,7 +921,7 @@ export default defineComponent({
           imagePurchases: u.stats?.imagePurchases ?? "",
           videoPurchases: u.stats?.videoPurchases ?? "",
           wallets: Array.isArray(u.wallets) ? u.wallets.join(" ") : "",
-          attribSource: primarySourceCache[u.id] || "-",
+          attribSource: u.attribution?.source || "-",
         }))
 
         const escapeCsv = (val: unknown): string => {
@@ -1124,25 +1012,14 @@ export default defineComponent({
         delete attribLoading.value[userId]
       }
     }
-    // Prefetch for current page rows
-    watch(
-      usersRows,
-      (rows) => {
-        const list = Array.isArray(rows) ? rows.slice(0, 50) : []
-        list.forEach((row: any) => {
-          if (!row || typeof row?.id !== "string") return
-          const hints = collectUserAttribHints(row)
-          void loadAttribForUser(row.id, hints)
-        })
-      },
-      { immediate: true },
-    )
+    // Users attribution comes from API; no prefetch needed
     watch([userSearch, includeBanned, filterOnlyBanned], () => {
       usersPagination.value.page = 1
       refetchUsers()
     })
     watch([filterAdminOnly, filterMinSpent, filterMaxSpent, filterMinAvail, filterMaxAvail, filterCreatedStart, filterCreatedEnd, filterActiveStart, filterActiveEnd], () => {
       usersPagination.value.page = 1
+      refetchUsers()
     })
 
     // Payments tab
@@ -1560,7 +1437,7 @@ export default defineComponent({
         try {
           await banMutation.mutateAsync({ data: { userId: row.id, reason } })
           Notify.create({ message: "User banned", color: "negative", icon: "block" })
-          await usersQuery.refetch()
+          await refetchUsers()
         } catch (error) {
           catchErr(error)
         }
