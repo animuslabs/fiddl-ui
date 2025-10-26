@@ -210,43 +210,49 @@
         )
           .text-body2 Latest error {{ formatDate(selectedFunnel.lastErrorAt) }}
           .text-caption.text-grey-3 {{ selectedFunnel.lastError || 'See logs for details.' }}
-        .summary-grid
-          q-card(flat bordered class="summary-card")
-            q-card-section
-              .summary-label Status
-              .summary-helper The funnel's current processing state.
-              .summary-value(:class="selectedFunnel.active ? 'text-positive' : 'text-grey-7'") {{ selectedFunnel.active ? 'Active' : 'Paused' }}
-              div.text-caption.text-grey-6(v-if="selectedFunnel.lastSentAt") Last email sent {{ formatDate(selectedFunnel.lastSentAt) }}
-          q-card(flat bordered class="summary-card")
-            q-card-section
-              .summary-label Activity ({{ sinceDays }} days)
-              .summary-helper Deliveries and issues over the recent window.
-              .row.q-col-gutter-sm.q-mt-sm
-                .col-auto
-                  .summary-chip-label Sent
-                  .summary-chip-value {{ numberDisplay(selectedFunnel.recent.sent) }}
-                .col-auto
-                  .summary-chip-label Ready
-                  .summary-chip-value {{ numberDisplay(selectedFunnel.recent.ready) }}
-                .col-auto
-                  .summary-chip-label Failed
-                  .summary-chip-value {{ numberDisplay(selectedFunnel.recent.failed) }}
-              div.text-caption.text-grey-6(v-if="selectedFunnel.recentWindowStart") Since {{ formatDate(selectedFunnel.recentWindowStart) }}
-          q-card(flat bordered class="summary-card")
-            q-card-section
-              .summary-label Engagement
-              .summary-helper Opens and clicks from recent deliveries.
-              div.text-caption.text-grey-6(v-if="engagementWindowLabel") {{ engagementWindowLabel }}
-              .row.q-col-gutter-sm.q-mt-sm
-                .col-auto
-                  .summary-chip-label Opens
-                  .summary-chip-value {{ numberDisplay(selectedEngagement?.opensTotalRecent) }}
-                .col-auto
-                  .summary-chip-label Clicks
-                  .summary-chip-value {{ numberDisplay(selectedEngagement?.clicksTotalRecent) }}
-                .col-auto
-                  .summary-chip-label Sent
-                  .summary-chip-value {{ numberDisplay(selectedEngagement?.sentRecent) }}
+        .row.summary-row.q-col-gutter-md
+          .col-12.col-md-4
+            q-card(flat bordered class="summary-card")
+              q-card-section
+                .summary-card__header
+                  .summary-label Status
+                .summary-value(:class="selectedFunnel.active ? 'text-positive' : 'text-grey-7'") {{ selectedFunnel.active ? 'Active' : 'Paused' }}
+                div.text-caption.text-grey-6(v-if="selectedFunnel.lastSentAt") Last send {{ formatDate(selectedFunnel.lastSentAt) }}
+                div.text-caption.text-grey-6(v-else) No sends recorded
+                div.text-caption.text-grey-6(v-if="selectedFunnel.lastEvaluatedAt") Evaluated {{ formatDate(selectedFunnel.lastEvaluatedAt) }}
+          .col-12.col-md-4
+            q-card(flat bordered class="summary-card")
+              q-card-section
+                .summary-card__header
+                  .summary-label Activity
+                  div.summary-caption {{ sinceDays }} day window
+                .summary-metrics
+                  .summary-metric
+                    span.summary-metric__label Sent
+                    span.summary-metric__value {{ numberDisplay(selectedFunnel.recent.sent) }}
+                  .summary-metric
+                    span.summary-metric__label Ready
+                    span.summary-metric__value {{ numberDisplay(selectedFunnel.recent.ready) }}
+                  .summary-metric
+                    span.summary-metric__label Failed
+                    span.summary-metric__value {{ numberDisplay(selectedFunnel.recent.failed) }}
+                div.text-caption.text-grey-6(v-if="selectedFunnel.recentWindowStart") Since {{ formatDate(selectedFunnel.recentWindowStart) }}
+          .col-12.col-md-4
+            q-card(flat bordered class="summary-card")
+              q-card-section
+                .summary-card__header
+                  .summary-label Engagement
+                  div.summary-caption(v-if="engagementWindowLabel") {{ engagementWindowLabel }}
+                .summary-metrics
+                  .summary-metric
+                    span.summary-metric__label Opens
+                    span.summary-metric__value {{ numberDisplay(selectedEngagement?.opensTotalRecent) }}
+                  .summary-metric
+                    span.summary-metric__label Clicks
+                    span.summary-metric__value {{ numberDisplay(selectedEngagement?.clicksTotalRecent) }}
+                  .summary-metric
+                    span.summary-metric__label Sent
+                    span.summary-metric__value {{ numberDisplay(selectedEngagement?.sentRecent) }}
         q-list(padding class="detail-accordions")
           q-expansion-item(
             expand-separator
@@ -2016,16 +2022,16 @@ function formatDate(value?: string | null): string {
     overflow-y: auto;
   }
 
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
+  .summary-row {
+    margin-top: 0;
   }
 
   .summary-card {
     height: 100%;
     border-radius: 12px;
     background: #ffffff;
+    display: flex;
+    flex-direction: column;
   }
 
   .summary-label {
@@ -2042,21 +2048,42 @@ function formatDate(value?: string | null): string {
     margin-top: 4px;
   }
 
-  .summary-helper {
-    margin-top: 2px;
-    font-size: 0.8rem;
+  .summary-caption {
+    font-size: 0.75rem;
     color: #6b7280;
   }
 
-  .summary-chip-label {
+  .summary-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .summary-metrics {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .summary-metric {
+    min-width: 68px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .summary-metric__label {
     font-size: 0.7rem;
     text-transform: uppercase;
     color: #6b7280;
     letter-spacing: 0.08em;
   }
 
-  .summary-chip-value {
-    font-size: 1.1rem;
+  .summary-metric__value {
+    font-size: 1.05rem;
     font-weight: 600;
   }
 
@@ -2326,15 +2353,15 @@ function formatDate(value?: string | null): string {
     .funnel-dialog-card {
       width: min(1400px, 96vw);
     }
-    /* Ensure the three summary cards line up on one row on desktop */
-    .summary-grid {
-      grid-template-columns: repeat(3, minmax(280px, 1fr));
+
+    .summary-row {
+      margin-top: 0;
     }
   }
 
   @media (min-width: 1280px) {
-    .summary-grid {
-      grid-template-columns: repeat(3, minmax(300px, 1fr));
+    .summary-row {
+      margin-top: 0;
     }
   }
 }
