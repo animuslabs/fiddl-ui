@@ -48,6 +48,12 @@ div.media-viewer-shell
           :color="mediaViewerStore.editBtnColor"
           @click.stop="editMedia()"
         )
+        q-spinner(
+          v-if="shareLoading"
+          size="20px"
+          color="white"
+          class="share-spinner q-mr-sm"
+        )
         q-btn(
           icon="more_vert"
           round
@@ -68,6 +74,7 @@ div.media-viewer-shell
               q-item(
                 v-if="isCompact"
                 clickable
+                :disable="shareLoading"
                 @click.stop="mobileShare()"
                 v-close-popup
               )
@@ -132,14 +139,16 @@ div.media-viewer-shell
       :class="{ 'has-counts': hasAnyCounts }"
     )
       div.pop-row(:class="{ 'has-any-counts': hasAnyCounts }")
-        div.pop-item
-          q-btn(
+       div.pop-item
+         q-btn(
             icon="share"
             round
             flat
             size="sm"
             :dense="$q.screen.lt.md"
             color="white"
+            :loading="shareLoading"
+            :disable="shareLoading"
             @click.stop="shareMenuOpen = true"
           )
             q-menu(
@@ -150,7 +159,7 @@ div.media-viewer-shell
               @click.stop
             )
               q-list
-                q-item(clickable @click.stop="mobileShare()" v-close-popup)
+                q-item(clickable @click.stop="mobileShare()" v-close-popup :disable="shareLoading")
                   q-item-section
                     .row.items-center
                       q-icon(:name="shareIcon" size="20px").q-mr-md
@@ -217,7 +226,7 @@ import { useImageCreations } from "src/stores/imageCreationsStore"
 import { useVideoCreations } from "src/stores/videoCreationsStore"
 import { useBrowserStore } from "src/stores/browserStore"
 import { creationsDeleteMedia, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
-import { catchErr, copyToClipboard, getCreationRequest, isRateLimitError, longIdToShort, shareMedia, shareLink } from "src/lib/util"
+import { catchErr, copyToClipboard, ensureShortRequestId, getCreationRequest, isRateLimitError, longIdToShort, normalizeRequestId, shareMedia, shareLink } from "src/lib/util"
 import { originalDownloadUrl } from "lib/imageCdn"
 import { img, s3Video } from "lib/netlifyImg"
 import { COMMENT_DIALOG_SENTINEL } from "lib/mediaViewer"
@@ -260,6 +269,7 @@ const shareMenuOpen = ref(false)
 const moreMenuOpen = ref(false)
 const pendingCommentId = ref<string | null>(props.initialCommentId)
 const autoOpenedInitialComment = ref(false)
+const shareLoading = ref(false)
 
 const currentIsPublic = computed(() => true)
 
@@ -335,75 +345,177 @@ watch(
   { immediate: true },
 )
 
-async function mobileShare() {
-  const url =
-    window.location.origin +
-    router.resolve({
-      name: "mediaRequest",
-      params: {
-        requestShortId: longIdToShort(mediaViewerStore.loadedRequestId || ""),
-        type: mediaViewerStore.currentMediaType,
-        index: mediaViewerStore.currentIndex || 0,
-      },
-      query: userAuth.userProfile?.username ? { referredBy: userAuth.userProfile.username } : {},
-    }).href
+async function resolveRequestIdentifiers(): Promise<{ longId: string; shortId: string }> {
+  let requestId = mediaViewerStore.loadedRequestId
+  if (!requestId) {
+    requestId = (await mediaViewerStore.loadRequestId()) ?? null
+  }
 
-  try {
-    const tg: any = (window as any)?.Telegram?.WebApp
-    const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
-    if (inTma) {
-      if (mediaViewerStore.currentMediaType === "image") {
-        try {
-          const orig = await originalDownloadUrl(mediaViewerStore.currentMediaId).catch(() => "")
-          const canStory = typeof tg?.shareToStory === "function" && /\.(png|jpe?g)$/i.test(orig)
-          if (canStory) {
-            tg.shareToStory(orig, {
-              text: "Made with Fiddl.art",
-              widget_link: { url: window.location.origin, text: "Open Fiddl.art" },
-            })
-            return
-          }
-        } catch {}
-      }
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out this creation on Fiddl.art")}`
-      if (typeof tg?.openTelegramLink === "function") {
-        tg.openTelegramLink(shareUrl)
-        return
+  if (!requestId) {
+    const { data } = await creationsGetCreationData(mediaViewerStore.getMediaParams())
+    const normalizedFromApi = normalizeRequestId(data?.requestId)
+    if (!normalizedFromApi) {
+      throw new Error("Creation request not found.")
+    }
+    mediaViewerStore.loadedRequestId = normalizedFromApi.longId
+    const mediaEntry = mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]
+    if (mediaEntry) {
+      mediaEntry.requestId = normalizedFromApi.longId
+    }
+    return normalizedFromApi
+  }
+
+  const normalizedExisting = normalizeRequestId(requestId)
+  if (normalizedExisting) {
+    if (mediaViewerStore.loadedRequestId !== normalizedExisting.longId) {
+      mediaViewerStore.loadedRequestId = normalizedExisting.longId
+      const mediaEntry = mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]
+      if (mediaEntry) {
+        mediaEntry.requestId = normalizedExisting.longId
       }
     }
-  } catch {}
+    return normalizedExisting
+  }
 
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-  const fileName = `${mediaViewerStore.currentMediaId}-fiddl-art.${mediaViewerStore.currentMediaType === "video" ? "mp4" : "webp"}`
-  const file = new File([], fileName)
-  if (isMobile && typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-    await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", mediaViewerStore.getCurrentMediaUrl(), fileName)
-  } else {
+  const trimmed = requestId.trim()
+  if (!trimmed) {
+    throw new Error("Creation request not found.")
+  }
+  const shortId = ensureShortRequestId(trimmed)
+  mediaViewerStore.loadedRequestId = trimmed
+  const mediaEntry = mediaViewerStore.mediaObjects[mediaViewerStore.currentIndex]
+  if (mediaEntry) {
+    mediaEntry.requestId = trimmed
+  }
+  return { longId: trimmed, shortId }
+}
+
+async function resolveRequestShareContext(): Promise<{ longId: string; shortId: string; mediaIndex: number }> {
+  const identifiers = await resolveRequestIdentifiers()
+  const requestData = await getCreationRequest(identifiers.longId, mediaViewerStore.currentMediaType)
+  let mediaIndex = requestData.mediaIds.findIndex((el) => el === mediaViewerStore.currentMediaId)
+  mediaIndex = mediaIndex >= 0 ? mediaIndex : 0
+  return { ...identifiers, mediaIndex }
+}
+
+function inferExtensionFromUrl(url: string, fallback: string): string {
+  try {
+    const sanitized = url.split("?")[0]?.split("#")[0] ?? ""
+    const match = sanitized.match(/\.([a-z0-9]+)$/i)
+    if (match?.[1]) {
+      return match[1].toLowerCase()
+    }
+  } catch {
+    /* ignore parsing errors */
+  }
+  return fallback
+}
+
+type ResolvedShareAsset = { url: string; filename: string; preferImageType?: "image/jpeg" | "image/png" }
+
+async function resolveShareMediaAsset(): Promise<ResolvedShareAsset | null> {
+  const mediaId = mediaViewerStore.currentMediaId
+  if (!mediaId) return null
+  const type = mediaViewerStore.currentMediaType
+  if (type === "image") {
+    const ownsMedia = mediaViewerStore.userOwnsMedia || Boolean(mediaViewerStore.hdImageSrc[mediaId])
+    if (ownsMedia) {
+      await mediaViewerStore.loadHdMedia(mediaId)
+    } else {
+      await mediaViewerStore.loadLgImage(mediaId)
+    }
+    const hdUrl = mediaViewerStore.hdImageSrc[mediaId]
+    const lgUrl = mediaViewerStore.lgImageSrc[mediaId]
+    const displayUrl = mediaViewerStore.displayImageSrc[mediaId]
+    const url = (ownsMedia && hdUrl) || lgUrl || displayUrl || hdUrl || img(mediaId, "lg")
+    const baseFilename = ownsMedia ? `${mediaId}-fiddl-art-hd` : `${mediaId}-fiddl-art`
+    const ext = inferExtensionFromUrl(url, "jpg")
+    return { url, filename: `${baseFilename}.${ext}`, preferImageType: "image/jpeg" }
+  }
+  const url = mediaViewerStore.getCurrentMediaUrl()
+  const ext = type === "video" ? "mp4" : inferExtensionFromUrl(url, "webp")
+  return { url, filename: `${mediaId}-fiddl-art.${ext}` }
+}
+
+async function mobileShare() {
+  if (shareLoading.value) return
+  try {
+    shareLoading.value = true
+    const { shortId, mediaIndex } = await resolveRequestShareContext()
+    const params = {
+      requestShortId: shortId,
+      type: mediaViewerStore.currentMediaType,
+      index: String(mediaIndex),
+    }
+    const query =
+      userAuth.userProfile?.username != null && userAuth.userProfile.username.length > 0
+        ? { referredBy: userAuth.userProfile.username }
+        : {}
+    const url = window.location.origin + router.resolve({ name: "mediaRequest", params, query }).href
+    const mediaAsset = await resolveShareMediaAsset()
+
+    try {
+      const tg: any = (window as any)?.Telegram?.WebApp
+      const inTma = Boolean((window as any)?.__TMA__?.enabled && tg)
+      if (inTma) {
+        if (mediaViewerStore.currentMediaType === "image") {
+          try {
+            const orig = await originalDownloadUrl(mediaViewerStore.currentMediaId).catch(() => "")
+            const canStory = typeof tg?.shareToStory === "function" && /\.(png|jpe?g)$/i.test(orig)
+            if (canStory) {
+              tg.shareToStory(orig, {
+                text: "Made with Fiddl.art",
+                widget_link: { url: window.location.origin, text: "Open Fiddl.art" },
+              })
+              return
+            }
+          } catch {}
+        }
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Check out this creation on Fiddl.art")}`
+        if (typeof tg?.openTelegramLink === "function") {
+          tg.openTelegramLink(shareUrl)
+          return
+        }
+      }
+    } catch {}
+
+    if (mediaAsset) {
+      const shareOptions = {
+        ...(mediaAsset.preferImageType ? { preferImageType: mediaAsset.preferImageType } : {}),
+        onPreparing: (preparing: boolean) => {
+          shareLoading.value = preparing
+        },
+      }
+      const shared = await shareMedia("Fiddl.art Creation", "Check out this creation on Fiddl.art", mediaAsset.url, mediaAsset.filename, shareOptions)
+      if (shared) return
+    }
     await shareLink("Fiddl.art Creation", "Check out this creation on Fiddl.art", url)
+  } catch (err: any) {
+    if (isRateLimitError(err)) {
+      mediaViewerStore.startRateLimitCooldown()
+    } else {
+      catchErr(err)
+    }
+  } finally {
+    shareLoading.value = false
   }
 }
 
 async function share() {
   try {
-    let params: any = { requestShortId: "", type: mediaViewerStore.currentMediaType, index: 0 }
-    let query: any = {}
-    let localRequestId = mediaViewerStore.loadedRequestId
-
-    if (!localRequestId) {
-      const { data } = await creationsGetCreationData(mediaViewerStore.getMediaParams())
-      localRequestId = data.requestId
+    const { shortId, mediaIndex } = await resolveRequestShareContext()
+    const params = {
+      requestShortId: shortId,
+      type: mediaViewerStore.currentMediaType,
+      index: String(mediaIndex),
     }
-
-    params.requestShortId = longIdToShort(localRequestId)
-    params.type = mediaViewerStore.currentMediaType
-    const requestData = await getCreationRequest(localRequestId, mediaViewerStore.currentMediaType)
-    const mediaIndex = requestData.mediaIds.findIndex((el: string) => el === mediaViewerStore.currentMediaId) || 0
-    params.index = mediaIndex
-
+    const query: Record<string, string> = {}
     let hasUsername = !!(userAuth.loggedIn && userAuth.userProfile?.username)
     if (!hasUsername && userAuth.loggedIn) await userAuth.loadUserProfile()
     hasUsername = !!userAuth.userProfile?.username
-    if (hasUsername) query.referredBy = userAuth.userProfile?.username
+    if (hasUsername && userAuth.userProfile?.username) {
+      query.referredBy = userAuth.userProfile.username
+    }
 
     const url = router.resolve({ name: "mediaRequest", params, query }).href
     const fullUrl = window.location.origin + url
@@ -423,15 +535,24 @@ async function share() {
   }
 }
 
-function showRequestInfoDialog() {
-  if (!mediaViewerStore.loadedRequestId || mediaViewerStore.loadedRequestId.length === 0) return
-  Dialog.create({
-    component: RequestInfoDialog,
-    componentProps: {
-      requestId: mediaViewerStore.loadedRequestId,
-      type: mediaViewerStore.currentMediaType,
-    },
-  })
+async function showRequestInfoDialog() {
+  try {
+    const { longId } = await resolveRequestIdentifiers()
+    if (!longId) return
+    Dialog.create({
+      component: RequestInfoDialog,
+      componentProps: {
+        requestId: longId,
+        type: mediaViewerStore.currentMediaType,
+      },
+    })
+  } catch (err: any) {
+    if (isRateLimitError(err)) {
+      mediaViewerStore.startRateLimitCooldown()
+    } else {
+      catchErr(err)
+    }
+  }
 }
 
 function showCommentsDialog(targetCommentId?: string | null) {
@@ -762,6 +883,10 @@ function deleteMedia() {
 
 .viewer-top-actions .q-btn {
   min-width: 0;
+}
+
+.share-spinner {
+  flex: 0 0 auto;
 }
 
 .viewer-media-slot {

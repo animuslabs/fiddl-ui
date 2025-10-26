@@ -3,7 +3,7 @@ import { LocalStorage, SessionStorage } from "quasar"
 import type { MediaGalleryMeta } from "src/types/media-gallery"
 import { collectionsMediaInUsersCollection, creationsGetCreationData, creationsHdVideo } from "src/lib/orval"
 import { img, s3Video } from "src/lib/netlifyImg"
-import { catchErr, isRateLimitError } from "src/lib/util"
+import { catchErr, isRateLimitError, normalizeRequestId } from "src/lib/util"
 import { markOwned, isOwned } from "lib/ownedMediaCache"
 import { hdUrl } from "lib/imageCdn"
 import { getCachedAspectRatio, parseAspectRatio, rememberAspectRatio } from "lib/aspectRatio"
@@ -241,6 +241,12 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
             media.aspectRatio = cached
           }
         }
+        if (typeof media?.requestId === "string" && media.requestId.length > 0) {
+          const normalizedRequest = normalizeRequestId(media.requestId)
+          if (normalizedRequest) {
+            media.requestId = normalizedRequest.longId
+          }
+        }
       }
 
       // Derive the intended starting media by id, then remap to filtered list
@@ -303,7 +309,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       const creatorId = cleanString(media?.creatorId)
       let creatorName = cleanString(media?.creatorUsername)
       const requestIdRaw = cleanString(media?.requestId)
-      const requestId = requestIdRaw.length ? requestIdRaw : null
+      const normalizedRequest = normalizeRequestId(requestIdRaw)
+      const requestId = normalizedRequest?.longId ?? (requestIdRaw.length ? requestIdRaw : null)
 
       if (creatorId && !creatorName) {
         creatorName = cleanString(creatorStore.getUsername(creatorId))
@@ -314,6 +321,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         userName: creatorName || "",
       }
       this.loadedRequestId = requestId
+
+      if (media && requestId) {
+        media.requestId = requestId
+      }
 
       if (creatorId && creatorName) {
         void creatorStore.rememberOne(creatorId, creatorName)
@@ -810,6 +821,8 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           if (!imageMeta) return null
 
           const creatorId = imageMeta.creatorId || ""
+          const normalizedRequest = normalizeRequestId(imageMeta.requestId)
+          const resolvedRequestId = cleanString(normalizedRequest?.longId ?? (imageMeta.requestId as string | undefined))
           let creatorName = ""
           if (creatorId) {
             const cachedName = creatorStore.getUsername(creatorId)
@@ -832,7 +845,7 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
           }
 
           const payload: CachedRequestMeta = {
-            requestId: imageMeta.requestId,
+            requestId: resolvedRequestId || null,
             creatorId,
             creatorName,
           }
@@ -856,6 +869,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
         if (isActive()) {
           this.loadedRequestId = payload.requestId
           this.creatorMeta = { id: payload.creatorId, userName: payload.creatorName }
+          const mediaEntry = this.mediaObjects[this.currentIndex]
+          if (mediaEntry) {
+            mediaEntry.requestId = payload.requestId ?? undefined
+          }
         }
         return payload.requestId
       }
@@ -863,6 +880,10 @@ export const useMediaViewerStore = defineStore("mediaViewerStore", {
       if (isActive()) {
         this.loadedRequestId = null
         this.creatorMeta = { userName: "", id: "" }
+        const mediaEntry = this.mediaObjects[this.currentIndex]
+        if (mediaEntry) {
+          mediaEntry.requestId = undefined
+        }
       }
       return null
     },

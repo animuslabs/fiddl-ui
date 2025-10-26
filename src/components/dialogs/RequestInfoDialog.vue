@@ -1,5 +1,5 @@
 <template lang="pug">
-q-dialog(ref="dialog" @hide="onDialogHide" :maximized="isScreenLtMd")
+q-dialog(ref="dialog" @hide="onDialogHide" :maximized="$q.screen.lt.md")
   q-card.q-dialog-plugin(:style="cardStyle")
     div.q-pa-md
       .row.items-center.justify-between.q-mb-sm
@@ -57,12 +57,9 @@ export default defineComponent({
     }
   },
   computed: {
-    isScreenLtMd(): boolean {
-      const screen = (this.$q as typeof this.$q & { screen?: { lt?: Record<string, boolean> } }).screen
-      return Boolean(screen?.lt?.md)
-    },
     cardStyle(): Record<string, string> {
-      if (this.isScreenLtMd) {
+      const isLtMd = Boolean((this.$q as typeof this.$q & { screen?: { lt?: Record<string, boolean> } }).screen?.lt?.md)
+      if (isLtMd) {
         const dynamicHeight = viewportHeight(100)
         return { width: "100vw", maxWidth: "100vw", height: dynamicHeight, maxHeight: dynamicHeight, overflow: "auto" }
       }

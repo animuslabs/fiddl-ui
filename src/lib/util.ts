@@ -11,40 +11,194 @@ import type { CreateImageRequestData, CreateVideoRequestData } from "fiddl-serve
 import { match } from "ts-pattern"
 import { creationsGetImageRequest, creationsGetVideoRequest, creationsPurchaseMedia, type CreationsGetImageRequest200, type CreationsGetVideoRequest200 } from "lib/orval"
 import { prices } from "src/stores/pricesStore"
-/**
- * Shares an image or video via the native share feature, with a fallback for unsupported devices.
- * @param title - The title of the content being shared.
- * @param text - The text description of the content being shared.
- * @param mediaUrl - The URL of the media (image or video) to be shared.
- * @param filename - The desired filename for the shared or downloaded media.
- */
-export async function shareMedia(title: string, text: string, mediaUrl: string, filename: string): Promise<void> {
-  if (navigator.share && navigator.canShare) {
-    try {
-      const response = await fetch(mediaUrl)
-      const blob = await response.blob()
-      const file = new File([blob], filename, { type: blob.type })
-
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title,
-          text,
-          files: [file],
-        })
-        console.log("Media shared successfully!")
-      } else {
-        console.error("This device cannot share the provided media.")
-        fallbackShare(mediaUrl, filename)
-      }
-    } catch (error) {
-      console.error("Error sharing the media:", error)
-      fallbackShare(mediaUrl, filename)
-    }
-  } else {
-    console.warn("Web Share API is not supported or file sharing is unavailable on this device.")
-    fallbackShare(mediaUrl, filename)
+function guessMimeFromExtension(ext: string): string | null {
+  const normalized = ext.toLowerCase()
+  switch (normalized) {
+    case "png":
+      return "image/png"
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg"
+    case "gif":
+      return "image/gif"
+    case "webp":
+      return "image/webp"
+    case "mp4":
+      return "video/mp4"
+    case "mov":
+      return "video/quicktime"
+    default:
+      return null
   }
 }
+
+function extensionFromMime(mime: string): string | null {
+  const normalized = mime.toLowerCase()
+  switch (normalized) {
+    case "image/jpeg":
+      return ".jpg"
+    case "image/png":
+      return ".png"
+    case "image/gif":
+      return ".gif"
+    case "video/mp4":
+      return ".mp4"
+    case "video/quicktime":
+      return ".mov"
+    default:
+      return null
+  }
+}
+
+async function convertImageBlob(blob: Blob, mimeType: "image/png" | "image/jpeg"): Promise<Blob | null> {
+  const drawToCanvas = async (image: CanvasImageSource, width: number, height: number) => {
+    const canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return null
+    ctx.drawImage(image, 0, 0)
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((converted) => resolve(converted), mimeType, 0.92)
+    })
+  }
+
+  try {
+    if ("createImageBitmap" in window) {
+      const bitmap = await createImageBitmap(blob)
+      const result = await drawToCanvas(bitmap, bitmap.width, bitmap.height)
+      if (result) return result
+    }
+  } catch (err) {
+    console.warn("[shareMedia] createImageBitmap conversion failed, attempting Image fallback", err)
+  }
+
+  return await new Promise<Blob | null>((resolve) => {
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+    const objectUrl = URL.createObjectURL(blob)
+    img.onload = async () => {
+      try {
+        const converted = await drawToCanvas(img, img.naturalWidth, img.naturalHeight)
+        resolve(converted)
+      } catch (err) {
+        console.error("[shareMedia] failed to draw image during conversion", err)
+        resolve(null)
+      } finally {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+    img.onerror = (event) => {
+      console.error("[shareMedia] image conversion fallback failed", event)
+      URL.revokeObjectURL(objectUrl)
+      resolve(null)
+    }
+    img.src = objectUrl
+  })
+}
+
+function ensureShareFilename(filename: string, ext: string): string {
+  const normalizedExt = ext.startsWith(".") ? ext : `.${ext}`
+  if (normalizedExt.length > 1 && filename.toLowerCase().endsWith(normalizedExt.toLowerCase())) {
+    return filename
+  }
+  const lastDot = filename.lastIndexOf(".")
+  if (lastDot > 0) {
+    return `${filename.slice(0, lastDot)}${normalizedExt}`
+  }
+  return `${filename}${normalizedExt}`
+}
+
+export interface ShareMediaOptions {
+  preferImageType?: "image/jpeg" | "image/png"
+  preferFileExtension?: string
+  onPreparing?: (preparing: boolean) => void
+}
+
+/**
+ * Shares an image or video via the native share feature when supported.
+ * Returns true when the share operation succeeds, false otherwise.
+ */
+export async function shareMedia(title: string, text: string, mediaUrl: string, filename: string, options: ShareMediaOptions = {}): Promise<boolean> {
+  if (!navigator.share || !navigator.canShare) return false
+
+  try {
+    options.onPreparing?.(true)
+    const response = await fetch(mediaUrl, { mode: "cors" })
+    if (!response.ok) {
+      console.error("[shareMedia] failed to fetch media for sharing", response.status, response.statusText)
+      return false
+    }
+
+    let blob = await response.blob()
+    const urlExtMatch = mediaUrl.split("?")[0]?.match(/\.([a-z0-9]+)$/i)
+    const fileExtMatch = filename.match(/\.([a-z0-9]+)$/i)
+    const ext = (fileExtMatch?.[1] ?? urlExtMatch?.[1] ?? "").toLowerCase()
+
+    let mimeType = blob.type || (ext ? guessMimeFromExtension(ext) : null) || "application/octet-stream"
+    let shareName = filename.trim().length > 0 ? filename : "fiddl-art-share"
+
+    const preferredExt =
+      typeof options.preferFileExtension === "string" && options.preferFileExtension.length > 0
+        ? options.preferFileExtension.startsWith(".")
+          ? options.preferFileExtension
+          : `.${options.preferFileExtension}`
+        : null
+    if (preferredExt) {
+      shareName = ensureShareFilename(shareName, preferredExt)
+    }
+
+    const isImage = (blob.type || mimeType).startsWith("image/")
+    const requestedImageType = options.preferImageType ?? ((blob.type === "image/webp" || mimeType === "image/webp") ? "image/jpeg" : null)
+    if (isImage && requestedImageType && blob.type !== requestedImageType) {
+      const conversionTarget = requestedImageType === "image/png" ? "image/png" : "image/jpeg"
+      const converted = await convertImageBlob(blob, conversionTarget)
+      if (converted) {
+        blob = converted
+        mimeType = converted.type || conversionTarget
+      } else {
+        console.warn("[shareMedia] failed to convert image blob to preferred format; continuing with original type")
+        mimeType = blob.type || mimeType
+      }
+    } else if (isImage) {
+      mimeType = blob.type || mimeType
+    }
+
+    if (mimeType === "image/webp") {
+      const converted = await convertImageBlob(blob, "image/jpeg")
+      if (converted) {
+        blob = converted
+        mimeType = converted.type || "image/jpeg"
+      } else {
+        console.warn("[shareMedia] webp conversion failed; proceeding with original blob")
+      }
+    }
+
+    const resolvedExt = preferredExt || extensionFromMime(mimeType)
+    if (resolvedExt) {
+      shareName = ensureShareFilename(shareName, resolvedExt)
+    }
+
+    const file = new File([blob], shareName, { type: mimeType })
+    if (!navigator.canShare({ files: [file] })) {
+      console.warn("[shareMedia] navigator.canShare rejected provided file")
+      return false
+    }
+
+    await navigator.share({
+      title,
+      text,
+      files: [file],
+    })
+    return true
+  } catch (error) {
+    console.error("[shareMedia] failed to share media", error)
+    return false
+  } finally {
+    options.onPreparing?.(false)
+  }
+}
+
 export async function shareLink(title: string, text: string, url: string) {
   if (navigator.share) {
     try {
@@ -175,6 +329,45 @@ export function longIdToShort(uuid: string): string {
   // Convert Base64 to Base64 URL encoding
   const base64url = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
   return base64url
+}
+
+const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+const SHORT_ID_REGEX = /^[A-Za-z0-9_-]{16,24}$/
+
+export function normalizeRequestId(rawId?: string | null): { longId: string; shortId: string } | null {
+  const value = typeof rawId === "string" ? rawId.trim() : ""
+  if (!value) return null
+  if (UUID_REGEX.test(value)) {
+    return { longId: value, shortId: longIdToShort(value) }
+  }
+  if (SHORT_ID_REGEX.test(value)) {
+    try {
+      const longId = shortIdToLong(value)
+      if (UUID_REGEX.test(longId)) {
+        return { longId, shortId: value }
+      }
+    } catch (err) {
+      console.error("[util] failed to convert short request id", err)
+      return null
+    }
+  }
+  return null
+}
+
+export function ensureLongRequestId(rawId?: string | null): string {
+  const normalized = normalizeRequestId(rawId)
+  if (normalized) return normalized.longId
+  return typeof rawId === "string" ? rawId.trim() : ""
+}
+
+export function ensureShortRequestId(rawId?: string | null): string {
+  const normalized = normalizeRequestId(rawId)
+  if (normalized) return normalized.shortId
+  const value = typeof rawId === "string" ? rawId.trim() : ""
+  if (UUID_REGEX.test(value)) {
+    return longIdToShort(value)
+  }
+  return value
 }
 
 export function timeSince(date: Date): string {
@@ -441,8 +634,12 @@ export function normalizeCreation(creation: CreateImageRequestData | CreateVideo
   const mediaIds = (isImage ? (creation as any).imageIds : (creation as any).videoIds) as string[]
   const createdAtRaw = (creation as any).createdAt as any
   const createdAt = createdAtRaw instanceof Date ? createdAtRaw : new Date(createdAtRaw)
+  const rawId = (creation as any).id as string
+  const normalizedId = normalizeRequestId(rawId)
+  const resolvedId = normalizedId?.longId ?? rawId
   const base: BaseCreationRequest = {
-    id: (creation as any).id as string,
+    id: resolvedId,
+    requestShortId: normalizedId?.shortId ?? ensureShortRequestId(resolvedId),
     mediaIds,
     createdAt,
     aspectRatio: (creation as any).aspectRatio || "1:1",
@@ -475,8 +672,12 @@ export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideo
   const isImage = (creation as any).imageIds != null
   const createdAtRaw = (creation as any).createdAt as any
   const createdAt = createdAtRaw instanceof Date ? createdAtRaw : new Date(createdAtRaw)
+  const rawId = (creation as any).id as string
+  const normalizedId = normalizeRequestId(rawId)
+  const resolvedId = normalizedId?.longId ?? rawId
   return {
-    id: (creation as any).id as string,
+    id: resolvedId,
+    requestShortId: normalizedId?.shortId ?? ensureShortRequestId(resolvedId),
     mediaIds: isImage ? ((creation as any).imageIds as string[]) : ((creation as any).videoIds as string[]),
     createdAt,
     aspectRatio: (creation as any).aspectRatio || "1:1",
@@ -498,9 +699,14 @@ export function toUnifiedCreation(creation: CreateImageRequestData | CreateVideo
 }
 
 export async function getCreationRequest(requestId: string, type: MediaType) {
+  const normalized = normalizeRequestId(requestId)
+  const resolvedId = normalized?.longId ?? ensureLongRequestId(requestId)
+  if (!resolvedId) {
+    throw new Error("Creation request not found.")
+  }
   const { data } = await match(type)
-    .with("image", () => creationsGetImageRequest({ imageRequestId: requestId }))
-    .with("video", () => creationsGetVideoRequest({ videoRequestId: requestId }))
+    .with("image", () => creationsGetImageRequest({ imageRequestId: resolvedId }))
+    .with("video", () => creationsGetVideoRequest({ videoRequestId: resolvedId }))
     .exhaustive()
   return unifiyRequest(data)
 }
@@ -531,7 +737,17 @@ export async function preloadHdVideo(url: string): Promise<HTMLVideoElement> {
 }
 export function unifiyRequest(request: CreationsGetImageRequest200 | CreationsGetVideoRequest200): UnifiedRequest {
   const mediaIds = "imageIds" in request ? request.imageIds : request.videoIds
-  return { ...request, mediaIds, type: "imageIds" in request ? "image" : "video", createdAt: new Date(request.createdAt) }
+  const normalized = normalizeRequestId(request.id)
+  const resolvedId = normalized?.longId ?? request.id
+  const shortId = normalized?.shortId ?? ensureShortRequestId(resolvedId)
+  return {
+    ...request,
+    id: resolvedId,
+    requestShortId: shortId,
+    mediaIds,
+    type: "imageIds" in request ? "image" : "video",
+    createdAt: new Date(request.createdAt),
+  }
 }
 
 export function triggerDownload(url: string, filename: string) {

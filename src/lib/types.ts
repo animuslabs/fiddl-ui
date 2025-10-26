@@ -102,6 +102,7 @@ export interface TranscriptionLineEvent {
 
 export type BaseCreationRequest = {
   id: string
+  requestShortId?: string
   mediaIds: string[]
   createdAt: Date
   aspectRatio: string
@@ -127,6 +128,7 @@ export type UnifiedCreationRequest = (BaseCreationRequest & ImageCreationExtensi
 
 export type UnifiedRequest = {
   id: string
+  requestShortId?: string
   mediaIds: string[]
   createdAt: Date
   aspectRatio: string

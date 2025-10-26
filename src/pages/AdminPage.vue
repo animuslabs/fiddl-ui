@@ -263,12 +263,26 @@ q-page.full-height.full-width.admin-page
           q-input(v-model="filterActiveStart" type="datetime-local" label="Active Start" dense outlined clearable style="min-width:220px")
         .col-12.col-sm-auto
           q-input(v-model="filterActiveEnd" type="datetime-local" label="Active End" dense outlined clearable style="min-width:220px")
+        .col-12.col-sm-auto
+          q-select(v-model="usersPagination.rowsPerPage" :options="[10,25,50,100]" label="Rows" dense outlined style="width:100px")
         .col-auto
           q-space
         .col-auto
           q-btn(color="primary" icon="download" label="Export CSV" @click="exportUsersCsv" :loading="usersExporting")
         .col-auto
           q-btn(icon="refresh" flat @click="refetchUsers" :loading="usersFetching")
+      // Top page navigation (centered, large)
+      .row.justify-center.q-mb-sm(ref="usersTopPager")
+        q-pagination(
+          v-if="usersPagination.rowsPerPage !== 0 && usersTotal > 0"
+          v-model="usersPagination.page"
+          :max="Math.max(1, Math.ceil(usersTotal / usersPagination.rowsPerPage))"
+          max-pages="8"
+          boundary-links
+          direction-links
+          color="primary"
+          size="lg"
+        )
       q-table(
         :rows="usersRows"
         :columns="userColumns"
@@ -281,6 +295,7 @@ q-page.full-height.full-width.admin-page
         flat
         bordered
         dense
+        :hide-bottom="true"
         :wrap-cells="false"
         :rows-per-page-options="[10,25,50,100,0]"
         :no-data-label="'No users found'"
@@ -320,6 +335,19 @@ q-page.full-height.full-width.admin-page
           q-td(:props="props")
             q-chip(color="accent" text-color="white" v-if="props.row.admin" size="sm" label="ADMIN")
             q-chip(color="grey-5" text-color="black" v-else size="sm" label="USER")
+      // Bottom page navigation (centered, large)
+      .row.justify-center.q-mt-sm
+        q-pagination(
+          v-if="usersPagination.rowsPerPage !== 0 && usersTotal > 0"
+          v-model="usersPagination.page"
+          @update:model-value="onBottomPageChangeUsers"
+          :max="Math.max(1, Math.ceil(usersTotal / usersPagination.rowsPerPage))"
+          max-pages="8"
+          boundary-links
+          direction-links
+          color="primary"
+          size="lg"
+        )
 
   div(v-if="tab == 'payments'").q-pa-sm
     .row.items-center.q-gutter-sm.q-mb-sm
@@ -761,7 +789,7 @@ export default defineComponent({
       sortBy: "spentPoints",
       descending: true,
       page: 1,
-      rowsPerPage: 25,
+      rowsPerPage: 50,
     })
 
     const limit = computed(() => {
@@ -848,10 +876,28 @@ export default defineComponent({
     }
 
     const refetchUsers = () => fetchUsers(false)
+    const usersSilent = ref(false)
     const onUsersRequest = (props: OnRequestProps) => {
+      usersSilent.value = true
       usersPagination.value = props.pagination
       void refetchUsers()
+      usersSilent.value = false
     }
+
+    // React to external page/rows changes (top/bottom paginators and rows selector)
+    watch(
+      () => [usersPagination.value.page, usersPagination.value.rowsPerPage],
+      () => {
+        if (usersSilent.value) return
+        void refetchUsers()
+      },
+    )
+    watch(
+      () => usersPagination.value.rowsPerPage,
+      () => {
+        usersPagination.value.page = 1
+      },
+    )
 
     // Initial load
     void fetchUsers(true)
@@ -1643,6 +1689,21 @@ export default defineComponent({
       scrollTopPagerIntoView()
     }
 
+    // Users top pager scroll helper
+    const usersTopPager = ref<HTMLElement | null>(null)
+    function scrollUsersTopPagerIntoView() {
+      try {
+        const el = usersTopPager.value
+        if (!el || typeof window === "undefined") return
+        const rect = el.getBoundingClientRect()
+        const top = window.pageYOffset + rect.top - 8
+        window.scrollTo({ top, behavior: "smooth" })
+      } catch {}
+    }
+    function onBottomPageChangeUsers() {
+      scrollUsersTopPagerIntoView()
+    }
+
     // Identify if results correspond to a single uploader for top ban button
     const singleUploaderUser = computed(() => {
       const ids = new Set<string>()
@@ -2298,6 +2359,8 @@ export default defineComponent({
       usersFetching,
       userColumns,
       refetchUsers,
+      usersTopPager,
+      onBottomPageChangeUsers,
       usersExporting,
       exportUsersCsv,
       confirmBan,
