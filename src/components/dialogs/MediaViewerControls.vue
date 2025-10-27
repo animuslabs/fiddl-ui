@@ -139,8 +139,8 @@ div.media-viewer-shell
       :class="{ 'has-counts': hasAnyCounts }"
     )
       div.pop-row(:class="{ 'has-any-counts': hasAnyCounts }")
-       div.pop-item
-         q-btn(
+        div.pop-item
+          q-btn(
             icon="share"
             round
             flat

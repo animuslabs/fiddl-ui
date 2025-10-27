@@ -1854,7 +1854,7 @@ function prefetchImage(url: string): Promise<void> {
                   // Use v-show to avoid DOM remove/add and prevent pop
                   div.loading-overlay(v-show="!isPendingItem(m) && showImageOverlay(m.id)")
                     div.loading-overlay__stack
-                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
                   // Actual image (rendered underneath the overlay)
                   template(v-if="!isPendingItem(m)")
@@ -1881,9 +1881,9 @@ function prefetchImage(url: string): Promise<void> {
                   template(v-else)
                     div.media-placeholder(:class="{ 'media-placeholder--pending': props.showLoading }")
                       template(v-if="props.showLoading")
-                        div.media-placeholder__overlay
+                        div.loading-overlay
                           div.loading-overlay__stack
-                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                             span.loading-overlay__label Loading
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
@@ -1938,7 +1938,7 @@ function prefetchImage(url: string): Promise<void> {
                   // Loading overlay for images that are still rendering/propagating
                   div.loading-overlay(v-show="!isPendingItem(m) && showImageOverlay(m.id)")
                     div.loading-overlay__stack
-                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
                   // Actual image (rendered underneath the overlay)
                   template(v-if="!isPendingItem(m)")
@@ -1965,9 +1965,9 @@ function prefetchImage(url: string): Promise<void> {
                   template(v-else)
                     div.media-placeholder(:class="{ 'media-placeholder--pending': props.showLoading }")
                       template(v-if="props.showLoading")
-                        div.media-placeholder__overlay
+                        div.loading-overlay
                           div.loading-overlay__stack
-                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                            q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                             span.loading-overlay__label Loading
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
@@ -2050,7 +2050,7 @@ function prefetchImage(url: string): Promise<void> {
                   // Use v-show to avoid DOM remove/add and prevent pop
                   div.loading-overlay(v-show="showVideoOverlay(m.id)")
                     div.loading-overlay__stack
-                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
                   div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
                     video(
@@ -2115,7 +2115,7 @@ function prefetchImage(url: string): Promise<void> {
                 template(v-else)
                   div.loading-overlay(v-if="showVideoOverlay(m.id)")
                     div.loading-overlay__stack
-                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)")
+                      q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
                   div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
                     video(
@@ -2248,23 +2248,13 @@ function prefetchImage(url: string): Promise<void> {
 }
 
 .media-placeholder {
+  position: relative;
   width: 100%;
   height: 100%;
   background: #000; /* black placeholder */
 }
 
-.media-placeholder__overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  color: inherit;
-}
-
 .media-wrapper.mode-grid .media-placeholder {
-  position: relative;
   height: auto;
 }
 
@@ -2272,11 +2262,6 @@ function prefetchImage(url: string): Promise<void> {
   content: "";
   display: block;
   padding-top: 100%;
-}
-
-.media-wrapper.mode-grid .media-placeholder__overlay {
-  position: absolute;
-  inset: 0;
 }
 
 .media-placeholder--pending {
@@ -2339,6 +2324,12 @@ function prefetchImage(url: string): Promise<void> {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.loading-overlay__spinner {
+  position: relative;
+  z-index: 0;
+  opacity: 0.85;
 }
 
 .loading-overlay__label {

@@ -18,8 +18,8 @@ axios.defaults.baseURL = apiUrl
 axios.defaults.timeout = 0
 axios.defaults.paramsSerializer = {
   serialize: (params) => {
-    if (!params) return ''
-    if (typeof params === 'string') return params
+    if (!params) return ""
+    if (typeof params === "string") return params
     if (params instanceof URLSearchParams) return params.toString()
 
     const parts: string[] = []
@@ -36,9 +36,9 @@ axios.defaults.paramsSerializer = {
 
       let normalized: string | null | undefined
       if (value instanceof Date) normalized = value.toISOString()
-      else if (typeof value === 'boolean') normalized = value ? 'true' : 'false'
-      else if (typeof value === 'number') normalized = Number.isFinite(value) ? `${value}` : null
-      else if (typeof value === 'string') normalized = value
+      else if (typeof value === "boolean") normalized = value ? "true" : "false"
+      else if (typeof value === "number") normalized = Number.isFinite(value) ? `${value}` : null
+      else if (typeof value === "string") normalized = value
       else normalized = JSON.stringify(value)
 
       if (normalized === undefined || normalized === null) return
@@ -47,7 +47,7 @@ axios.defaults.paramsSerializer = {
 
     Object.entries(params as Record<string, unknown>).forEach(([key, value]) => appendParam(key, value))
 
-    return parts.join('&')
+    return parts.join("&")
   },
 }
 
@@ -71,7 +71,8 @@ axios.interceptors.request.use((config) => {
   const jwtData = jwt.read()
   if (jwtData) {
     // Ensure headers object exists and is correctly typed
-    const headers = (config.headers ?? new AxiosHeaders()) as AxiosRequestHeaders
+    const headers =
+      config.headers instanceof AxiosHeaders ? config.headers : new AxiosHeaders(config.headers as AxiosRequestHeaders | undefined)
     headers.set("Authorization", `Bearer ${jwtData.token}`)
     config.headers = headers
   }
