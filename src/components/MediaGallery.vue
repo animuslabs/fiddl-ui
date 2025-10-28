@@ -332,6 +332,7 @@ const UPGRADE_INTERVAL_MS = 2000
 const MAX_ATTEMPTS_PER_SIZE = 30
 const SKELETON_COUNT = 30
 const skeletonSeed = ref<number>(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))
+const videoSources = ref<Record<string, string>>({})
 
 function getSizeRank(size: ImageSize): number {
   return sizeRank[String(size)] ?? 99
@@ -348,6 +349,28 @@ function createSeededRandom(seed: number) {
 
 function reseedSkeletons() {
   skeletonSeed.value = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+}
+
+function videoPosterFor(id: string | number): string {
+  return s3Video(String(id), "thumbnail")
+}
+
+function queueVideoSrc(id: string) {
+  if (videoSources.value[id]) return
+  const preview = s3Video(id, "preview-md")
+  if (typeof window === "undefined") {
+    videoSources.value[id] = preview
+    return
+  }
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      videoSources.value[id] = preview
+    })
+  })
+}
+
+function hasVideoSource(id: string): boolean {
+  return typeof videoSources.value[id] === "string" && videoSources.value[id].length > 0
 }
 
 // Intersection-based visibility map to unmount offscreen media
@@ -967,11 +990,27 @@ watch(
   },
 )
 
+const skeletonGridMinHeightPx = computed(() => {
+  const base = gridMinSize.value
+  const reserved = useReservedBars.value ? effectiveTopBarPx.value + effectiveBottomBarPx.value : 0
+  return Math.max(96, Math.round(base + reserved))
+})
+
+const skeletonMosaicExtraRows = computed(() => {
+  if (!useReservedBars.value) return 0
+  const rowHeightPx = Math.max(1, Number(thumbSize.value) * props.rowHeightRatio)
+  const reserved = effectiveTopBarPx.value + effectiveBottomBarPx.value
+  if (reserved <= 0) return 0
+  return Math.max(0, Math.ceil(reserved / Math.max(1, rowHeightPx)))
+})
+
 const skeletonItems = computed(() => {
   const count = SKELETON_COUNT
   const isMosaic = layoutEffective.value === "mosaic"
   const items: Array<{ id: string; style: Record<string, string> }> = []
   const rng = createSeededRandom(skeletonSeed.value || 1)
+  const minHeightPx = skeletonGridMinHeightPx.value
+  const extraRows = skeletonMosaicExtraRows.value
 
   const effectiveCols = (() => {
     if (isPhone.value) {
@@ -995,8 +1034,12 @@ const skeletonItems = computed(() => {
       else if (rollRow > 0.5) rowSpan = 2
       if (isPhone.value) rowSpan = Math.min(rowSpan, 2)
 
+      const spanWithBars = Math.max(1, rowSpan + extraRows)
       style.gridColumn = `span ${colSpan}`
-      style.gridRow = `span ${rowSpan}`
+      style.gridRow = `span ${spanWithBars}`
+    } else {
+      style.minHeight = `${minHeightPx}px`
+      style.aspectRatio = "1 / 1"
     }
 
     items.push({ id: `sk-${i}`, style })
@@ -1056,6 +1099,7 @@ function pruneInactiveState(activeIds: Set<string>) {
   pruneRecord(privacyLoading.value)
   pruneRecord(deleteLoading.value)
   pruneRecord(addInputLoading.value)
+  pruneRecord(videoSources.value as Record<string, unknown>)
 
   for (const key of Array.from(videoRetryState.keys())) {
     if (!activeIds.has(key)) {
@@ -1132,7 +1176,7 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
       const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
       const mediaId = String(item.id)
       if (!item.url) {
-        item.url = incomingType === "video" ? s3Video(mediaId, "preview-lg") : img(mediaId, previewInitialSize)
+        item.url = incomingType === "video" ? s3Video(mediaId, "preview-md") : img(mediaId, previewInitialSize)
       }
       const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
       const type: "image" | "video" = derived === "video" ? "video" : "image"
@@ -1155,6 +1199,8 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
         if (!isPlaceholder) {
           initImageProgressState(mediaId, item.url, previewUpgradeTarget)
         }
+      } else if (type === "video") {
+        queueVideoSrc(mediaId)
       }
       const fallbackAspect = type === "video" ? 16 / 9 : 1
       const cachedAspect = getCachedAspectRatio(item.id)
@@ -2164,17 +2210,18 @@ function prefetchImage(url: string): Promise<void> {
                     span.nsfw-label NSFW Content
                     span.nsfw-helper Tap to confirm viewing
                 template(v-else)
-                  // Use v-show to avoid DOM remove/add and prevent pop
-                  div.loading-overlay(v-show="showVideoOverlay(m.id)")
+                  // Show spinner only after video source is attached
+                  div.loading-overlay(v-show="showVideoOverlay(m.id) && hasVideoSource(m.id)")
                     div.loading-overlay__stack
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
-                  div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                  div(v-if="hasVideoSource(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
                     video(
-                      :src="m.url"
+                      :src="videoSources[m.id]"
                       :key="videoReloadKey[m.id]"
                       :data-id="m.id"
-                      loop autoplay muted playsinline
+                      loop autoplay muted playsinline preload="auto"
+                      :poster="videoPosterFor(m.id)"
                       @loadstart="markVideoLoadStart(m.id)"
                       @canplay="markVideoLoaded(m.id)"
                       @loadeddata="markVideoLoaded(m.id)"
@@ -2182,6 +2229,15 @@ function prefetchImage(url: string): Promise<void> {
                       @click="handleSelect(m, index)"
                       style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; background-color:#000;"
                       :class="videoClass(m)"
+                    )
+                  div(v-else style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                    q-img(
+                      :src="videoPosterFor(m.id)"
+                      style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block;"
+                      :class="props.selectable ? 'cursor-pointer' : ''"
+                      no-spinner
+                      no-transition
+                      @click="handleSelect(m, index)"
                     )
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
@@ -2230,16 +2286,17 @@ function prefetchImage(url: string): Promise<void> {
                     span.nsfw-label NSFW Content
                     span.nsfw-helper Tap to confirm viewing
                 template(v-else)
-                  div.loading-overlay(v-if="showVideoOverlay(m.id)")
+                  div.loading-overlay(v-if="showVideoOverlay(m.id) && hasVideoSource(m.id)")
                     div.loading-overlay__stack
                       q-spinner-gears(color="grey-10" size="clamp(64px, 60%, 120px)" class="loading-overlay__spinner")
                       span.loading-overlay__label Loading
-                  div(v-show="!showVideoOverlay(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                  div(v-if="hasVideoSource(m.id)" style="position: relative; overflow: hidden; width: 100%; height: 100%;")
                     video(
-                      :src="m.url"
+                      :src="videoSources[m.id]"
                       :key="videoReloadKey[m.id]"
                       :data-id="m.id"
-                      loop autoplay muted playsinline
+                      loop autoplay muted playsinline preload="auto"
+                      :poster="videoPosterFor(m.id)"
                       @loadstart="markVideoLoadStart(m.id)"
                       @canplay="markVideoLoaded(m.id)"
                       @loadeddata="markVideoLoaded(m.id)"
@@ -2247,6 +2304,15 @@ function prefetchImage(url: string): Promise<void> {
                       @click="handleSelect(m, index)"
                       style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block"
                       :class="videoClass(m)"
+                    )
+                  div(v-else style="position: relative; overflow: hidden; width: 100%; height: 100%;")
+                    q-img(
+                      :src="videoPosterFor(m.id)"
+                      style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block;"
+                      :class="props.selectable ? 'cursor-pointer' : ''"
+                      no-spinner
+                      no-transition
+                      @click="handleSelect(m, index)"
                     )
               template(v-else)
                 // Offscreen: render a lightweight black placeholder to avoid blank gaps
@@ -2308,7 +2374,9 @@ function prefetchImage(url: string): Promise<void> {
 }
 .mg-skel-cell {
   width: 100%;
-  height: 100%;
+  height: auto;
+  min-height: 0;
+  position: relative;
 }
 .mg-skel-box {
   width: 100%;

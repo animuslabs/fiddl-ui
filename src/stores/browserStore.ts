@@ -50,6 +50,8 @@ export interface MediaItem extends MediaGalleryMeta {
 type BrowseRow = CreationsBrowseCreateRequests200Item
 type MediaTypeFilter = MediaType | "all"
 
+const PAGE_SIZE = 30
+
 export const useBrowserStore = defineStore("browserStore", {
   state: (): {
     media: MediaItem[]
@@ -123,7 +125,7 @@ export const useBrowserStore = defineStore("browserStore", {
         const { data } = await creationsBrowseCreateRequests({
           order: "desc",
           endDateTime: last?.createdAt.toISOString(),
-          limit: 100,
+          limit: PAGE_SIZE,
           promptIncludes: this.search || undefined,
           aspectRatio: this.filter.aspectRatio as any,
           model: this.filter.model as any,
@@ -148,7 +150,7 @@ export const useBrowserStore = defineStore("browserStore", {
         const { data } = await creationsBrowseCreateRequests({
           order: "asc",
           startDateTime: first?.createdAt.toISOString(),
-          limit: 100,
+          limit: PAGE_SIZE,
           promptIncludes: this.search || undefined,
           aspectRatio: this.filter.aspectRatio as any,
           model: this.filter.model as any,
@@ -203,7 +205,7 @@ export const useBrowserStore = defineStore("browserStore", {
 
           const item: MediaItem = {
             id: m.id,
-            url: t === "image" ? img(m.id, "md") : s3Video(m.id, "preview-md"),
+            url: t === "image" ? img(m.id, "sm") : s3Video(m.id, "preview-md"),
             type: t,
             aspectRatio,
             createdAt: new Date(row.createdAt),

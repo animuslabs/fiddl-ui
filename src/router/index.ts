@@ -2,7 +2,7 @@ import { route } from "quasar/wrappers"
 import { createMemoryHistory, createRouter, createWebHashHistory, createWebHistory } from "vue-router"
 
 import routes from "./routes"
-import { setupRoutePrefetch } from "src/lib/routePreloader"
+import { prefetchRoute } from "src/lib/routePreloader"
 import { events } from "lib/eventsManager"
 
 // const createHistory = import.meta.env.SERVER ? createMemoryHistory : import.meta.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory
@@ -119,18 +119,16 @@ Router.afterEach((to) => {
 
 // Preload other route chunks when idle after initial load
 if (!import.meta.env.SSR) {
+  const PREFETCH_ROUTE_NAMES = ["browse", "create", "models", "missions", "forge", "profile", "index"]
+
   const startRoutePrefetch = () => {
-    setupRoutePrefetch(Router, {
-      // Skip heavy/rare pages by default; adjust as needed
-      excludeNames: ["magicMirror", "magicMirrorBanana"],
-      concurrency: 2,
-      delayMs: 0,
-      runOnce: true,
-    })
+    for (const name of PREFETCH_ROUTE_NAMES) {
+      prefetchRoute(Router, { name })
+    }
   }
 
   const scheduleRoutePrefetch = () => {
-    window.setTimeout(startRoutePrefetch, 800)
+    window.setTimeout(startRoutePrefetch, 8000)
   }
 
   if (document.readyState === "complete") scheduleRoutePrefetch()
