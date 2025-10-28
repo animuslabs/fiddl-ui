@@ -56,6 +56,8 @@ const props = withDefaults(
     bottomBarHeight?: number | string
     // When true, show small creator avatar+name in the reserved bottom bar
     showCreator?: boolean
+    // External loading flag to force initial skeletons (e.g., browse feed)
+    skeletonLoading?: boolean
   }>(),
   {
     layout: "grid",
@@ -78,6 +80,7 @@ const props = withDefaults(
     topBarHeight: 0,
     bottomBarHeight: 0,
     showCreator: false,
+    skeletonLoading: false,
   },
 )
 
@@ -258,7 +261,7 @@ function onPinchStart(ev: TouchEvent, m: MediaGalleryMeta) {
     if (!rect) return
 
     pinchActiveId.value = m.id
-    pinchImageUrl.value = m.url || img(m.id, "lg")
+    pinchImageUrl.value = m.url || img(String(m.id), "lg")
     pinchStartRect.value = { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
     pinchStartDistance.value = dist(t1, t2)
     // Center between touches relative to the host top-left for transform-origin
@@ -321,9 +324,31 @@ const imageCurrentSize = ref<Record<string, ImageSize>>({})
 const imageUpgradeQueue = ref<Record<string, ImageSize[]>>({})
 const imageUpgradeAttempts = ref<Record<string, Partial<Record<ImageSize, number>>>>({})
 const imageUpgradeInFlight = ref<Record<string, boolean>>({})
+const previewInitialSize: ImageSize = "sm"
+const previewUpgradeTarget: ImageSize = "md"
+const sizeRank: Record<string, number> = { xs: 0, sm: 1, md: 2, lg: 3, xl: 4, hd: 5 }
 let imageUpgradeTimer: number | null = null
 const UPGRADE_INTERVAL_MS = 2000
 const MAX_ATTEMPTS_PER_SIZE = 30
+const SKELETON_COUNT = 30
+const skeletonSeed = ref<number>(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))
+
+function getSizeRank(size: ImageSize): number {
+  return sizeRank[String(size)] ?? 99
+}
+
+function createSeededRandom(seed: number) {
+  let t = (seed ^ 0x6d2b79f5) >>> 0
+  return () => {
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function reseedSkeletons() {
+  skeletonSeed.value = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+}
 
 // Intersection-based visibility map to unmount offscreen media
 const visibleMap = ref<Record<string, boolean>>({})
@@ -474,7 +499,7 @@ function barBgUrlFor(m: MediaGalleryMeta): string {
     // Prefer smaller assets for the blurred backdrop
     // For videos, use the static thumbnail for stable/lightweight blur
     if ((m.type ?? m.mediaType) === "video") return s3Video(m.id, "thumbnail")
-    return img(m.id, "sm")
+    return img(String(m.id), "sm")
   } catch {
     return m.url || ""
   }
@@ -922,15 +947,62 @@ const mediaAspectBoxStyle = computed(() => {
 const galleryItems = ref<MediaGalleryMeta[]>([])
 // Show skeletons when loading and no items yet
 const showSkeletons = computed(() => {
-  if (!props.showLoading) return false
   if ((galleryItems.value?.length || 0) > 0) return false
+  if (props.skeletonLoading) return true
+  if (!props.showLoading) return false
   return imageCreations.loadingCreations || videoCreations.loadingCreations
 })
 
-const skeletonCount = computed(() => {
-  if (isPhone.value) return layoutEffective.value === "grid" ? 4 : 6
-  const c = cols.value || 4
-  return layoutEffective.value === "grid" ? c * 2 : c * 3
+watch(
+  () => [layoutEffective.value, cols.value, isPhone.value, props.skeletonLoading],
+  () => {
+    if (showSkeletons.value) reseedSkeletons()
+  },
+)
+
+watch(
+  () => showSkeletons.value,
+  (val, oldVal) => {
+    if (val && !oldVal) reseedSkeletons()
+  },
+)
+
+const skeletonItems = computed(() => {
+  const count = SKELETON_COUNT
+  const isMosaic = layoutEffective.value === "mosaic"
+  const items: Array<{ id: string; style: Record<string, string> }> = []
+  const rng = createSeededRandom(skeletonSeed.value || 1)
+
+  const effectiveCols = (() => {
+    if (isPhone.value) {
+      return isMosaic ? 2 : 1
+    }
+    return Math.max(1, cols.value || 1)
+  })()
+
+  for (let i = 0; i < count; i++) {
+    const style: Record<string, string> = {}
+    if (isMosaic) {
+      let colSpan = 1
+      const rollCol = rng()
+      if (rollCol > 0.8) colSpan = 3
+      else if (rollCol > 0.5) colSpan = 2
+      colSpan = Math.max(1, Math.min(effectiveCols, colSpan))
+
+      let rowSpan = 1
+      const rollRow = rng()
+      if (rollRow > 0.85) rowSpan = 3
+      else if (rollRow > 0.5) rowSpan = 2
+      if (isPhone.value) rowSpan = Math.min(rowSpan, 2)
+
+      style.gridColumn = `span ${colSpan}`
+      style.gridRow = `span ${rowSpan}`
+    }
+
+    items.push({ id: `sk-${i}`, style })
+  }
+
+  return items
 })
 // Offscreen unloading is disabled for small galleries to avoid Safari popping
 const UNLOAD_THRESHOLD = 200
@@ -1058,10 +1130,32 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
     .filter((item): item is MediaGalleryMeta => !!item && (typeof (item as any).id === "string" || typeof (item as any).id === "number"))
     .map((item) => {
       const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
-      if (!item.url) item.url = incomingType === "video" ? s3Video(item.id, "preview-lg") : img(item.id, "lg")
+      const mediaId = String(item.id)
+      if (!item.url) {
+        item.url = incomingType === "video" ? s3Video(mediaId, "preview-lg") : img(mediaId, previewInitialSize)
+      }
       const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
       const type: "image" | "video" = derived === "video" ? "video" : "image"
       const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
+      if (type === "image") {
+        const existingSize = imageCurrentSize.value[mediaId]
+        const providedSize = extractSizeFromUrl(item.url || "")
+        let initialSize: ImageSize
+        if (existingSize) {
+          initialSize = existingSize
+        } else if (providedSize) {
+          initialSize = getSizeRank(providedSize) > getSizeRank(previewUpgradeTarget) ? previewInitialSize : providedSize
+        } else {
+          initialSize = previewInitialSize
+        }
+        const currentUrlSize = providedSize
+        if (!currentUrlSize || currentUrlSize !== initialSize) {
+          item.url = img(mediaId, initialSize)
+        }
+        if (!isPlaceholder) {
+          initImageProgressState(mediaId, item.url, previewUpgradeTarget)
+        }
+      }
       const fallbackAspect = type === "video" ? 16 / 9 : 1
       const cachedAspect = getCachedAspectRatio(item.id)
       const baseAspect = typeof item.aspectRatio === "number" ? item.aspectRatio : cachedAspect
@@ -1069,8 +1163,6 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
         rememberAspectRatio(item.id, baseAspect)
       }
       const aspectRatio = layoutEffective.value === "grid" ? 1 : isPlaceholder ? 1.6 : (baseAspect ?? fallbackAspect)
-      // Initialize progressive target/current sizes for images
-      if (type === "image") initImageProgressState(item.id, item.url)
       return { ...item, type, aspectRatio }
     })
 
@@ -1094,7 +1186,7 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
         // Recreate a minimal placeholder tile so the user sees continued loading feedback
         stickyPendingMap.value[id] = {
           id,
-          url: img(id, "lg"),
+          url: img(String(id), previewInitialSize),
           type: "image",
           placeholder: true,
           aspectRatio: layoutEffective.value === "grid" ? 1 : 1.6,
@@ -1217,19 +1309,21 @@ function markImageErrored(id: string) {
   if (!item) return
   // Determine current and target sizes
   const curUrl = item.url || ""
-  const curSize = imageCurrentSize.value[id] || extractSizeFromUrl(curUrl) || ("lg" as ImageSize)
-  const target = imageTargetSize.value[id] || curSize
+  const curSize = imageCurrentSize.value[id] || extractSizeFromUrl(curUrl) || previewInitialSize
+  const target = imageTargetSize.value[id] || previewUpgradeTarget
   // If current attempted size failed and it's larger than sm, fallback to sm immediately
-  if (curSize !== "sm") {
+  if (getSizeRank(curSize) > getSizeRank(previewInitialSize)) {
     // Initialize upgrade plan if not set
-    if (!imageUpgradeQueue.value[id]) {
-      imageUpgradeQueue.value[id] = target === "lg" ? (["md", "lg"] as ImageSize[]) : target === "md" ? (["md"] as ImageSize[]) : ([] as ImageSize[])
+    const queue = imageUpgradeQueue.value[id] ?? []
+    if (!queue.includes(target)) {
+      imageUpgradeQueue.value[id] = [...queue.filter((size) => size !== target), target]
       imageUpgradeAttempts.value[id] = {}
     }
+    imageTargetSize.value[id] = target
     // Switch to small for instant feedback
-    const nextUrl = img(id, "sm") + cacheBust()
+    const nextUrl = img(String(id), previewInitialSize) + cacheBust()
     item.url = nextUrl
-    imageCurrentSize.value[id] = "sm"
+    imageCurrentSize.value[id] = previewInitialSize
     // Show loading overlay until sm finishes the very first time
     imageLoading.value[id] = true
     // Ensure upgrade loop is running
@@ -1706,10 +1800,33 @@ function extractSizeFromUrl(url: string): ImageSize | null {
   }
 }
 
-function initImageProgressState(id: string, url: string) {
-  const size = extractSizeFromUrl(url) || ("lg" as ImageSize)
-  if (!imageTargetSize.value[id]) imageTargetSize.value[id] = size
-  if (!imageCurrentSize.value[id]) imageCurrentSize.value[id] = size
+function initImageProgressState(id: string, url: string, target?: ImageSize) {
+  const sizeFromUrl = extractSizeFromUrl(url) || previewInitialSize
+  if (!imageCurrentSize.value[id]) {
+    imageCurrentSize.value[id] = sizeFromUrl
+  }
+  const currentSize = imageCurrentSize.value[id] ?? sizeFromUrl
+
+  if (!target) {
+    if (!imageTargetSize.value[id]) imageTargetSize.value[id] = currentSize
+    return
+  }
+
+  const currentRank = getSizeRank(currentSize)
+  const targetRank = getSizeRank(target)
+
+  if (currentRank >= targetRank) {
+    imageTargetSize.value[id] = currentSize
+    return
+  }
+
+  imageTargetSize.value[id] = target
+  const queue = imageUpgradeQueue.value[id] ?? []
+  if (!queue.includes(target)) {
+    imageUpgradeQueue.value[id] = [...queue.filter((size) => size !== target), target]
+    imageUpgradeAttempts.value[id] = {}
+  }
+  ensureImageUpgradeTimer()
 }
 
 function ensureImageUpgradeTimer() {
@@ -1738,12 +1855,12 @@ function runImageUpgradeTick() {
         continue
       }
       // Prefetch the next size; use a cache-buster to avoid CDN 404 caching
-      const testUrl = img(id, nextSize) + cacheBust(now)
+      const testUrl = img(String(id), nextSize) + cacheBust(now)
       imageUpgradeInFlight.value[id] = true
       prefetchImage(testUrl)
         .then(() => {
           // Swap in the higher resolution
-          item.url = img(id, nextSize) + cacheBust(now)
+          item.url = img(String(id), nextSize) + cacheBust(now)
           imageCurrentSize.value[id] = nextSize
           // Move to the next step in the queue
           queue.shift()
@@ -1803,7 +1920,7 @@ function prefetchImage(url: string): Promise<void> {
     )
   // Initial skeleton shimmer when loading with no items
   div(v-if="showSkeletons" :style="wrapperStyles" class="mg-grid" ref="gridRef")
-    div(v-for="i in skeletonCount" :key="'sk-'+i" class="mg-skel-cell")
+    div(v-for="sk in skeletonItems" :key="sk.id" class="mg-skel-cell" :style="sk.style")
       q-skeleton(type="rect" animation="wave" class="mg-skel-box")
 
   div.mg-group(
@@ -2195,7 +2312,8 @@ function prefetchImage(url: string): Promise<void> {
 }
 .mg-skel-box {
   width: 100%;
-  height: 100px;
+  height: 100%;
+  min-height: 96px;
   border-radius: 6px;
 }
 .media-container {

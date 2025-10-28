@@ -28,6 +28,9 @@ function isTmaMode() {
 }
 
 function injectScript(timeoutMs = 15000): Promise<void> {
+  // Tawk temporarily disabled; keep a resolved promise for callers.
+  return Promise.resolve()
+  /*
   // Do not load Tawk inside Telegram Mini App
   if (isTmaMode()) return Promise.resolve()
   if (isClientReady()) return Promise.resolve()
@@ -70,6 +73,7 @@ function injectScript(timeoutMs = 15000): Promise<void> {
   })
 
   return loadPromise
+  */
 }
 
 export const tawk = {
@@ -156,6 +160,12 @@ export const tawk = {
   },
 
   async setVisitorInfo(name: string, email: string, extraAttributes?: Record<string, any>) {
+    // Tawk temporarily disabled.
+    void name
+    void email
+    void extraAttributes
+    return
+    /*
     if (isTmaMode()) return
     this.unloadScript()
     window.Tawk_API = window.Tawk_API || {}
@@ -164,5 +174,6 @@ export const tawk = {
       window.Tawk_API.attributes = { ...(window.Tawk_API.attributes || {}), ...extraAttributes }
     }
     await this.reloadScript()
+    */
   },
 }

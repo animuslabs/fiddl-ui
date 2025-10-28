@@ -39,9 +39,6 @@
 import { defineComponent } from "vue"
 import { useUserAuth } from "stores/userAuth"
 import { Dialog, LocalStorage, Notify, SessionStorage } from "quasar"
-import ImageGallery from "src/components/dialogs/MediaViewer.vue"
-import ReferralSurveyDialog from "src/components/dialogs/ReferralSurvey.vue"
-import MotdDialog from "src/components/dialogs/MotdDialog.vue"
 import { shortIdToLong, toObject } from "lib/util"
 import { usePricesStore } from "src/stores/pricesStore"
 import { tawk } from "lib/tawk"
@@ -50,6 +47,10 @@ import { handleClaimCode } from "lib/promoCodeUtil"
 import { useMissionsStore } from "stores/missionsStore"
 import { useAsyncErrorStore } from "stores/asyncErrorStore"
 import { useMotdStore } from "stores/motdStore"
+import ImageGallery from "src/components/dialogs/MediaViewer.vue"
+import ReferralSurveyDialog from "src/components/dialogs/ReferralSurvey.vue"
+import MotdDialog from "src/components/dialogs/MotdDialog.vue"
+type MediaViewerRef = { show: () => void }
 // LoadingBar.setDefaults({
 //   color: "transparent",
 //   size: "1px",
@@ -81,6 +82,7 @@ export default defineComponent({
       motd: useMotdStore(),
       motdSuppressed: false as boolean,
       motdAllowedRoutes: ["index", "browse", "create", "forge"] as string[],
+      deferredStartTimers: {} as Record<string, number | null>,
     }
   },
   computed: {
@@ -112,18 +114,28 @@ export default defineComponent({
         const missions = useMissionsStore()
         const asyncErrors = useAsyncErrorStore()
         if (val) {
-          missions.startPolling()
+          this.scheduleDeferredStart("missionsPolling", () => missions.startPolling())
           // Initial check for claimables after login
           this.maybeNotifyClaimables()
           // Check if we should prompt referral survey on login
           this.$nextTick(() => this.maybeShowReferralSurvey())
-          asyncErrors.startPolling()
-          void this.motd.refreshLatest()
-          this.motd.startPolling()
+          this.scheduleDeferredStart("asyncErrorsPolling", () => asyncErrors.startPolling())
+          this.scheduleDeferredStart("motdPolling", async () => {
+            try {
+              await this.motd.refreshLatest()
+            } catch (err) {
+              console.warn("motd refresh delayed start failed", err)
+            }
+            this.motd.startPolling()
+            this.handleMotdRouteChange(this.isMotdAllowedRoute)
+          })
           this.handleMotdRouteChange(this.isMotdAllowedRoute)
         } else {
+          this.clearDeferredStart("missionsPolling")
           missions.stopPolling()
+          this.clearDeferredStart("asyncErrorsPolling")
           asyncErrors.stopPolling()
+          this.clearDeferredStart("motdPolling")
           this.motd.stopPolling()
           this.motd.closeDialog(false)
           this.motdSuppressed = false
@@ -183,7 +195,43 @@ export default defineComponent({
       { immediate: true },
     )
   },
+  beforeUnmount() {
+    this.clearAllDeferredStarts()
+  },
   methods: {
+    scheduleDeferredStart(key: string, runner: () => void | Promise<void>, delayMs = 10_000) {
+      if (typeof window === "undefined") {
+        try {
+          void Promise.resolve(runner())
+        } catch (err) {
+          console.warn("deferred start immediate execution failed", err)
+        }
+        return
+      }
+      this.clearDeferredStart(key)
+      const timer = window.setTimeout(() => {
+        this.deferredStartTimers[key] = null
+        try {
+          const result = runner()
+          if (result && typeof (result as PromiseLike<unknown>).then === "function") {
+            void Promise.resolve(result).catch((err) => console.warn(`deferred start '${key}' rejected`, err))
+          }
+        } catch (err) {
+          console.warn(`deferred start '${key}' failed`, err)
+        }
+      }, delayMs)
+      this.deferredStartTimers[key] = timer
+    },
+    clearDeferredStart(key: string) {
+      const timer = this.deferredStartTimers[key]
+      if (typeof timer === "number") {
+        window.clearTimeout(timer)
+      }
+      this.deferredStartTimers[key] = null
+    },
+    clearAllDeferredStarts() {
+      Object.keys(this.deferredStartTimers).forEach((key) => this.clearDeferredStart(key))
+    },
     async maybeShowReferralSurvey() {
       try {
         if (!this.$userAuth?.loggedIn) return
@@ -279,9 +327,8 @@ export default defineComponent({
     },
     openDialog(startingIndex = 0, images: string[]) {
       this.images = toObject(images)
-      const gallery = this.$refs.gallery as InstanceType<typeof ImageGallery>
-      console.log(gallery)
-      gallery.show()
+      const gallery = this.$refs.gallery as MediaViewerRef | undefined
+      gallery?.show()
       // gallery.openDialog(startingIndex)
     },
   },

@@ -119,13 +119,22 @@ Router.afterEach((to) => {
 
 // Preload other route chunks when idle after initial load
 if (!import.meta.env.SSR) {
-  setupRoutePrefetch(Router, {
-    // Skip heavy/rare pages by default; adjust as needed
-    excludeNames: ["magicMirror", "magicMirrorBanana"],
-    concurrency: 2,
-    delayMs: 500,
-    runOnce: true,
-  })
+  const startRoutePrefetch = () => {
+    setupRoutePrefetch(Router, {
+      // Skip heavy/rare pages by default; adjust as needed
+      excludeNames: ["magicMirror", "magicMirrorBanana"],
+      concurrency: 2,
+      delayMs: 0,
+      runOnce: true,
+    })
+  }
+
+  const scheduleRoutePrefetch = () => {
+    window.setTimeout(startRoutePrefetch, 800)
+  }
+
+  if (document.readyState === "complete") scheduleRoutePrefetch()
+  else window.addEventListener("load", scheduleRoutePrefetch, { once: true })
 
   // As a safety net, also watch for unhandled dynamic import rejections
   window.addEventListener("unhandledrejection", (ev) => {

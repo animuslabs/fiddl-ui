@@ -82,6 +82,10 @@ function sanitizeParams(input?: Record<string, any>): Record<string, string> | u
 
 export const datafast = {
   goal(eventName: string, params?: Record<string, any>): void {
+    void eventName
+    void params
+    // DataFast temporarily disabled.
+    /*
     if (!isBrowser) return
     const df = getDf()
     if (!df) return
@@ -91,11 +95,15 @@ export const datafast = {
       if (meta) df(name, meta)
       else df(name)
     } catch {
-      /* no-op */
+      // no-op
     }
+    */
   },
 
   identify(params: { user_id: string; name?: string; image?: string } & Record<string, any>): void {
+    void params
+    // DataFast temporarily disabled.
+    /*
     if (!isBrowser) return
     const df = getDf()
     if (!df) return
@@ -114,10 +122,10 @@ export const datafast = {
     try {
       df("identify", p)
     } catch {
-      /* no-op */
+      // no-op
     }
+    */
   },
 }
 
 export default datafast
-

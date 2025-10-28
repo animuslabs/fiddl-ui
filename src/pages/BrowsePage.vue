@@ -19,6 +19,7 @@ q-page.full-height.full-width.relative-position
         :layout="viewMode"
         :rowHeightRatio="1.2"
         :show-loading="false"
+        :skeleton-loading="browserStore.loading"
         :top-bar-height="18"
         :bottom-bar-height="26"
         show-creator

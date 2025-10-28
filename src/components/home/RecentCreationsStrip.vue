@@ -58,7 +58,7 @@ export default defineComponent({
       items: [] as MediaStripItem[],
       loading: false as boolean,
       pollId: null as any,
-      limit: 60 as number,
+      limit: 20 as number,
     }
   },
   computed: {
@@ -187,7 +187,7 @@ export default defineComponent({
           out.push({
             id,
             type: t,
-            url: t === "image" ? img(id, "md") : s3Video(id, "preview-md"),
+            url: t === "image" ? img(id, "sm") : s3Video(id, "preview-md"),
             aspectRatio: parseAspectRatio((row as any).aspectRatio as any),
             createdAt: new Date((row as any).createdAt as any).toISOString(),
             nsfw: m.nsfw === true,

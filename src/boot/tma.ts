@@ -2,6 +2,8 @@ import { boot } from "quasar/wrappers"
 import { jwt } from "src/lib/jwt"
 import { useUserAuth } from "src/stores/userAuth"
 import axios from "axios"
+import { ensureTelegramSdkLoaded, hasTelegramWebApp, isLikelyTmaSession } from "src/lib/telegramEnv"
+import { ensureTelemetreeInitialized } from "src/lib/telemetreeBridge"
 
 // Lazy import to avoid pulling analytics in non‑TMA sessions unnecessarily
 let telegramAnalytics: any
@@ -41,24 +43,41 @@ const D = {
 function isTmaEnv(): boolean {
   try {
     if (typeof window === "undefined") return false
-    const qp = new URLSearchParams(window.location.search)
-    const forced = qp.has("tma") || qp.has("tgWebApp") || qp.get("mode") === "tma"
-
     const tg = (window as any)?.Telegram?.WebApp
-    // Only treat as TMA when real Telegram window data is present.
-    // The SDK may define Telegram.WebApp even outside Telegram; require non-empty initData.
     const hasInitData = typeof tg?.initData === "string" && tg.initData.length > 0
-    const result = Boolean(forced || hasInitData)
-    D.log("Env check", { forced, hasInitData, result })
+    const result = Boolean(hasInitData || isLikelyTmaSession())
+    D.log("Env check", { hasInitData, likely: isLikelyTmaSession(), hasTelegramWebApp: hasTelegramWebApp(), result })
     return result
   } catch {
     return false
   }
 }
 
+async function ensureTelegramContext(): Promise<boolean> {
+  if (typeof window === "undefined") return false
+  if (hasTelegramWebApp()) return true
+  try {
+    await ensureTelegramSdkLoaded({ force: true })
+  } catch (err) {
+    D.warn("Failed to load Telegram SDK", err)
+    return false
+  }
+  // Give Telegram a beat to populate WebApp interface
+  for (let i = 0; i < 10; i++) {
+    if (hasTelegramWebApp()) return true
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  return hasTelegramWebApp()
+}
+
 async function initAnalyticsIfPossible() {
   try {
     if (!isTmaEnv()) return
+    const contextReady = await ensureTelegramContext()
+    if (!contextReady) {
+      D.warn("Skip analytics init: Telegram context unavailable")
+      return
+    }
     // Avoid double init
     const w = window as any
     if (w.__tmaAnalyticsInit) return
@@ -82,9 +101,14 @@ async function initAnalyticsIfPossible() {
   }
 }
 
-function prepareTmaShell() {
+async function prepareTmaShell() {
   try {
     if (!isTmaEnv()) return
+    const contextReady = await ensureTelegramContext()
+    if (!contextReady) {
+      D.warn("TMA shell skipped: Telegram SDK unavailable")
+      return
+    }
     const tg = (window as any)?.Telegram?.WebApp
     if (tg) {
       D.log("WebApp present", {
@@ -118,6 +142,7 @@ function prepareTmaShell() {
     document.documentElement.classList.add("tma-mode")
     ;(window as any).__TMA__ = { enabled: true }
     ;(window as any).__TMA_DEBUG__ = { enabled: isDebugEnabled() }
+    void ensureTelemetreeInitialized().catch(() => {})
   } catch {}
 }
 
@@ -125,6 +150,11 @@ async function loginViaWebAppIfPossible() {
   try {
     if (!isTmaEnv()) {
       D.log("Skip WebApp login: not in TMA env")
+      return false
+    }
+    const contextReady = await ensureTelegramContext()
+    if (!contextReady) {
+      D.warn("Skip WebApp login: Telegram context unavailable")
       return false
     }
     // Small retry to give Telegram time to inject interface on some platforms
@@ -213,7 +243,7 @@ export default boot(async ({ router }) => {
     const base = apiBase.replace(/\/$/, "") + "/api"
     if (!axios.defaults.baseURL) axios.defaults.baseURL = base
   } catch {}
-  prepareTmaShell()
+  await prepareTmaShell()
   await initAnalyticsIfPossible()
   // In TMA mode, ensure no prior login is restored or kept around
   try {

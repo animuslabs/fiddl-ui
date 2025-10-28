@@ -5,7 +5,6 @@ import { type NotificationConfig, type PointsTransfer, type UserData, type UserP
 import { User } from "lib/prisma"
 import { jwt } from "lib/jwt"
 import umami from "lib/umami"
-import telemetree from "lib/telemetree"
 import { events } from "lib/eventsManager"
 import { catchErr, getReferredBy } from "lib/util"
 import { clearImageSecretCache } from "lib/imageCdn"
@@ -35,6 +34,7 @@ import { useCreateImageStore } from "src/stores/createImageStore"
 import { tawk } from "lib/tawk"
 import { avatarImg } from "lib/netlifyImg"
 import { extractLoginToken } from "lib/loginLink"
+import { getTelemetree } from "lib/telemetreeBridge"
 
 export const useUserAuth = defineStore("userAuth", {
   state() {
@@ -94,7 +94,8 @@ export const useUserAuth = defineStore("userAuth", {
         if (this.userProfile) {
           umami.identify({ userId: this.userId!, userName: this.userProfile.username! })
           try {
-            telemetree.identify({
+            const telemetree = await getTelemetree()
+            telemetree?.identify({
               userId: this.userId!,
               username: this.userProfile.username || undefined,
               email: this.userProfile.email || undefined,
@@ -435,7 +436,11 @@ export const useUserAuth = defineStore("userAuth", {
       }
       this.upvotesWalletRefreshInFlight = false
       umami.identify({ userId: "logged-out" })
-      try { telemetree.identify({ userId: "logged-out" }) } catch {}
+      void getTelemetree()
+        .then((telemetree) => {
+          telemetree?.identify({ userId: "logged-out" })
+        })
+        .catch(() => {})
       clearImageSecretCache()
       if (uid) clearAvatarVersion(uid)
       // useCreateImageStore().$reset()

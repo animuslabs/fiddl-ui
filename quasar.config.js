@@ -28,7 +28,7 @@ export default configure(function (/* ctx */) {
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     // Put TMA boot first to initialize analytics as early as possible
     // Initialize Telemetree early as well (after TMA)
-    boot: ["tma", "telemetree", "boot", "componentDefaults", "vueQuery"],
+    boot: ["tma", "telemetree", "boot", "analytics", "componentDefaults", "vueQuery", "icons"],
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.sass"],
 
@@ -41,7 +41,6 @@ export default configure(function (/* ctx */) {
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-      "material-symbols-outlined",
       "roboto-font", // optional, you are not bound to it
       "material-icons", // optional, you are not bound to it
     ],
@@ -61,8 +60,25 @@ export default configure(function (/* ctx */) {
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ["vue", "vue-router", "pinia"],
+          manualChunks(id) {
+            const normalized = id.split("\\").join("/")
+            if (normalized.includes("node_modules")) {
+              if (["/node_modules/vue/", "/node_modules/vue-router/", "/node_modules/pinia/"].some((pkg) => normalized.includes(pkg))) {
+                return "vendor"
+              }
+              if (normalized.includes("/node_modules/quasar/")) return "quasar"
+              if (normalized.includes("/node_modules/@tanstack/vue-query/")) return "vue-query"
+              if (normalized.includes("/node_modules/@tonomy/")) return "tonomy"
+              if (
+                normalized.includes("/node_modules/crypto-js/") ||
+                normalized.includes("/node_modules/jsencrypt/") ||
+                normalized.includes("/node_modules/@telegram-apps/analytics/")
+              ) {
+                return "tma"
+              }
+            }
+            if (normalized.includes("/src/lib/telemetree")) return "tma"
+            return undefined
           },
         },
       },
