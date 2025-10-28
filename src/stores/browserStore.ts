@@ -58,6 +58,7 @@ export const useBrowserStore = defineStore("browserStore", {
     loading: boolean
     search: string | null
     randomSeed: number
+    initialPrefetchDone: boolean
     filter: {
       aspectRatio?: string
       model?: string
@@ -69,6 +70,7 @@ export const useBrowserStore = defineStore("browserStore", {
     loading: false,
     search: null,
     randomSeed: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
+    initialPrefetchDone: false,
     filter: { sort: "shuffle", mediaType: "all" },
   }),
 
@@ -102,10 +104,12 @@ export const useBrowserStore = defineStore("browserStore", {
     },
     reset() {
       this.media = []
+      this.initialPrefetchDone = false
       void this.loadCreations()
     },
     searchCreations() {
       this.media = []
+      this.initialPrefetchDone = false
       void this.loadCreations()
     },
     deleteMedia(id: string) {
@@ -117,9 +121,11 @@ export const useBrowserStore = defineStore("browserStore", {
     },
 
     /* ---------- main loaders ---------- */
-    async loadCreations() {
+    async loadCreations(options?: { skipPrefetch?: boolean }) {
+      const opts = options ?? {}
       this.loading = true
       const last = this.media[this.media.length - 1]
+      let rows: BrowseRow[] = []
 
       try {
         const { data } = await creationsBrowseCreateRequests({
@@ -133,11 +139,17 @@ export const useBrowserStore = defineStore("browserStore", {
           sortMethod: this.filter.sort,
           mediaType: this.filter.mediaType,
         })
-        this.addBatch(data as unknown as BrowseRow[])
+        rows = data as unknown as BrowseRow[]
+        this.addBatch(rows)
       } catch (err) {
         console.error("loadCreations failed", err)
       } finally {
         this.loading = false
+      }
+
+      if (!opts.skipPrefetch && !this.initialPrefetchDone && rows.length > 0) {
+        this.initialPrefetchDone = true
+        void this.loadCreations({ skipPrefetch: true })
       }
     },
 

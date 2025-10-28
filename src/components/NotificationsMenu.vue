@@ -24,7 +24,7 @@ div.relative-position.self-center
       div.q-pa-sm(:style="menuContainerStyle")
         .q-mb-sm.row.items-center.justify-between
           .text-subtitle2 Notifications
-          q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
+          q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0 || markingAll" :loading="loading || markingAll")
             q-tooltip Mark all as seen
         q-separator
         q-scroll-area(:style="menuScrollStyle")
@@ -48,11 +48,23 @@ div.relative-position.self-center
                     router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
+                .row.items-center.q-gutter-xs.q-mt-xs(v-if="pointsRewardLabel(ev)")
+                  q-chip(color="accent" text-color="black" dense size="sm" icon="img:/FiddlPointsLogo.svg" :label="pointsRewardLabel(ev)")
                 .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
                   span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
               q-item-section(side top)
-                q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
+                q-btn(
+                  flat
+                  round
+                  dense
+                  :size="isMobile ? 'xs' : 'sm'"
+                  :icon="ev.seen ? 'check' : 'mark_email_unread'"
+                  :color="ev.seen ? 'grey' : 'primary'"
+                  :disable="markingAll || isMarking(ev.id)"
+                  :loading="isMarking(ev.id)"
+                  @click.stop="toggleSeen(ev)"
+                )
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
         q-separator
@@ -67,7 +79,7 @@ div.relative-position.self-center
         .q-mb-sm.row.items-center.justify-between
           .text-subtitle2 Notifications
           div.row.items-center.q-gutter-xs
-            q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0" :loading="loading")
+            q-btn(flat dense icon="done_all" @click.stop="markAllSeen" :disable="unreadCount === 0 || markingAll" :loading="loading || markingAll")
               q-tooltip Mark all as seen
             q-btn(flat dense icon="close" @click.stop="open = false")
               q-tooltip Close
@@ -93,11 +105,23 @@ div.relative-position.self-center
                     router-link(:to="{ name: 'profile', params: { username: ev.originUsername } }" class="notif-link") @{{ ev.originUsername }}
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
+                .row.items-center.q-gutter-xs.q-mt-xs(v-if="pointsRewardLabel(ev)")
+                  q-chip(color="accent" text-color="black" dense size="sm" icon="img:/FiddlPointsLogo.svg" :label="pointsRewardLabel(ev)")
                 .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
                   span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
               q-item-section(side top)
-                q-btn(flat round dense :size="isMobile ? 'xs' : 'sm'" :icon="ev.seen ? 'check' : 'mark_email_unread'" :color="ev.seen ? 'grey' : 'primary'" @click.stop="toggleSeen(ev)")
+                q-btn(
+                  flat
+                  round
+                  dense
+                  :size="isMobile ? 'xs' : 'sm'"
+                  :icon="ev.seen ? 'check' : 'mark_email_unread'"
+                  :color="ev.seen ? 'grey' : 'primary'"
+                  :disable="markingAll || isMarking(ev.id)"
+                  :loading="isMarking(ev.id)"
+                  @click.stop="toggleSeen(ev)"
+                )
           .text-caption.text-grey-6.q-pa-md.text-center(v-else)
             | No notifications yet
         q-separator
@@ -108,7 +132,14 @@ div.relative-position.self-center
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { eventsPrivateEvents, eventsMarkEventSeen, type EventsPrivateEvents200Item, type EventsPrivateEventsParams, EventsPrivateEvents200ItemType as EventsTypeConst } from "../lib/orval"
+import {
+  eventsPrivateEvents,
+  eventsMarkEventSeen,
+  type EventsPrivateEvents200Item,
+  type EventsPrivateEventsParams,
+  EventsPrivateEvents200ItemType as EventsTypeConst,
+  type EventsPrivateEvents200ItemType,
+} from "../lib/orval"
 import { img, s3Video } from "../lib/netlifyImg"
 import mediaViwer from "../lib/mediaViewer"
 import { emitNotificationsSeen, listenNotificationsSeen } from "../lib/notificationsBus"
@@ -117,16 +148,54 @@ import { viewportHeight } from "src/lib/viewport"
 import { useMotdStore } from "stores/motdStore"
 import type { MotdMessage } from "stores/motdStore"
 
+const REWARDING_EVENT_TYPES: EventsPrivateEvents200ItemType[] = [
+  EventsTypeConst.unlockedImage,
+  EventsTypeConst.unlockedVideo,
+  EventsTypeConst.referredUser,
+  EventsTypeConst.missionCompleted,
+  EventsTypeConst.earnedComission,
+]
+
+const PLAIN_POINTS_EVENT_TYPES: EventsPrivateEvents200ItemType[] = [
+  EventsTypeConst.missionCompleted,
+  EventsTypeConst.earnedComission,
+]
+
+const POINTS_CANDIDATE_KEYS = [
+  "pointsReward",
+  "points_reward",
+  "pointsEarned",
+  "points_earned",
+  "pointsAwarded",
+  "points_awarded",
+  "pointsGranted",
+  "points_granted",
+  "pointsGrant",
+  "points_grant",
+  "pointsDelta",
+  "points_delta",
+  "pointsAdded",
+  "points_added",
+  "rewardPoints",
+  "reward_points",
+  "earnedPoints",
+  "earned_points",
+  "pointsBonus",
+  "points_bonus",
+] as const
+
 export default defineComponent({
   name: "NotificationsMenu",
   data() {
     return {
       open: false as boolean,
       loading: false as boolean,
+      markingAll: false as boolean,
       events: [] as EventsPrivateEvents200Item[],
       pollId: null as any,
       seenCleanup: null as null | (() => void),
       motd: useMotdStore(),
+      markingById: {} as Record<string, boolean>,
     }
   },
   computed: {
@@ -423,33 +492,172 @@ export default defineComponent({
       }
     },
     async toggleSeen(ev: EventsPrivateEvents200Item) {
-      if (ev.seen) return
+      if (!this.$userAuth?.loggedIn || ev.seen || this.markingAll || this.isMarking(ev.id)) return
+      this.setMarking(ev.id, true)
+      const previousSeen = Boolean(ev.seen)
+      ev.seen = true
       try {
         await eventsMarkEventSeen({ eventId: ev.id })
-        ev.seen = true
         emitNotificationsSeen([ev.id])
       } catch (e) {
-        // ignore
+        ev.seen = previousSeen
+      } finally {
+        this.setMarking(ev.id, false)
       }
     },
     async markAllSeen() {
+      if (!this.$userAuth?.loggedIn || this.markingAll) return
       const unseen = this.events.filter((e) => !e.seen)
       const hadMotdUnread = this.motdUnread
       if (unseen.length === 0 && !hadMotdUnread) return
-      const seenIds: string[] = []
-      await Promise.all(
-        unseen.map(async (e) => {
-          try {
-            await eventsMarkEventSeen({ eventId: e.id })
-            e.seen = true
-            seenIds.push(e.id)
-          } catch (err) {
-            // ignore individual failures
+
+      this.markingAll = true
+
+      const successIds: string[] = []
+
+      if (unseen.length > 0) {
+        unseen.forEach((event) => {
+          event.seen = true
+        })
+      }
+
+      if (hadMotdUnread) {
+        this.motd.acknowledgeCurrent()
+      }
+
+      try {
+        if (unseen.length > 0) {
+          const markSeenTasks = unseen.map((event) =>
+            eventsMarkEventSeen({ eventId: event.id })
+              .then(() => {
+                successIds.push(event.id)
+              })
+              .catch(() => {
+                // ignore individual failures
+              }),
+          )
+          await Promise.allSettled(markSeenTasks)
+        }
+
+        if (successIds.length > 0) {
+          emitNotificationsSeen(successIds)
+        }
+      } finally {
+        this.markingAll = false
+      }
+
+      if (this.loading) {
+        await new Promise<void>((resolve) => {
+          const poll = () => {
+            if (!this.loading) {
+              resolve()
+            } else {
+              setTimeout(poll, 50)
+            }
           }
-        }),
-      )
-      if (hadMotdUnread) this.motd.acknowledgeCurrent()
-      if (seenIds.length > 0) emitNotificationsSeen(seenIds)
+          poll()
+        })
+      }
+
+      await this.refresh(true)
+    },
+    setMarking(eventId: string, active: boolean) {
+      if (!eventId) return
+      if (active) {
+        this.markingById = { ...this.markingById, [eventId]: true }
+      } else if (this.markingById[eventId]) {
+        const next = { ...this.markingById }
+        delete next[eventId]
+        this.markingById = next
+      }
+    },
+    isMarking(eventId: string): boolean {
+      return Boolean(eventId && this.markingById[eventId])
+    },
+    normalizePointsValue(value: unknown): number | null {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) return value
+      if (typeof value === "string") {
+        const trimmed = value.trim()
+        if (!trimmed) return null
+        const numeric = Number(trimmed)
+        if (Number.isFinite(numeric) && numeric > 0) return numeric
+      }
+      return null
+    },
+    pointsRewardAmount(ev: EventsPrivateEvents200Item): number | null {
+      if (!REWARDING_EVENT_TYPES.includes(ev.type)) return null
+      const payload = this.parseData(ev)
+      if (!payload || typeof payload !== "object") return null
+      const visited = new Set<object>()
+      const stack: unknown[] = [payload]
+      while (stack.length > 0) {
+        const current = stack.pop()
+        if (!current || typeof current !== "object") continue
+        if (visited.has(current as object)) continue
+        visited.add(current as object)
+        if (Array.isArray(current)) {
+          for (const entry of current) {
+            if (entry && typeof entry === "object") stack.push(entry)
+          }
+          continue
+        }
+        const obj = current as Record<string, unknown>
+        for (const key of POINTS_CANDIDATE_KEYS) {
+          if (key in obj) {
+            const normalized = this.normalizePointsValue(obj[key])
+            if (normalized !== null) return normalized
+          }
+        }
+        if (
+          (Array.isArray(obj.rewards) || Array.isArray((obj as any).reward)) &&
+          !Array.isArray(current)
+        ) {
+          const rewardsArray = (Array.isArray(obj.rewards) ? obj.rewards : []) as unknown[]
+          const altArray = (Array.isArray((obj as any).reward) ? (obj as any).reward : []) as unknown[]
+          ;[...rewardsArray, ...altArray].forEach((entry) => stack.push(entry))
+        }
+        if (
+          typeof obj.reward === "object" &&
+          obj.reward !== null &&
+          !Array.isArray(obj.reward)
+        ) {
+          stack.push(obj.reward)
+        }
+        if (
+          typeof obj.amount !== "undefined" &&
+          typeof obj.type === "string" &&
+          obj.type.toLowerCase().includes("points")
+        ) {
+          const normalized = this.normalizePointsValue(obj.amount)
+          if (normalized !== null) return normalized
+        }
+        if (
+          PLAIN_POINTS_EVENT_TYPES.includes(ev.type) &&
+          "points" in obj &&
+          !("pointsCost" in obj) &&
+          !("points_cost" in obj)
+        ) {
+          const normalized = this.normalizePointsValue(obj.points)
+          if (normalized !== null) return normalized
+        }
+        Object.values(obj).forEach((value) => {
+          if (value && typeof value === "object") stack.push(value)
+        })
+      }
+      return null
+    },
+    formatPointsAmount(amount: number): string {
+      const hasFraction = !Number.isInteger(amount)
+      return amount.toLocaleString(undefined, {
+        maximumFractionDigits: hasFraction ? 2 : 0,
+        minimumFractionDigits: hasFraction ? 1 : 0,
+      })
+    },
+    pointsRewardLabel(ev: EventsPrivateEvents200Item): string | null {
+      const amount = this.pointsRewardAmount(ev)
+      if (amount === null) return null
+      const formatted = this.formatPointsAmount(amount)
+      return `+${formatted} pts`
     },
     handleClick(ev: EventsPrivateEvents200Item) {
       if (ev.type === "creationCommented" || ev.type === "commentMentioned") {

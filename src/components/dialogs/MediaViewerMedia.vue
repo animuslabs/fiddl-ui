@@ -10,6 +10,7 @@ MediaViewerControls(
   div.viewer-root(@click.stop)
     //- Main media display area
     div.relative-position.full-width(
+      :key="mediaViewerStore.currentMediaId"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
@@ -41,6 +42,7 @@ MediaViewerControls(
             loop
             :muted="previewMuted"
             :controls="!showHd"
+            :data-media-id="mediaViewerStore.currentMediaId"
             @canplay="onMediaLoaded"
             @loadedmetadata="onPreviewMetadata"
             @timeupdate="onPreviewTimeUpdate"
@@ -65,6 +67,7 @@ MediaViewerControls(
             :muted="hdMuted"
             :controls="showHd"
             :class="{ visible: showHd }"
+            :data-media-id="mediaViewerStore.currentMediaId"
             @loadedmetadata="onHdMetadata"
             @volumechange="onVolumeChange"
             @click.stop="onMediaClick"
@@ -80,6 +83,7 @@ MediaViewerControls(
         img(
           v-bind="imageAttrs"
           ref="imageRef"
+          :data-media-id="mediaViewerStore.currentMediaId"
         )
 
 
@@ -166,7 +170,7 @@ function commitFrameWidth(width: number, source: "expected" | "measured" = "meas
   const expected = displayDimensions.value.width
   if (expected > 0) {
     const expectedNormalized = Math.max(1, Math.round(expected))
-    const expectedTolerance = Math.max(2, expectedNormalized * 0.01)
+    const expectedTolerance = Math.max(3, expectedNormalized * 0.02)
     if (Math.abs(width - expected) <= expectedTolerance) {
       mediaWidth.value = expectedNormalized
       cacheCommittedWidth(expectedNormalized)
@@ -176,7 +180,7 @@ function commitFrameWidth(width: number, source: "expected" | "measured" = "meas
     }
   }
 
-  const tolerance = Math.max(2, normalized * 0.02)
+  const tolerance = Math.max(3, normalized * 0.025)
   if (Math.abs(normalized - lastMeasuredWidth) <= tolerance) {
     stableMeasuredFrames += 1
   } else {
@@ -203,7 +207,67 @@ let measurementRetryHandle: number | null = null
 let measurementRetryAttempts = 0
 let measurementRaf: number | null = null
 let burstMeasurementsRemaining = 0
-let forcedRecalcTimer: number | null = null
+let forcedRecalcHandle: number | null = null
+let forcedRecalcToken: MediaToken | null = null
+let forcedRecalcFramesRemaining = 0
+type MediaToken = { id: string; seq: number }
+let hasCommittedRealDimensionsForCurrent = false
+function snapshotMediaToken(targetId?: string | null): MediaToken | null {
+  const id = targetId ?? mediaViewerStore.currentMediaId
+  if (!id) return null
+  return { id, seq: mediaViewerStore.loadSequence }
+}
+function isTokenActive(token: MediaToken | null | undefined): boolean {
+  if (!token?.id) return false
+  try {
+    return mediaViewerStore.isActiveLoadSequence(token.seq, token.id)
+  } catch {
+    return false
+  }
+}
+function getMediaIdFromTarget(target: EventTarget | null): string | null {
+  if (!target) return null
+  const dataset = (target as { dataset?: DOMStringMap })?.dataset
+  const id = dataset?.mediaId
+  return typeof id === "string" && id.length > 0 ? id : null
+}
+
+function cancelForcedRecalc() {
+  if (typeof window !== "undefined" && forcedRecalcHandle != null) {
+    window.cancelAnimationFrame(forcedRecalcHandle)
+  }
+  forcedRecalcHandle = null
+  forcedRecalcToken = null
+  forcedRecalcFramesRemaining = 0
+}
+
+function queueForcedRecalc(targetToken?: MediaToken | null, frames = 2) {
+  cancelForcedRecalc()
+  if (typeof window === "undefined") return
+  const resolvedToken = targetToken ?? snapshotMediaToken()
+  if (resolvedToken && !isTokenActive(resolvedToken)) return
+  forcedRecalcToken = resolvedToken
+  forcedRecalcFramesRemaining = Math.max(1, Math.floor(frames))
+
+  const step = () => {
+    forcedRecalcHandle = null
+    if (forcedRecalcToken && !isTokenActive(forcedRecalcToken)) {
+      cancelForcedRecalc()
+      return
+    }
+    forcedRecalcFramesRemaining -= 1
+    if (forcedRecalcFramesRemaining > 0) {
+      forcedRecalcHandle = window.requestAnimationFrame(step)
+      return
+    }
+    recalculateDisplayDimensions()
+    scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+    controlsKey.value += 1
+    cancelForcedRecalc()
+  }
+
+  forcedRecalcHandle = window.requestAnimationFrame(step)
+}
 const frameMaxWidth = computed(() => {
   const available = Math.max(MIN_FRAME_WIDTH, $q.screen.width - 32)
   return Math.min(available, MAX_FRAME_WIDTH)
@@ -330,6 +394,11 @@ function syncActiveVideoElement() {
   void nextTick(() => {
     const active = showHd.value ? hdRef.value : previewRef.value
     if (mediaViewerStore.currentMediaType === "video" && active instanceof HTMLVideoElement) {
+      const token = snapshotMediaToken(getMediaIdFromTarget(active))
+      if (!token || !isTokenActive(token)) {
+        mediaViewerStore.registerVideoElement(null)
+        return
+      }
       mediaViewerStore.registerVideoElement(active)
     } else {
       mediaViewerStore.registerVideoElement(null)
@@ -344,8 +413,9 @@ function clearMetadataRetry() {
   }
 }
 
-function applyVideoDimensions(width: number, height: number): boolean {
+function applyVideoDimensions(width: number, height: number, token?: MediaToken | null): boolean {
   if (!width || !height) return false
+  if (token && !isTokenActive(token)) return false
   previewReady.value = true
   aspectRatio.value = `${width} / ${height}`
   aspectRatioNum.value = width / height
@@ -354,16 +424,18 @@ function applyVideoDimensions(width: number, height: number): boolean {
   return true
 }
 
-function captureVideoDimensionsFrom(video: HTMLVideoElement | null): boolean {
+function captureVideoDimensionsFrom(video: HTMLVideoElement | null, token?: MediaToken | null): boolean {
   if (!video) return false
   const width = Math.round(video.videoWidth || 0)
   const height = Math.round(video.videoHeight || 0)
-  return applyVideoDimensions(width, height)
+  return applyVideoDimensions(width, height, token)
 }
 
-function ensureVideoDimensions(video: HTMLVideoElement | null, attempt = 0): void {
+function ensureVideoDimensions(video: HTMLVideoElement | null, attempt = 0, token?: MediaToken | null): void {
   if (!video) return
-  if (captureVideoDimensionsFrom(video)) {
+  const resolvedToken = token ?? snapshotMediaToken(getMediaIdFromTarget(video))
+  if (!resolvedToken || !isTokenActive(resolvedToken)) return
+  if (captureVideoDimensionsFrom(video, resolvedToken)) {
     clearMetadataRetry()
     scheduleStageMeasurement()
     return
@@ -372,7 +444,7 @@ function ensureVideoDimensions(video: HTMLVideoElement | null, attempt = 0): voi
   clearMetadataRetry()
   const delay = METADATA_RETRY_DELAY_MS * (attempt + 1)
   metadataRetryHandle = window.setTimeout(() => {
-    ensureVideoDimensions(video, attempt + 1)
+    ensureVideoDimensions(video, attempt + 1, resolvedToken)
   }, delay)
 }
 
@@ -463,12 +535,15 @@ const imageAttrs = computed(() => {
 
 async function onMediaLoaded(event?: Event) {
   const target = event?.target as HTMLImageElement | HTMLVideoElement | null
+  const eventMediaId = getMediaIdFromTarget(target)
+  const token = snapshotMediaToken(eventMediaId ?? undefined)
   const isImageEvent = target instanceof HTMLImageElement
   const isVideoEvent = target instanceof HTMLVideoElement
   const currentType = mediaViewerStore.currentMediaType
   const isTypeMatch = (isImageEvent && currentType === "image") || (isVideoEvent && currentType === "video") || (!event && currentType === "image")
   const initialLoad = !mediaViewerStore.firstImageLoaded
-  if (event && !isTypeMatch) return
+  if (event && (!isTypeMatch || (eventMediaId && eventMediaId !== mediaViewerStore.currentMediaId))) return
+  if (event && token && !isTokenActive(token)) return
 
   // Instant ownership from local cache
   if (isOwned(mediaViewerStore.currentMediaId, mediaViewerStore.currentMediaType)) {
@@ -486,32 +561,43 @@ async function onMediaLoaded(event?: Event) {
     } else if (!mediaViewerStore.triedHdLoad) {
       // Only load HD if not already tried (prevents duplicate calls)
       await mediaViewerStore.loadHdMedia()
+      if (token && !isTokenActive(token)) return
     }
   } else if (isVideoEvent && !mediaViewerStore.hdMediaLoaded && !mediaViewerStore.triedHdLoad) {
     // Only load HD if not already tried (prevents duplicate calls)
     await mediaViewerStore.loadHdMedia()
+    if (token && !isTokenActive(token)) return
   }
   if (isVideoEvent) {
-    ensureVideoDimensions((target as HTMLVideoElement | null) ?? previewRef.value)
+    ensureVideoDimensions((target as HTMLVideoElement | null) ?? previewRef.value, 0, token)
+    if (token && !isTokenActive(token)) return
   }
 
+  if (token && !isTokenActive(token)) return
   mediaViewerStore.onMediaLoaded(mediaViewerStore.currentMediaId)
 
   // Preload and load metadata on first load only
   if (initialLoad) {
+    if (token && !isTokenActive(token)) return
     preloadMedia()
     // Only load request ID if not already loaded
     if (!mediaViewerStore.loadedRequestId) {
       await mediaViewerStore.loadRequestId()
+      if (token && !isTokenActive(token)) return
     }
   }
-  scheduleStageMeasurement()
+  if (!token || isTokenActive(token)) {
+    scheduleStageMeasurement()
+  }
 }
 
 // Keep HD buffered and synced behind the preview; when ready, crossfade
 function onPreviewMetadata(e: Event) {
   const v = (e.target as HTMLVideoElement) ?? null
-  ensureVideoDimensions(v)
+  const token = snapshotMediaToken(getMediaIdFromTarget(v))
+  if (token && !isTokenActive(token)) return
+  ensureVideoDimensions(v, 0, token)
+  if (token && !isTokenActive(token)) return
   void v?.play().catch(() => {})
   scheduleStageMeasurement()
 }
@@ -520,7 +606,10 @@ function onHdMetadata(e: Event) {
   const hd = (e.target as HTMLVideoElement) ?? null
   const preview = previewRef.value
   if (!hd || !preview) return
-  ensureVideoDimensions(hd)
+  const token = snapshotMediaToken(getMediaIdFromTarget(hd))
+  if (token && !isTokenActive(token)) return
+  ensureVideoDimensions(hd, 0, token)
+  if (token && !isTokenActive(token)) return
   try {
     hd.currentTime = preview.currentTime || 0
   } catch {}
@@ -546,6 +635,8 @@ function syncAndMaybeSwap() {
   const hd = hdRef.value
   const preview = previewRef.value
   if (!hd || !preview || showHd.value) return
+  const token = snapshotMediaToken(getMediaIdFromTarget(preview))
+  if (token && !isTokenActive(token)) return
   const dt = Math.abs((hd.currentTime || 0) - (preview.currentTime || 0))
   if (dt > 0.25) {
     try {
@@ -576,6 +667,8 @@ function onPreviewTimeUpdate() {
   const hd = hdRef.value
   const preview = previewRef.value
   if (!hd || !preview) return
+  const token = snapshotMediaToken(getMediaIdFromTarget(preview))
+  if (token && !isTokenActive(token)) return
   const dt = Math.abs((hd.currentTime || 0) - (preview.currentTime || 0))
   if (dt > 0.25) {
     try {
@@ -643,7 +736,9 @@ function handleTouchEnd(e: TouchEvent) {
 watch(
   () => mediaViewerStore.currentMediaId,
   async (newId, oldId) => {
+    hasCommittedRealDimensionsForCurrent = false
     if (!newId) return
+    cancelForcedRecalc()
     cancelPendingAspectPrime()
     resetWidthTracking()
     clearMetadataRetry()
@@ -657,24 +752,19 @@ watch(
     } else if (!oldId) {
       mediaWidth.value = 0
     }
-    naturalDimensions.value = { width: 0, height: 0 }
-    displayDimensions.value = { width: 0, height: 0 }
-    primeDimensionsFromMetadata(currentMedia.value)
-    // Immediately compute a fallback frame so bars align while we load
-    recalculateDisplayDimensions()
+    const primedFromMeta = primeDimensionsFromMetadata(currentMedia.value)
+    if (!primedFromMeta) {
+      naturalDimensions.value = { width: 0, height: 0 }
+      displayDimensions.value = { width: 0, height: 0 }
+      // Immediately compute a fallback frame so bars align while we load
+      recalculateDisplayDimensions()
+    }
     primeAspectRatioForCurrentMedia()
 
     if (!oldId) {
       scheduleStageMeasurement()
-      if (typeof window !== 'undefined') {
-        if (forcedRecalcTimer != null) window.clearTimeout(forcedRecalcTimer)
-        forcedRecalcTimer = window.setTimeout(() => {
-          forcedRecalcTimer = null
-          recalculateDisplayDimensions()
-          scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
-          controlsKey.value += 1
-        }, 500)
-      }
+      const token = snapshotMediaToken(newId)
+      queueForcedRecalc(token, 3)
       return // Skip initial load (handled by parent)
     }
 
@@ -770,7 +860,7 @@ function shouldRetryMeasurement(measuredWidth: number): boolean {
   const expectedWidth = displayDimensions.value.width > 0 ? displayDimensions.value.width : frameMaxWidth.value
   if (expectedWidth <= 0) return false
 
-  const tolerance = Math.max(2, expectedWidth * 0.015)
+  const tolerance = Math.max(3, expectedWidth * 0.02)
   return Math.abs(expectedWidth - measuredWidth) > tolerance
 }
 
@@ -820,13 +910,7 @@ onMounted(() => {
   // Force a late recalc ~0.5s after open to mirror
   // the successful reflow that happens after navigation.
   if (typeof window !== 'undefined') {
-    if (forcedRecalcTimer != null) window.clearTimeout(forcedRecalcTimer)
-    forcedRecalcTimer = window.setTimeout(() => {
-      forcedRecalcTimer = null
-      recalculateDisplayDimensions()
-      scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
-      controlsKey.value += 1
-    }, 500)
+    queueForcedRecalc(snapshotMediaToken(mediaViewerStore.currentMediaId), 3)
   }
 })
 
@@ -848,16 +932,21 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => mediaViewerStore.loadSequence,
+  () => {
+    cancelForcedRecalc()
+    hasCommittedRealDimensionsForCurrent = false
+  },
+)
+
 onBeforeUnmount(() => {
   cancelSyncLoop()
   mediaViewerStore.registerVideoElement(null)
   clearMetadataRetry()
   resetMeasurementRetry()
   cancelPendingAspectPrime()
-  if (typeof window !== 'undefined' && forcedRecalcTimer != null) {
-    window.clearTimeout(forcedRecalcTimer)
-    forcedRecalcTimer = null
-  }
+  cancelForcedRecalc()
   if (removeViewportResizeListeners) {
     removeViewportResizeListeners()
   }
@@ -865,14 +954,12 @@ onBeforeUnmount(() => {
     stageObserver.disconnect()
     stageObserver = null
   }
-  if (typeof window !== 'undefined' && forcedRecalcTimer != null) {
-    window.clearTimeout(forcedRecalcTimer)
-    forcedRecalcTimer = null
-  }
 })
 
 function updateNaturalDimensions(width: number, height: number) {
   if (!width || !height) return
+  cancelForcedRecalc()
+  const firstRealDimensions = !hasCommittedRealDimensionsForCurrent
   naturalDimensions.value = { width, height }
   // Lock aspect ratio on first measurement for images so md->lg->hd swaps don't reflow
   if (!aspectRatioNum.value) {
@@ -881,6 +968,11 @@ function updateNaturalDimensions(width: number, height: number) {
     rememberAspectRatio(mediaViewerStore.currentMediaId, aspectRatioNum.value)
   }
   recalculateDisplayDimensions()
+  if (firstRealDimensions) {
+    scheduleStageMeasurement(BURST_MEASUREMENT_FRAMES * 2, true)
+    controlsKey.value += 1
+  }
+  hasCommittedRealDimensionsForCurrent = true
 }
 
 function cancelPendingAspectPrime() {
@@ -1003,7 +1095,7 @@ watch(frameMaxWidth, () => {
   recalculateDisplayDimensions()
 })
 
-function primeDimensionsFromMetadata(media: any) {
+function primeDimensionsFromMetadata(media: any): boolean {
   const id = (media?.id as string | undefined) ?? mediaViewerStore.currentMediaId
   let aspect: number | undefined
   if (typeof media?.aspectRatio === "number" && media.aspectRatio > 0) {
@@ -1014,7 +1106,7 @@ function primeDimensionsFromMetadata(media: any) {
   if (!aspect) {
     aspect = getCachedAspectRatio(id)
   }
-  if (!aspect) return
+  if (!aspect) return false
   const baseHeight = 1000
   const baseWidth = Math.max(1, aspect * baseHeight)
   naturalDimensions.value = { width: baseWidth, height: baseHeight }
@@ -1022,6 +1114,7 @@ function primeDimensionsFromMetadata(media: any) {
   aspectRatio.value = `${baseWidth} / ${baseHeight}`
   rememberAspectRatio(id, aspect)
   recalculateDisplayDimensions()
+  return true
 }
 </script>
 
