@@ -159,6 +159,12 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
   overflow: hidden;
 }
 
+.media-comment-item :deep(.q-item__section--avatar) {
+  padding-right: 0;
+  margin-right: 0;
+  min-width: 0;
+}
+
 .media-comment-item--highlight {
   background: rgba(128, 222, 234, 0.18);
   border-radius: 16px;
@@ -245,7 +251,7 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
 @media (max-width: 768px) {
   .media-comment-item {
     padding: 8px 10px;
-    gap: 8px;
+    gap: 4px;
     border-radius: 12px;
   }
 
