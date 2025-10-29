@@ -2457,6 +2457,7 @@ export type LoginLinkLoginWithCode200 = {
 };
 
 export type StatsUsers200 = {
+  asOf: string;
   spentPoints: number;
   spentOver100Points: number;
   spentOver1000Points: number;
@@ -2481,6 +2482,7 @@ export type StatsImages200AverageImageQuantityPerCreateRequest = {
 };
 
 export type StatsImages200 = {
+  asOf: string;
   totalCreated: number;
   totalUpscaled: number;
   totalImageCreateRequests: number;
@@ -2493,6 +2495,7 @@ export type StatsImages200 = {
 };
 
 export type StatsCollections200 = {
+  asOf: string;
   collectionsCreated: number;
   emptyCollections: number;
 };
@@ -2507,9 +2510,23 @@ export type StatsPayments200PaypalOrdersTotalPaid = {
 };
 
 export type StatsPayments200 = {
+  asOf: string;
   incompletePayPayPalOrders: number;
   completePayPayPalOrders: number;
   paypalOrdersTotalPaid: StatsPayments200PaypalOrdersTotalPaid;
+};
+
+export type StatsActivity200 = {
+  asOf: string;
+  newUsersHourly: number;
+  imagePurchasesHourly: number;
+  videoPurchasesHourly: number;
+  totalPurchasesHourly: number;
+  magicMirrorUsesHourly: number;
+  paymentsUsdHourly: number;
+  paymentsPayPalUsdHourly: number;
+  paymentsCryptoUsdHourly: number;
+  paymentsStarsUsdHourly: number;
 };
 
 export type StatsHistoryParams = {
@@ -2547,10 +2564,51 @@ export type StatsHistory200SnapshotsItem = {
   paymentsIncompletePayPalOrders: number;
   paymentsCompletePayPalOrders: number;
   paymentsTotalPaid: number;
+  newUsersHourly: number;
+  imagePurchasesHourly: number;
+  videoPurchasesHourly: number;
+  magicMirrorUsesHourly: number;
+  paymentsUsdHourly: number;
+  paymentsPayPalUsdHourly: number;
+  paymentsCryptoUsdHourly: number;
+  paymentsStarsUsdHourly: number;
+  freeCreditsSocialLinksDaily: number;
+  freeCreditsMissionsDaily: number;
+  freeCreditsUnlocksDaily: number;
+  freeCreditsReferralsDaily: number;
+  freeCreditsPromoCodesDaily: number;
+  freeCreditsRefundsDaily: number;
+  freeCreditsOtherDaily: number;
 };
 
 export type StatsHistory200 = {
   snapshots: StatsHistory200SnapshotsItem[];
+};
+
+export type StatsFreeCreditsDailyParams = {
+from?: string;
+to?: string;
+limit?: number;
+};
+
+export type StatsFreeCreditsDaily200DaysItemCategories = {
+  socialLinks: number;
+  missions: number;
+  unlocks: number;
+  referrals: number;
+  promoCodes: number;
+  refunds: number;
+  other: number;
+};
+
+export type StatsFreeCreditsDaily200DaysItem = {
+  dayStart: string;
+  totalIssued: number;
+  categories: StatsFreeCreditsDaily200DaysItemCategories;
+};
+
+export type StatsFreeCreditsDaily200 = {
+  days: StatsFreeCreditsDaily200DaysItem[];
 };
 
 export type StatsWeeklyParams = {
@@ -2655,6 +2713,7 @@ export type CollectionsGetCollectionImages200Item = {
   seed: string;
   errored: boolean;
   filtered: boolean;
+  upscaled: boolean;
   deleted: boolean;
   /** @nullable */
   deletedAt: string | null;
@@ -7690,6 +7749,27 @@ export const statsPayments = async ( options?: RequestInit): Promise<StatsPaymen
 
 
 
+export const getStatsActivityUrl = () => {
+
+
+  
+
+  return `/stats/activity`
+}
+
+export const statsActivity = async ( options?: RequestInit): Promise<StatsActivity200> => {
+  
+  return fetcher<StatsActivity200>(getStatsActivityUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
 export const getStatsHistoryUrl = (params?: StatsHistoryParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -7708,6 +7788,34 @@ export const getStatsHistoryUrl = (params?: StatsHistoryParams,) => {
 export const statsHistory = async (params?: StatsHistoryParams, options?: RequestInit): Promise<StatsHistory200> => {
   
   return fetcher<StatsHistory200>(getStatsHistoryUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getStatsFreeCreditsDailyUrl = (params?: StatsFreeCreditsDailyParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/stats/freeCreditsDaily?${stringifiedParams}` : `/stats/freeCreditsDaily`
+}
+
+export const statsFreeCreditsDaily = async (params?: StatsFreeCreditsDailyParams, options?: RequestInit): Promise<StatsFreeCreditsDaily200> => {
+  
+  return fetcher<StatsFreeCreditsDaily200>(getStatsFreeCreditsDailyUrl(params),
   {      
     ...options,
     method: 'GET'
