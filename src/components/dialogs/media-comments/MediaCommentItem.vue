@@ -185,7 +185,6 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 12ch;
 }
 
 .media-comment-timestamp {
