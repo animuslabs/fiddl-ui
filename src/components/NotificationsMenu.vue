@@ -49,7 +49,13 @@ div.relative-position.self-center
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
                 .row.items-center.q-gutter-xs.q-mt-xs(v-if="pointsRewardLabel(ev)")
-                  q-chip(color="accent" text-color="black" dense size="sm" icon="img:/FiddlPointsLogo.svg" :label="pointsRewardLabel(ev)")
+                  q-chip(
+                    color="primary"
+                    text-color="white"
+                    size="md"
+                    icon="img:/FiddlPointsLogo.svg"
+                    :label="pointsRewardLabel(ev)"
+                  )
                 .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
                   span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
@@ -106,7 +112,13 @@ div.relative-position.self-center
                     |  {{ actionTextFor(ev) }}
                   template(v-else) {{ messageFor(ev) }}
                 .row.items-center.q-gutter-xs.q-mt-xs(v-if="pointsRewardLabel(ev)")
-                  q-chip(color="accent" text-color="black" dense size="sm" icon="img:/FiddlPointsLogo.svg" :label="pointsRewardLabel(ev)")
+                  q-chip(
+                    color="primary"
+                    text-color="white"
+                    size="md"
+                    icon="img:/FiddlPointsLogo.svg"
+                    :label="pointsRewardLabel(ev)"
+                  )
                 .notif-comment-preview.text-caption.q-mt-xs(v-if="commentPreview(ev)")
                   span.notif-comment-link(@click.stop="openCommentFromEvent(ev)") {{ commentPreview(ev) }}
                 .text-caption.text-grey-6 {{ timeAgo(ev.createdAt) }}
@@ -147,6 +159,7 @@ import { decodeHtmlEntities } from "../lib/util"
 import { viewportHeight } from "src/lib/viewport"
 import { useMotdStore } from "stores/motdStore"
 import type { MotdMessage } from "stores/motdStore"
+import { usePricesStore } from "stores/pricesStore"
 
 const REWARDING_EVENT_TYPES: EventsPrivateEvents200ItemType[] = [
   EventsTypeConst.unlockedImage,
@@ -196,6 +209,7 @@ export default defineComponent({
       seenCleanup: null as null | (() => void),
       motd: useMotdStore(),
       markingById: {} as Record<string, boolean>,
+      pricesStore: usePricesStore(),
     }
   },
   computed: {
@@ -644,7 +658,8 @@ export default defineComponent({
           if (value && typeof value === "object") stack.push(value)
         })
       }
-      return null
+      const fallback = this.defaultPointsForType(ev.type)
+      return fallback !== null ? fallback : null
     },
     formatPointsAmount(amount: number): string {
       const hasFraction = !Number.isInteger(amount)
@@ -652,6 +667,19 @@ export default defineComponent({
         maximumFractionDigits: hasFraction ? 2 : 0,
         minimumFractionDigits: hasFraction ? 1 : 0,
       })
+    },
+    defaultPointsForType(type: EventsPrivateEvents200ItemType): number | null {
+      const store = this.pricesStore
+      const values = store?.prices
+      if (!values) return null
+      switch (type) {
+        case EventsTypeConst.unlockedImage:
+          return this.normalizePointsValue(values.image?.unlockCommission ?? null)
+        case EventsTypeConst.unlockedVideo:
+          return this.normalizePointsValue(values.video?.unlockCommission ?? null)
+        default:
+          return null
+      }
     },
     pointsRewardLabel(ev: EventsPrivateEvents200Item): string | null {
       const amount = this.pointsRewardAmount(ev)

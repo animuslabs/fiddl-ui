@@ -62,7 +62,10 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
+                show-popularity
                 :enable-model-chip-select="['image', 'video'].includes(currentTab)"
+                :top-bar-height="24"
+                :bottom-bar-height="26"
               )
               MediaGallery.q-pl-md.q-pr-md(
                 :key="`grid-${currentTab}`"
@@ -82,7 +85,10 @@
                 :show-visibility-toggle="true"
                 :show-delete-button="true"
                 :show-use-as-input="true"
+                show-popularity
                 :enable-model-chip-select="['image', 'video'].includes(currentTab)"
+                :top-bar-height="24"
+                :bottom-bar-height="26"
               )
               //- div(v-else v-for="(creation,index) in activeCreationsStore.allCreations"  :key="creation.creationId+'1'")
               //-   CreatedImageCard.q-ma-sm.relative-position.cursor-pointer(:imageId="creation.id" style="width:150px; height:150px;" @click="showDetails(creation.creationId,index)")

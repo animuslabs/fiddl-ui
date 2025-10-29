@@ -191,6 +191,7 @@ function scrollToComment(element: HTMLElement) {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .media-comments-list-items {

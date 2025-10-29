@@ -334,6 +334,21 @@ const SKELETON_COUNT = 30
 const skeletonSeed = ref<number>(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))
 const videoSources = ref<Record<string, string>>({})
 
+const placeholderAvatarSrc = "/blankAvatar.webp"
+const creatorAvatarStyle: Record<string, string> = {
+  width: "18px",
+  height: "18px",
+  borderRadius: "50%",
+}
+
+function creatorAvatarSrc(m: MediaGalleryMeta): string {
+  const id = m?.creatorId
+  if (!id || m?.creatorHasAvatar === false) {
+    return placeholderAvatarSrc
+  }
+  return avatarImg(id)
+}
+
 function getSizeRank(size: ImageSize): number {
   return sizeRank[String(size)] ?? 99
 }
@@ -1995,7 +2010,13 @@ function prefetchImage(url: string): Promise<void> {
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
                 // Creator avatar + username (left)
                 .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                  q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                  q-img(
+                    :src="creatorAvatarSrc(m)"
+                    :error-src="placeholderAvatarSrc"
+                    :style="creatorAvatarStyle"
+                    no-spinner
+                    no-transition
+                  )
                   .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
                 // Actions (right)
                 div.bar-actions(style="display:flex; align-items:center; gap:10px;")
@@ -2070,7 +2091,7 @@ function prefetchImage(url: string): Promise<void> {
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                   .pop-item
-                    q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
+                    q-btn(:size="popIconSize" flat dense round icon="favorite_fill" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
                     span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
                   .pop-item
                     q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
@@ -2141,7 +2162,13 @@ function prefetchImage(url: string): Promise<void> {
             )
               // Creator profile chip (avatar + @username)
               .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                q-img(
+                  :src="creatorAvatarSrc(m)"
+                  :error-src="placeholderAvatarSrc"
+                  :style="creatorAvatarStyle"
+                  no-spinner
+                  no-transition
+                )
                 .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
               // Delete
               q-btn(v-if="canDelete(m)" :size="popIconSize" flat dense round color="white" icon="delete" @click.stop="handleDeleteClick(m)" :loading="!!deleteLoading[m.id]" :disable="deleteLoading[m.id] === true")
@@ -2163,7 +2190,7 @@ function prefetchImage(url: string): Promise<void> {
             .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
               .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                 .pop-item
-                  q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
+                  q-btn(:size="popIconSize" flat dense round icon="favorite_fill" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'image')")
                   span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
                 .pop-item
                   q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
@@ -2193,7 +2220,13 @@ function prefetchImage(url: string): Promise<void> {
               template(v-if="isVisible(m.id) && !shouldMaskNsfw(m)")
                 // Creator avatar + username (left)
                 .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                  q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                  q-img(
+                    :src="creatorAvatarSrc(m)"
+                    :error-src="placeholderAvatarSrc"
+                    :style="creatorAvatarStyle"
+                    no-spinner
+                    no-transition
+                  )
                   .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
                 // Actions (right)
                 div.bar-actions(style="display:flex; align-items:center; gap:10px;")
@@ -2260,7 +2293,7 @@ function prefetchImage(url: string): Promise<void> {
               template(v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id)")
                 .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                   .pop-item
-                    q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
+                    q-btn(:size="popIconSize" flat dense round icon="favorite_fill" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
                     span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
                   .pop-item
                     q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")
@@ -2323,7 +2356,13 @@ function prefetchImage(url: string): Promise<void> {
             )
               // Creator profile chip (avatar + @username)
               .creator-meta(v-if="showCreatorFor(m)" @click.stop="goToCreator(m)")
-                q-img(:src="avatarImg(m.creatorId || '')" style="width:18px; height:18px; border-radius:50%;")
+                q-img(
+                  :src="creatorAvatarSrc(m)"
+                  :error-src="placeholderAvatarSrc"
+                  :style="creatorAvatarStyle"
+                  no-spinner
+                  no-transition
+                )
                 .creator-name(:title="'@' + (m.creatorUsername || '')") @{{ m.creatorUsername }}
               // Add as input (images only; for video items this won't show)
               q-btn(v-if="props.showUseAsInput && !m.placeholder && (m.type === 'image' || m.mediaType === 'image')" :size="popIconSize" flat dense round color="white" icon="add_photo_alternate" @click.stop="addAsInput(m.id)" :loading="!!addInputLoading[m.id]" :disable="addInputLoading[m.id] === true")
@@ -2346,7 +2385,7 @@ function prefetchImage(url: string): Promise<void> {
             .popularity-overlay(:class="popularityLayoutClass(m)" v-if="props.showPopularity && !shouldMaskNsfw(m) && isVisible(m.id) && !(isPhone && layoutEffective === 'mosaic')")
               .pop-row(:class="{ 'has-any-counts': !!((popularity.get(m.id)?.favorites) || (popularity.get(m.id)?.commentsCount) || (popularity.get(m.id)?.upvotes)) }")
                 .pop-item
-                  q-btn(:size="popIconSize" flat dense round icon="favorite" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
+                  q-btn(:size="popIconSize" flat dense round icon="favorite_fill" :color="popularity.get(m.id)?.isFavoritedByMe ? 'red-5' : 'white'" @click.stop="onFavorite(m.id, 'video')")
                   span.count(:class="{ empty: !(popularity.get(m.id)?.favorites) }") {{ popularity.get(m.id)?.favorites ?? 0 }}
                 .pop-item
                   q-btn(:size="popIconSize" flat dense round icon="chat_bubble" color="white" @click.stop="openCommentsFromOverlay(m)")

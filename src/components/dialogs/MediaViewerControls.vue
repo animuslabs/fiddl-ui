@@ -235,9 +235,11 @@ import CreateAvatar from "./CreateAvatar.vue"
 import EditMedia from "./EditMedia.vue"
 import LikeMedia from "./LikeMedia.vue"
 import RequestInfoDialog from "./RequestInfoDialog.vue"
-import MediaCommentsDialog from "components/dialogs/MediaCommentsDialog.vue"
 import { useRouter } from "vue-router"
 import { usePopularityStore } from "src/stores/popularityStore"
+import { showCommentsDialog as showCommentsDialogController } from "src/lib/commentsDialogController"
+
+let activeCommentsDialog: DialogChainObject | null = null
 
 interface Props {
   allowDelete?: boolean
@@ -559,18 +561,16 @@ function showCommentsDialog(targetCommentId?: string | null) {
   if (!mediaViewerStore.currentMediaId) return
   const previewUrl = mediaViewerStore.getCurrentMediaUrl()
   mediaViewerStore.pauseActiveVideo()
-  const dialog = Dialog.create({
-    component: MediaCommentsDialog,
-    componentProps: {
-      mediaId: mediaViewerStore.currentMediaId,
-      mediaType: mediaViewerStore.currentMediaType,
-      previewUrl,
-      targetCommentId: targetCommentId ?? null,
-      forceMobileLayout: $q.screen.lt.md,
+  showCommentsDialogController({
+    mediaId: mediaViewerStore.currentMediaId,
+    mediaType: mediaViewerStore.currentMediaType,
+    previewUrl,
+    targetCommentId: targetCommentId ?? null,
+    forceMobileLayout: $q.screen.lt.md,
+    maximized: $q.screen.lt.md,
+    onDismiss: () => {
+      mediaViewerStore.playActiveVideo()
     },
-  })
-  dialog.onDismiss(() => {
-    mediaViewerStore.playActiveVideo()
   })
 }
 

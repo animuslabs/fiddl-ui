@@ -15,4 +15,5 @@ export interface MediaGalleryMeta {
   // Optional creator metadata (when available from caller)
   creatorId?: string
   creatorUsername?: string
+  creatorHasAvatar?: boolean
 }

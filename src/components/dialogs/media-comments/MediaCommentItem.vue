@@ -1,7 +1,7 @@
 <template lang="pug">
 q-item.media-comment-item(dense :class="{ 'media-comment-item--highlight': highlighted }")
   q-item-section(avatar)
-    q-avatar.comment-avatar(size="36px" color="primary" text-color="white")
+    q-avatar.comment-avatar(size="32px" color="primary" text-color="white")
       q-img(
         v-if="avatarSrc"
         :src="avatarSrc"
@@ -12,37 +12,37 @@ q-item.media-comment-item(dense :class="{ 'media-comment-item--highlight': highl
       )
       template(v-else) {{ authorInitial }}
   q-item-section
-    .media-comment-meta.row.items-center.no-wrap
+    .media-comment-meta.row.items-center
       span.media-comment-author.text-subtitle2.text-white {{ authorDisplayName }}
       span.media-comment-timestamp.text-caption.text-grey-4.q-ml-sm {{ timestampLabel }}
       span.text-caption.text-grey-5.q-ml-sm(v-if="comment.edited") (edited)
-      q-space
-      q-btn.comment-options-btn.q-ml-xs(
-        v-if="canManage"
-        flat
-        dense
-        round
-        icon="more_vert"
-        color="grey-5"
-        :loading="actionLoading"
-        :disable="actionLoading"
-      )
-        q-menu(auto-close cover anchor="bottom right" self="top right" class="comment-options-menu")
-          q-list(dense padding)
-            q-item(clickable v-close-popup @click="$emit('edit')")
-              q-item-section Edit
-            q-item(clickable v-close-popup class="text-negative" @click="$emit('delete')")
-              q-item-section Delete
-      q-btn.comment-reply-btn(
-        flat
-        dense
-        no-caps
-        size="sm"
-        color="primary"
-        label="Reply"
-        :disable="!comment.author?.username"
-        @click.stop="$emit('reply')"
-      )
+      .media-comment-actions.row.items-center
+        q-btn.comment-options-btn(
+          v-if="canManage"
+          flat
+          dense
+          round
+          icon="more_vert"
+          color="grey-5"
+          :loading="actionLoading"
+          :disable="actionLoading"
+        )
+          q-menu(auto-close cover anchor="bottom right" self="top right" class="comment-options-menu")
+            q-list(dense padding)
+              q-item(clickable v-close-popup @click="$emit('edit')")
+                q-item-section Edit
+              q-item(clickable v-close-popup class="text-negative" @click="$emit('delete')")
+                q-item-section Delete
+        q-btn.comment-reply-btn(
+          flat
+          dense
+          no-caps
+          size="sm"
+          color="primary"
+          label="Reply"
+          :disable="!comment.author?.username"
+          @click.stop="$emit('reply')"
+        )
     div.media-comment-content.text-white
       template(v-for="(segment, index) in segments" :key="index")
         RouterLink.media-comment-text.media-comment-mention-link(
@@ -148,9 +148,9 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
 <style scoped>
 .media-comment-item {
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 16px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   transition: background 0.2s ease, transform 0.2s ease;
   width: 100%;
@@ -165,7 +165,8 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
 }
 
 .media-comment-meta {
-  column-gap: 8px;
+  column-gap: 6px;
+  row-gap: 0;
   flex-wrap: nowrap;
   width: 100%;
   align-items: center;
@@ -178,6 +179,7 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 12ch;
 }
 
 .media-comment-timestamp {
@@ -190,14 +192,24 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
   text-overflow: ellipsis;
 }
 
+.media-comment-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
 .media-comment-content {
   margin-top: 4px;
+  min-width: 0;
 }
 
 .media-comment-text {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
   font-family: inherit;
   font-size: 1rem;
   background: transparent;
@@ -226,24 +238,28 @@ function segmentProfileLink(segment: CommentSegment): RouteLocationRaw {
 
 .comment-reply-btn {
   min-width: 0;
-  padding: 0 6px;
+  padding: 0 4px;
   font-size: 0.75rem;
 }
 
 @media (max-width: 768px) {
   .media-comment-item {
-    padding: 10px 14px;
-    border-radius: 14px;
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 12px;
   }
 
   .media-comment-meta {
-    column-gap: 6px;
-    min-width: 0;
+    column-gap: 4px;
   }
 
   .media-comment-timestamp {
     font-size: 0.64rem;
     max-width: 18ch;
+  }
+
+  .media-comment-actions {
+    gap: 2px;
   }
 }
 
