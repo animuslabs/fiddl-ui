@@ -67,8 +67,8 @@ function ensureTikTokStub(): any {
     "grantConsent",
   ]
   ttq.setAndDefer = function (obj: any, method: string) {
-    obj[method] = function () {
-      obj.push([method].concat(Array.prototype.slice.call(arguments, 0)))
+    obj[method] = function (...args: unknown[]) {
+      obj.push([method, ...args])
     }
   }
   ttq._i = ttq._i || {}

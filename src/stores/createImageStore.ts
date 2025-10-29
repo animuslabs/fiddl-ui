@@ -1,6 +1,6 @@
 // stores/createImageStore.ts — Composition API + factory reset
 import { defineStore } from "pinia"
-import { ref, computed, reactive, watch } from "vue"
+import { computed, reactive, watch } from "vue"
 import { LocalStorage, Notify } from "quasar"
 import { useRouter } from "vue-router"
 import { aspectRatios, imageModels, type AspectRatio, type ImageModel } from "lib/imageModels"
@@ -15,6 +15,16 @@ import type { CreateImageRequest } from "fiddl-server/dist/lib/types/serverTypes
 import type { CustomModel } from "lib/api"
 import { useLoadingStates } from "lib/composables/useLoadingStates"
 import { prices } from "src/stores/pricesStore"
+
+export const MAX_SINGLE_MODEL_REQUESTS = 10
+
+function clampQuantity(value: unknown): number {
+  const parsed = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(parsed)) return 1
+  const floored = Math.max(1, Math.floor(parsed))
+  return Math.min(floored, MAX_SINGLE_MODEL_REQUESTS)
+}
+
 const defaultImageRequest: CreateImageRequest = {
   prompt: "",
   model: "flux-dev",
@@ -66,12 +76,13 @@ function initState() {
         ? (raw.uploadedStartImageIds as any[]).filter((x) => typeof x === "string")
         : []
       const startImageIds = Array.isArray(raw.startImageIds) ? (raw.startImageIds as any[]).filter((x) => typeof x === "string") : []
+      const quantity = clampQuantity((raw as any)?.quantity)
       return {
         prompt,
         model,
         aspectRatio,
         public: pub,
-        quantity: 1,
+        quantity,
         seed,
         customModelId,
         customModelName,
@@ -200,7 +211,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     return Math.ceil(premium)
   })
 
-  const quantity = computed(() => 1)
+  const quantity = computed(() => clampQuantity(state.req.quantity))
 
   const publicTotalCost = computed(() => selectedModelPrice.value * quantity.value)
 
@@ -355,7 +366,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
         sum += priceForModel(baseModel) + baseCustomCharge
       }
     }
-    return sum
+    return sum * quantity.value
   })
 
   const privateTotalCostMulti = computed(() => {
@@ -376,6 +387,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
 
   function setReq(req: Partial<CreateImageRequestWithCustomModel>) {
     Object.assign(state.req, req)
+    state.req.quantity = clampQuantity(state.req.quantity)
     if (!req.customModelId) {
       state.customModel = null
       state.req.customModelName = undefined
@@ -439,6 +451,9 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       return
     }
 
+    const quantityValue = clampQuantity(state.req.quantity)
+    state.req.quantity = quantityValue
+
     // Decide models for this creation
     const modelsForThisRun = resolveMultiModels()
     // Use requested aspect ratio and coerce per-model as needed
@@ -447,7 +462,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     const requests = modelsForThisRun.map((m) => ({
       prompt: state.req.prompt,
       negativePrompt: undefined as string | undefined,
-      quantity: 1,
+      quantity: quantityValue,
       seed: state.req.seed,
       model: m,
       public: state.req.public,
@@ -463,7 +478,7 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
         requests.push({
           prompt: state.req.prompt,
           negativePrompt: undefined as string | undefined,
-          quantity: 1,
+          quantity: quantityValue,
           seed: state.req.seed,
           model: "custom" as ImageModel,
           public: state.req.public,
@@ -476,7 +491,8 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
     }
 
     // Pre-insert placeholder tiles immediately so the gallery shows progress without a blank state
-    const preQty = Math.max(1, requests.length)
+    const totalRequestedImages = requests.reduce((acc, item) => acc + (item.quantity ?? 1), 0)
+    const preQty = Math.max(1, totalRequestedImages)
     const stampNow = Date.now()
     const tempPlaceholderIds = Array.from({ length: preQty }, (_, i) => `pending-${stampNow}-${Math.random().toString(36).slice(2, 8)}-${i}`)
     state.pendingPlaceholders.unshift(...tempPlaceholderIds)
@@ -609,6 +625,14 @@ export const useCreateImageStore = defineStore("createImageStore", () => {
       else state[key] = fresh[key]
     }
   }
+
+  watch(
+    () => state.req.quantity,
+    (val) => {
+      const next = clampQuantity(val)
+      if (next !== val) state.req.quantity = next
+    },
+  )
 
   // Persist request changes automatically with safe serialization
   watch(

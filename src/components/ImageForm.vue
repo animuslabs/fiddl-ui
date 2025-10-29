@@ -36,8 +36,8 @@
 
       q-separator(color="grey-9" spaced="20px" inset)
       .centered.settings-grid
-        .row.q-col-gutter-md.full-width.items-start.no-wrap
-          .col-md-3
+        .row.full-width.settings-row
+          .col-md-3.setting-col
             p.setting-label Aspect Ratio
             q-select(
               v-if="!isAspectControlDisabled"
@@ -60,7 +60,21 @@
                     .ar-box(:style="aspectBoxStyle(String(createStore.state.req.aspectRatio || '1:1'))")
                   span {{ createStore.state.req.aspectRatio }}
             q-badge.q-mt-xs(v-else color="grey-7" label="N/A")
-          .col-12.col-md-3(v-if="req.seed != undefined")
+          div.count-column.setting-col
+            p.setting-label Count
+            q-input.count-input(
+              v-model.number="requestCount"
+              type="number"
+              :min="1"
+              :max="maxRequestCount"
+              :step="1"
+              :disable="createStore.anyLoading"
+              input-class="count-native"
+              dense
+            )
+            div.count-helper
+              | Max {{ maxRequestCount }}
+          .col-12.col-md-3.setting-col(v-if="req.seed != undefined")
             p.setting-label Seed
             .row.items-start.no-wrap.q-gutter-sm
               q-input.col(
@@ -75,7 +89,7 @@
                 q-btn(size="sm" icon="add" flat round @click="req.seed++" :disable="!req.seed")
                 q-btn(size="sm" icon="remove" flat round @click="req.seed--" :disable="!req.seed")
           // Model select moved up to share the row with Aspect Ratio
-          div.relative-position.col-grow.cursor-pointer(@click.stop="openModelSelectDialog" )
+          div.relative-position.col-grow.cursor-pointer.setting-col.model-column(@click.stop="openModelSelectDialog" )
             p.setting-label Model
             // Keep selector on its own row
             q-select.relative-position.text-capitalize.model-select.full-width(
@@ -203,7 +217,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from "vue"
-import { useCreateImageStore } from "src/stores/createImageStore"
+import { useCreateImageStore, MAX_SINGLE_MODEL_REQUESTS } from "src/stores/createImageStore"
 import { useImageCreations } from "src/stores/imageCreationsStore"
 // import CustomModelsList from "./CustomModelsList.vue" // legacy
 import { useQuasar } from "quasar"
@@ -228,8 +242,26 @@ const createStore = useCreateImageStore()
 const creationsStore = useImageCreations()
 const userAuth = useUserAuth()
 
+const maxRequestCount = MAX_SINGLE_MODEL_REQUESTS
+
 const req = createStore.state.req
 const loading = createStore.state.loading
+
+function clampRequestCount(value: unknown): number {
+  const parsed = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(parsed)) return 1
+  const floored = Math.max(1, Math.floor(parsed))
+  return Math.min(floored, MAX_SINGLE_MODEL_REQUESTS)
+}
+
+const requestCount = computed({
+  get() {
+    return clampRequestCount(req.quantity ?? 1)
+  },
+  set(value: number) {
+    req.quantity = clampRequestCount(value)
+  },
+})
 
 const invalidManualMulti = computed(() => {
   const rnd: any = createStore.state.randomizer
@@ -702,6 +734,62 @@ textarea::-webkit-resizer {
 
 .settings-grid {
   width: 100%;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.setting-col {
+  align-self: flex-start;
+}
+
+.count-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 72px;
+  flex: 0 0 auto;
+}
+
+.count-column .count-input {
+  width: 72px;
+  margin-top: 4px;
+}
+
+.count-helper {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+  text-align: left;
+  width: 100%;
+}
+
+.count-input::v-deep input.count-native {
+  text-align: center;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+}
+
+.count-input::v-deep input.count-native::-webkit-outer-spin-button,
+.count-input::v-deep input.count-native::-webkit-inner-spin-button {
+  -webkit-appearance: auto;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .settings-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0 24px;
+  }
+}
+
+.model-column {
+  flex: 1 1 0%;
+  min-width: 200px;
 }
 
 .setting-label {

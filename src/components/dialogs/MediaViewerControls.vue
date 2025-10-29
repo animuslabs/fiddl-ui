@@ -218,7 +218,7 @@ div.media-viewer-shell
 
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from "vue"
-import { Dialog, useQuasar } from "quasar"
+import { Dialog, useQuasar, type DialogChainObject } from "quasar"
 import CreatorInfo from "src/components/CreatorInfo.vue"
 import { useMediaViewerStore } from "src/stores/mediaViewerStore"
 import { useUserAuth } from "src/stores/userAuth"
