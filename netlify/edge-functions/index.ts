@@ -1,6 +1,6 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
-import { buildStaticTopNavHtml, escapeHtml } from "./lib/util.ts"
+import { buildStaticTopNavHtml, buildAssetLicenseMetadata } from "./lib/util.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
 const handler = async (request: Request, context: Context) => {
@@ -41,6 +41,7 @@ function buildHomepageSchema(siteUrl: string): string {
     logo: {
       "@type": "ImageObject",
       url: `${siteUrl}/fiddlLogoWithText-hor.svg`,
+      ...buildAssetLicenseMetadata({}),
     },
     description: "AI-powered art creation platform where artists create, discover, and earn from AI-generated artwork",
     slogan: "Create and Earn with AI Art",

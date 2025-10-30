@@ -27,6 +27,27 @@ export function escapeHtml(input: string): string {
 
   return input.replace(/[&<>"']/g, (char) => map[char!]!)
 }
+
+const LICENSE_URL = "https://fiddl.art/terms-of-service"
+const ACQUIRE_LICENSE_URL = "https://app.fiddl.art/license"
+
+export function buildAssetLicenseMetadata({ creatorUsername, createdAt }: { creatorUsername?: string; createdAt?: string | Date }): {
+  copyrightNotice: string
+  creditText: string
+  license: string
+  acquireLicensePage: string
+} {
+  const creatorLabel = creatorUsername ? `@${creatorUsername}` : "Fiddl.art creator"
+  const date = createdAt instanceof Date ? createdAt : createdAt ? new Date(createdAt) : new Date()
+  const isValidDate = !Number.isNaN(date.getTime())
+  const year = isValidDate ? date.getUTCFullYear() : new Date().getUTCFullYear()
+  return {
+    copyrightNotice: `© ${year} ${creatorLabel}`,
+    creditText: `${creatorLabel} via Fiddl.art`,
+    license: LICENSE_URL,
+    acquireLicensePage: ACQUIRE_LICENSE_URL,
+  }
+}
 type TwitterCardType = "summary" | "summary_large_image" | "player" | "app"
 
 interface SocialMeta {
@@ -196,7 +217,10 @@ export function buildModelSchema(data: ModelsGetModelByName200, fullUrl: string)
         }
       }
 
-      return base
+      return {
+        ...base,
+        ...buildAssetLicenseMetadata({ creatorUsername: item.creatorUsername, createdAt: model.updatedAt }),
+      }
     }) || []
 
   const schema: any = {
@@ -221,6 +245,7 @@ export function buildModelSchema(data: ModelsGetModelByName200, fullUrl: string)
     ...(mediaObjects.length && {
       [type === "image" ? "image" : "video"]: mediaObjects,
     }),
+    ...buildAssetLicenseMetadata({ creatorUsername: customModelCreator?.userName, createdAt: model.updatedAt }),
   }
 
   return JSON.stringify(schema)
@@ -230,6 +255,7 @@ export type MediaItem = {
   meta: string
   type: "image" | "video"
   creatorUsername?: string
+  createdAt?: string | Date
 }
 export function buildMediaEls(medias: MediaItem[]): string {
   return medias
@@ -308,6 +334,7 @@ export function buildMediaListSchema(medias: MediaItem[], pageUrl: string): stri
       ...(isImage ? {} : { thumbnailUrl: s3Video(m.id, "thumbnail") }),
       name: m.meta,
       description: m.meta,
+      ...buildAssetLicenseMetadata({ creatorUsername: m.creatorUsername, createdAt: m.createdAt }),
     }
     if (m.creatorUsername) {
       obj.creator = {

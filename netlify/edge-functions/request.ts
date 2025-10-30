@@ -1,6 +1,6 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
-import { buildMediaEls, buildMediaListSchema, buildStaticTopNavHtml, renderJsonAsHtml, shortIdToLong, type MediaItem } from "./lib/util.ts"
+import { buildMediaEls, buildMediaListSchema, buildStaticTopNavHtml, renderJsonAsHtml, shortIdToLong, type MediaItem, buildAssetLicenseMetadata } from "./lib/util.ts"
 import { creationsGetImageRequest, creationsGetVideoRequest, type CreationsGetVideoRequest200 } from "./lib/orval.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
@@ -41,6 +41,7 @@ const handler = async (request: Request, context: Context) => {
       meta: `Media Index ${i} | ${data.meta || ""}`,
       type,
       creatorUsername: data.creatorUsername,
+      createdAt: data.createdAt,
     }))
     // Use per-media thumbnail for OG when type is video
     const imageUrl = type === "video" ? s3Video(mediaId, "thumbnail") : img(mediaId, "md")
@@ -85,6 +86,7 @@ const handler = async (request: Request, context: Context) => {
             "@type": "WatchAction",
             target: pageUrl,
           },
+          ...buildAssetLicenseMetadata({ creatorUsername: v.creatorUsername, createdAt: v.createdAt }),
         }
         return JSON.stringify(obj)
       }
@@ -97,6 +99,7 @@ const handler = async (request: Request, context: Context) => {
         name,
         description: name,
         contentUrl: img(mediaId, "lg"),
+        ...buildAssetLicenseMetadata({ creatorUsername: data.creatorUsername, createdAt: data.createdAt }),
       })
     })()
 

@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { creationsBrowseCreateRequests } from "./lib/orval.ts"
-import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort, normalizeCanonicalUrl } from "./lib/util.ts"
+import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort, normalizeCanonicalUrl, buildAssetLicenseMetadata } from "./lib/util.ts"
 import { img, s3Video } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
@@ -74,7 +74,7 @@ const handler = async (request: Request, context: Context) => {
       request,
       context,
       pageTitle,
-      cache: { edgeTtl: 3600, edgeSwr: 300, tags: ["browse"] },
+      cache: { edgeTtl: 86400, edgeSwr: 3600, tags: ["browse"] },
       social: {
         description,
         imageUrl: mediaItems[0]?.url || "https://app.fiddl.art/OGImage-1.jpg",
@@ -201,6 +201,7 @@ function buildBrowseListSchema(mediaItems: MediaItem[], pageUrl: string, filters
           width: Math.round(1000 * item.aspectRatio),
           height: 1000,
         }),
+        ...buildAssetLicenseMetadata({ creatorUsername: item.creatorUsername, createdAt: item.createdAt }),
       },
     }
   })

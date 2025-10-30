@@ -16,7 +16,7 @@ export type SocialMetaInput = {
 }
 
 export type CacheConfig = {
-  edgeTtl?: number // seconds, default 3600
+  edgeTtl?: number // seconds, default 86400
   edgeSwr?: number // seconds, default 300
   browser?: "no-store" | "revalidate" // default "revalidate"
   tags?: string[] // optional Cache-Tag
@@ -151,10 +151,17 @@ export async function buildPageResponse({ request, context, social, pageTitle, c
   const namespace = cache?.namespace ?? "pages"
   const kv = await caches.open(namespace)
   const key = new Request(url.toString())
+  const ttlMs = (cache?.edgeTtl ?? 86400) * 1000
 
   // early return if cached
   const cached = await kv.match(key)
-  if (cached) return cached
+  if (cached) {
+    const cachedAtHeader = cached.headers.get("X-Cache-Created-At")
+    const cachedAt = cachedAtHeader ? Date.parse(cachedAtHeader) : NaN
+    const isFresh = Number.isFinite(cachedAt) ? Date.now() - cachedAt < ttlMs : false
+    if (isFresh) return cached
+    await kv.delete(key)
+  }
 
   // get upstream HTML (from origin) unless provided
   const res = upstreamHtml ? undefined : await context.next()
@@ -193,6 +200,7 @@ export async function buildPageResponse({ request, context, social, pageTitle, c
 
   // build response & headers
   const headers = buildHeaders(cache)
+  headers.set("X-Cache-Created-At", new Date().toISOString())
   const status = res ? (res as Response).status : 200
   const response = new Response(html, { status, headers })
 

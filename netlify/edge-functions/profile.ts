@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/edge-functions"
 import { buildPageResponse } from "./lib/page.ts"
 import { userFindByUsername, userPublicProfile, creationsCreateImageRequests, collectionsFindCollectionByName, collectionsGetCollectionImages } from "./lib/orval.ts"
-import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort } from "./lib/util.ts"
+import { buildStaticTopNavHtml, escapeHtml, buildMediaListSchema, longIdToShort, buildAssetLicenseMetadata } from "./lib/util.ts"
 import { img, s3Video, avatarImg } from "./lib/netlifyImg.ts"
 import { safeEdge, logEdgeError } from "./lib/safe.ts"
 
@@ -88,7 +88,7 @@ const handler = async (request: Request, context: Context) => {
       request,
       context,
       pageTitle,
-      cache: { edgeTtl: 3600, edgeSwr: 300, tags: ["profile", profileData.userId] },
+      cache: { edgeTtl: 86400, edgeSwr: 3600, tags: ["profile", profileData.userId] },
       social: {
         description,
         imageUrl: ogImageUrl,
@@ -166,6 +166,7 @@ function buildProfileSchema(profile: ProfileData, mediaItems: MediaItem[], pageU
           value: item.model,
         },
       }),
+      ...buildAssetLicenseMetadata({ creatorUsername: profile.username, createdAt: item.createdAt }),
     }
   })
 
