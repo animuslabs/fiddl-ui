@@ -681,9 +681,9 @@ export default defineComponent({
           return null
       }
     },
-    pointsRewardLabel(ev: EventsPrivateEvents200Item): string | null {
+    pointsRewardLabel(ev: EventsPrivateEvents200Item): string | undefined {
       const amount = this.pointsRewardAmount(ev)
-      if (amount === null) return null
+      if (amount == null) return undefined
       const formatted = this.formatPointsAmount(amount)
       return `+${formatted} pts`
     },
