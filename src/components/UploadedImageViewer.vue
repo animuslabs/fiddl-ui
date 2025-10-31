@@ -128,7 +128,14 @@ watch(
   },
 )
 
-const mediaObjects = computed(() => imageUploadIds.value.map((id) => ({ id, url: s3Img("uploads/" + id), type: "image" as const })))
+const mediaObjects = computed(() =>
+  imageUploadIds.value.map((id) => ({
+    id,
+    url: s3Img("uploads/" + id),
+    type: "image" as const,
+    useOriginalUrl: true,
+  })),
+)
 const thumbSizeMobile = computed(() => props.thumbSizeMobile)
 const selectedIds = computed(() => props.selectedIds || [])
 

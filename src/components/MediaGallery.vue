@@ -89,6 +89,7 @@ const videoLoading = ref<Record<string, boolean>>({})
 const videoReloadKey = ref<Record<string, number>>({})
 const imageLoading = ref<Record<string, boolean>>({})
 const imageReloadKey = ref<Record<string, number>>({})
+const useOriginalImageUrlMap = ref<Record<string, boolean>>({})
 
 const VIDEO_RETRY_BASE_DELAY_MS = 1500
 const VIDEO_RETRY_MAX_DELAY_MS = 20000
@@ -1108,6 +1109,7 @@ function pruneInactiveState(activeIds: Set<string>) {
   pruneRecord(imageUpgradeQueue.value as Record<string, unknown>)
   pruneRecord(imageUpgradeAttempts.value as Record<string, unknown>)
   pruneRecord(imageUpgradeInFlight.value as Record<string, unknown>)
+  pruneRecord(useOriginalImageUrlMap.value)
   pruneRecord(layoutSpans.value as Record<string, unknown>)
   pruneRecord(visibleMap.value)
   pruneRecord(nearVisibleMap.value)
@@ -1190,29 +1192,44 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
     .map((item) => {
       const incomingType = ((item.mediaType ?? item.type) as string | undefined)?.toString().toLowerCase()
       const mediaId = String(item.id)
+      let preferOriginalUrl = item.useOriginalUrl === true || (typeof item.url === "string" && item.url.includes("/uploads/"))
       if (!item.url) {
         item.url = incomingType === "video" ? s3Video(mediaId, "preview-md") : img(mediaId, previewInitialSize)
+        preferOriginalUrl = false
+      }
+      if (preferOriginalUrl) {
+        useOriginalImageUrlMap.value[mediaId] = true
+      } else if (useOriginalImageUrlMap.value[mediaId]) {
+        delete useOriginalImageUrlMap.value[mediaId]
       }
       const derived = (incomingType as "image" | "video" | undefined) ?? getMediaType(item.url)
       const type: "image" | "video" = derived === "video" ? "video" : "image"
       const isPlaceholder = item.placeholder === true || (typeof item.id === "string" && item.id.startsWith("pending-"))
       if (type === "image") {
-        const existingSize = imageCurrentSize.value[mediaId]
-        const providedSize = extractSizeFromUrl(item.url || "")
-        let initialSize: ImageSize
-        if (existingSize) {
-          initialSize = existingSize
-        } else if (providedSize) {
-          initialSize = getSizeRank(providedSize) > getSizeRank(previewUpgradeTarget) ? previewInitialSize : providedSize
+        if (preferOriginalUrl) {
+          delete imageUpgradeQueue.value[mediaId]
+          delete imageUpgradeAttempts.value[mediaId]
+          delete imageUpgradeInFlight.value[mediaId]
+          delete imageTargetSize.value[mediaId]
+          delete imageCurrentSize.value[mediaId]
         } else {
-          initialSize = previewInitialSize
-        }
-        const currentUrlSize = providedSize
-        if (!currentUrlSize || currentUrlSize !== initialSize) {
-          item.url = img(mediaId, initialSize)
-        }
-        if (!isPlaceholder) {
-          initImageProgressState(mediaId, item.url, previewUpgradeTarget)
+          const existingSize = imageCurrentSize.value[mediaId]
+          const providedSize = extractSizeFromUrl(item.url || "")
+          let initialSize: ImageSize
+          if (existingSize) {
+            initialSize = existingSize
+          } else if (providedSize) {
+            initialSize = getSizeRank(providedSize) > getSizeRank(previewUpgradeTarget) ? previewInitialSize : providedSize
+          } else {
+            initialSize = previewInitialSize
+          }
+          const currentUrlSize = providedSize
+          if (!currentUrlSize || currentUrlSize !== initialSize) {
+            item.url = img(mediaId, initialSize)
+          }
+          if (!isPlaceholder) {
+            initImageProgressState(mediaId, item.url, previewUpgradeTarget)
+          }
         }
       } else if (type === "video") {
         queueVideoSrc(mediaId)
@@ -1366,6 +1383,10 @@ function markImageLoaded(id: string) {
   }
 
 function markImageErrored(id: string) {
+  if (useOriginalImageUrlMap.value[id]) {
+    imageLoading.value[id] = false
+    return
+  }
   const item = galleryItems.value.find((i) => i.id === id)
   if (!item) return
   // Determine current and target sizes

@@ -16,4 +16,6 @@ export interface MediaGalleryMeta {
   creatorId?: string
   creatorUsername?: string
   creatorHasAvatar?: boolean
+  // When true, keep the provided URL as-is instead of rewriting to CDN variants
+  useOriginalUrl?: boolean
 }
