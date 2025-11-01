@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue"
+import { ref, computed, watch, watchEffect, onMounted, onUnmounted, nextTick } from "vue"
 import { useQuasar, LocalStorage } from "quasar"
 import { Dialog, Loading } from "quasar"
 // Import removed: unified flow uses route-based orchestrator to open quick-edit
@@ -325,8 +325,9 @@ const imageCurrentSize = ref<Record<string, ImageSize>>({})
 const imageUpgradeQueue = ref<Record<string, ImageSize[]>>({})
 const imageUpgradeAttempts = ref<Record<string, Partial<Record<ImageSize, number>>>>({})
 const imageUpgradeInFlight = ref<Record<string, boolean>>({})
-const previewInitialSize: ImageSize = "sm"
+const previewInitialSize = ref<ImageSize>("sm")
 const previewUpgradeTarget: ImageSize = "md"
+const lowResPreviewSize: ImageSize = "sm"
 const sizeRank: Record<string, number> = { xs: 0, sm: 1, md: 2, lg: 3, xl: 4, hd: 5 }
 let imageUpgradeTimer: number | null = null
 const UPGRADE_INTERVAL_MS = 2000
@@ -1183,6 +1184,17 @@ watch(
   },
 )
 
+watchEffect(() => {
+  previewInitialSize.value = (isMobile.value ? "md" : "sm") as ImageSize
+})
+
+watch(
+  () => previewInitialSize.value,
+  () => {
+    void buildItems(props.mediaObjects)
+  },
+)
+
 async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
   if (!Array.isArray(src)) {
     galleryItems.value = []
@@ -1200,7 +1212,7 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
       const mediaId = String(item.id)
       let preferOriginalUrl = item.useOriginalUrl === true || (typeof item.url === "string" && item.url.includes("/uploads/"))
       if (!item.url) {
-        item.url = incomingType === "video" ? s3Video(mediaId, "preview-md") : img(mediaId, previewInitialSize)
+        item.url = incomingType === "video" ? s3Video(mediaId, "preview-md") : img(mediaId, previewInitialSize.value)
         preferOriginalUrl = false
       }
       if (preferOriginalUrl) {
@@ -1222,12 +1234,18 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
           const existingSize = imageCurrentSize.value[mediaId]
           const providedSize = extractSizeFromUrl(item.url || "")
           let initialSize: ImageSize
+          const desiredRank = getSizeRank(previewInitialSize.value)
           if (existingSize) {
-            initialSize = existingSize
+            initialSize = getSizeRank(existingSize) >= desiredRank ? existingSize : previewInitialSize.value
           } else if (providedSize) {
-            initialSize = getSizeRank(providedSize) > getSizeRank(previewUpgradeTarget) ? previewInitialSize : providedSize
+            const providedRank = getSizeRank(providedSize)
+            if (providedRank > getSizeRank(previewUpgradeTarget) || providedRank < desiredRank) {
+              initialSize = previewInitialSize.value
+            } else {
+              initialSize = providedSize
+            }
           } else {
-            initialSize = previewInitialSize
+            initialSize = previewInitialSize.value
           }
           const currentUrlSize = providedSize
           if (!currentUrlSize || currentUrlSize !== initialSize) {
@@ -1270,7 +1288,7 @@ async function buildItems(src: MediaGalleryMeta[] | undefined | null) {
         // Recreate a minimal placeholder tile so the user sees continued loading feedback
         stickyPendingMap.value[id] = {
           id,
-          url: img(String(id), previewInitialSize),
+          url: img(String(id), previewInitialSize.value),
           type: "image",
           placeholder: true,
           aspectRatio: layoutEffective.value === "grid" ? 1 : 1.6,
@@ -1397,7 +1415,7 @@ function markImageLoaded(id: string | number) {
     }
   }
 
-  const currentSize = imageCurrentSize.value[idStr] ?? previewInitialSize
+  const currentSize = imageCurrentSize.value[idStr] ?? previewInitialSize.value
   const targetSize = imageTargetSize.value[idStr] ?? previewUpgradeTarget
   if (getSizeRank(currentSize) < getSizeRank(targetSize)) {
     if (!item) {
@@ -1418,10 +1436,10 @@ function markImageErrored(id: string | number) {
   if (!item) return
   // Determine current and target sizes
   const curUrl = item.url || ""
-  const curSize = imageCurrentSize.value[idStr] || extractSizeFromUrl(curUrl) || previewInitialSize
+  const curSize = imageCurrentSize.value[idStr] || extractSizeFromUrl(curUrl) || previewInitialSize.value
   const target = imageTargetSize.value[idStr] || previewUpgradeTarget
   // If current attempted size failed and it's larger than sm, fallback to sm immediately
-  if (getSizeRank(curSize) > getSizeRank(previewInitialSize)) {
+  if (getSizeRank(curSize) > getSizeRank(previewInitialSize.value)) {
     // Initialize upgrade plan if not set
     const queue = imageUpgradeQueue.value[idStr] ?? []
     if (!queue.includes(target)) {
@@ -1429,10 +1447,11 @@ function markImageErrored(id: string | number) {
       imageUpgradeAttempts.value[idStr] = {}
     }
     imageTargetSize.value[idStr] = target
-    // Switch to small for instant feedback
-    const nextUrl = img(idStr, previewInitialSize) + cacheBust()
+    // Switch to smaller preview for instant feedback
+    const fallbackSize = previewInitialSize.value === "md" ? lowResPreviewSize : previewInitialSize.value
+    const nextUrl = img(idStr, fallbackSize) + cacheBust()
     item.url = nextUrl
-    imageCurrentSize.value[idStr] = previewInitialSize
+    imageCurrentSize.value[idStr] = fallbackSize
     // Show loading overlay until sm finishes the very first time
     imageLoading.value[idStr] = true
     // Ensure upgrade loop is running
@@ -1910,7 +1929,7 @@ function extractSizeFromUrl(url: string): ImageSize | null {
 }
 
 function initImageProgressState(id: string, url: string, target?: ImageSize) {
-  const sizeFromUrl = extractSizeFromUrl(url) || previewInitialSize
+  const sizeFromUrl = extractSizeFromUrl(url) || previewInitialSize.value
   if (!imageCurrentSize.value[id]) {
     imageCurrentSize.value[id] = sizeFromUrl
   }
