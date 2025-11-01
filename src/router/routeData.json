@@ -60,6 +60,11 @@
     "AccountSettings"
   ],
   [
+    "accountDelete",
+    "/account/delete",
+    "AccountDeletePage"
+  ],
+  [
     "addPoints",
     "/addPoints",
     "AddPointsPage"

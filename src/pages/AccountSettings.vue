@@ -304,9 +304,10 @@ q-page.full-height.full-width
         q-card(flat bordered class="bg-dark-2 q-pa-md q-mt-sm")
           .column.q-gutter-sm
             div.text-white Delete account
-            small.text-grey-4(style="max-width: 420px;") We'll send a confirmation link to your verified contact. You must approve the request via email or Telegram before your account is removed.
+            small.text-grey-4(style="max-width: 420px;") Confirming this request removes your personal data right away, soft-deletes your content, purges derived media now, and deletes any originals after about 30 days.
+            small.text-grey-4(style="max-width: 420px;") We'll send a confirmation link to your verified contact. Approve it via email or Telegram to finish the deletion.
             q-input(v-model="deleteAccountEmail" type="email" label="Email for confirmation (optional)" :disable="deleteAccountLoading" clearable)
-            q-btn(color="negative" icon="delete" label="Request account deletion" :loading="deleteAccountLoading" :disable="deleteAccountLoading" @click="requestAccountDeletion")
+            q-btn(color="negative" icon="delete" label="Request account deletion" :loading="deleteAccountLoading" :disable="deleteAccountLoading" @click="onRequestAccountDeletionClick")
             q-alert(v-if="deleteAccountStatusMessage" dense :color="deleteAccountStatusColor" text-color="white" class="q-mt-sm" :icon="deleteAccountMethod === 'telegram' ? 'send' : deleteAccountMethod === 'email' ? 'mail' : 'info'")
               div {{ deleteAccountStatusMessage }}
     .centered.q-mt-md(v-else)
@@ -328,6 +329,7 @@ import {
   userSetBio,
   userSetNotificationConfig,
   userRequestDeleteAccount,
+  userSendVerificationEmail,
   userSetUsername,
   discountsMyCodes,
   userGetAffiliatePayoutDetails,
@@ -890,7 +892,30 @@ export default defineComponent({
         }
       })
     },
-    async requestAccountDeletion() {
+    onRequestAccountDeletionClick() {
+      if (this.deleteAccountLoading) return
+      Dialog.create({
+        title: "Confirm account deletion",
+        message:
+          "Deleting your account removes personal data immediately, makes your content inaccessible, and permanently removes originals after about 30 days. This action cannot be undone. Type DELETE to continue.",
+        prompt: {
+          model: "",
+          type: "text",
+          isValid: (val: string) => String(val || "").trim().toUpperCase() === "DELETE",
+        },
+        ok: { label: "Confirm deletion", color: "negative", flat: true },
+        cancel: true,
+        persistent: true,
+        maximized: this.quasar.screen.lt.md,
+      }).onOk(async (input) => {
+        if (String(input || "").trim().toUpperCase() !== "DELETE") {
+          Notify.create({ type: "negative", message: 'Please type "DELETE" exactly to confirm.' })
+          return
+        }
+        await this.performAccountDeletionRequest()
+      })
+    },
+    async performAccountDeletionRequest() {
       if (this.deleteAccountLoading) return
       const email = (this.deleteAccountEmail || "").trim()
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -910,9 +935,32 @@ export default defineComponent({
         if (!data?.ok) {
           const reason = data?.reason || "Unable to request account deletion."
           this.deleteAccountMethod = null
-          this.deleteAccountStatusMessage = reason
-          this.deleteAccountStatusColor = "negative"
-          Notify.create({ type: "negative", message: reason })
+          let message = reason
+          let color: string = "negative"
+          const emailForVerification = email || this.connections?.email?.address || this.$userAuth.userProfile?.email || ""
+          switch (reason) {
+            case "email_mismatch":
+              message = "Email doesn’t match your account."
+              break
+            case "email_not_verified":
+              message = "Verify your email before you can request deletion."
+              color = "warning"
+              if (emailForVerification) this.promptEmailVerification(emailForVerification)
+              break
+            case "no_verified_email_or_telegram":
+              message = "Add a verified email or link Telegram to complete this request."
+              color = "warning"
+              break
+            case "telegram_send_failed":
+            case "send_failed":
+              message = "We couldn't send the confirmation. Try again or switch to a verified email."
+              break
+            default:
+              break
+          }
+          this.deleteAccountStatusMessage = message
+          this.deleteAccountStatusColor = color
+          Notify.create({ type: color === "positive" ? "positive" : color === "warning" ? "warning" : "negative", message })
           return
         }
 
@@ -937,6 +985,32 @@ export default defineComponent({
         catchErr(err)
       } finally {
         this.deleteAccountLoading = false
+      }
+    },
+    promptEmailVerification(targetEmail: string) {
+      Dialog.create({
+        title: "Verify your email",
+        message: `We need to verify ${targetEmail} before you can delete your account.`,
+        ok: { label: "Send verification email", color: "primary", flat: true },
+        cancel: true,
+        persistent: true,
+        maximized: this.quasar.screen.lt.md,
+      }).onOk(async () => {
+        await this.sendVerificationEmail(targetEmail)
+      })
+    },
+    async sendVerificationEmail(targetEmail: string) {
+      const email = targetEmail.trim()
+      if (!email) return
+      try {
+        Loading.show({ message: "Sending verification email..." })
+        await userSendVerificationEmail({ email })
+        Loading.hide()
+        Notify.create({ type: "positive", message: `Verification email sent to ${email}.` })
+      } catch (err) {
+        Loading.hide()
+        Notify.create({ type: "negative", message: "Couldn't send verification email. Please try again later." })
+        catchErr(err)
       }
     },
     loadData() {

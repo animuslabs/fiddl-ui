@@ -1091,10 +1091,16 @@ const filteredGalleryItems = computed(() => {
   return list.filter((el) => !!el && (typeof (el as any).id === "string" || typeof (el as any).id === "number"))
 })
 
-function pruneInactiveState(activeIds: Set<string>) {
+function pruneInactiveState(activeIds: Set<string | number>) {
+  const activeIdStrings = new Set<string>()
+  activeIds.forEach((id) => {
+    if (id === null || id === undefined) return
+    activeIdStrings.add(String(id))
+  })
+
   const pruneRecord = (record: Record<string, unknown>) => {
     for (const key of Object.keys(record)) {
-      if (!activeIds.has(key)) {
+      if (!activeIdStrings.has(key)) {
         delete record[key]
       }
     }
@@ -1119,18 +1125,18 @@ function pruneInactiveState(activeIds: Set<string>) {
   pruneRecord(videoSources.value as Record<string, unknown>)
 
   for (const key of Array.from(videoRetryState.keys())) {
-    if (!activeIds.has(key)) {
+    if (!activeIdStrings.has(key)) {
       clearVideoRetryState(key)
     }
   }
   for (const key of Array.from(videoPlaybackState.keys())) {
-    if (!activeIds.has(key)) {
+    if (!activeIdStrings.has(key)) {
       clearVideoPlaybackState(key)
     }
   }
 
   for (const [key, burst] of Object.entries(upvoteBursts.value)) {
-    if (!activeIds.has(key)) {
+    if (!activeIdStrings.has(key)) {
       if (burst?.timer) window.clearTimeout(burst.timer)
       delete upvoteBursts.value[key]
     }
@@ -1363,56 +1369,77 @@ function markVideoErrored(id: string) {
   scheduleVideoRetry(id)
 }
 
-function markImageLoaded(id: string) {
-  imageLoading.value[id] = false
-  const im = document.querySelector(`img[data-id="${id}"]`) as HTMLImageElement | null
+function markImageLoaded(id: string | number) {
+  const idStr = String(id)
+  imageLoading.value[idStr] = false
+  const im = document.querySelector(`img[data-id="${idStr}"]`) as HTMLImageElement | null
+  let item = galleryItems.value.find((i) => String(i.id) === idStr) || null
+
   if (im && im.naturalWidth && im.naturalHeight) {
     const realAspect = im.naturalWidth / im.naturalHeight
-    const item = galleryItems.value.find((i) => i.id === id)
-      if (item) {
-        const prev = item.aspectRatio
-        // Clear cached mosaic row/col spans when the real aspect arrives so the
-        // grid can reflow and reveal the full image height on mobile.
-        if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
-          delete layoutSpans.value[id]
-        }
-        item.aspectRatio = realAspect
-        rememberAspectRatio(id, realAspect)
+    if (item) {
+      const prev = item.aspectRatio
+      // Clear cached mosaic row/col spans when the real aspect arrives so the
+      // grid can reflow and reveal the full image height on mobile.
+      if (Math.abs((prev ?? 0) - realAspect) > 0.005) {
+        delete layoutSpans.value[idStr]
       }
+      item.aspectRatio = realAspect
+    }
+    rememberAspectRatio(idStr, realAspect)
+  }
+
+  const sizeFromSrc = extractSizeFromUrl(im?.currentSrc || im?.src || "")
+  if (sizeFromSrc) {
+    imageCurrentSize.value[idStr] = sizeFromSrc
+    if (!imageTargetSize.value[idStr]) {
+      imageTargetSize.value[idStr] = sizeFromSrc
     }
   }
 
-function markImageErrored(id: string) {
-  if (useOriginalImageUrlMap.value[id]) {
-    imageLoading.value[id] = false
+  const currentSize = imageCurrentSize.value[idStr] ?? previewInitialSize
+  const targetSize = imageTargetSize.value[idStr] ?? previewUpgradeTarget
+  if (getSizeRank(currentSize) < getSizeRank(targetSize)) {
+    if (!item) {
+      item = galleryItems.value.find((i) => String(i.id) === idStr) || null
+    }
+    processImageUpgradeQueue(idStr, item ?? undefined, Date.now())
+    ensureImageUpgradeTimer()
+  }
+}
+
+function markImageErrored(id: string | number) {
+  const idStr = String(id)
+  if (useOriginalImageUrlMap.value[idStr]) {
+    imageLoading.value[idStr] = false
     return
   }
-  const item = galleryItems.value.find((i) => i.id === id)
+  const item = galleryItems.value.find((i) => String(i.id) === idStr)
   if (!item) return
   // Determine current and target sizes
   const curUrl = item.url || ""
-  const curSize = imageCurrentSize.value[id] || extractSizeFromUrl(curUrl) || previewInitialSize
-  const target = imageTargetSize.value[id] || previewUpgradeTarget
+  const curSize = imageCurrentSize.value[idStr] || extractSizeFromUrl(curUrl) || previewInitialSize
+  const target = imageTargetSize.value[idStr] || previewUpgradeTarget
   // If current attempted size failed and it's larger than sm, fallback to sm immediately
   if (getSizeRank(curSize) > getSizeRank(previewInitialSize)) {
     // Initialize upgrade plan if not set
-    const queue = imageUpgradeQueue.value[id] ?? []
+    const queue = imageUpgradeQueue.value[idStr] ?? []
     if (!queue.includes(target)) {
-      imageUpgradeQueue.value[id] = [...queue.filter((size) => size !== target), target]
-      imageUpgradeAttempts.value[id] = {}
+      imageUpgradeQueue.value[idStr] = [...queue.filter((size) => size !== target), target]
+      imageUpgradeAttempts.value[idStr] = {}
     }
-    imageTargetSize.value[id] = target
+    imageTargetSize.value[idStr] = target
     // Switch to small for instant feedback
-    const nextUrl = img(String(id), previewInitialSize) + cacheBust()
+    const nextUrl = img(idStr, previewInitialSize) + cacheBust()
     item.url = nextUrl
-    imageCurrentSize.value[id] = previewInitialSize
+    imageCurrentSize.value[idStr] = previewInitialSize
     // Show loading overlay until sm finishes the very first time
-    imageLoading.value[id] = true
+    imageLoading.value[idStr] = true
     // Ensure upgrade loop is running
     ensureImageUpgradeTimer()
   } else {
     // Already at smallest; stop the spinner to avoid a stuck loading card
-    imageLoading.value[id] = false
+    imageLoading.value[idStr] = false
   }
 }
 
@@ -1916,6 +1943,54 @@ function ensureImageUpgradeTimer() {
   imageUpgradeTimer = window.setInterval(runImageUpgradeTick, UPGRADE_INTERVAL_MS) as unknown as number
 }
 
+function processImageUpgradeQueue(idInput: string | number, item?: MediaGalleryMeta, timestamp?: number): boolean {
+  const id = String(idInput)
+  const queue = imageUpgradeQueue.value[id]
+  if (!queue || queue.length === 0) return false
+
+  if (!isVisible(id)) {
+    return queue.length > 0
+  }
+  if (imageUpgradeInFlight.value[id]) {
+    return true
+  }
+
+  const nextSize = queue[0] as ImageSize
+  const attempts = (imageUpgradeAttempts.value[id]?.[nextSize] || 0) as number
+  if (attempts >= MAX_ATTEMPTS_PER_SIZE) {
+    queue.shift()
+    return queue.length > 0
+  }
+
+  const now = timestamp ?? Date.now()
+  const bust = cacheBust(now)
+  const baseUrl = img(id, nextSize)
+  const targetUrl = `${baseUrl}${bust}`
+  imageUpgradeInFlight.value[id] = true
+  prefetchImage(targetUrl)
+    .then(() => {
+      const targetItem = item ?? galleryItems.value.find((entry) => String(entry.id) === id)
+      if (targetItem) {
+        targetItem.url = targetUrl
+      }
+      imageCurrentSize.value[id] = nextSize
+      queue.shift()
+      if (queue.length === 0) {
+        delete imageUpgradeQueue.value[id]
+        delete imageUpgradeAttempts.value[id]
+      }
+    })
+    .catch(() => {
+      const cur = imageUpgradeAttempts.value[id] || {}
+      cur[nextSize] = (cur[nextSize] || 0) + 1
+      imageUpgradeAttempts.value[id] = cur
+    })
+    .finally(() => {
+      imageUpgradeInFlight.value[id] = false
+    })
+  return true
+}
+
 function runImageUpgradeTick() {
   try {
     if (typeof document !== "undefined" && document.hidden) return
@@ -1923,39 +1998,9 @@ function runImageUpgradeTick() {
     let shouldKeepAlive = false
     for (const item of galleryItems.value) {
       if (item.type !== "image") continue
-      const id = item.id
-      const queue = imageUpgradeQueue.value[id]
-      if (!queue || queue.length === 0) continue
-      shouldKeepAlive = true
-      if (!isVisible(id)) continue
-      if (imageUpgradeInFlight.value[id]) continue
-      const nextSize = queue[0] as ImageSize
-      const attempts = (imageUpgradeAttempts.value[id]?.[nextSize] || 0) as number
-      if (attempts >= MAX_ATTEMPTS_PER_SIZE) {
-        // Give up on this size and move to the next
-        queue.shift()
-        continue
+      if (processImageUpgradeQueue(item.id, item, now)) {
+        shouldKeepAlive = true
       }
-      // Prefetch the next size; use a cache-buster to avoid CDN 404 caching
-      const testUrl = img(String(id), nextSize) + cacheBust(now)
-      imageUpgradeInFlight.value[id] = true
-      prefetchImage(testUrl)
-        .then(() => {
-          // Swap in the higher resolution
-          item.url = img(String(id), nextSize) + cacheBust(now)
-          imageCurrentSize.value[id] = nextSize
-          // Move to the next step in the queue
-          queue.shift()
-        })
-        .catch(() => {
-          // Increment attempts and try again on a future tick
-          const cur = imageUpgradeAttempts.value[id] || {}
-          cur[nextSize] = (cur[nextSize] || 0) + 1
-          imageUpgradeAttempts.value[id] = cur
-        })
-        .finally(() => {
-          imageUpgradeInFlight.value[id] = false
-        })
     }
     if (!shouldKeepAlive && imageUpgradeTimer !== null) {
       window.clearInterval(imageUpgradeTimer)
